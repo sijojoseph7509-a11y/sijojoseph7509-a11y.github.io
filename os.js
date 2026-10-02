@@ -310,18 +310,55 @@
   };
   tick(); setInterval(tick, 15000);
 
-  function open(key = "about", closeCb) {
+  // Apple-style zoom: the desktop scales out of (and back into) the laptop screen's rectangle
+  const ZOOM_MS = 620, ZOOM_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let zoomRect = null, closing = false;
+  const toRect = (r) => {
+    const to = screen.getBoundingClientRect();
+    return `translate(${r.left - to.left}px, ${r.top - to.top}px) scale(${r.width / to.width}, ${r.height / to.height})`;
+  };
+  function open(key = "about", closeCb, fromRect) {
     onClose = closeCb || (() => {});
+    closing = false;
     os.hidden = false;
     win.classList.remove("max");
     closeMenu(); closeSpotlight();
     show(key);
-    screen.style.animation = "none"; void os.offsetWidth; screen.style.animation = "";
+    zoomRect = fromRect && !reduced ? fromRect : null;
+    if (zoomRect) {
+      os.style.animation = screen.style.animation = "none";
+      screen.style.transition = os.style.transition = "none";
+      screen.style.transformOrigin = "0 0";
+      screen.style.transform = toRect(zoomRect);
+      os.style.backgroundColor = "rgba(0,0,0,0)";
+      win.style.animationDelay = "0.18s";                       // the window pops in just after the screen settles
+      void screen.offsetWidth;
+      screen.style.transition = `transform ${ZOOM_MS}ms ${ZOOM_EASE}, border-radius ${ZOOM_MS}ms ${ZOOM_EASE}`;
+      os.style.transition = `background-color ${ZOOM_MS}ms ${ZOOM_EASE}`;
+      screen.style.transform = "none";
+      os.style.backgroundColor = "";
+    } else {
+      os.style.animation = ""; screen.style.transform = ""; win.style.animationDelay = "";
+      screen.style.animation = "none"; void os.offsetWidth; screen.style.animation = "";
+    }
   }
   function close() {
+    if (closing) return;
     closeMenu(); closeSpotlight();
-    os.hidden = true;
-    onClose();
+    const finish = () => {
+      os.hidden = true; closing = false;
+      screen.style.transition = os.style.transition = "none";
+      screen.style.transform = ""; os.style.backgroundColor = ""; win.style.animationDelay = "";
+      onClose();
+    };
+    if (!zoomRect) return finish();
+    closing = true;
+    screen.style.transition = `transform ${ZOOM_MS - 80}ms cubic-bezier(0.4, 0, 0.6, 1)`;
+    os.style.transition = `background-color ${ZOOM_MS - 80}ms ease`;
+    screen.style.transform = toRect(zoomRect);
+    os.style.backgroundColor = "rgba(0,0,0,0)";
+    setTimeout(finish, ZOOM_MS - 60);
   }
 
   const setDark = (dark) => os.classList.toggle("dark", !!dark);
