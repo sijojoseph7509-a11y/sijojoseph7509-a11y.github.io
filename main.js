@@ -121,7 +121,7 @@ function fitCamera() {
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(19 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
+  const dist = Math.max(21 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
   scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
@@ -374,12 +374,20 @@ const wall = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), new THREE.MeshStan
 wall.position.set(TABLE.x, 2, WALL_Z);
 wall.receiveShadow = true;
 scene.add(wall);
+for (const side of [-1, 1]) {   // side walls: turning the view shows a room corner, not empty black space
+  const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), wall.material);
+  sideWall.rotation.y = -side * Math.PI / 2;
+  sideWall.position.set(TABLE.x + side * 17, 2, WALL_Z + 45);
+  sideWall.receiveShadow = true;
+  scene.add(sideWall);
+}
 const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0xffffff, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
-const poster = canvasTex(1240, 1754, (g, w, h) => {
+const poster = canvasTex(2048, 2896, (g, w, h) => {
+  g.scale(2048 / 1240, 2896 / 1754); w = 1240; h = 1754;   // draw on the 1240-wide layout, rendered at 2× sharpness
   g.fillStyle = "#f6f4ef"; g.fillRect(0, 0, w, h);
   const red = "#c7262e";
   const big = (ch, x, y, size, rot = 0) => {
@@ -394,7 +402,7 @@ const poster = canvasTex(1240, 1754, (g, w, h) => {
   big("N", 680, 1350, 470); big("E", 230, 1560, 430, Math.PI / 2); big("G", 1060, 1630, 470, Math.PI);
   // black statement text, tight and heavy
   const line = (t, y, align = "left") => {
-    g.fillStyle = "#111"; g.font = `800 82px ${UI}`; g.textBaseline = "alphabetic";
+    g.fillStyle = "#0a0a0a"; g.font = `900 84px ${UI}`; g.textBaseline = "alphabetic";
     if ("letterSpacing" in g) g.letterSpacing = "-5px";
     g.textAlign = align; g.fillText(t, align === "left" ? 46 : w - 40, y);
   };
@@ -409,7 +417,7 @@ const poster = canvasTex(1240, 1754, (g, w, h) => {
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * 0.03})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } // paper grain
 });
 const posterGroup = new THREE.Group();
-const POSTER = { w: 5.6, h: 7.92 };   // A-series proportions
+const POSTER = { w: 6.6, h: 9.33 };   // A-series proportions, ≈ A2 — big enough to read from the desk
 const paperGeo = new THREE.PlaneGeometry(POSTER.w, POSTER.h, 12, 16);
 { const p = paperGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 0.04 * Math.pow(Math.abs(x) / (POSTER.w / 2), 3) + 0.03 * Math.pow(Math.max(0, -y) / (POSTER.h / 2), 4)); } paperGeo.computeVertexNormals(); }
 const paper = new THREE.Mesh(paperGeo, new THREE.MeshStandardMaterial({ map: poster.tex, roughness: 0.8 }));
@@ -420,7 +428,7 @@ for (const [tx, ty] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {   // bits of clea
   tape.position.set(tx * (POSTER.w / 2 - 0.1), ty * (POSTER.h / 2 - 0.08), 0.06); tape.rotation.z = tx * ty * 0.6;
   posterGroup.add(tape);
 }
-posterGroup.position.set(-4.6, 6.5, WALL_Z + 0.03);
+posterGroup.position.set(-5.7, 6.9, WALL_Z + 0.03);
 scene.add(posterGroup);
 // (the poster is decoration only — not clickable)
 
@@ -471,7 +479,8 @@ laptop.rotation.y = -0.08;
 scene.add(laptop);
 
 // Base (bottom case) + rubber feet
-const lapBase = rbox(LAP_W, BASE_T, LAP_D, 0.09, SILVER, 5);
+const MIDNIGHT = mat(0x2a303c, { metalness: 0.7, roughness: 0.34 }), MIDNIGHT_DARK = mat(0x222833, { metalness: 0.65, roughness: 0.4 });
+const lapBase = rbox(LAP_W, BASE_T, LAP_D, 0.09, MIDNIGHT, 5);
 lapBase.position.y = BASE_T / 2 + 0.04;
 laptop.add(lapBase);
 [[-2.6, -1.8], [2.6, -1.8], [-2.6, 1.8], [2.6, 1.8]].forEach(([x, z]) => {
@@ -482,7 +491,7 @@ laptop.add(lapBase);
 const TOP = BASE_T + 0.04; // top surface of the deck
 
 // Front thumb scoop
-const scoop = rbox(1.3, 0.04, 0.14, 0.02, SILVER_DARK);
+const scoop = rbox(1.3, 0.04, 0.14, 0.02, MIDNIGHT_DARK);
 scoop.position.set(0, TOP - 0.03, LAP_D / 2 - 0.02);
 laptop.add(scoop);
 
@@ -536,7 +545,7 @@ for (const side of [-1, 1]) {
 }
 
 // Trackpad (types a hello on screen)
-const trackpad = rbox(2.9, 0.012, 1.75, 0.08, mat(0xc9ccd0, { metalness: 0.5, roughness: 0.25 }));
+const trackpad = rbox(2.9, 0.012, 1.75, 0.08, mat(0x343b48, { metalness: 0.45, roughness: 0.22 }));
 trackpad.position.set(0, TOP + 0.002, 1.05);
 laptop.add(trackpad);
 interactive(trackpad, "Type hello", () => { Sound.click(); typeOnScreen(); });
@@ -553,7 +562,7 @@ const lid = new THREE.Group();
 lid.position.set(0, TOP + 0.04, -LAP_D / 2 + 0.06);
 lid.rotation.x = -0.26;
 laptop.add(lid);
-const lidShell = rbox(LAP_W, LID_H, LID_T, 0.09, SILVER, 5);
+const lidShell = rbox(LAP_W, LID_H, LID_T, 0.09, MIDNIGHT, 5);
 lidShell.position.set(0, LID_H / 2, 0);
 lid.add(lidShell);
 // Glass bezel + display
@@ -790,7 +799,7 @@ interactive(phone, "New message — say hello", () => { Sound.click(); boot("con
 
 // 2d. Things from Sijo's real desk: plant in a white pot, green water bottle, black soundbar
 const plant = new THREE.Group();
-const pot2 = mesh(new THREE.CylinderGeometry(0.75, 0.6, 1.2, 32), mat(0xf4f4f2, { roughness: 0.5, clearcoat: 0.3 }));
+const pot2 = mesh(new THREE.CylinderGeometry(0.75, 0.6, 1.2, 32), mat(0xffb21a, { roughness: 0.45, clearcoat: 0.4 }));   // mango yellow
 pot2.position.y = 0.6;
 const soil2 = mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 24), mat(0x3b2a20, { roughness: 1 }));
 soil2.position.y = 1.15;
@@ -960,8 +969,7 @@ const nameMaps = {
 const roleMaps = {
   light: floorText(roleLines(false), { width: 8.4, gap: 1.4 }).material.map, dark: rolesBlock.material.map
 };
-let lightsOn;
-try { lightsOn = localStorage.getItem("lamp") ? localStorage.getItem("lamp") === "on" : !matchMedia("(prefers-color-scheme: dark)").matches; } catch (_) { lightsOn = true; }
+let lightsOn = true;   // the laptop screen uses the light glass look
 let modeMix = lightsOn ? 1 : 0;     // 1 = light, 0 = dark (animated)
 const _ca = new THREE.Color(), _cb = new THREE.Color();
 const lerpC = (target, a, b, k) => target.copy(_ca.setHex(a)).lerp(_cb.setHex(b), k);
@@ -982,28 +990,13 @@ function applyMode(k, flicker = 1) {
   nameBlock.material.map = light ? nameMaps.light : nameMaps.dark;
   rolesBlock.material.map = light ? roleMaps.light : roleMaps.dark;
 }
-function setLights(on, animate = true) {
-  lightsOn = on;
-  try { localStorage.setItem("lamp", on ? "on" : "off"); } catch (_) {}
-  document.body.classList.toggle("appearance-light", on);
-  document.body.classList.toggle("appearance-dark", !on);
-  window.OS.setDark(!on);
-  if (lamp.userData.hover) lamp.userData.hover.label = on ? "Turn the light off 🌙" : "Turn the light on 💡";
-  modeAnim = animate ? { from: modeMix, to: on ? 1 : 0, start: performance.now() } : null;
-  if (!animate) { modeMix = on ? 1 : 0; applyMode(modeMix); }
-}
-let modeAnim = null;
-function stepMode(now) {
-  if (!modeAnim) return;
-  const k = Math.min(1, (now - modeAnim.start) / 700), e = k * k * (3 - 2 * k);
-  modeMix = modeAnim.from + (modeAnim.to - modeAnim.from) * e;
-  // a short filament flicker when the lamp switches on
-  const flick = modeAnim.to === 1 && k < 0.5 ? (Math.sin(now * 0.09) > 0.2 ? 1 : 0.35) : 1;
-  applyMode(modeMix, flick);
-  if (k === 1) modeAnim = null;
-}
-interactive(lamp, "", () => { Sound.click(); setLights(!lightsOn); });
-setLights(lightsOn, false);
+// Fixed look (light/dark toggle removed): dark room, lamp always on, light glass desktop
+applyMode(0);
+lampLight.intensity = 55;
+bulb.material.color.setRGB(1, 0.83, 0.6);
+glowSprite.material.opacity = 1;
+document.body.classList.add("appearance-dark");
+window.OS.setDark(false);
 
 
 // Menu — left front (each word is its own clickable label)
@@ -1214,7 +1207,6 @@ let lastScreen = 0;
 function loop(now) {
   const t = clock.getElapsedTime();
   if (tween) tween(now);
-  stepMode(now);
   controls.update();
 
   // hover lift / scale
@@ -1259,7 +1251,9 @@ function loop(now) {
     ball.position.x += ballVX;
     ball.children[0].rotation.z -= ballVX / BALL_R;
     ballVX *= 0.985;
-    if ((ball.position.x < -7.6 && ballVX < 0) || (ball.position.x > 1.2 && ballVX > 0)) ballVX *= -0.8; // bounce off the side panel / cubby
+    const BX0 = X0 + 0.8 + BALL_R + 0.05, BX1 = CX0 - BALL_R - 0.05;   // inside faces of the left panel / cubby
+    if (ball.position.x < BX0) { ball.position.x = BX0; ballVX = Math.abs(ballVX) * 0.75; }
+    if (ball.position.x > BX1) { ball.position.x = BX1; ballVX = -Math.abs(ballVX) * 0.75; }
   }
   if (wiggleT >= 0) {
     wiggleT += 0.06;
