@@ -13,7 +13,6 @@
     contact: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',
     linkedin:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10.5V16M8 7.8v.1M11.5 16v-3.2a2 2 0 0 1 4 0V16M11.5 10.5V16"/>',
     behance: '<path d="M4 7h4.5a2.2 2.2 0 0 1 0 4.4H4zM4 11.4h5a2.3 2.3 0 0 1 0 4.6H4zM4 7v9M14 13.5h6a3 3 0 1 0-1 2.3M15 8h4"/>',
-    poster:  '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 10h5"/><circle cx="14.5" cy="15" r="2.5"/>',
     desk:    '<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 18.5h18"/><path d="M12 8v3M10 9.2a2.6 2.6 0 1 0 4 0"/>'
   };
   const icon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
@@ -62,14 +61,6 @@
           <li><div><b>${esc(e.company)}</b><span>${esc(e.role)}</span></div><span class="yr">${esc(e.from)} – ${esc(e.to)}</span></li>`).join("")}
         </ul>
         <a class="btn" href="${esc(S.resumeUrl)}" target="_blank" rel="noopener">Download résumé</a>`
-    },
-    poster: {
-      title: "Poster", file: "To begin an era.jpg", grad: "linear-gradient(160deg,#ff6b6b,#c7262e)",
-      html: () => `
-        <figure class="viewer">
-          <img src="${window.POSTER_URL || ""}" alt="Typographic poster by Sijo Joseph: To create a solution for something, something that has even bigger cause than me, something that I am supposed to make, to begin an era.">
-          <figcaption><b>To begin an era</b><span>Typographic poster · Sijo Joseph</span></figcaption>
-        </figure>`
     },
     contact: {
       title: "Contact", grad: "linear-gradient(160deg,#30d158,#00a86b)",

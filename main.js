@@ -422,9 +422,7 @@ for (const [tx, ty] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {   // bits of clea
 }
 posterGroup.position.set(-4.6, 6.5, WALL_Z + 0.03);
 scene.add(posterGroup);
-// the poster image is also shown full-size on the Mac (Preview-style window) when you click it
-window.POSTER_URL = poster.canvas.toDataURL("image/jpeg", 0.9);
-interactive(posterGroup, "Open my poster on the Mac", () => { Sound.click(); boot("poster"); });
+// (the poster is decoration only — not clickable)
 
 // Woven wire-cage pendant lamp (like the one in Sijo's room), warm bulb inside
 const lamp = new THREE.Group();
@@ -952,8 +950,8 @@ scene.add(rolesBlock);
    Lamp on  → light appearance: warm cream walls, lamp glowing, light glass UI.
    Lamp off → dark appearance: charcoal walls, cool moonlight, dark glass UI.   */
 const MODES = {
-  // wall = Sijo's room paint (warm ivory-cream, sampled from his photos ≈ #EAE0C4)
-  light: { bg: 0xe3d9be, wall: 0xeae0c4, skirt: 0xd3c7a7, hemi: 0.85, hemiG: 0xc4b89a, sun: 2.0, sunC: 0xfff4e6, rim: 0.35, lamp: 60, bulb: 1, exposure: 0.95 },
+  // wall = Sijo's room paint: warm buttery yellow-beige (sampled from his wall photo ≈ #E4D3AB on screen)
+  light: { bg: 0xd9c690, wall: 0xe8cf8c, skirt: 0xc9b37a, hemi: 0.85, hemiG: 0xbfa978, sun: 2.0, sunC: 0xfff1d8, rim: 0.35, lamp: 60, bulb: 1, exposure: 0.95 },
   dark:  { bg: 0x1d1d1f, wall: 0x2c2b2a, skirt: 0x232221, hemi: 0.45, hemiG: 0x2a2a2e, sun: 1.1, sunC: 0x9fb4ff, rim: 0.5, lamp: 0, bulb: 0, exposure: 1.05 }
 };
 const nameMaps = {
