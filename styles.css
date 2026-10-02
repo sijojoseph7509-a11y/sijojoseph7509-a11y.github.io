@@ -70,7 +70,7 @@ body { transition: background-color .7s var(--ease); }
   padding: 8px 16px; border-radius: 99px; font-family: var(--font); font-size: 13px; font-weight: 500;
   color: var(--blue); text-decoration: none; letter-spacing: -.01em; transition: background .2s;
 }
-.topnav a:hover { background: rgba(255, 255, 255, .08); text-decoration: underline; }
+.topnav a:hover { background: rgba(255, 255, 255, .08); text-decoration: none; }
 .topnav a:focus-visible { outline: 2px solid rgba(10, 132, 255, .6); outline-offset: 1px; }
 .tooltip {
   position: fixed; z-index: 6; pointer-events: none; padding: 6px 11px; border-radius: 8px;
