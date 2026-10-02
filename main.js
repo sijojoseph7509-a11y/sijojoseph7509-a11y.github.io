@@ -1,0 +1,1186 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { ColladaLoader } from "three/addons/loaders/ColladaLoader.js";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+
+const S = window.SITE;
+const $ = (s) => document.querySelector(s);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const setProgress = (p, msg) => {
+  $("#loaderBar").style.width = p + "%";
+  $("#loaderPct").textContent = `${msg} ${Math.round(p)}%`;
+};
+
+// Apple-style type: the system font where available (San Francisco on Apple devices), Inter elsewhere
+const UI = '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif';
+
+// Wait for webfonts first so every canvas texture is drawn with the right type
+setProgress(15, "loading fonts…");
+try {
+  await Promise.race([
+    Promise.all(['800 40px "Inter"', '700 40px "Inter"', '600 40px "Inter"', '500 40px "Inter"', '400 40px "Inter"', '600 40px "Caveat"'].map((f) => document.fonts.load(f))),
+    new Promise((r) => setTimeout(r, 3000))
+  ]);
+} catch (_) {}
+setProgress(45, "assembling desk…");
+
+/* ───────────────────────── Sound (tiny synth blips) ───────────────────────── */
+const Sound = (() => {
+  let ctx, muted = false;
+  try { muted = localStorage.getItem("muted") === "1"; } catch (_) {}
+  const blip = (freq, dur = 0.06, type = "square", vol = 0.04) => {
+    if (muted) return;
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+  };
+  return {
+    hover: () => blip(880, 0.03, "sine", 0.02),
+    click: () => blip(520, 0.07),
+    boot: () => [262, 330, 392, 523].forEach((f, i) => setTimeout(() => blip(f, 0.14, "triangle", 0.05), i * 110)),
+    purr() {
+      if (muted) return;
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), t = ctx.currentTime;
+      o.type = "sawtooth"; o.frequency.value = 55;
+      lfo.frequency.value = 24; lg.gain.value = 0.03;
+      lfo.connect(lg).connect(g.gain);
+      g.gain.setValueAtTime(0.035, t); g.gain.linearRampToValueAtTime(0.0001, t + 1.8);
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 300;
+      o.connect(f).connect(g).connect(ctx.destination);
+      o.start(t); lfo.start(t); o.stop(t + 1.8); lfo.stop(t + 1.8);
+    },
+    toggle() { muted = !muted; try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {} return muted; },
+    get muted() { return muted; }
+  };
+})();
+window.Sound = Sound;
+$("#soundBtn").classList.toggle("muted", Sound.muted);
+$("#soundBtn").addEventListener("click", () => {
+  const m = Sound.toggle();
+  $("#soundBtn").classList.toggle("muted", m);
+  $("#soundBtn").setAttribute("aria-label", m ? "Turn sound on" : "Mute sound");
+  if (!m) Sound.click();
+});
+
+/* Open the portfolio without 3D */
+$("#skipLink").addEventListener("click", (e) => { e.preventDefault(); window.OS.open("about"); });
+
+/* ───────────────────────── Renderer / scene ───────────────────────── */
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+} catch (err) {
+  // No WebGL — go straight to the 2D portfolio
+  $("#loader").classList.add("done");
+  window.OS.open("about");
+  throw err;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+$("#stage").appendChild(renderer.domElement);
+
+const BG = 0x1d1d1f;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(BG);
+scene.fog = new THREE.Fog(BG, 45, 90);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// Perspective camera with a longish lens (30° FOV): natural depth without wide-angle distortion.
+// Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
+const FOV = 30;
+const camera = new THREE.PerspectiveCamera(FOV, innerWidth / innerHeight, 0.5, 400);
+const HOME_TARGET = new THREE.Vector3(0.2, 0.6, 1.0);
+const HOME_DIR = new THREE.Vector3(0, 0.52, 0.86).normalize();   // ~31° above the desk, straight on
+const HOME = { pos: new THREE.Vector3(), target: HOME_TARGET.clone(), zoom: 1 };
+function fitCamera() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
+  const dist = Math.max(17 / Math.tan(v / 2), 12.5 / Math.tan(h / 2)) * 0.62; // fit wall art + desk; whole desk width on phones
+  HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
+}
+fitCamera();
+camera.position.copy(HOME.pos);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan = false;
+controls.minDistance = 14; controls.maxDistance = 90;
+controls.minPolarAngle = 0.55; controls.maxPolarAngle = 1.2;
+const homeAz = Math.atan2(HOME.pos.x - HOME.target.x, HOME.pos.z - HOME.target.z);
+controls.minAzimuthAngle = homeAz - 0.6; controls.maxAzimuthAngle = homeAz + 0.6;
+controls.update();
+
+// Lights
+scene.add(new THREE.HemisphereLight(0xffffff, 0x2a2a2e, 0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+sun.position.set(-7, 16, 9);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 70 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; sun.shadow.radius = 6;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xc8d4ff, 0.6);
+rim.position.set(10, 6, -8);
+scene.add(rim);
+
+/* ───────────────────────── Helpers ───────────────────────── */
+const mat = (color, o = {}) => new THREE.MeshPhysicalMaterial({ color, roughness: 0.55, metalness: 0, ...o });
+const PLASTIC = mat(0xfbfbfd, { roughness: 0.35, clearcoat: 0.4 });
+const DARK = mat(0x2a2a2c, { roughness: 0.5 });
+function rbox(w, h, d, r, material, segs = 4) {
+  const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, segs, r), material);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function mesh(geo, material) {
+  const m = new THREE.Mesh(geo, material);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function canvasTex(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  draw(g, w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return { tex: t, canvas: c, g };
+}
+// Flat text that lies on the floor
+function floorText(lines, { size = 120, font = UI, weight = 700, color = "#f5f5f7", width = 6, italic = false, gap = 1.15, align = "left" } = {}) {
+  const pad = 20;
+  const W = 2048;
+  const H = Math.ceil(lines.reduce((s, l) => s + (l.size || size) * gap, 0) + pad * 2);
+  const { tex } = canvasTex(W, H, (g) => {
+    let y = pad;
+    for (const l of lines) {
+      const sz = l.size || size;
+      g.font = `${italic ? "italic " : ""}${l.weight || weight} ${sz}px ${l.font || font}`;
+      g.fillStyle = l.color || color;
+      g.textBaseline = "top";
+      g.textAlign = align;
+      if ("letterSpacing" in g) g.letterSpacing = (l.spacing ?? -0.02) * sz + "px";
+      g.fillText(l.text, align === "left" ? pad : align === "center" ? W / 2 : W - pad, y);
+      y += sz * gap;
+    }
+  });
+  const h = (width * H) / W;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(width, h), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 1, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2;
+  m.receiveShadow = true;
+  return m;
+}
+
+const dummy = new THREE.Object3D();
+
+/* ───────────────────────── Interactivity registry ───────────────────────── */
+const hoverables = []; // { obj, label, onClick }
+function interactive(obj, label, onClick) {
+  obj.userData.hover = { label, onClick, base: obj.scale.clone(), lift: 0 };
+  hoverables.push(obj);
+  return obj;
+}
+
+/* ───────────────────────── Floor ───────────────────────── */
+// Cream-white marble tiles (2 × 2 units each; one texture = 2 × 2 tiles)
+const grid = canvasTex(1024, 1024, (g, w, h) => {
+  g.fillStyle = "#efe8dc"; g.fillRect(0, 0, w, h);
+  // soft clouding
+  for (let i = 0; i < 260; i++) {
+    const x = Math.random() * w, y = Math.random() * h, r = 30 + Math.random() * 120;
+    const rg = g.createRadialGradient(x, y, 0, x, y, r);
+    const c = Math.random() > 0.5 ? "255,252,246" : "214,202,184";
+    rg.addColorStop(0, `rgba(${c},0.18)`); rg.addColorStop(1, `rgba(${c},0)`);
+    g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // veins: wandering lines, a few strong, many faint
+  for (let v = 0; v < 22; v++) {
+    let x = Math.random() * w, y = Math.random() * h, a = Math.random() * Math.PI * 2;
+    const strong = v < 5;
+    g.strokeStyle = strong ? "rgba(150,132,108,0.38)" : "rgba(170,155,135,0.16)";
+    g.lineWidth = strong ? 1.6 + Math.random() * 1.6 : 0.8;
+    g.shadowColor = "rgba(150,132,108,0.35)"; g.shadowBlur = strong ? 6 : 2;
+    g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 120; k++) {
+      a += (Math.random() - 0.5) * 0.45;
+      x += Math.cos(a) * 9; y += Math.sin(a) * 9;
+      g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  g.shadowBlur = 0;
+  // grout lines between the four tiles
+  g.fillStyle = "rgba(170,158,140,0.75)";
+  g.fillRect(0, 0, w, 3); g.fillRect(0, h / 2 - 1.5, w, 3);
+  g.fillRect(0, 0, 3, h); g.fillRect(w / 2 - 1.5, 0, 3, h);
+});
+grid.tex.wrapS = grid.tex.wrapT = THREE.RepeatWrapping;
+grid.tex.repeat.set(240 / 4, 240 / 4);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.2 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+floor.position.y = -8.45;
+scene.add(floor);
+
+/* ───────────────────────── Wooden desk ───────────────────────── */
+const wood = canvasTex(2048, 512, (g, w, h) => {
+  g.fillStyle = "#5e3b20"; g.fillRect(0, 0, w, h);
+  // planks
+  for (let p = 0; p < 4; p++) {
+    const y0 = (p * h) / 4;
+    g.fillStyle = ["#5e3b20", "#56361c", "#654023", "#5a391e"][p];
+    g.fillRect(0, y0, w, h / 4);
+    // grain
+    for (let i = 0; i < 38; i++) {
+      const y = y0 + Math.random() * (h / 4);
+      g.strokeStyle = `rgba(${Math.random() > 0.5 ? "30,16,6" : "150,100,60"},${0.08 + Math.random() * 0.14})`;
+      g.lineWidth = 0.6 + Math.random() * 2.2;
+      g.beginPath();
+      const amp = 2 + Math.random() * 7, f = 0.002 + Math.random() * 0.006, ph = Math.random() * 10;
+      for (let x = 0; x <= w; x += 16) g.lineTo(x, y + Math.sin(x * f + ph) * amp + Math.sin(x * f * 3.1) * amp * 0.3);
+      g.stroke();
+    }
+    // a knot
+    const kx = Math.random() * w, ky = y0 + h / 8;
+    for (let r = 4; r < 26; r += 4) { g.strokeStyle = "rgba(70,40,18,.18)"; g.lineWidth = 1.5; g.beginPath(); g.ellipse(kx, ky, r * 2.4, r * 0.7, 0, 0, 7); g.stroke(); }
+    g.fillStyle = "rgba(40,22,10,.35)"; g.fillRect(0, y0, w, 2);
+  }
+});
+wood.tex.wrapS = wood.tex.wrapT = THREE.RepeatWrapping;
+const woodMat = new THREE.MeshPhysicalMaterial({ map: wood.tex, roughness: 0.55, clearcoat: 0.35, clearcoatRoughness: 0.5 });
+const TABLE = { x: 0.2, z: 1.6, w: 19, d: 10, t: 0.45 };
+const tableTop = rbox(TABLE.w, TABLE.t, TABLE.d, 0.12, woodMat, 3);
+tableTop.position.set(TABLE.x, -TABLE.t / 2, TABLE.z);
+scene.add(tableTop);
+const legMat = mat(0x2e1d10, { roughness: 0.6 });
+const tableLegs = [];
+for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+  const leg = rbox(0.55, 8, 0.55, 0.08, legMat, 2);
+  leg.position.set(TABLE.x + sx * (TABLE.w / 2 - 0.9), -TABLE.t - 4, TABLE.z + sz * (TABLE.d / 2 - 0.9));
+  scene.add(leg); tableLegs.push(leg);
+}
+const apron = rbox(TABLE.w - 1.4, 0.5, TABLE.d - 1.4, 0.05, legMat, 2);
+apron.position.set(TABLE.x, -TABLE.t - 0.25, TABLE.z);
+scene.add(apron);
+
+/* ───────────────────────── Wall + framed artwork ───────────────────────── */
+const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
+const wallTex = canvasTex(512, 512, (g, w, h) => {
+  g.fillStyle = "#2c2b2a"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},0.025)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+});
+wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
+wallTex.tex.repeat.set(11, 10);
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(80, 70), new THREE.MeshStandardMaterial({ map: wallTex.tex, roughness: 0.95 }));
+wall.position.set(TABLE.x, 2, WALL_Z);
+wall.receiveShadow = true;
+scene.add(wall);
+const skirting = rbox(80, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
+skirting.position.set(TABLE.x, -8.2, WALL_Z + 0.06);
+scene.add(skirting);
+
+// Original abstract artwork — warm paper, layered shapes, a single fine line
+const art = canvasTex(1200, 900, (g, w, h) => {
+  g.fillStyle = "#efe7da"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#e3d6c2"; g.fillRect(0, h * 0.62, w, h * 0.38);           // horizon band
+  g.fillStyle = "#e8642c"; g.beginPath(); g.arc(w * 0.66, h * 0.42, h * 0.24, 0, 7); g.fill();   // sun
+  g.fillStyle = "#1f3a5f"; g.beginPath(); g.moveTo(0, h); g.lineTo(0, h * 0.7); g.quadraticCurveTo(w * 0.28, h * 0.42, w * 0.55, h * 0.74); g.lineTo(w * 0.55, h); g.fill(); // hill
+  g.fillStyle = "#7e9a86"; g.beginPath(); g.moveTo(w * 0.35, h); g.quadraticCurveTo(w * 0.7, h * 0.55, w, h * 0.68); g.lineTo(w, h); g.fill();
+  g.fillStyle = "#f2c14e"; g.fillRect(w * 0.14, h * 0.18, w * 0.16, w * 0.16);  // square
+  g.strokeStyle = "#1d1d1f"; g.lineWidth = 5; g.beginPath(); g.moveTo(w * 0.08, h * 0.56); g.bezierCurveTo(w * 0.35, h * 0.3, w * 0.55, h * 0.95, w * 0.92, h * 0.22); g.stroke();
+  g.fillStyle = "#1d1d1f"; g.beginPath(); g.arc(w * 0.92, h * 0.22, 9, 0, 7); g.fill();
+  for (let i = 0; i < 14000; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * 0.04})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } // paper grain
+  g.fillStyle = "rgba(29,29,31,.55)"; g.font = `500 22px ${UI}`; g.textAlign = "right"; g.fillText("S.J. — Horizon, 2026", w - 36, h - 30);
+});
+const artwork = new THREE.Group();
+const frame = rbox(7.4, 5.6, 0.22, 0.04, mat(0x151515, { roughness: 0.4 }), 2);
+const matBoard = new THREE.Mesh(new THREE.PlaneGeometry(7.0, 5.2), new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: 0.9 }));
+matBoard.position.z = 0.115;
+const canvasArt = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 4.2), new THREE.MeshStandardMaterial({ map: art.tex, roughness: 0.85 }));
+canvasArt.position.z = 0.12;
+artwork.add(frame, matBoard, canvasArt);
+artwork.position.set(-4.2, 6.0, WALL_Z + 0.12);
+artwork.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+scene.add(artwork);
+interactive(artwork, "“Horizon” — an original piece", () => { Sound.click(); boot("about"); });
+// Picture light
+const picLight = new THREE.SpotLight(0xffe2b8, 40, 12, 0.6, 0.7, 1.5);
+picLight.position.set(-4.2, 9.8, WALL_Z + 1.8);
+picLight.target = artwork;
+scene.add(picLight);
+const lampBar = rbox(3.2, 0.14, 0.3, 0.06, mat(0x8a8d91, { metalness: 0.8, roughness: 0.3 }), 2);
+lampBar.position.set(-4.2, 9.15, WALL_Z + 0.55);
+const lampArm = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), mat(0x8a8d91, { metalness: 0.8, roughness: 0.3 }));
+lampArm.rotation.x = Math.PI / 2; lampArm.position.set(-4.2, 9.15, WALL_Z + 0.25);
+scene.add(lampBar, lampArm);
+
+/* ───────────────────────── The laptop (13" silver) ───────────────────────── */
+// Proportions follow a 13" ultrabook: ~30.4 × 21.5 cm, ~1.1 cm thick (1 unit ≈ 5 cm).
+const SILVER = mat(0xd6d8db, { metalness: 0.75, roughness: 0.32 });
+const SILVER_DARK = mat(0xbfc2c6, { metalness: 0.7, roughness: 0.38 });
+const KEY_BLACK = mat(0x161618, { roughness: 0.55 });
+const LAP_W = 6.0, LAP_D = 4.25, BASE_T = 0.2, LID_T = 0.11, LID_H = 4.15;
+
+const laptop = new THREE.Group();
+laptop.position.set(0, 0, 0.4);
+laptop.rotation.y = -0.08;
+scene.add(laptop);
+
+// Base (bottom case) + rubber feet
+const lapBase = rbox(LAP_W, BASE_T, LAP_D, 0.09, SILVER, 5);
+lapBase.position.y = BASE_T / 2 + 0.04;
+laptop.add(lapBase);
+[[-2.6, -1.8], [2.6, -1.8], [-2.6, 1.8], [2.6, 1.8]].forEach(([x, z]) => {
+  const f = mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 16), DARK);
+  f.position.set(x, 0.025, z);
+  laptop.add(f);
+});
+const TOP = BASE_T + 0.04; // top surface of the deck
+
+// Front thumb scoop
+const scoop = rbox(1.3, 0.04, 0.14, 0.02, SILVER_DARK);
+scoop.position.set(0, TOP - 0.03, LAP_D / 2 - 0.02);
+laptop.add(scoop);
+
+// Keyboard well
+const well = rbox(5.2, 0.02, 2.05, 0.06, mat(0x2a2b2e, { roughness: 0.7 }));
+well.position.set(0, TOP, -0.72);
+laptop.add(well);
+
+// Keys: function row (short) + 5 rows; touch-ID / power key at top-right
+const lapKeys = new THREE.Group();
+const fnKeyGeo = new RoundedBoxGeometry(0.34, 0.04, 0.18, 2, 0.015);
+const keyGeoL = new RoundedBoxGeometry(0.34, 0.04, 0.33, 2, 0.02);
+const fnKeys = new THREE.InstancedMesh(fnKeyGeo, KEY_BLACK, 13);
+for (let c = 0; c < 13; c++) { dummy.position.set(-2.4 + c * 0.384, TOP + 0.03, -1.6); dummy.updateMatrix(); fnKeys.setMatrixAt(c, dummy.matrix); }
+const mainSlots = [];
+for (let r = 0; r < 5; r++) for (let c = 0; c < 13; c++) {
+  if (r === 4 && c >= 4 && c <= 8) continue; // spacebar area
+  mainSlots.push([c, r]);
+}
+const mainKeys = new THREE.InstancedMesh(keyGeoL, KEY_BLACK, mainSlots.length);
+mainSlots.forEach(([c, r], i) => {
+  dummy.position.set(-2.4 + c * 0.384 + (r % 2) * 0.06, TOP + 0.03, -1.27 + r * 0.37);
+  dummy.updateMatrix(); mainKeys.setMatrixAt(i, dummy.matrix);
+});
+fnKeys.receiveShadow = mainKeys.receiveShadow = true;
+const spacebar = rbox(1.86, 0.04, 0.33, 0.02, KEY_BLACK, 2);
+spacebar.position.set(-2.4 + 6 * 0.384, TOP + 0.03, -1.27 + 4 * 0.37);
+lapKeys.add(fnKeys, mainKeys, spacebar);
+laptop.add(lapKeys);
+
+// Power key with a glowing accent ring (the main "boot" interaction)
+const powerKey = new THREE.Group();
+const pkCap = rbox(0.34, 0.05, 0.18, 0.015, KEY_BLACK, 2);
+const pkRing = mesh(new THREE.TorusGeometry(0.075, 0.016, 8, 24), mat(0xff6a2b, { emissive: 0xff4a10, emissiveIntensity: 0.6, roughness: 0.3 }));
+pkRing.rotation.x = Math.PI / 2; pkRing.position.y = 0.03;
+powerKey.add(pkCap, pkRing);
+powerKey.position.set(-2.4 + 13 * 0.384, TOP + 0.03, -1.6);
+laptop.add(powerKey);
+interactive(powerKey, "⏻ Power on", () => boot("about"));
+const btnCap = pkRing; // pulses in the render loop
+
+// Speaker grilles either side of the keyboard
+for (const side of [-1, 1]) {
+  const holes = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.018, 0.018, 0.01, 6), DARK, 60);
+  let n = 0;
+  for (let r = 0; r < 30; r++) for (let c = 0; c < 2; c++) {
+    dummy.position.set(side * (2.78 + c * 0.06), TOP + 0.002, -1.7 + r * 0.068);
+    dummy.updateMatrix(); holes.setMatrixAt(n++, dummy.matrix);
+  }
+  laptop.add(holes);
+}
+
+// Trackpad (types a hello on screen)
+const trackpad = rbox(2.9, 0.012, 1.75, 0.08, mat(0xc9ccd0, { metalness: 0.5, roughness: 0.25 }));
+trackpad.position.set(0, TOP + 0.002, 1.05);
+laptop.add(trackpad);
+interactive(trackpad, "Type hello", () => { Sound.click(); typeOnScreen(); });
+interactive(lapKeys, "Type hello", () => { Sound.click(); typeOnScreen(); });
+
+// Hinge
+const hinge = mesh(new THREE.CylinderGeometry(0.1, 0.1, LAP_W - 1.4, 20), mat(0x3a3b3e, { metalness: 0.6, roughness: 0.4 }));
+hinge.rotation.z = Math.PI / 2;
+hinge.position.set(0, TOP + 0.04, -LAP_D / 2 + 0.06);
+laptop.add(hinge);
+
+// Lid — pivots at the hinge, opened ~105°
+const lid = new THREE.Group();
+lid.position.set(0, TOP + 0.04, -LAP_D / 2 + 0.06);
+lid.rotation.x = -0.26;
+laptop.add(lid);
+const lidShell = rbox(LAP_W, LID_H, LID_T, 0.09, SILVER, 5);
+lidShell.position.set(0, LID_H / 2, 0);
+lid.add(lidShell);
+// Glass bezel + display
+const glassBezel = rbox(LAP_W - 0.1, LID_H - 0.1, 0.015, 0.07, mat(0x0b0b0c, { roughness: 0.15, metalness: 0.2 }), 2);
+glassBezel.position.set(0, LID_H / 2, LID_T / 2 + 0.002);
+lid.add(glassBezel);
+const SCREEN_W = 5.62, SCREEN_H = 3.6;
+const screenCanvas = canvasTex(800, 512, () => {});
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenCanvas.tex, toneMapped: false }));
+screen.position.set(0, LID_H / 2 - 0.08, LID_T / 2 + 0.012);
+lid.add(screen);
+interactive(screen, "Click to boot", () => boot("about"));
+// Camera notch
+const notch = rbox(0.62, 0.17, 0.01, 0.05, mat(0x0b0b0c), 2);
+notch.position.set(0, LID_H - 0.13, LID_T / 2 + 0.014);
+lid.add(notch);
+const camDot = mesh(new THREE.CircleGeometry(0.025, 12), mat(0x22324a, { roughness: 0.1 }));
+camDot.position.set(0, LID_H - 0.11, LID_T / 2 + 0.02);
+lid.add(camDot);
+
+// Screen glow onto the desk
+const glow = new THREE.PointLight(0xdcd6ff, 1.2, 6, 2);
+glow.position.set(0, 2.2, 1.8);
+scene.add(glow);
+
+// Back of the lid: SJ monogram + a few original stickers (visible when you orbit around)
+function lidSticker(draw, size, x, y, rotZ = 0, glossy = false) {
+  const { tex } = canvasTex(256, 256, draw);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: glossy ? 0.15 : 0.45, metalness: glossy ? 0.6 : 0, polygonOffset: true, polygonOffsetFactor: -2 }));
+  m.position.set(x, y, -LID_T / 2 - 0.003);
+  m.rotation.set(0, Math.PI, rotZ);
+  lid.add(m);
+}
+lidSticker((g) => {
+  g.strokeStyle = "#9da1a7"; g.lineWidth = 8; g.beginPath(); g.arc(128, 128, 96, 0, 7); g.stroke();
+  g.fillStyle = "#9da1a7"; g.font = `700 92px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("SJ", 128, 134);
+}, 1.0, 0, LID_H / 2, 0, true);
+lidSticker((g) => {
+  const px = ["01100110", "11111111", "11111111", "11111111", "01111110", "00111100", "00011000"];
+  g.fillStyle = "#fff"; g.fillRect(14, 30, 228, 196);
+  px.forEach((row, y) => [...row].forEach((c, x) => { if (c === "1") { g.fillStyle = "#ff4d6d"; g.fillRect(32 + x * 24, 46 + y * 24, 24, 24); } }));
+}, 0.7, -1.9, 3.0, 0.15);
+lidSticker((g) => {
+  g.translate(128, 128); g.fillStyle = "#5b7cfa"; g.beginPath();
+  for (let i = 0; i < 16; i++) { const r = i % 2 ? 60 : 118, a = (i / 16) * Math.PI * 2; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+  g.fill(); g.fillStyle = "#fff"; g.font = `800 48px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("3D", 0, 4);
+}, 0.75, 1.9, 1.1, 0.3);
+
+// Sticky note on the palm rest
+const note = canvasTex(256, 256, (g) => {
+  g.fillStyle = "#ffe066"; g.fillRect(10, 10, 236, 236);
+  g.fillStyle = "#00000014"; g.fillRect(10, 10, 236, 30);
+  g.fillStyle = "#3b3b3b"; g.font = '600 40px "Caveat"';
+  ["make it", "simple,", "then make", "it fun ✶"].forEach((t, i) => g.fillText(t, 26, 82 + i * 46));
+});
+const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.85), new THREE.MeshStandardMaterial({ map: note.tex, roughness: 0.8 }));
+noteMesh.rotation.set(-Math.PI / 2, 0, 0.12);
+noteMesh.position.set(2.15, TOP + 0.006, 1.25);
+noteMesh.receiveShadow = true;
+laptop.add(noteMesh);
+
+/* ───────────────────────── Desk objects (original set) ───────────────────────── */
+// 1. Ginger Persian cat (modelled on Sijo's cat) — right back, where the plant used to be
+const fur = (color) => new THREE.MeshPhysicalMaterial({ color, roughness: 1, sheen: 0.35, sheenRoughness: 0.7, sheenColor: new THREE.Color(0xffcf9e) });
+const FUR = fur(0xd4823f), FUR_LIGHT = fur(0xe39d5c), FUR_DEEP = fur(0xbd6e33), CREAM = fur(0xeec08e);
+const PINK = mat(0xe9a39a, { roughness: 0.6 });
+const blob = (r, m, x, y, z, sx = 1, sy = 1, sz = 1, segs = 28) => {
+  const b = mesh(new THREE.SphereGeometry(r, segs, Math.round(segs * 0.7)), m);
+  b.position.set(x, y, z); b.scale.set(sx, sy, sz);
+  return b;
+};
+let seed = 7;
+const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+let cat = new THREE.Group(); // replaced by the downloaded cat model once it loads
+const catBody = blob(0.8, FUR, 0, 1.08, 0, 1.0, 1.38, 0.92);
+cat.add(
+  catBody,
+  blob(0.9, FUR, 0, 0.6, 0.02, 1.08, 0.68, 1.0),
+  blob(0.6, FUR_LIGHT, 0, 1.55, 0.34, 1.12, 1.0, 0.66),   // chest mane
+  blob(0.56, FUR_LIGHT, 0, 0.98, 0.46, 1.0, 1.3, 0.6),    // belly fluff
+  blob(0.21, CREAM, -0.24, 0.1, 0.78, 1, 0.68, 1.25),     // front paws
+  blob(0.21, CREAM, 0.24, 0.1, 0.78, 1, 0.68, 1.25),
+  blob(0.22, FUR_LIGHT, -0.68, 0.1, 0.42, 1.1, 0.65, 1.2),
+  blob(0.22, FUR_LIGHT, 0.68, 0.1, 0.42, 1.1, 0.65, 1.2)
+);
+const furMats = [FUR, FUR, FUR_LIGHT, FUR_DEEP];
+for (let i = 0; i < 34; i++) {
+  const u = rand() * Math.PI * 2, v = 0.15 + rand() * 0.75;
+  const y = 0.3 + v * 1.6;
+  const rad = (y < 0.75 ? 0.86 : 0.76 - (y - 0.75) * 0.25) * (0.95 + rand() * 0.06);
+  const x = Math.cos(u) * rad, z = Math.sin(u) * rad * 0.95;
+  const front = z > 0.35 && Math.abs(x) < 0.5;
+  cat.add(blob(0.16 + rand() * 0.07, front ? FUR_LIGHT : furMats[Math.floor(rand() * 4)], x * 0.97, y, z * 0.97, 1, 1.4, 0.8, 14));
+}
+const head = new THREE.Group();
+head.position.set(0, 2.3, 0.2);
+cat.add(head);
+head.add(
+  blob(0.47, FUR, 0, 0, 0, 1.12, 0.98, 0.95),
+  blob(0.15, FUR_DEEP, 0, 0.3, 0.3, 1.8, 0.55, 0.6),
+  blob(0.21, CREAM, 0, -0.15, 0.36, 1.35, 0.82, 0.7)
+);
+for (let i = 0; i < 11; i++) {
+  const a = Math.PI * (0.05 + (i / 10) * 0.9) + Math.PI;
+  head.add(blob(0.17 + rand() * 0.05, i % 3 ? FUR : FUR_LIGHT, Math.cos(a) * 0.5, Math.sin(a) * 0.32 - 0.12, 0.12, 1, 1.1, 0.9, 14));
+}
+for (const sx of [-1, 1]) head.add(blob(0.24, FUR_LIGHT, sx * 0.44, -0.08, 0.06, 1, 0.95, 0.9));
+head.add(blob(0.045, PINK, 0, -0.06, 0.47, 1.3, 0.8, 0.6));
+const eyesOpen = new THREE.Group(), eyesHappy = new THREE.Group();
+for (const sx of [-1, 1]) {
+  const ex = sx * 0.19;
+  eyesOpen.add(
+    blob(0.09, mat(0xc9781e, { roughness: 0.12 }), ex, 0.05, 0.39, 1.1, 0.9, 0.5),
+    blob(0.055, mat(0x140d08, { roughness: 0.1 }), ex + 0.035, 0.04, 0.43, 0.8, 1, 0.3),
+    blob(0.018, mat(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.6 }), ex + 0.05, 0.075, 0.45)
+  );
+  const lid = mesh(new THREE.SphereGeometry(0.105, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), FUR);
+  lid.position.set(ex, 0.045, 0.385); lid.scale.set(1.12, 0.95, 0.62); lid.rotation.x = 0.5;
+  eyesOpen.add(lid);
+  const arc = mesh(new THREE.TorusGeometry(0.075, 0.014, 8, 16, Math.PI), mat(0x3a2414));
+  arc.position.set(ex, 0.03, 0.44);
+  eyesHappy.add(arc);
+}
+eyesHappy.visible = false;
+head.add(eyesOpen, eyesHappy);
+const ears = [];
+for (const sx of [-1, 1]) {
+  const ear = new THREE.Group();
+  const outer = mesh(new THREE.ConeGeometry(0.15, 0.22, 18), FUR);
+  const inner = mesh(new THREE.ConeGeometry(0.09, 0.15, 12), PINK);
+  inner.position.set(0, -0.02, 0.05);
+  ear.add(outer, inner, blob(0.06, CREAM, 0, -0.06, 0.08, 1, 1.4, 0.8, 10));
+  ear.position.set(sx * 0.36, 0.36, -0.02);
+  ear.rotation.z = -sx * 0.75;
+  head.add(ear); ears.push(ear);
+}
+const whiskerMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+for (const sx of [-1, 1]) for (let k = 0; k < 4; k++) {
+  head.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(sx * 0.16, -0.13, 0.46), new THREE.Vector3(sx * 0.6, -0.1 - k * 0.06, 0.5), new THREE.Vector3(sx * 0.92, -0.2 - k * 0.1, 0.36)]), whiskerMat));
+}
+const tailRoot = new THREE.Group();
+tailRoot.position.set(0.45, 0.22, -0.6);
+tailRoot.rotation.y = -1.3;
+cat.add(tailRoot);
+const tailSegs = [];
+let tailParent = tailRoot;
+for (let i = 0; i < 9; i++) {
+  const seg = new THREE.Group();
+  seg.position.set(0, 0, i === 0 ? 0 : -0.21);
+  seg.add(blob(0.25 - i * 0.008, i % 2 ? FUR : FUR_LIGHT, 0, 0, -0.1, 1.05, 1, 1.3, 16));
+  tailParent.add(seg); tailSegs.push(seg); tailParent = seg;
+}
+cat.position.set(5.4, 0, -1.6);
+cat.rotation.y = -0.35;
+cat.scale.setScalar(0.92);
+scene.add(cat);
+// Petting: happy eyes, purr, floating hearts
+const heartTex = canvasTex(128, 128, (g) => { g.fillStyle = "#ff5c8a"; g.font = "100px serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("♥", 64, 70); }).tex;
+const hearts = [];
+let catPetUntil = 0, catMood = 0;
+interactive(cat, "pet me? 🥺", () => {
+  catPetUntil = performance.now() + 2600;
+  Sound.purr();
+  for (let i = 0; i < 5; i++) {
+    const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthWrite: false }));
+    h.scale.setScalar(0.45);
+    h.position.copy(cat.position).add(new THREE.Vector3((Math.random() - 0.5) * 1.6, CAT_HEIGHT + 0.4, (Math.random() - 0.5) * 0.6));
+    h.userData = { life: 0, delay: i * 0.12, vx: (Math.random() - 0.5) * 0.01 };
+    scene.add(h); hearts.push(h);
+  }
+});
+
+// 2b. Project files — a fanned stack of folders on the desk; each opens the Work window
+const folderColors = [0xd2d2d7, 0xffffff, 0xbcd6f7, 0xe8e8ed, 0x8e8e93, 0xd6e6fb];
+const projectFiles = new THREE.Group();
+S.projects.forEach((p, i) => {
+  const f = new THREE.Group();
+  const c = folderColors[i % folderColors.length];
+  const back = rbox(2.0, 0.035, 1.42, 0.03, mat(c, { roughness: 0.85 }), 2);
+  const tab = rbox(0.7, 0.035, 0.24, 0.03, mat(c, { roughness: 0.85 }), 2);
+  tab.position.set(-0.55, 0, -0.78);
+  const paper = rbox(1.8, 0.02, 1.3, 0.01, mat(0xfbf8f2, { roughness: 0.95 }), 1);
+  paper.position.set(0.1, 0.025, -0.12); paper.rotation.y = 0.05;
+  const front = rbox(2.0, 0.035, 1.3, 0.03, mat(c, { roughness: 0.8 }), 2);
+  front.position.set(0, 0.05, 0.06);
+  const label = canvasTex(512, 256, (g, w, h) => {
+    g.fillStyle = "#fbf8f2"; g.fillRect(20, 40, 340, 120);
+    g.strokeStyle = "#1b1a17"; g.lineWidth = 4; g.strokeRect(20, 40, 340, 120);
+    g.fillStyle = "#1b1a17"; g.font = `600 34px ${UI}`; g.textBaseline = "top";
+    g.fillText(p.title.length > 18 ? p.title.slice(0, 17) + "…" : p.title, 36, 56);
+    g.font = `500 24px ${UI}`; g.fillStyle = "#6b665d";
+    g.fillText(p.tag.toUpperCase(), 36, 106);
+    g.font = `700 40px ${UI}`; g.fillStyle = "#1b1a1766"; g.fillText(String(i + 1).padStart(2, "0"), 400, 180);
+  });
+  const lab = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), new THREE.MeshStandardMaterial({ map: label.tex, transparent: true, roughness: 0.9 }));
+  lab.rotation.x = -Math.PI / 2; lab.position.set(0, 0.07, 0.15);
+  f.add(back, tab, paper, front, lab);
+  const spots = [[-2.4, 4.8, 0.3], [0.9, 5.5, -0.18], [5.4, 5.7, 0.15], [-6.6, 0.6, -0.3], [-0.6, -2.9, 0.1], [-6.4, 0.6, -0.2]];
+  const [fx, fz, fr] = spots[i % spots.length];
+  f.position.set(fx, 0, fz);
+  f.rotation.y = fr;
+  projectFiles.add(f);
+  interactive(f, `📁 ${p.title}`, () => { Sound.click(); boot("work"); });
+});
+projectFiles.position.set(0, 0.02, 0);
+
+scene.add(projectFiles);
+
+// 2c. Smartphone face-up on the desk
+const phone = new THREE.Group();
+const phoneBody = rbox(1.05, 0.1, 2.15, 0.16, SILVER, 6);
+phoneBody.position.y = 0.05;
+const phoneGlass = rbox(1.0, 0.012, 2.1, 0.15, mat(0x0b0b0c, { roughness: 0.08, clearcoat: 1 }), 4);
+phoneGlass.position.y = 0.105;
+const phoneScreenTex = canvasTex(256, 540, (g, w, h) => {
+  const lg = g.createLinearGradient(0, 0, w, h);
+  lg.addColorStop(0, "#5e5ce6"); lg.addColorStop(0.55, "#bf5af2"); lg.addColorStop(1, "#ff9f0a");
+  g.fillStyle = lg; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#fff"; g.textAlign = "center";
+  g.font = `600 22px ${UI}`; g.fillText(new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" }), w / 2, 92);
+  g.font = `700 92px ${UI}`; g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M/i, ""), w / 2, 190);
+  g.fillStyle = "rgba(255,255,255,.28)"; g.beginPath(); g.roundRect(22, 380, w - 44, 70, 18); g.fill();
+  g.fillStyle = "#fff"; g.textAlign = "left"; g.font = `600 20px ${UI}`; g.fillText("New message", 40, 410);
+  g.font = `400 18px ${UI}`; g.fillText("Let's work together →", 40, 436);
+  g.fillStyle = "#000"; g.beginPath(); g.roundRect(w / 2 - 42, 14, 84, 24, 12); g.fill();
+});
+const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 2.02), new THREE.MeshBasicMaterial({ map: phoneScreenTex.tex, toneMapped: false }));
+phoneScreen.rotation.x = -Math.PI / 2; phoneScreen.position.y = 0.113;
+phone.add(phoneBody, phoneGlass, phoneScreen);
+phone.position.set(3.4, 0, 4.4);
+phone.rotation.y = 0.5;
+scene.add(phone);
+interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); });
+
+// 3. Headphones — left back (sound toggle)
+const phones = new THREE.Group();
+// Lying flat: the headband rests on the desk and the ear cups sit face-down on their cushions
+const band = mesh(new THREE.TorusGeometry(0.78, 0.08, 12, 40, Math.PI), SILVER);
+band.rotation.x = -Math.PI / 2; band.position.y = 0.2;
+const bandPad = mesh(new THREE.TorusGeometry(0.78, 0.065, 10, 30, Math.PI * 0.5), mat(0xf2f2f2, { roughness: 0.95 }));
+bandPad.rotation.set(-Math.PI / 2, 0, Math.PI * 0.25); bandPad.position.y = 0.2;
+const padMat = mat(0xf2f2f2, { roughness: 0.95 });
+const cupMat = SILVER;
+const cups = [-1, 1].map((sx) => {
+  const g = new THREE.Group();
+  const pad = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.12, 28), padMat);
+  pad.position.y = 0.06;
+  const cup = rbox(0.62, 0.22, 0.78, 0.2, cupMat, 5);
+  cup.position.y = 0.23;
+  g.add(pad, cup);
+  g.position.set(sx * 0.82, 0, 0.12);
+  g.rotation.y = sx * 0.15;
+  return g;
+});
+phones.add(band, bandPad, ...cups);
+phones.position.set(-3.9, 0, -2.4);
+phones.rotation.y = 0.35;
+scene.add(phones);
+interactive(phones, "Sound on / off", () => $("#soundBtn").click());
+
+// 4. Hobby book — a sketchbook with an elastic band, a pencil, and a book underneath
+const books = new THREE.Group();
+const under = rbox(1.9, 0.3, 1.4, 0.04, mat(0x3a3a3c, { roughness: 0.7 }));
+under.position.y = 0.15; under.rotation.y = 0.06;
+const underPages = rbox(1.82, 0.24, 1.3, 0.02, mat(0xfaf7f0, { roughness: 0.9 }));
+underPages.position.set(0.05, 0.15, 0); underPages.rotation.y = 0.06;
+const hobbyCover = canvasTex(512, 384, (g, w, h) => {
+  g.fillStyle = "#e9e2d2"; g.fillRect(0, 0, w, h);
+  // little illustrated scene: mountains, sun, a winding path
+  g.fillStyle = "#f2b45a"; g.beginPath(); g.arc(w * 0.72, h * 0.34, 34, 0, 7); g.fill();
+  g.fillStyle = "#6f8f7a"; g.beginPath(); g.moveTo(40, h * 0.7); g.lineTo(170, h * 0.3); g.lineTo(300, h * 0.7); g.fill();
+  g.fillStyle = "#3f5f7a"; g.beginPath(); g.moveTo(190, h * 0.7); g.lineTo(320, h * 0.38); g.lineTo(470, h * 0.7); g.fill();
+  g.strokeStyle = "#1d1d1f"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(80, h * 0.72); g.bezierCurveTo(200, h * 0.78, 260, h * 0.64, 430, h * 0.74); g.stroke();
+  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.fillText("Weekend", 40, h * 0.86); g.font = `400 26px ${UI}`; g.fillText("sketches · hobbies · notes", 40, h * 0.95);
+});
+const hobby = new THREE.Group();
+const hobbyBoard = rbox(1.75, 0.08, 1.3, 0.03, new THREE.MeshStandardMaterial({ color: 0xe9e2d2, roughness: 0.85 }));
+const hobbyPages = rbox(1.68, 0.14, 1.24, 0.02, mat(0xfbf8f2, { roughness: 0.95 }));
+hobbyPages.position.y = -0.1;
+const hobbyFace = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.25), new THREE.MeshStandardMaterial({ map: hobbyCover.tex, roughness: 0.85 }));
+hobbyFace.rotation.x = -Math.PI / 2; hobbyFace.position.y = 0.045;
+const elastic = rbox(0.06, 0.26, 1.34, 0.02, mat(0x1d1d1f, { roughness: 0.6 }));
+elastic.position.set(0.68, -0.06, 0);
+const sketchPencil = new THREE.Group();
+const sp1 = mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), mat(0xffd60a));
+const sp2 = mesh(new THREE.ConeGeometry(0.04, 0.13, 6), mat(0xf1d3a8));
+sp2.position.y = 0.66;
+sketchPencil.add(sp1, sp2);
+sketchPencil.rotation.set(0, 0, Math.PI / 2); sketchPencil.rotation.y = 0.5;
+sketchPencil.position.set(-0.2, 0.1, 0.25);
+hobby.add(hobbyBoard, hobbyPages, hobbyFace, elastic, sketchPencil);
+hobby.position.y = 0.48; hobby.rotation.y = -0.12;
+books.add(under, underPages, hobby);
+books.position.set(-4.6, 0, 2.0);
+books.rotation.y = 0.35;
+scene.add(books);
+interactive(books, "My weekend sketchbook", () => { Sound.click(); boot("about"); });
+
+// 5. Pencil cup — behind the computer, left
+const cup = new THREE.Group();
+const cupBody = mesh(new THREE.CylinderGeometry(0.36, 0.32, 0.85, 28, 1, true), mat(0x161618, { roughness: 0.35, clearcoat: 0.6, side: THREE.DoubleSide }));
+cupBody.position.y = 0.425;
+const cupBottom = mesh(new THREE.CircleGeometry(0.32, 24), mat(0x161618, { roughness: 0.4 }));
+cupBottom.rotation.x = -Math.PI / 2; cupBottom.position.y = 0.02;
+cup.add(cupBody, cupBottom);
+[[0xfbfbfd, 0.1, -0.09, 0.07, 0.06], [0xd6d8db, -0.11, 0.08, -0.05, -0.07], [0x0a84ff, 0.02, 0.0, 0.0, -0.02]].forEach(([c, tilt, px, pz, lean], i) => {
+  const p = new THREE.Group();
+  const stick = mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.3, 6), mat(c));
+  stick.position.y = 0.65;
+  const tip = mesh(new THREE.ConeGeometry(0.05, 0.16, 6), mat(0xf1d3a8));
+  tip.position.y = 1.38;
+  p.add(stick, tip);
+  p.position.set(px, 0.06, pz);          // bases stay well inside the cup
+  p.rotation.z = tilt; p.rotation.x = lean;
+  cup.add(p);
+});
+cup.position.set(3.6, 0, -2.6);
+scene.add(cup);
+
+
+
+/* ───────────────────────── Floor typography ───────────────────────── */
+// Name block — right
+const nameBlock = floorText([
+  { text: S.name + ".", size: 190, weight: 700, spacing: -0.035 },
+  { text: S.title, size: 78, weight: 500, color: "#a1a1a6", spacing: -0.01 },
+], { width: 5.0 });
+nameBlock.position.set(6.4, 8.2, WALL_Z + 0.03);
+nameBlock.rotation.x = 0; // hung on the wall like studio lettering
+nameBlock.rotation.z = 0;
+scene.add(nameBlock);
+interactive(nameBlock, "About me", () => boot("about"));
+
+// Roles strip — under the name
+const half = Math.ceil(S.roles.length / 2);
+const rolesBlock = floorText([
+  { text: S.roles.slice(0, half).join("  ·  "), size: 58, weight: 500, color: "#8e8e93", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 58, weight: 500, color: "#8e8e93", spacing: 0 }
+], { width: 5.0, gap: 1.5 });
+rolesBlock.position.set(6.4, 6.9, WALL_Z + 0.03);
+rolesBlock.rotation.x = 0;
+scene.add(rolesBlock);
+
+// Menu — left front (each word is its own clickable label)
+const menu = [["Work", "work"], ["Skills", "skills"], ["Resume", "resume"], ["Contact", "contact"]];
+menu.forEach(([label, key], i) => {
+  const m = floorText([{ text: label + " ›", size: 160, weight: 600, spacing: -0.02 }], { width: 2.6 });
+  m.position.set(-7.2 + i * 0.25, 0.01, 3.4 + i * 0.8);
+  scene.add(m);
+  interactive(m, `Open ${label.toLowerCase()}`, () => boot(key));
+});
+
+// "Let's connect" — left back, with three tiles
+const connect = floorText([{ text: "Let's connect.", size: 130, weight: 600, spacing: -0.02, color: "#d1d1d6" }], { width: 4.4 });
+connect.position.set(-6.9, 0.01, -2.0);
+scene.add(connect);
+const tileDefs = [["@", "Email", S.links.mail], ["in", "LinkedIn", S.links.linkedin], ["Bē", "Behance", S.links.behance]];
+tileDefs.forEach(([glyph, label, url], i) => {
+  const { tex } = canvasTex(256, 256, (g) => {
+    g.fillStyle = "#1d1d1f"; g.font = `700 112px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(glyph, 128, 136);
+  });
+  const tile = new THREE.Group();
+  const block = rbox(0.9, 0.18, 0.9, 0.08, PLASTIC);
+  block.position.y = 0.09;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), new THREE.MeshStandardMaterial({ map: tex, transparent: true }));
+  face.rotation.x = -Math.PI / 2; face.position.y = 0.185;
+  tile.add(block, face);
+  tile.position.set(-8.0 + i * 1.15, 0, -1.0);
+  scene.add(tile);
+  interactive(tile, label, () => { Sound.click(); window.open(url, url.startsWith("mailto:") ? "_self" : "_blank", "noopener"); });
+});
+
+/* ───────────────────────── Live screen (macOS-style desktop) ───────────────────────── */
+let screenMode = "idle", typed = "", typeTimer = 0;
+const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
+function drawScreen(t) {
+  const g = screenCanvas.g, W = screenCanvas.canvas.width, H = screenCanvas.canvas.height;
+  // Wallpaper: soft, slowly drifting colour blobs (original)
+  g.fillStyle = "#4b3fd1"; g.fillRect(0, 0, W, H);
+  const blobs = [[0.15, 0.25, "#7d6cff"], [0.85, 0.15, "#ff8fb1"], [0.8, 0.9, "#ffb36b"], [0.2, 0.95, "#3fc6ff"], [0.5, 0.5, "#e46aa0"]];
+  blobs.forEach(([bx, by, c], i) => {
+    const x = (bx + Math.sin(t * 0.25 + i) * 0.04) * W, y = (by + Math.cos(t * 0.2 + i * 2) * 0.04) * H;
+    const rg = g.createRadialGradient(x, y, 0, x, y, W * 0.55);
+    rg.addColorStop(0, c); rg.addColorStop(1, c + "00");
+    g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  });
+  // Menu bar
+  g.fillStyle = "rgba(255,255,255,0.5)"; g.fillRect(0, 0, W, 24);
+  g.fillStyle = "#1d1d1f"; g.textBaseline = "middle"; g.textAlign = "left";
+  g.font = `800 13px ${UI}`; g.fillText("SJ", 12, 12);
+  g.font = `700 13px ${UI}`; g.fillText("Portfolio", 40, 12);
+  g.font = `400 13px ${UI}`;
+  ["About", "Work", "Skills", "Contact"].forEach((m, i) => g.fillText(m, 112 + i * 60, 12));
+  g.textAlign = "right";
+  g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 12, 12);
+  // Dock
+  const n = DOCK_COLORS.length, ds = 38, dg = 8, dw = n * ds + (n - 1) * dg + 20, dx = (W - dw) / 2, dy = H - 56;
+  g.fillStyle = "rgba(255,255,255,0.3)"; rr(g, dx, dy, dw, 50, 14); g.fill();
+  DOCK_COLORS.forEach(([a, b], i) => {
+    const x = dx + 10 + i * (ds + dg), y = dy + 6;
+    const lg = g.createLinearGradient(x, y, x, y + ds); lg.addColorStop(0, a); lg.addColorStop(1, b);
+    g.fillStyle = lg; rr(g, x, y, ds, ds, 9); g.fill();
+  });
+  // Centre window
+  if (screenMode === "idle") {
+    const bw = 380, bh = 190, bx = (W - bw) / 2, by = 120;
+    g.save(); g.shadowColor = "rgba(0,0,0,0.3)"; g.shadowBlur = 30; g.shadowOffsetY = 10;
+    g.fillStyle = "rgba(255,255,255,0.95)"; rr(g, bx, by, bw, bh, 12); g.fill(); g.restore();
+    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 18 + i * 18, by + 18, 6, 0, 7); g.fill(); });
+    g.textAlign = "center"; g.fillStyle = "#1d1d1f";
+    g.font = `600 12px ${UI}`; g.fillText("Welcome", W / 2, by + 18);
+    g.font = `700 34px ${UI}`; g.fillText(`Hi, I'm ${S.name.split(" ")[0]}.`, W / 2, by + 78);
+    g.font = `400 15px ${UI}`; g.fillStyle = "#6e6e73"; g.fillText(S.title, W / 2, by + 110);
+    const pulse = 0.85 + Math.sin(t * 3) * 0.15;
+    g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, W / 2 - 70, by + 134, 140, 34, 17); g.fill(); g.globalAlpha = 1;
+    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText("Click to open", W / 2, by + 151);
+  } else if (screenMode === "typing") {
+    const bw = 460, bh = 170, bx = (W - bw) / 2, by = 130;
+    g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 30; g.shadowOffsetY = 10;
+    g.fillStyle = "rgba(30,30,32,0.94)"; rr(g, bx, by, bw, bh, 12); g.fill(); g.restore();
+    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 18 + i * 18, by + 18, 6, 0, 7); g.fill(); });
+    g.fillStyle = "#a1a1a6"; g.textAlign = "center"; g.font = `600 12px ${UI}`; g.fillText("Terminal", W / 2, by + 18);
+    g.fillStyle = "#f5f5f7"; g.textAlign = "left"; g.font = `500 20px "SF Mono", Menlo, monospace`;
+    g.fillText("sijo@desk ~ % " + typed + (Math.floor(t * 3) % 2 ? "▍" : ""), bx + 22, by + 70);
+  }
+  screenCanvas.tex.needsUpdate = true;
+}
+function typeOnScreen() {
+  const msg = "hello, world! I'm " + S.name.split(" ")[0] + " :)";
+  screenMode = "typing"; typed = "";
+  clearInterval(typeTimer);
+  typeTimer = setInterval(() => {
+    typed = msg.slice(0, typed.length + 1);
+    if (typed.length % 2) Sound.hover();
+    if (typed === msg) { clearInterval(typeTimer); setTimeout(() => (screenMode = "idle"), 1800); }
+  }, 70);
+}
+
+/* ───────────────────────── Camera moves ───────────────────────── */
+let tween = null;
+function moveCamera(toPos, toTarget, toZoom, dur = 1100, done) {
+  const from = { pos: camera.position.clone(), target: controls.target.clone(), zoom: camera.zoom };
+  const start = performance.now();
+  controls.enabled = false;
+  tween = (now) => {
+    let k = Math.min(1, (now - start) / (reduced ? 1 : dur));
+    const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    camera.position.lerpVectors(from.pos, toPos, e);
+    controls.target.lerpVectors(from.target, toTarget, e);
+    camera.zoom = THREE.MathUtils.lerp(from.zoom, toZoom, e);
+    camera.updateProjectionMatrix();
+    if (k === 1) { tween = null; controls.enabled = true; done && done(); }
+  };
+}
+let booting = false;
+function boot(app) {
+  if (booting) return;
+  booting = true;
+  Sound.boot();
+  hideTooltip();
+  $("#hint").style.opacity = 0;
+  const screenWorld = new THREE.Vector3();
+  screen.getWorldPosition(screenWorld);
+  const v = THREE.MathUtils.degToRad(FOV), hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
+  const d = Math.max((SCREEN_H * 1.15) / 2 / Math.tan(v / 2), (SCREEN_W * 1.15) / 2 / Math.tan(hf / 2));
+  const normal = new THREE.Vector3();
+  screen.getWorldDirection(normal);
+  moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1200, () => {
+    window.OS.open(app, () => {
+      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1100, () => { booting = false; });
+    });
+  });
+}
+
+/* ───────────────────────── Hover + click ───────────────────────── */
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let hovered = null, downAt = null;
+const tip = $("#tooltip");
+function hideTooltip() { tip.classList.remove("show"); $("#stage").classList.remove("pointer"); }
+function pick(e) {
+  ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects(hoverables, true);
+  for (const h of hits) {
+    let o = h.object;
+    while (o && !o.userData.hover) o = o.parent;
+    if (o) return o;
+  }
+  return null;
+}
+renderer.domElement.addEventListener("pointermove", (e) => {
+  if (booting || tween) return;
+  const o = pick(e);
+  if (o !== hovered) {
+    hovered = o;
+    if (o) Sound.hover();
+  }
+  if (o) {
+    tip.textContent = o.userData.hover.label;
+    tip.style.left = e.clientX + "px"; tip.style.top = e.clientY + "px";
+    tip.classList.add("show");
+    $("#stage").classList.add("pointer");
+  } else hideTooltip();
+});
+renderer.domElement.addEventListener("pointerdown", (e) => (downAt = [e.clientX, e.clientY]));
+renderer.domElement.addEventListener("pointerup", (e) => {
+  if (!downAt || booting) return;
+  const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
+  downAt = null;
+  if (moved > 6) return; // that was a drag, not a click
+  const o = pick(e);
+  if (o) o.userData.hover.onClick();
+});
+renderer.domElement.addEventListener("pointerleave", () => { hovered = null; hideTooltip(); });
+
+// Zoom button
+let zoomedIn = false;
+$("#zoomBtn").addEventListener("click", () => {
+  zoomedIn = !zoomedIn;
+  Sound.click();
+  moveCamera(camera.position.clone(), controls.target.clone(), zoomedIn ? 1.7 : 1, 600);
+  $("#zoomIcon").setAttribute("d", zoomedIn ? "M20 20l-3.5-3.5M8 11h6" : "M20 20l-3.5-3.5M8 11h6M11 8v6");
+  $("#zoomBtn").setAttribute("aria-label", zoomedIn ? "Zoom out" : "Zoom in");
+});
+
+let wiggleT = -1, wiggleObj = null;
+function wiggle(o) { wiggleObj = o; wiggleT = 0; }
+
+/* ───────────────────────── Loop ───────────────────────── */
+const clock = new THREE.Clock();
+let lastScreen = 0;
+function loop(now) {
+  const t = clock.getElapsedTime();
+  if (tween) tween(now);
+  controls.update();
+
+  // hover lift / scale
+  for (const o of hoverables) {
+    const h = o.userData.hover;
+    const target = o === hovered && !booting ? 1 : 0;
+    h.lift += (target - h.lift) * 0.18;
+    const s = 1 + h.lift * 0.05;
+    o.scale.set(h.base.x * s, h.base.y * s, h.base.z * s);
+  }
+  btnCap.material.emissiveIntensity = 0.25 + (Math.sin(t * 3) * 0.5 + 0.5) * 0.6;
+
+  if (!reduced) {
+    // cat: tail sways; on hover it swishes faster, head tilts, ears flick; petting = happy eyes
+    const catHover = hovered === cat && !booting, petting = now < catPetUntil;
+    catMood += ((catHover ? 1 : 0) - catMood) * 0.08;
+    const tSpeed = 1.6 + catMood * 5.5, tAmp = 0.1 + catMood * 0.22;
+    tailSegs.forEach((seg, i) => {
+      seg.rotation.y = -0.3 + Math.sin(t * tSpeed - i * 0.55) * tAmp;
+      seg.rotation.x = i > 5 ? -0.12 - Math.max(0, Math.sin(t * tSpeed - i * 0.5)) * tAmp * 0.8 : 0;
+    });
+    head.rotation.z = Math.sin(t * 1.2) * 0.04 + catMood * 0.18;
+    head.rotation.x = petting ? 0.18 : -catMood * 0.08;
+    ears.forEach((ear, i) => { ear.rotation.x = Math.max(0, Math.sin(t * 7 + i * 2)) * 0.25 * catMood; });
+    eyesOpen.visible = !petting; eyesHappy.visible = petting;
+    catBody.scale.y = 1.38 * (1 + Math.sin(t * (petting ? 6 : 2)) * 0.015);
+    // swatch fan
+  }
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    const h = hearts[i], d = h.userData;
+    if ((d.delay -= 1 / 60) > 0) { h.material.opacity = 0; continue; }
+    d.life += 1 / 60;
+    h.position.y += 0.025; h.position.x += d.vx + Math.sin(d.life * 6) * 0.006;
+    h.material.opacity = Math.max(0, 1 - d.life / 1.4);
+    if (d.life > 1.4) { scene.remove(h); h.material.dispose(); hearts.splice(i, 1); }
+  }
+  if (ball && Math.abs(ballVX) > 0.001) {
+    ball.position.x += ballVX;
+    ball.children[0].rotation.z -= ballVX / BALL_R;
+    ballVX *= 0.985;
+    if ((ball.position.x < -6.6 && ballVX < 0) || (ball.position.x > 6.8 && ballVX > 0)) ballVX *= -0.8; // bounce off the legs
+  }
+  if (wiggleT >= 0) {
+    wiggleT += 0.06;
+    wiggleObj.rotation.z = Math.sin(wiggleT * 9) * 0.08 * Math.max(0, 1 - wiggleT);
+    if (wiggleT > 1) { wiggleObj.rotation.z = 0; wiggleT = -1; }
+  }
+  if (now - lastScreen > 33) { drawScreen(t); lastScreen = now; }
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+addEventListener("resize", () => {
+  renderer.setSize(innerWidth, innerHeight);
+  fitCamera();
+  if (!booting && !tween) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); }
+});
+
+/* ───────────────────────── Downloaded models (table, cat, ball) ───────────────────────── */
+const manager = new THREE.LoadingManager();
+manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) * 45, "loading models…");
+const shadowsOn = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } });
+
+// Table: scaled to the desk footprint, top surface at y = 0; floor + skirting follow its legs
+const DESK_HEIGHT = 14.8;
+async function loadTable() {
+  const dae = await new ColladaLoader(manager).loadAsync("models/table/table_dae/table.dae");
+  const holder = new THREE.Group();
+  holder.add(dae.scene);
+  shadowsOn(holder);
+  let box = new THREE.Box3().setFromObject(holder);
+  let size = box.getSize(new THREE.Vector3());
+  if (size.z > size.x) { holder.rotation.y = Math.PI / 2; box.setFromObject(holder); size = box.getSize(new THREE.Vector3()); }
+  const sx = TABLE.w / size.x;
+  holder.scale.set(sx, DESK_HEIGHT / size.y, TABLE.d / size.z);   // 95 × 50 cm top, 74 cm tall
+  box.setFromObject(holder);
+  const c = box.getCenter(new THREE.Vector3());
+  holder.position.set(TABLE.x - c.x, -box.max.y, TABLE.z - c.z);
+  // black-stained wood: keep the grain from the model's texture, remap it to near-black
+  const woodTex = await new THREE.TextureLoader(manager).loadAsync("models/table/table_dae/table_final_map.jpg");
+  const black = new THREE.MeshPhysicalMaterial({ map: recolor(woodTex.image, [12, 12, 13], [34, 33, 32], [70, 66, 62]), roughness: 0.5, clearcoat: 0.45, clearcoatRoughness: 0.35 });
+  holder.traverse((m) => { if (m.isMesh) m.material = black; });
+  scene.add(holder);
+  [tableTop, apron, ...tableLegs].forEach((o) => scene.remove(o));
+  box.setFromObject(holder);
+  floor.position.y = box.min.y;
+  skirting.position.y = box.min.y + 0.25;
+}
+
+// Fur texture recoloured to ginger: keep the light/dark detail, remap it onto a ginger ramp
+function gingerize(img) { return recolor(img, [96, 44, 14], [210, 122, 56], [250, 222, 184]); }
+function recolor(img, dark, mid, light) {
+  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+  const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height), px = d.data;
+  for (let i = 0; i < px.length; i += 4) {
+    let l = (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
+    l = Math.min(1, Math.max(0, (l - 0.06) * 1.4));
+    const [a, b, k] = l < 0.6 ? [dark, mid, l / 0.6] : [mid, light, (l - 0.6) / 0.4];
+    px[i] = a[0] + (b[0] - a[0]) * k; px[i + 1] = a[1] + (b[1] - a[1]) * k; px[i + 2] = a[2] + (b[2] - a[2]) * k;
+  }
+  g.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+const CAT_HEIGHT = 5.0; // ≈ 25 cm at the shoulder / head — real-cat size next to the 13" laptop
+async function loadCat() {
+  const dir = "models/cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/";
+  const tl = new THREE.TextureLoader(manager);
+  const [obj, diffuse, bump] = await Promise.all([
+    new OBJLoader(manager).loadAsync(dir + "12221_Cat_v1_l3.obj"),
+    tl.loadAsync(dir + "Cat_diffuse.jpg"),
+    tl.loadAsync(dir + "Cat_bump.jpg")
+  ]);
+  const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
+  obj.traverse((m) => { if (m.isMesh) m.material = fur; });
+  obj.rotation.x = -Math.PI / 2;            // model is Z-up
+  const holder = new THREE.Group();
+  holder.add(obj);
+  shadowsOn(holder);
+  let box = new THREE.Box3().setFromObject(holder);
+  const s = CAT_HEIGHT / box.getSize(new THREE.Vector3()).y;
+  obj.scale.setScalar(s);
+  box.setFromObject(holder);
+  const c = box.getCenter(new THREE.Vector3());
+  obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
+  holder.position.set(7.0, 0, 1.0);
+  holder.rotation.y = CAT_FACING;
+  scene.add(holder);
+  // swap the procedural cat out, keep the same hover / pet behaviour
+  scene.remove(cat);
+  const i = hoverables.indexOf(cat);
+  holder.userData.hover = { ...cat.userData.hover, base: holder.scale.clone(), lift: 0 };
+  hoverables[i] = holder;
+  cat = holder;
+}
+const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards the laptop
+
+// Ball on the marble floor — click to kick it
+let ball = null, ballVX = 0;
+const BALL_R = 2.2; // a real size-5 football is ≈22 cm across
+async function loadBall() {
+  const dir = "models/football/";
+  const tl = new THREE.TextureLoader(manager);
+  const [fbx, base, normal, rough] = await Promise.all([
+    new FBXLoader(manager).loadAsync(dir + "football.fbx"),
+    tl.loadAsync(dir + "BaseColor.jpg"), tl.loadAsync(dir + "Normal.jpg"), tl.loadAsync(dir + "Roughness.jpg")
+  ]);
+  base.colorSpace = THREE.SRGBColorSpace;
+  const leather = new THREE.MeshStandardMaterial({ map: base, normalMap: normal, roughnessMap: rough, roughness: 1, metalness: 0 });
+  fbx.traverse((m) => { if (m.isMesh) m.material = leather; });
+  const inner = new THREE.Group();
+  inner.add(fbx);
+  shadowsOn(inner);
+  const r = new THREE.Box3().setFromObject(inner).getSize(new THREE.Vector3()).y / 2;
+  inner.scale.setScalar(BALL_R / r);
+  const c = new THREE.Box3().setFromObject(inner).getCenter(new THREE.Vector3());
+  inner.position.sub(c);
+  const spin = new THREE.Group();   // rolling rotation lives here
+  spin.add(inner);
+  ball = new THREE.Group();
+  ball.add(spin);
+  ball.position.set(-3.6, floor.position.y + BALL_R, 2.4); // on the floor under the desk, between the legs
+  scene.add(ball);
+  interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
+}
+
+async function loadHeadphones() {
+  const gltf = await new GLTFLoader(manager).loadAsync("models/headphones/headphones.glb");
+  const model = gltf.scene;
+  model.traverse((m) => {
+    if (!m.isMesh) return;
+    const old = m.material, c = old.color ? old.color.clone() : new THREE.Color(0x222222);
+    const clear = old.transparent || old.opacity < 1;
+    const l = c.getHSL({}).l;
+    let mtl;
+    if (clear) mtl = { color: 0xffffff, roughness: 0.08, transparent: true, opacity: 0.2 };
+    else if (c.g > c.r + 0.2 && c.g > c.b + 0.2) mtl = { color: 0x48484a, roughness: 0.4, metalness: 0.3 };   // brand-green accents → graphite
+    else if (l > 0.5) mtl = { color: 0x2c2c2e, roughness: 0.75, sheen: 0.4, sheenColor: new THREE.Color(0x555555) }; // untextured leather / foam → graphite leather
+    else if (l > 0.08) mtl = { color: 0x8e8e93, roughness: 0.3, metalness: 0.85 };   // chrome sliders → brushed metal
+    else mtl = { color: 0x161618, roughness: 0.45, metalness: 0.1, clearcoat: 0.4 };  // black plastic
+    m.material = new THREE.MeshPhysicalMaterial(mtl);
+  });
+  const holder = new THREE.Group();
+  const inner = new THREE.Group();
+  inner.add(model);
+  holder.add(inner);
+  shadowsOn(holder);
+  // lie it flat: put the thinnest dimension vertical
+  let size = new THREE.Box3().setFromObject(inner).getSize(new THREE.Vector3());
+  if (size.x < size.y && size.x <= size.z) inner.rotation.z = Math.PI / 2;
+  else if (size.z < size.y && size.z <= size.x) inner.rotation.x = -Math.PI / 2;
+  let box = new THREE.Box3().setFromObject(inner);
+  size = box.getSize(new THREE.Vector3());
+  inner.scale.setScalar(3.9 / Math.max(size.x, size.z));                  // ≈ 19–20 cm across, real size
+  box = new THREE.Box3().setFromObject(inner);
+  const c = box.getCenter(new THREE.Vector3());
+  inner.position.set(-c.x, -box.min.y, -c.z);
+  holder.position.copy(phones.position);
+  holder.rotation.y = 0.35;
+  scene.add(holder);
+  scene.remove(phones);
+  const i = hoverables.indexOf(phones);
+  holder.userData.hover = { ...phones.userData.hover, base: holder.scale.clone(), lift: 0 };
+  hoverables[i] = holder;
+}
+
+await Promise.allSettled([loadTable(), loadCat(), loadBall(), loadHeadphones()]).then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model failed to load, using the built-in version:", x.reason)));
+if (ball) ball.position.y = floor.position.y + BALL_R; // the table may have moved the floor
+
+/* ───────────────────────── Start ───────────────────────── */
+drawScreen(0);
+renderer.compile(scene, camera);
+setProgress(100, "ready");
+requestAnimationFrame(loop);
+setTimeout(() => $("#loader").classList.add("done"), 300);
+const deep = new URLSearchParams(location.search).get("open");
+if (deep) setTimeout(() => boot(deep), 900);
