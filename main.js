@@ -57,12 +57,22 @@ const Sound = (() => {
       o.connect(f).connect(g).connect(ctx.destination);
       o.start(t); lfo.start(t); o.stop(t + 1.8); lfo.stop(t + 1.8);
     },
-    toggle() { muted = !muted; try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {} return muted; },
+    audio() { return (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)()); },
+    toggle() {
+      muted = !muted;
+      try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {}
+      if (muted) window.Music.stop(); else window.Music.start(this.audio());
+      return muted;
+    },
     get muted() { return muted; }
   };
 })();
 window.Sound = Sound;
 $("#soundBtn").classList.toggle("muted", Sound.muted);
+// Background music starts on the first tap/click (browsers block audio before a user gesture)
+const startMusic = () => { if (!Sound.muted) window.Music.start(Sound.audio()); };
+addEventListener("pointerdown", startMusic, { once: true });
+addEventListener("keydown", startMusic, { once: true });
 $("#soundBtn").addEventListener("click", () => {
   const m = Sound.toggle();
   $("#soundBtn").classList.toggle("muted", m);
@@ -983,6 +993,20 @@ function loop(now) {
   if (!reduced) {
     // cat: tail sways; on hover it swishes faster, head tilts, ears flick; petting = happy eyes
     const catHover = hovered === cat && !booting, petting = now < catPetUntil;
+    if (catTail) {
+      const { pos, orig, idx, w, base } = catTail, a = pos.array;
+      const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
+      for (let k = 0; k < idx.length; k++) {
+        const i = idx[k] * 3, wk = w[k], wc = Math.pow(wk, 1.4);
+        const ang = amp * wc * Math.sin(t * speed - wk * 2.2);      // wave travels down the tail
+        const lift = (petting ? 5 : 1.5) * wc * (0.5 + 0.5 * Math.sin(t * speed * 0.5 - wk * 1.5));
+        const dx = orig[i] - base.x, dy = orig[i + 1] - base.y, c = Math.cos(ang), s = Math.sin(ang);
+        a[i] = base.x + dx * c - dy * s;          // swish side to side (around the vertical axis)
+        a[i + 1] = base.y + dx * s + dy * c;
+        a[i + 2] = orig[i + 2] + lift;            // and curl the tip upward
+      }
+      pos.needsUpdate = true;
+    }
     catMood += ((catHover ? 1 : 0) - catMood) * 0.08;
     const tSpeed = 1.6 + catMood * 5.5, tAmp = 0.1 + catMood * 0.22;
     tailSegs.forEach((seg, i) => {
@@ -1076,6 +1100,7 @@ function recolor(img, dark, mid, light) {
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 }
+let catTail = null;
 const CAT_HEIGHT = 5.0; // ≈ 25 cm at the shoulder / head — real-cat size next to the 13" laptop
 async function loadCat() {
   const dir = "models/cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/";
@@ -1087,6 +1112,17 @@ async function loadCat() {
   ]);
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
   obj.traverse((m) => { if (m.isMesh) m.material = fur; });
+  // Tail = thin strip (|x| < 1.8) that starts behind the rump (y > 19.5) at ~20–24 cm height, in model units (cm, Z-up)
+  const TAIL_BASE = new THREE.Vector3(0, 19.5, 22), TAIL_LEN = 19.5;
+  obj.traverse((m) => {
+    if (!m.isMesh) return;
+    const pos = m.geometry.attributes.position, idx = [], w = [];
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { idx.push(i); w.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
+    }
+    if (idx.length) catTail = { pos, orig: Float32Array.from(pos.array), idx: Int32Array.from(idx), w: Float32Array.from(w), base: TAIL_BASE };
+  });
   obj.rotation.x = -Math.PI / 2;            // model is Z-up
   const holder = new THREE.Group();
   holder.add(obj);
