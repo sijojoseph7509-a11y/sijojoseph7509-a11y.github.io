@@ -115,7 +115,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 const FOV = 30;
 const camera = new THREE.PerspectiveCamera(FOV, innerWidth / innerHeight, 0.5, 400);
-const HOME_TARGET = new THREE.Vector3(0.2, 5.4, 0.0);
+const HOME_TARGET = new THREE.Vector3(-0.6, 6.1, 0.0);
 const HOME_DIR = new THREE.Vector3(0, 0.44, 0.9).normalize();   // a little lower, so more of the wall shows   // ~31° above the desk, straight on
 const HOME = { pos: new THREE.Vector3(), target: HOME_TARGET.clone(), zoom: 1 };
 function fitCamera() {
@@ -123,7 +123,7 @@ function fitCamera() {
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(32.5 / Math.tan(v / 2) * 0.62, 14 / Math.tan(h / 2));
+  const dist = Math.max(27.5 / Math.tan(v / 2) * 0.62, 12.5 / Math.tan(h / 2));   // closer: desk + poster fill the view
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
   scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
@@ -1054,7 +1054,7 @@ function drawScreen(t) {
   g.font = `800 13px ${UI}`; g.fillText("SJ", 14, 14);
   g.font = `700 13px ${UI}`; g.fillText("Portfolio", 42, 14);
   g.font = `400 13px ${UI}`;
-  ["About", "Work", "Skills", "Contact"].forEach((m, i) => g.fillText(m, 114 + i * 60, 14));
+  ["File", "Edit", "View", "Go", "Window", "Help"].forEach((m, i) => g.fillText(m, 112 + [0, 38, 76, 118, 148, 208][i], 14));
   g.textAlign = "right";
   g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 14, 14);
   g.restore();

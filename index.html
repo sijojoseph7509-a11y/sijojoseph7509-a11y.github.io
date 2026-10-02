@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=33">
+  <link rel="stylesheet" href="styles.css?v=36">
   <script type="importmap">
   {
     "imports": {
@@ -45,6 +45,7 @@
     <div class="loader-inner">
       <span class="loader-name" aria-label="Sijo Joseph">SJ</span>
       <div class="loader-bar"><i id="loaderBar"></i></div>
+      <span class="loader-quote">Good things take time</span>
       <span class="loader-pct" id="loaderPct">assembling desk… 0%</span>
     </div>
   </div>
@@ -54,17 +55,20 @@
     <div class="os-screen" id="osScreen">
       <header class="menubar">
         <div class="mb-left" id="menubar">
-          <span class="mb-logo" aria-hidden="true">SJ</span>
-          <button class="mb-app" id="mbApp">Portfolio</button>
-          <button data-open="about">About</button>
-          <button data-open="work">Work</button>
-          <button data-open="skills">Skills</button>
-          <button data-open="resume">Resume</button>
-          <button data-open="contact">Contact</button>
+          <button class="mb-logo" data-menu="portfolio" aria-label="Portfolio menu">SJ</button>
+          <button class="mb-app" data-menu="portfolio" id="mbApp">Portfolio</button>
+          <button data-menu="file">File</button>
+          <button data-menu="edit">Edit</button>
+          <button data-menu="view">View</button>
+          <button data-menu="go">Go</button>
+          <button data-menu="window">Window</button>
+          <button data-menu="help">Help</button>
         </div>
         <div class="mb-right">
           <svg width="17" height="12" viewBox="0 0 17 12" aria-hidden="true"><path d="M8.5 2.2c2.3 0 4.4.9 6 2.4l1-1A9.9 9.9 0 0 0 8.5.8 9.9 9.9 0 0 0 1.5 3.6l1 1c1.6-1.5 3.7-2.4 6-2.4zm0 3c1.5 0 2.8.6 3.9 1.5l1-1a7 7 0 0 0-9.8 0l1 1c1.1-.9 2.4-1.5 3.9-1.5zm0 3c.7 0 1.3.3 1.8.7L8.5 10.7 6.7 8.9c.5-.4 1.1-.7 1.8-.7z" fill="currentColor"/></svg>
           <svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="1.6" fill="currentColor"/><path d="M23 4v4c.8-.3 1.3-1.1 1.3-2S23.8 4.3 23 4z" fill="currentColor" opacity=".45"/></svg>
+          <button class="mb-icon" id="mbSearch" aria-label="Search (⌘K)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.6-4.6"/></svg></button>
+          <span class="mb-icon" aria-hidden="true"><svg width="16" height="14" viewBox="0 0 24 20" fill="currentColor"><rect x="1" y="1" width="22" height="7.5" rx="3.75"/><circle cx="18.6" cy="4.75" r="2.4" fill="#000" fill-opacity=".35"/><rect x="1" y="11.5" width="22" height="7.5" rx="3.75" fill-opacity=".55"/><circle cx="5.4" cy="15.25" r="2.4"/></svg></span>
           <span id="clock"></span>
         </div>
       </header>
@@ -95,14 +99,23 @@
       </section>
 
       <nav class="dock" id="dock" aria-label="Dock"></nav>
+      <div class="mb-menu" id="mbMenu" role="menu" hidden></div>
+      <div class="spotlight" id="spotlight" role="dialog" aria-label="Search" hidden>
+        <div class="sp-panel">
+          <div class="sp-field"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.6-4.6"/></svg>
+            <input id="spInput" type="text" placeholder="Search Sijo's portfolio" autocomplete="off" spellcheck="false" aria-label="Search"></div>
+          <ul class="sp-results" id="spResults" role="listbox"></ul>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status" hidden></div>
     </div>
   </div>
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=33"></script>
-  <script src="os.js?v=33"></script>
-  <script src="music.js?v=33"></script>
-  <script type="module" src="main.js?v=33"></script>
+  <script src="content.js?v=36"></script>
+  <script src="os.js?v=36"></script>
+  <script src="music.js?v=36"></script>
+  <script type="module" src="main.js?v=36"></script>
 </body>
 </html>
