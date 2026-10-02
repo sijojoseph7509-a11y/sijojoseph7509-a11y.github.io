@@ -94,7 +94,7 @@ $("#stage").appendChild(renderer.domElement);
 const BG = 0x1d1d1f;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(BG);
-scene.fog = new THREE.Fog(BG, 45, 90);
+scene.fog = new THREE.Fog(BG, 70, 170);
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
@@ -111,6 +111,7 @@ function fitCamera() {
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   const dist = Math.max(17 / Math.tan(v / 2), 12.5 / Math.tan(h / 2)) * 0.62; // fit wall art + desk; whole desk width on phones
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
+  HOME.dist = dist;
 }
 fitCamera();
 camera.position.copy(HOME.pos);
@@ -120,7 +121,8 @@ controls.target.copy(HOME.target);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
-controls.minDistance = 14; controls.maxDistance = 90;
+const setZoomLimits = () => { controls.minDistance = HOME.dist * 0.4; controls.maxDistance = HOME.dist * 1.35; }; // zoom out only as far as the room still fills the view
+setZoomLimits();
 controls.minPolarAngle = 0.55; controls.maxPolarAngle = 1.2;
 const homeAz = Math.atan2(HOME.pos.x - HOME.target.x, HOME.pos.z - HOME.target.z);
 controls.minAzimuthAngle = homeAz - 0.6; controls.maxAzimuthAngle = homeAz + 0.6;
@@ -288,11 +290,11 @@ const wallTex = canvasTex(512, 512, (g, w, h) => {
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
 wallTex.tex.repeat.set(11, 10);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(80, 70), new THREE.MeshStandardMaterial({ map: wallTex.tex, roughness: 0.95 }));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), new THREE.MeshStandardMaterial({ map: wallTex.tex, roughness: 0.95 }));
 wall.position.set(TABLE.x, 2, WALL_Z);
 wall.receiveShadow = true;
 scene.add(wall);
-const skirting = rbox(80, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
+const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -8.2, WALL_Z + 0.06);
 scene.add(skirting);
 
@@ -682,7 +684,7 @@ const cups = [-1, 1].map((sx) => {
   return g;
 });
 phones.add(band, bandPad, ...cups);
-phones.position.set(-3.9, 0, -2.4);
+phones.position.set(5.9, 0, -1.7); // back-right, behind the cat
 phones.rotation.y = 0.35;
 scene.add(phones);
 interactive(phones, "Sound on / off", () => $("#soundBtn").click());
@@ -743,7 +745,7 @@ cup.add(cupBody, cupBottom);
   p.rotation.z = tilt; p.rotation.x = lean;
   cup.add(p);
 });
-cup.position.set(3.6, 0, -2.6);
+cup.position.set(2.9, 0, -2.75);
 scene.add(cup);
 
 
@@ -751,10 +753,10 @@ scene.add(cup);
 /* ───────────────────────── Floor typography ───────────────────────── */
 // Name block — right
 const nameBlock = floorText([
-  { text: S.name + ".", size: 190, weight: 700, spacing: -0.035 },
-  { text: S.title, size: 78, weight: 500, color: "#a1a1a6", spacing: -0.01 },
-], { width: 5.0 });
-nameBlock.position.set(6.4, 8.2, WALL_Z + 0.03);
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03 },
+  { text: S.title, size: 112, weight: 500, color: "#d1d1d6", spacing: -0.01 },
+], { width: 8.4, gap: 1.2 });
+nameBlock.position.set(6.6, 9.4, WALL_Z + 0.03);
 nameBlock.rotation.x = 0; // hung on the wall like studio lettering
 nameBlock.rotation.z = 0;
 scene.add(nameBlock);
@@ -763,10 +765,10 @@ interactive(nameBlock, "About me", () => boot("about"));
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 58, weight: 500, color: "#8e8e93", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 58, weight: 500, color: "#8e8e93", spacing: 0 }
-], { width: 5.0, gap: 1.5 });
-rolesBlock.position.set(6.4, 6.9, WALL_Z + 0.03);
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 }
+], { width: 8.4, gap: 1.4 });
+rolesBlock.position.set(6.6, 7.2, WALL_Z + 0.03);
 rolesBlock.rotation.x = 0;
 scene.add(rolesBlock);
 
@@ -1019,6 +1021,7 @@ function loop(now) {
 addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   fitCamera();
+  setZoomLimits();
   if (!booting && !tween) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); }
 });
 
