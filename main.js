@@ -83,6 +83,8 @@ $("#soundBtn").addEventListener("click", () => {
 
 /* Open the portfolio without 3D */
 $("#skipLink").addEventListener("click", (e) => { e.preventDefault(); window.OS.open("about"); });
+// Top nav: Work · Resume · Contact boot the laptop straight into that window
+document.querySelectorAll("[data-boot]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); boot(a.dataset.boot); }));
 
 /* ───────────────────────── Renderer / scene ───────────────────────── */
 let renderer;
@@ -113,15 +115,15 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 const FOV = 30;
 const camera = new THREE.PerspectiveCamera(FOV, innerWidth / innerHeight, 0.5, 400);
-const HOME_TARGET = new THREE.Vector3(0.2, 0.6, 1.0);
-const HOME_DIR = new THREE.Vector3(0, 0.52, 0.86).normalize();   // ~31° above the desk, straight on
+const HOME_TARGET = new THREE.Vector3(0.2, 5.4, 0.0);
+const HOME_DIR = new THREE.Vector3(0, 0.44, 0.9).normalize();   // a little lower, so more of the wall shows   // ~31° above the desk, straight on
 const HOME = { pos: new THREE.Vector3(), target: HOME_TARGET.clone(), zoom: 1 };
 function fitCamera() {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(21 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
+  const dist = Math.max(32.5 / Math.tan(v / 2) * 0.62, 14 / Math.tan(h / 2));
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
   scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
@@ -377,7 +379,7 @@ scene.add(wall);
 for (const side of [-1, 1]) {   // side walls: turning the view shows a room corner, not empty black space
   const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), wall.material);
   sideWall.rotation.y = -side * Math.PI / 2;
-  sideWall.position.set(TABLE.x + side * 17, 2, WALL_Z + 45);
+  sideWall.position.set(TABLE.x + side * 24, 2, WALL_Z + 45);
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
@@ -417,7 +419,7 @@ const poster = canvasTex(2048, 2896, (g, w, h) => {
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * 0.03})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } // paper grain
 });
 const posterGroup = new THREE.Group();
-const POSTER = { w: 6.6, h: 9.33 };   // A-series proportions, ≈ A2 — big enough to read from the desk
+const POSTER = { w: 11.88, h: 16.82 };   // A1: 594 × 841 mm (1 unit ≈ 5 cm)
 const paperGeo = new THREE.PlaneGeometry(POSTER.w, POSTER.h, 12, 16);
 { const p = paperGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 0.04 * Math.pow(Math.abs(x) / (POSTER.w / 2), 3) + 0.03 * Math.pow(Math.max(0, -y) / (POSTER.h / 2), 4)); } paperGeo.computeVertexNormals(); }
 const paper = new THREE.Mesh(paperGeo, new THREE.MeshStandardMaterial({ map: poster.tex, roughness: 0.8 }));
@@ -428,7 +430,7 @@ for (const [tx, ty] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {   // bits of clea
   tape.position.set(tx * (POSTER.w / 2 - 0.1), ty * (POSTER.h / 2 - 0.08), 0.06); tape.rotation.z = tx * ty * 0.6;
   posterGroup.add(tape);
 }
-posterGroup.position.set(-5.7, 6.9, WALL_Z + 0.03);
+posterGroup.position.set(-7.8, 9.1, WALL_Z + 0.03);   // bottom edge just above the desk
 scene.add(posterGroup);
 // (the poster is decoration only — not clickable)
 
