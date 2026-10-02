@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Project handover & technical reference |
-| **Version** | 1.0 — 3 October 2026 |
+| **Version** | 1.1 — 3 October 2026 (load-time + bug-fix pass) |
 | **Owner** | Sijo Joseph (GitHub: `sijojoseph7509-a11y`) |
 | **Prepared by** | Claude (AI assistant), working with Sijo Joseph |
 | **Live site** | https://sijojoseph7509-a11y.github.io |
@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=38` |
+| **Asset version (cache-buster)** | `?v=39` |
 
 ---
 
@@ -97,7 +97,7 @@ python3 -m http.server 4173        # any static server works
 | Layer | Choice | Version / source | Notes |
 |---|---|---|---|
 | 3D engine | Three.js | **0.165.0** via import map → `cdn.jsdelivr.net/npm/three@0.165.0` | Pinned. Upgrading may change lighting/colour defaults — re-test. |
-| Three addons | OrbitControls, RoundedBoxGeometry, RoomEnvironment, ColladaLoader, OBJLoader, GLTFLoader, FBXLoader, BufferGeometryUtils (`mergeGeometries`) | same CDN, `examples/jsm/` | ColladaLoader is now only used by nothing critical (see §21). |
+| Three addons | OrbitControls, RoundedBoxGeometry, RoomEnvironment, GLTFLoader + MeshoptDecoder, BufferGeometryUtils (`mergeGeometries`) | same CDN, `examples/jsm/` | All three models are meshopt-compressed GLBs. |
 | UI | Hand-written HTML/CSS/JS | — | No framework. |
 | Fonts | System font stack (SF Pro on Apple devices) → **Inter** fallback; **Caveat** (sticky note) | Google Fonts | Canvas text waits for fonts (max 3 s) before drawing. |
 | Audio | Web Audio API | built-in | No audio files. |
@@ -114,7 +114,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. I
 /
 ├── index.html            7.3 KB  Page shell: import map, HUD, nav, loader, desktop markup
 ├── styles.css           26.1 KB  All styling (3D page overlays + macOS-style desktop)
-├── main.js              79.0 KB  Three.js scene, camera, interactions, models, render loop (≈1,460 lines)
+├── main.js              ~70 KB   Three.js scene, camera, interactions, models, render loop (≈1,300 lines)
 ├── os.js                21.6 KB  The Mac desktop: windows, sidebar, dock, menus, Spotlight, shortcuts, zoom animation
 ├── music.js              6.2 KB  Original generative lo-fi track (Web Audio)
 ├── content.js            3.4 KB  ★ ALL editable text, links, projects, skills, experience
@@ -122,15 +122,14 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. I
 ├── .gitignore                    ignores .claude/ and .DS_Store
 ├── HANDOVER.md                   this document
 └── models/
-    ├── cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/
-    │   ├── 12221_Cat_v1_l3.obj   5.37 MB  realistic cat mesh (Z-up, cm)
-    │   ├── 12221_Cat_v1_l3.mtl   (not used at runtime — material is replaced)
-    │   ├── Cat_diffuse.jpg       347 KB  recoloured to ginger at runtime
-    │   └── Cat_bump.jpg          568 KB
+    ├── cat/
+    │   ├── cat.glb               915 KB  realistic cat mesh, meshopt-compressed, unquantised floats (Z-up, cm — the tail rig needs raw positions)
+    │   ├── cat_diffuse.jpg       347 KB  recoloured to ginger at runtime
+    │   └── cat_bump.jpg          285 KB
     ├── football/
-    │   ├── football.fbx          1.20 MB
-    │   ├── BaseColor.jpg / Normal.jpg / Roughness.jpg   (resized to 1024 px)
-    └── headphones/headphones.glb  473 KB   (simplified from a 97 MB OBJ)
+    │   ├── football.glb           70 KB  (from the FBX, simplified to 15k triangles)
+    │   ├── BaseColor.jpg / Normal.jpg / Roughness.jpg   (512 px, ~110 KB each)
+    └── headphones/headphones.glb  166 KB  (simplified from a 97 MB OBJ, meshopt-compressed)
 ```
 
 Script load order in `index.html` (classic scripts first, module last):
@@ -141,16 +140,17 @@ Script load order in `index.html` (classic scripts first, module last):
 ## 6. Architecture and runtime flow
 
 ### 6.1 Start-up sequence (`main.js`)
+0. `index.html` preloads three.js, `main.js`, all three GLBs and their textures (`<link rel=modulepreload/preload>` — **after** the import map, which must come first), so every download starts in parallel immediately.
 1. Loader visible (black, SJ ring, progress bar, "Good things take time").
 2. Wait for web fonts (`document.fonts.load`, capped at 3 s) so canvas textures draw with the right type.
 3. Create renderer (WebGL, antialias, pixel ratio ≤ 2, ACES tone mapping, PCF soft shadows), scene, perspective camera, OrbitControls.
 4. Build all procedural geometry synchronously (desk, throw, mat, walls, floor, poster, lamp, laptop, objects, wall lettering, desk labels).
-5. `await Promise.allSettled([loadCat(), loadBall(), loadHeadphones()])` through a `LoadingManager` that drives the progress bar (50→95 %). Any model that fails keeps its built-in fallback (warning in console).
-6. Draw the laptop screen canvas, `renderer.compile`, start the `requestAnimationFrame` loop, fade the loader.
+5. Load the cat, football and headset through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 7 s**; anything still downloading pops in when it arrives.
+6. Draw the laptop screen canvas, `renderer.compileAsync` (capped at 4 s), start the `requestAnimationFrame` loop, fade the loader.
 7. If `?open=` is present, auto-boot into that section after 0.9 s.
 
 ### 6.2 Render loop (`loop(now)`)
-Per frame: camera tween (if any) → `controls.update()` → hover lift/scale for interactive objects → power-key pulse → cat tail swish → hearts → football roll → wiggle → laptop screen redraw (every 33 ms, ~30 fps) → render.
+Per frame (skipped entirely while the Mac desktop fully covers the scene — `OS.isCovering()`; animation steps are scaled by frame time so 120 Hz screens don't run double speed): camera tween (if any) → `controls.update()` → hover lift/scale for interactive objects → power-key pulse → cat tail swish → hearts → football roll → wiggle → laptop screen redraw (every 33 ms, ~30 fps) → render.
 
 ### 6.3 Interactivity registry
 `interactive(object, label, onClick)` registers an object in `hoverables`. A raycaster on `pointermove` finds the nearest registered ancestor → tooltip + pointer cursor + 5 % hover scale. A `pointerup` within 6 px of `pointerdown` counts as a click (drags never click).
@@ -166,7 +166,7 @@ Per frame: camera tween (if any) → `controls.update()` → hover lift/scale fo
 | Global | Defined in | API |
 |---|---|---|
 | `window.SITE` | content.js | data only |
-| `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()` |
+| `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()`, `isCovering()` |
 | `window.Music` | music.js | `start(audioCtx)`, `stop()`, `playing` |
 | `window.Sound` | main.js | `hover()`, `click()`, `boot()`, `purr()`, `audio()`, `toggle()`, `muted` |
 
@@ -230,16 +230,16 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 | **Headset** (model) | (6.3, 0, −2.0), upright, rotated −0.25, 4.2 tall | Simplified GLB on its stand; untextured parts restyled: graphite leather #2c2c2e, brushed metal #8e8e93, black plastic #161618; brand-green accents → #48484a. | Click: sound on/off. |
 | Football (model) | (−3.2, floor + 1.5, 0.8), radius **1.5** | FBX + matte PBR textures (BaseColor/Normal/Roughness). | Hover "Kick me ⚽"; click rolls it (vx 0.4, friction 0.985, spins). Hard-stops at the inside faces of the left panel (x = X0 + 0.8 + R + 0.05) and cubby (x = CX0 − R − 0.05), bouncing back at 75 %. |
 | Plant | (−3.9, 0, −2.7) | **Mango-yellow** pot #ffb21a (clearcoat), 9 rubber-plant leaves. | Hover "My desk plant 🌱", click wiggles. |
-| Green bottle | (−8.5, 0, −2.9) | Ribbed translucent green (transmission 0.55). | — |
+| Green bottle | (−8.5, 0, −2.9) | Ribbed translucent green (plain transparency + clearcoat; **not** `transmission`, which re-rendered the scene every frame). | — |
 | Soundbar | (−0.1, 0, −3.0) | 5.2 × 0.9 × 1.0 black, grille front. | Click: music/sound on/off. |
 | Pen stand | (3.6, 0, −2.6) | Glossy black cup; 3 pencils (white, silver, blue) kept inside. | — |
 | Sketchbook (hobby book) | (−5.4, 0.01, 1.2) | Graphite book + "Weekend — sketches · hobbies · notes" sketchbook (original illustrated cover), elastic band, yellow pencil. Placeholder hobby. | Hover "My weekend sketchbook"; click → About. |
-| Project folders | Spots (−2.4, 4.8), (0.9, 5.5), (5.4, 5.7), (−6.6, 0.6), then (−0.6, −2.9), (−6.4, 0.6) for projects 5–6 | One per project in `content.js`; **black** (#1c1c1e family) with white paper label (title, tag, number). | Click → Work. |
+| Project folders | Spots (−2.4, 4.8), (0.9, 5.5), (5.4, 5.7), (−7.9, 1.5), (8.1, 5.3); projects 6+ stack on top of earlier folders | One per project in `content.js`; **black** (#1c1c1e family) with white paper label (title, tag, number). | Click → Work. |
 | Phone | (3.4, 0, 4.4), rotated 0.5 | Generic silver phone, lock screen (date, time, "New message — Let's work together →"). No logos. | Click → Contact. |
 | "Let's connect." label + 3 tiles | Label (−6.9, 0.03, −2.0) on a dark pill; tiles @ / in / Bē at x −8.0, −6.85, −5.7, z −1.0 | Glossy white tiles. | Open email / LinkedIn / Behance. |
 | Desk labels | "Work ›, Skills ›, Resume ›, Contact ›" on the mat at x −7.2…−6.45, z 3.4…5.8 | White Inter 600. | Open that section. |
 
-**Built-in fallbacks still in the code** (used only if a model fails to load): a procedural Persian cat, procedural headphones, and a cactus-era pot. The old wooden table model loader was removed.
+**No built-in fallbacks.** The procedural cartoon cat and flat headphones were removed in v1.1 — when the cat model failed on a visitor's laptop, the cartoon cat appeared in the wrong place, clipping the headset stand.
 
 ---
 
@@ -265,11 +265,11 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 | Renderer | antialias on, pixel ratio ≤ 2, `ACESFilmicToneMapping`, exposure **1.05**, `PCFSoftShadowMap` |
 | Environment | `RoomEnvironment` via PMREM (soft reflections on metal/glass) |
 | Hemisphere | sky #ffffff, ground #2a2a2e, intensity 0.45 (dark mode values applied at start) |
-| Sun (directional) | #9fb4ff, intensity 1.1, position (−7, 16, 9), shadow map 4096², bounds ±20, bias −0.0004, normalBias 0.02 |
+| Sun (directional) | #9fb4ff, intensity 1.1, position (−7, 16, 9), shadow map 2048², bounds ±20, bias −0.0004, normalBias 0.02 |
 | Rim (directional) | #c8d4ff, intensity 0.5, position (10, 6, −8) |
 | Lamp (point) | #ffb468, intensity 55, distance 34, decay 2 (see §8.3) |
 | Laptop screen glow | Point light #dcd6ff, intensity 1.2, distance 6 |
-| Look | Fixed **dark room with the lamp always on**. The `MODES` table and `applyMode(k)` still exist in code (`k = 0` dark is applied once at start); the toggle UI was removed by request. |
+| Look | Fixed **dark room with the lamp always on**. The old light/dark `MODES`/`applyMode` code was removed in v1.1; the values are set directly. |
 
 ---
 
@@ -299,7 +299,7 @@ Markup in `index.html` (`#os`), logic in `os.js`, styles in `styles.css` ("Deskt
 ### 11.3 Menus (click to open, hover to slide between open menus, click outside to close)
 | Menu | Items |
 |---|---|
-| SJ / Portfolio | About This Portfolio · — · Back to Desk (⌘Q label) |
+| SJ / Portfolio | About This Portfolio · — · Back to Desk (Esc) |
 | File | New Window (disabled) · Open Work… ⌘O · — · Close Window ⌘W |
 | Edit | Undo / Redo (disabled) · — · Copy Link to Portfolio · Find… ⌘K |
 | View | Enter Full Screen (zoom) · — · Show Sidebar (disabled) |
@@ -369,9 +369,9 @@ All downloaded by Sijo into `~/Downloads`. **Licences have not been verified** �
 
 | Model | Source file | Processing done | In repo |
 |---|---|---|---|
-| Cat | `Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64.zip` (OBJ, 3ds Max export, Z-up, cm) | Rotated to Y-up, scaled to 5.0 units tall; diffuse texture **recoloured to ginger at runtime** (luminance → ramp #602c0e → #d27a38 → #fadeb8); bump kept; tail rig done in code. | yes (5.9 MB) |
-| Headset | `headphone.rar` → "Razer kraken.obj" (97 MB, ~896k triangles, C4D) | **Simplified with `gltfpack -si 0.03`** → 29.5k triangles, 473 KB GLB; untextured materials restyled; green brand accents greyed. Model of a branded product — see §25. | yes |
-| Football | `73-soccer_ball.zip` → `football.fbx` + PBR PNGs (6–8 MB each) | Textures converted to 1024 px JPEG (`sips`); material rebuilt as matte PBR. | yes (2.7 MB) |
+| Cat | `Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64.zip` (OBJ, 3ds Max export, Z-up, cm) | v1.1: `gltfpack -i cat.obj -o cat.glb -noq -cc -tr`, then image references stripped from the GLB (textures are loaded separately). `-noq` keeps raw float positions so the tail rig thresholds still work. Rotated to Y-up, scaled to 5.0 units tall at runtime; diffuse **recoloured to ginger at runtime**; bump kept. Textures use `flipY = false` (glTF UVs). | yes (1.5 MB incl. textures) |
+| Headset | `headphone.rar` → "Razer kraken.obj" (97 MB, ~896k triangles, C4D) | Simplified with `gltfpack -si 0.03` → 29.5k triangles; v1.1 re-packed with `-cc` → 166 KB; untextured materials restyled; green brand accents greyed. Model of a branded product — see §25. | yes |
+| Football | `73-soccer_ball.zip` → `football.fbx` + PBR PNGs | v1.1: FBX → OBJ with three.js `FBXLoader` + `OBJExporter` in Node, then `gltfpack -si 0.4 -sv -kv -vt 14 -cc` → 70 KB GLB; textures 512 px JPEG. | yes (0.4 MB) |
 | Table (retired) | `15-table_dae.rar` | Used for a while, then replaced by the procedural desk from Sijo's photo; files removed from repo. | no |
 | Ball (retired) | `xh0avas9ej9c-Ball.zip` | Replaced by the matte football. | no |
 | Not used | `34-cat3d.rar` (SketchUp only), `9182knlssry8-Mac201512.rar` (Blender only; contains Apple wallpaper), `plant 1.zip`, `plants 2.rar`, `sshpy95hl0qo-table.wood.rar` (3ds Max only) | — | no |
@@ -420,18 +420,19 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 
 ## 18. Performance
 
-- Total download ≈ **14 MB** (cat OBJ 5.4 MB is the largest). First load on mobile data can take several seconds — the loader covers it.
-- Shadow maps: sun 4096², lamp 512² ×6 (desktop only).
+- v1.1: models + textures ≈ **2.1 MB** (was ≈ 9.6 MB; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than ~7 s + 4 s shader warm-up.
+- The desk is rendered only while visible — not while the Mac desktop covers it.
+- Shadow maps: sun 2048², lamp 512² ×6 (desktop only).
 - Laptop screen canvas redraws at ~30 fps; cat tail updates ~6,200 vertices per frame.
 - Pixel ratio capped at 2.
-- Ideas if needed: convert the cat to a Draco/meshopt GLB (likely < 1 MB), lower sun shadow map to 2048², pause rendering when the desktop overlay covers the canvas.
+- Further ideas: KTX2 textures; simplify the cat (`-si 0.5`) if needed.
 
 ---
 
 ## 19. Deployment and cache-busting
 
 1. Edit files.
-2. **Bump the version** on all five asset links in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
+2. **Bump the version** on all asset links (five scripts/styles + the `main.js` modulepreload) in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
 3. `git add -A && git commit -m "…" && git push origin main`
 4. Wait ~1 minute; confirm with `curl -s https://sijojoseph7509-a11y.github.io/index.html | grep "v=N"`.
 5. Hard-refresh on devices (or open in a private tab).
@@ -471,13 +472,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 1. **Content is placeholder** (§13) — the biggest blocker for real use.
 2. **Model licences unverified** (§14, §25).
 3. **Phone pinch zoom-out** fix (bigger room + 1.2× cap) was verified by reasoning and desktop testing; the preview tool could not simulate a pinch. Confirm on a real phone.
-4. **Stale code comments / leftovers** in `main.js`:
-   - "The laptop (13" silver)" heading — laptop is Midnight.
-   - "Downloaded models (table, cat, ball)" heading — table loader removed; ball is now the football; headset added.
-   - "Light / dark mode (the pendant lamp is the switch)" — the switch was removed; `MODES`, `applyMode`, `nameMaps`, `roleMaps`, `lightsOn` remain (harmless) and `appearance-light` CSS remains unused.
-   - Comments in the plant section still say "white pot" (now mango); "1. Ginger Persian cat … where the plant used to be" refers to the fallback cat.
-   - `ColladaLoader` import is no longer needed by any live model.
-   - `loadTable`-era variables (`tableTop`, `apron`, `tableLegs`) are gone; `DESK_H` and `TABLE` are the source of truth.
+4. ~~Stale code comments / leftovers~~ — cleaned up in v1.1 (unused loaders, light/dark mode code, fallback cat/headphones, stale comments).
 5. **Single large `main.js`** (~1,460 lines). Candidates to split: `scene/room.js`, `scene/desk.js`, `scene/objects.js`, `screen.js`, `camera.js`.
 6. **No automated tests / no linting / no CI.** QA is manual (§20).
 7. **SEO/social**: no Open Graph image or description tags beyond `<meta name="description">`; no favicon; no `404.html`.
@@ -524,6 +519,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.1) | Load time: compressed GLB models (9.6 → 2.1 MB), parallel preloading, 7 s loader cap, async shader compile, no `transmission`, 2048 shadows, render paused behind the desktop. Bugs: cartoon fallback cat removed (it clipped the headset), folder spots no longer overlap, Enter/Space boots, frame-rate-independent animation, ⌘Q label → Esc, drag `pointercancel`. |
 
 (Earlier non-git iterations — the first flat site, the retro CRT, the paper plane, the butterfly, the procedural cats — predate the repository.)
 
@@ -535,10 +531,9 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 2. **Verify licences** for the cat, headset and football models; add a credits line (e.g. in About or a small footer) if required — or replace with self-made/CC0 models.
 3. Real hobby on the sketchbook cover.
 4. Confirm the **phone pinch zoom-out** on a real device.
-5. Clean up stale comments/unused code (§21.4); optionally split `main.js`.
+5. Optionally split `main.js`.
 6. Add Open Graph tags + share image, favicon, `404.html`.
-7. Optional: compress the cat to GLB (meshopt/Draco) to cut ~5 MB.
-8. Optional: custom domain.
+7. Optional: custom domain.
 
 ---
 
