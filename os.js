@@ -213,10 +213,11 @@
     win.style.left = x + "px"; win.style.top = y + "px";
   });
   $("#winBar").addEventListener("pointerup", () => (drag = null));
+  $("#winBar").addEventListener("pointercancel", () => (drag = null));
 
   /* ── Menu bar menus (like a Mac app) ── */
   const MENUS = {
-    portfolio: [["About This Portfolio", () => show("about")], null, ["Back to Desk", () => close(), "Q"]],
+    portfolio: [["About This Portfolio", () => show("about")], null, ["Back to Desk", () => close(), "Esc"]],
     file: [["New Window", null, "N"], ["Open Work…", () => show("work"), "O"], null, ["Close Window", closeWindow, "W"]],
     edit: [["Undo", null, "Z"], ["Redo", null, "⇧Z"], null, ["Copy Link to Portfolio", copyLink], ["Find…", () => openSpotlight(), "K"]],
     view: [["Enter Full Screen", zoom, "⌃F"], null, ["Show Sidebar", null]],
@@ -229,7 +230,7 @@
   function openMenu(key, btn) {
     openMenuKey = key;
     menu.innerHTML = MENUS[key].map((it) => it === null ? "<hr>"
-      : `<button role="menuitem" ${it[1] ? "" : "disabled"} data-i="${MENUS[key].indexOf(it)}"><span>${it[0]}</span>${it[2] ? `<kbd>${it[2].length === 1 ? MOD + it[2] : it[2].replace("⌃", isMac ? "⌃⌘" : "Ctrl+Shift+")}</kbd>` : ""}</button>`).join("");
+      : `<button role="menuitem" ${it[1] ? "" : "disabled"} data-i="${MENUS[key].indexOf(it)}"><span>${it[0]}</span>${it[2] ? `<kbd>${it[2] === "Esc" ? "Esc" : it[2].length === 1 ? MOD + it[2] : it[2].replace("⌃", isMac ? "⌃⌘" : "Ctrl+Shift+")}</kbd>` : ""}</button>`).join("");
     const r = btn.getBoundingClientRect(), p = screen.getBoundingClientRect();
     menu.style.left = Math.min(r.left - p.left, p.width - 250) + "px";
     menu.style.top = r.bottom - p.top + 4 + "px";
@@ -313,14 +314,14 @@
   // Apple-style zoom: the desktop scales out of (and back into) the laptop screen's rectangle
   const ZOOM_MS = 620, ZOOM_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let zoomRect = null, closing = false;
+  let zoomRect = null, closing = false, settled = false;
   const toRect = (r) => {
     const to = screen.getBoundingClientRect();
     return `translate(${r.left - to.left}px, ${r.top - to.top}px) scale(${r.width / to.width}, ${r.height / to.height})`;
   };
   function open(key = "about", closeCb, fromRect) {
     onClose = closeCb || (() => {});
-    closing = false;
+    closing = false; settled = false;
     os.hidden = false;
     win.classList.remove("max");
     closeMenu(); closeSpotlight();
@@ -353,7 +354,7 @@
       onClose();
     };
     if (!zoomRect) return finish();
-    closing = true;
+    closing = true; settled = false;
     screen.style.transition = `transform ${ZOOM_MS - 80}ms cubic-bezier(0.4, 0, 0.6, 1)`;
     os.style.transition = `background-color ${ZOOM_MS - 80}ms ease`;
     screen.style.transform = toRect(zoomRect);
@@ -362,5 +363,8 @@
   }
 
   const setDark = (dark) => os.classList.toggle("dark", !!dark);
-  window.OS = { open, close, setDark, isOpen: () => !os.hidden };
+  // true while the desktop fully covers the 3D scene (the zoom-out/zoom-in animations still need it rendered)
+  screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
+  const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
+  window.OS = { open, close, setDark, isOpen: () => !os.hidden, isCovering };
 })();
