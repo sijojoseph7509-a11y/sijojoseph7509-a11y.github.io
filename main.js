@@ -109,9 +109,11 @@ function fitCamera() {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
-  const dist = Math.max(17 / Math.tan(v / 2), 12.5 / Math.tan(h / 2)) * 0.62; // fit wall art + desk; whole desk width on phones
+  // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
+  const dist = Math.max(17 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
+  scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
 }
 fitCamera();
 camera.position.copy(HOME.pos);
@@ -684,7 +686,7 @@ const cups = [-1, 1].map((sx) => {
   return g;
 });
 phones.add(band, bandPad, ...cups);
-phones.position.set(5.9, 0, -1.7); // back-right, behind the cat
+phones.position.set(6.3, 0, -2.0); // back-right: between the pen stand and the cat
 phones.rotation.y = 0.35;
 scene.add(phones);
 interactive(phones, "Sound on / off", () => $("#soundBtn").click());
@@ -745,7 +747,7 @@ cup.add(cupBody, cupBottom);
   p.rotation.z = tilt; p.rotation.x = lean;
   cup.add(p);
 });
-cup.position.set(2.9, 0, -2.75);
+cup.position.set(3.6, 0, -2.6);
 scene.add(cup);
 
 
@@ -1157,18 +1159,16 @@ async function loadHeadphones() {
   inner.add(model);
   holder.add(inner);
   shadowsOn(holder);
-  // lie it flat: put the thinnest dimension vertical
-  let size = new THREE.Box3().setFromObject(inner).getSize(new THREE.Vector3());
-  if (size.x < size.y && size.x <= size.z) inner.rotation.z = Math.PI / 2;
-  else if (size.z < size.y && size.z <= size.x) inner.rotation.x = -Math.PI / 2;
+  // standing upright, as modelled: headband on top, ear cups left and right (cups run along z, so turn 90°)
+  inner.rotation.y = Math.PI / 2;
   let box = new THREE.Box3().setFromObject(inner);
-  size = box.getSize(new THREE.Vector3());
-  inner.scale.setScalar(3.9 / Math.max(size.x, size.z));                  // ≈ 19–20 cm across, real size
+  const size = box.getSize(new THREE.Vector3());
+  inner.scale.setScalar(4.2 / size.y);                                    // ≈ 21 cm tall, real size
   box = new THREE.Box3().setFromObject(inner);
   const c = box.getCenter(new THREE.Vector3());
   inner.position.set(-c.x, -box.min.y, -c.z);
   holder.position.copy(phones.position);
-  holder.rotation.y = 0.35;
+  holder.rotation.y = -0.25;   // turned slightly towards the viewer
   scene.add(holder);
   scene.remove(phones);
   const i = hoverables.indexOf(phones);
