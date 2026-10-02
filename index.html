@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sijo Joseph — Multidisciplinary Designer</title>
+  <meta name="description" content="Sijo Joseph — product designer, brand strategist and experience designer.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=12">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D desk -->
+  <div id="stage" class="stage" aria-label="Interactive 3D desk. Click the laptop to open the portfolio."></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- HUD -->
+  <button class="hud hud-left" id="zoomBtn" aria-label="Zoom in">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M8 11h6M11 8v6" id="zoomIcon"/></svg>
+  </button>
+  <button class="hud hud-right" id="soundBtn" aria-label="Mute sound">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="soundWaves" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+  </button>
+  <p class="hint" id="hint">drag to look around · click the laptop to boot</p>
+  <a class="skip" href="#" id="skipLink">open portfolio without 3D →</a>
+  <div class="tooltip" id="tooltip" role="status"></div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="loader-inner">
+      <span class="loader-name" aria-label="Sijo Joseph">SJ</span>
+      <div class="loader-bar"><i id="loaderBar"></i></div>
+      <span class="loader-pct" id="loaderPct">assembling desk… 0%</span>
+    </div>
+  </div>
+
+  <!-- Desktop (opens when the laptop boots) -->
+  <div class="os" id="os" hidden>
+    <div class="os-screen" id="osScreen">
+      <header class="menubar">
+        <div class="mb-left" id="menubar">
+          <span class="mb-logo" aria-hidden="true">SJ</span>
+          <button class="mb-app" id="mbApp">Portfolio</button>
+          <button data-open="about">About</button>
+          <button data-open="work">Work</button>
+          <button data-open="skills">Skills</button>
+          <button data-open="resume">Resume</button>
+          <button data-open="contact">Contact</button>
+        </div>
+        <div class="mb-right">
+          <svg width="17" height="12" viewBox="0 0 17 12" aria-hidden="true"><path d="M8.5 2.2c2.3 0 4.4.9 6 2.4l1-1A9.9 9.9 0 0 0 8.5.8 9.9 9.9 0 0 0 1.5 3.6l1 1c1.6-1.5 3.7-2.4 6-2.4zm0 3c1.5 0 2.8.6 3.9 1.5l1-1a7 7 0 0 0-9.8 0l1 1c1.1-.9 2.4-1.5 3.9-1.5zm0 3c.7 0 1.3.3 1.8.7L8.5 10.7 6.7 8.9c.5-.4 1.1-.7 1.8-.7z" fill="currentColor"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="1.6" fill="currentColor"/><path d="M23 4v4c.8-.3 1.3-1.1 1.3-2S23.8 4.3 23 4z" fill="currentColor" opacity=".45"/></svg>
+          <span id="clock"></span>
+        </div>
+      </header>
+
+      <aside class="widget" id="widget"></aside>
+
+      <section class="win" id="win" role="dialog" aria-labelledby="winTitle">
+        <header class="win-bar" id="winBar">
+          <div class="lights">
+            <button class="red" id="winClose" aria-label="Close window"></button>
+            <button class="yellow" id="winMin" aria-label="Minimise window"></button>
+            <button class="green" id="winMax" aria-label="Zoom window"></button>
+          </div>
+          <span class="win-title" id="winTitle">About</span>
+        </header>
+        <div class="win-main">
+          <nav class="sidebar" id="sidebar" aria-label="Sections"></nav>
+          <div class="win-body" id="winBody"></div>
+        </div>
+      </section>
+
+      <nav class="dock" id="dock" aria-label="Dock"></nav>
+    </div>
+  </div>
+
+  <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
+
+  <script src="content.js?v=12"></script>
+  <script src="os.js?v=12"></script>
+  <script type="module" src="main.js?v=12"></script>
+</body>
+</html>

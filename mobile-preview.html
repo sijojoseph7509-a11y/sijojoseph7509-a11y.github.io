@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mobile preview — Sijo Joseph</title>
+  <style>
+    :root { --bg: #1d1d1f; --ink: #f5f5f7; --muted: #a1a1a6; --blue: #0a84ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #2c2c2e, var(--bg) 70%); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 28px 16px 40px; }
+    h1 { font-size: 20px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 4px; }
+    p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .controls { display: flex; gap: 6px; margin-bottom: 22px; padding: 4px; border-radius: 10px; background: rgba(120,120,128,.24); }
+    .controls button { border: 0; padding: 6px 14px; border-radius: 7px; background: none; color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+    .controls button.on { background: #636366; }
+    .phone { position: relative; padding: 14px; border-radius: 58px; background: linear-gradient(145deg, #3a3a3c, #1c1c1e);
+      box-shadow: inset 0 0 0 2px #48484a, 0 40px 90px rgba(0,0,0,.6); }
+    .phone::before { content: ""; position: absolute; z-index: 2; top: 25px; left: 50%; transform: translateX(-50%); width: 110px; height: 32px; border-radius: 20px; background: #000; }
+    .screen { display: block; border: 0; border-radius: 44px; background: #000; transition: width .3s, height .3s; }
+    .open { margin-top: 18px; font-size: 13px; color: var(--blue); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Mobile preview</h1>
+  <p>The live portfolio at phone size — it works exactly like on a real phone.</p>
+  <div class="controls" role="group" aria-label="Device size">
+    <button data-w="390" data-h="844" class="on">iPhone-size (390 × 844)</button>
+    <button data-w="430" data-h="932">Large phone (430 × 932)</button>
+    <button data-w="360" data-h="780">Small phone (360 × 780)</button>
+  </div>
+  <div class="phone"><iframe class="screen" id="screen" src="index.html" width="390" height="844" title="Portfolio on a phone"></iframe></div>
+  <a class="open" href="index.html">Open the full desktop version →</a>
+  <script>
+    const frame = document.getElementById("screen");
+    document.querySelectorAll("[data-w]").forEach((b) => b.addEventListener("click", () => {
+      document.querySelectorAll("[data-w]").forEach((x) => x.classList.toggle("on", x === b));
+      frame.width = b.dataset.w; frame.height = b.dataset.h;
+    }));
+  </script>
+</body>
+</html>
