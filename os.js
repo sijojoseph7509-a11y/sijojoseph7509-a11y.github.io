@@ -187,5 +187,8 @@
     onClose();
   }
 
-  window.OS = { open, close, isOpen: () => !os.hidden };
+  // Light / dark appearance (follows the lamp on the desk)
+  const setDark = (dark) => os.classList.toggle("dark", !!dark);
+
+  window.OS = { open, close, setDark, isOpen: () => !os.hidden };
 })();

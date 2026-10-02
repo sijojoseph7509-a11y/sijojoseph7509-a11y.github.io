@@ -142,7 +142,8 @@ controls.minAzimuthAngle = homeAz - 0.6; controls.maxAzimuthAngle = homeAz + 0.6
 controls.update();
 
 // Lights
-scene.add(new THREE.HemisphereLight(0xffffff, 0x2a2a2e, 0.6));
+const hemi = new THREE.HemisphereLight(0xffffff, 0x2a2a2e, 0.6);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 2.4);
 sun.position.set(-7, 16, 9);
 sun.castShadow = true;
@@ -364,7 +365,7 @@ scene.add(deskMat);
 /* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
 const wallTex = canvasTex(512, 512, (g, w, h) => {
-  g.fillStyle = "#2c2b2a"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h);   // neutral plaster; the wall colour is a tint set by the light/dark mode
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},0.025)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
@@ -373,7 +374,7 @@ const wall = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), new THREE.MeshStan
 wall.position.set(TABLE.x, 2, WALL_Z);
 wall.receiveShadow = true;
 scene.add(wall);
-const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
+const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0xffffff, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
@@ -726,7 +727,7 @@ interactive(cat, "pet me? 🥺", () => {
 });
 
 // 2b. Project files — a fanned stack of folders on the desk; each opens the Work window
-const folderColors = [0xd2d2d7, 0xffffff, 0xbcd6f7, 0xe8e8ed, 0x8e8e93, 0xd6e6fb];
+const folderColors = [0x1c1c1e, 0x111113, 0x2c2c2e, 0x18181a, 0x232325, 0x1a1a1c]; // black folders — stand out on the zebra throw
 const projectFiles = new THREE.Group();
 S.projects.forEach((p, i) => {
   const f = new THREE.Group();
@@ -821,7 +822,7 @@ bShoulder.position.y = 2.57;
 const bCap = mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.32, 24), mat(0x2f7a4c, { roughness: 0.4 }));
 bCap.position.y = 2.9;
 bottle.add(bBody, bShoulder, bCap);
-bottle.position.set(-5.3, 0, -3.0);
+bottle.position.set(-8.5, 0, -2.9);
 scene.add(bottle);
 
 const soundbar = new THREE.Group();
@@ -855,7 +856,7 @@ const cups = [-1, 1].map((sx) => {
   return g;
 });
 phones.add(band, bandPad, ...cups);
-phones.position.set(5.4, 0, -2.3); // back-right: between the pen stand and the cat
+phones.position.set(6.3, 0, -2.0); // back-right: between the pen stand and the cat
 phones.rotation.y = 0.35;
 scene.add(phones);
 interactive(phones, "Sound on / off", () => $("#soundBtn").click());
@@ -923,10 +924,11 @@ scene.add(cup);
 
 /* ───────────────────────── Floor typography ───────────────────────── */
 // Name block — right
-const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03 },
-  { text: S.title, size: 112, weight: 500, color: "#d1d1d6", spacing: -0.01 },
-], { width: 8.4, gap: 1.2 });
+const nameLines = (dark) => [
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: dark ? "#f5f5f7" : "#1d1d1f" },
+  { text: S.title, size: 112, weight: 500, color: dark ? "#d1d1d6" : "#48484a", spacing: -0.01 },
+];
+const nameBlock = floorText(nameLines(true), { width: 8.4, gap: 1.2 });
 nameBlock.position.set(6.6, 9.4, WALL_Z + 0.03);
 nameBlock.rotation.x = 0; // hung on the wall like studio lettering
 nameBlock.rotation.z = 0;
@@ -935,13 +937,73 @@ interactive(nameBlock, "About me", () => boot("about"));
 
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
-const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 }
-], { width: 8.4, gap: 1.4 });
+const roleLines = (dark) => [
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: dark ? "#aeaeb2" : "#636366", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: dark ? "#aeaeb2" : "#636366", spacing: 0 }
+];
+const rolesBlock = floorText(roleLines(true), { width: 8.4, gap: 1.4 });
 rolesBlock.position.set(6.6, 7.2, WALL_Z + 0.03);
 rolesBlock.rotation.x = 0;
 scene.add(rolesBlock);
+
+/* ───────────────────────── Light / dark mode (the pendant lamp is the switch) ─────────────────────────
+   Lamp on  → light appearance: warm cream walls, lamp glowing, light glass UI.
+   Lamp off → dark appearance: charcoal walls, cool moonlight, dark glass UI.   */
+const MODES = {
+  light: { bg: 0xe4ddcf, wall: 0xe6dcc6, skirt: 0xcfc4ae, hemi: 0.85, hemiG: 0xbfb5a2, sun: 2.0, sunC: 0xfff4e6, rim: 0.35, lamp: 60, bulb: 1, exposure: 0.95 },
+  dark:  { bg: 0x1d1d1f, wall: 0x2c2b2a, skirt: 0x232221, hemi: 0.45, hemiG: 0x2a2a2e, sun: 1.1, sunC: 0x9fb4ff, rim: 0.5, lamp: 0, bulb: 0, exposure: 1.05 }
+};
+const nameMaps = {
+  light: floorText(nameLines(false), { width: 8.4, gap: 1.2 }).material.map, dark: nameBlock.material.map
+};
+const roleMaps = {
+  light: floorText(roleLines(false), { width: 8.4, gap: 1.4 }).material.map, dark: rolesBlock.material.map
+};
+let lightsOn;
+try { lightsOn = localStorage.getItem("lamp") ? localStorage.getItem("lamp") === "on" : !matchMedia("(prefers-color-scheme: dark)").matches; } catch (_) { lightsOn = true; }
+let modeMix = lightsOn ? 1 : 0;     // 1 = light, 0 = dark (animated)
+const _ca = new THREE.Color(), _cb = new THREE.Color();
+const lerpC = (target, a, b, k) => target.copy(_ca.setHex(a)).lerp(_cb.setHex(b), k);
+function applyMode(k, flicker = 1) {
+  const D = MODES.dark, L = MODES.light, f = (a, b) => a + (b - a) * k;
+  lerpC(scene.background, D.bg, L.bg, k);
+  scene.fog.color.copy(scene.background);
+  lerpC(wall.material.color, D.wall, L.wall, k);
+  lerpC(skirting.material.color, D.skirt, L.skirt, k);
+  hemi.intensity = f(D.hemi, L.hemi); lerpC(hemi.groundColor, D.hemiG, L.hemiG, k);
+  sun.intensity = f(D.sun, L.sun); lerpC(sun.color, D.sunC, L.sunC, k);
+  rim.intensity = f(D.rim, L.rim);
+  lampLight.intensity = f(D.lamp, L.lamp) * flicker;
+  bulb.material.color.setRGB(1, 0.83, 0.6).multiplyScalar(0.25 + 0.75 * k * flicker);
+  glowSprite.material.opacity = k * flicker;
+  renderer.toneMappingExposure = f(D.exposure, L.exposure);
+  const light = k > 0.5;
+  nameBlock.material.map = light ? nameMaps.light : nameMaps.dark;
+  rolesBlock.material.map = light ? roleMaps.light : roleMaps.dark;
+}
+function setLights(on, animate = true) {
+  lightsOn = on;
+  try { localStorage.setItem("lamp", on ? "on" : "off"); } catch (_) {}
+  document.body.classList.toggle("appearance-light", on);
+  document.body.classList.toggle("appearance-dark", !on);
+  window.OS.setDark(!on);
+  if (lamp.userData.hover) lamp.userData.hover.label = on ? "Turn the light off 🌙" : "Turn the light on 💡";
+  modeAnim = animate ? { from: modeMix, to: on ? 1 : 0, start: performance.now() } : null;
+  if (!animate) { modeMix = on ? 1 : 0; applyMode(modeMix); }
+}
+let modeAnim = null;
+function stepMode(now) {
+  if (!modeAnim) return;
+  const k = Math.min(1, (now - modeAnim.start) / 700), e = k * k * (3 - 2 * k);
+  modeMix = modeAnim.from + (modeAnim.to - modeAnim.from) * e;
+  // a short filament flicker when the lamp switches on
+  const flick = modeAnim.to === 1 && k < 0.5 ? (Math.sin(now * 0.09) > 0.2 ? 1 : 0.35) : 1;
+  applyMode(modeMix, flick);
+  if (k === 1) modeAnim = null;
+}
+interactive(lamp, "", () => { Sound.click(); setLights(!lightsOn); });
+setLights(lightsOn, false);
+
 
 // Menu — left front (each word is its own clickable label)
 const menu = [["Work", "work"], ["Skills", "skills"], ["Resume", "resume"], ["Contact", "contact"]];
@@ -988,44 +1050,58 @@ function drawScreen(t) {
     rg.addColorStop(0, c); rg.addColorStop(1, c + "00");
     g.fillStyle = rg; g.fillRect(0, 0, W, H);
   });
-  // Menu bar
-  g.fillStyle = "rgba(255,255,255,0.5)"; g.fillRect(0, 0, W, 24);
-  g.fillStyle = "#1d1d1f"; g.textBaseline = "middle"; g.textAlign = "left";
-  g.font = `800 13px ${UI}`; g.fillText("SJ", 12, 12);
-  g.font = `700 13px ${UI}`; g.fillText("Portfolio", 40, 12);
+  const dark = !lightsOn;
+  if (dark) { g.fillStyle = "rgba(0,0,0,0.28)"; g.fillRect(0, 0, W, H); }
+  // Menu bar — transparent, text straight on the wallpaper (macOS 27)
+  g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 6;
+  g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "left";
+  g.font = `800 13px ${UI}`; g.fillText("SJ", 14, 14);
+  g.font = `700 13px ${UI}`; g.fillText("Portfolio", 42, 14);
   g.font = `400 13px ${UI}`;
-  ["About", "Work", "Skills", "Contact"].forEach((m, i) => g.fillText(m, 112 + i * 60, 12));
+  ["About", "Work", "Skills", "Contact"].forEach((m, i) => g.fillText(m, 114 + i * 60, 14));
   g.textAlign = "right";
-  g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 12, 12);
-  // Dock
-  const n = DOCK_COLORS.length, ds = 38, dg = 8, dw = n * ds + (n - 1) * dg + 20, dx = (W - dw) / 2, dy = H - 56;
-  g.fillStyle = "rgba(255,255,255,0.3)"; rr(g, dx, dy, dw, 50, 14); g.fill();
+  g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 14, 14);
+  g.restore();
+  // glass helper: tinted fill + bright top highlight + darker edge
+  const glass = (x, y, w, h, r, fill) => {
+    g.save(); g.shadowColor = "rgba(0,0,0,0.32)"; g.shadowBlur = 34; g.shadowOffsetY = 12;
+    g.fillStyle = fill; rr(g, x, y, w, h, r); g.fill(); g.restore();
+    g.strokeStyle = dark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.12)"; g.lineWidth = 1; rr(g, x + 0.5, y + 0.5, w - 1, h - 1, r); g.stroke();
+    const hl = g.createLinearGradient(0, y, 0, y + 14); hl.addColorStop(0, dark ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.95)"); hl.addColorStop(1, "rgba(255,255,255,0)");
+    g.strokeStyle = hl; g.lineWidth = 1.5; rr(g, x + 1, y + 1, w - 2, h - 2, r - 1); g.stroke();
+  };
+  // Dock — glass shelf, layered glass icons
+  const n = DOCK_COLORS.length, ds = 38, dg = 8, dw = n * ds + (n - 1) * dg + 22, dx = (W - dw) / 2, dy = H - 58;
+  glass(dx, dy, dw, 52, 18, dark ? "rgba(40,40,46,0.55)" : "rgba(255,255,255,0.32)");
   DOCK_COLORS.forEach(([a, b], i) => {
-    const x = dx + 10 + i * (ds + dg), y = dy + 6;
+    const x = dx + 11 + i * (ds + dg), y = dy + 7;
     const lg = g.createLinearGradient(x, y, x, y + ds); lg.addColorStop(0, a); lg.addColorStop(1, b);
-    g.fillStyle = lg; rr(g, x, y, ds, ds, 9); g.fill();
+    g.fillStyle = lg; rr(g, x, y, ds, ds, 10); g.fill();
+    const sh = g.createLinearGradient(x, y, x + ds, y + ds); sh.addColorStop(0, "rgba(255,255,255,0.45)"); sh.addColorStop(0.45, "rgba(255,255,255,0)");
+    g.fillStyle = sh; rr(g, x, y, ds, ds, 10); g.fill();
   });
-  // Centre window
+  const ink = dark ? "#f5f5f7" : "#1d1d1f", ink2 = dark ? "#aeaeb2" : "#6e6e73";
+  // Centre window — glass, larger corners, sidebar to the edge, controls on the sidebar
   if (screenMode === "idle") {
-    const bw = 380, bh = 190, bx = (W - bw) / 2, by = 120;
-    g.save(); g.shadowColor = "rgba(0,0,0,0.3)"; g.shadowBlur = 30; g.shadowOffsetY = 10;
-    g.fillStyle = "rgba(255,255,255,0.95)"; rr(g, bx, by, bw, bh, 12); g.fill(); g.restore();
-    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 18 + i * 18, by + 18, 6, 0, 7); g.fill(); });
-    g.textAlign = "center"; g.fillStyle = "#1d1d1f";
-    g.font = `600 12px ${UI}`; g.fillText("Welcome", W / 2, by + 18);
-    g.font = `700 34px ${UI}`; g.fillText(`Hi, I'm ${S.name.split(" ")[0]}.`, W / 2, by + 78);
-    g.font = `400 15px ${UI}`; g.fillStyle = "#6e6e73"; g.fillText(S.title, W / 2, by + 110);
+    const bw = 420, bh = 210, bx = (W - bw) / 2, by = 116;
+    glass(bx, by, bw, bh, 22, dark ? "rgba(34,34,38,0.88)" : "rgba(250,250,252,0.9)");
+    g.fillStyle = dark ? "rgba(70,70,78,0.55)" : "rgba(228,228,236,0.75)"; rr(g, bx + 6, by + 6, 92, bh - 12, 16); g.fill();
+    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 22 + i * 17, by + 24, 5.5, 0, 7); g.fill(); });
+    g.fillStyle = ink2; [52, 76, 100, 124].forEach((yy) => { rr(g, bx + 18, by + yy, 60, 9, 4.5); g.fill(); });
+    const cx = bx + 98 + (bw - 98) / 2;
+    g.textAlign = "center"; g.fillStyle = ink;
+    g.font = `700 32px ${UI}`; g.fillText(`Hi, I'm ${S.name.split(" ")[0]}.`, cx, by + 84);
+    g.font = `400 14px ${UI}`; g.fillStyle = ink2; g.fillText(S.title, cx, by + 114);
     const pulse = 0.85 + Math.sin(t * 3) * 0.15;
-    g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, W / 2 - 70, by + 134, 140, 34, 17); g.fill(); g.globalAlpha = 1;
-    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText("Click to open", W / 2, by + 151);
+    g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, cx - 70, by + 138, 140, 34, 17); g.fill(); g.globalAlpha = 1;
+    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText("Click to open", cx, by + 156);
   } else if (screenMode === "typing") {
     const bw = 460, bh = 170, bx = (W - bw) / 2, by = 130;
-    g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 30; g.shadowOffsetY = 10;
-    g.fillStyle = "rgba(30,30,32,0.94)"; rr(g, bx, by, bw, bh, 12); g.fill(); g.restore();
-    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 18 + i * 18, by + 18, 6, 0, 7); g.fill(); });
-    g.fillStyle = "#a1a1a6"; g.textAlign = "center"; g.font = `600 12px ${UI}`; g.fillText("Terminal", W / 2, by + 18);
+    glass(bx, by, bw, bh, 22, "rgba(28,28,30,0.92)");
+    ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 22 + i * 17, by + 22, 5.5, 0, 7); g.fill(); });
+    g.fillStyle = "#a1a1a6"; g.textAlign = "center"; g.font = `600 12px ${UI}`; g.fillText("Terminal", W / 2, by + 22);
     g.fillStyle = "#f5f5f7"; g.textAlign = "left"; g.font = `500 20px "SF Mono", Menlo, monospace`;
-    g.fillText("sijo@desk ~ % " + typed + (Math.floor(t * 3) % 2 ? "▍" : ""), bx + 22, by + 70);
+    g.fillText("sijo@desk ~ % " + typed + (Math.floor(t * 3) % 2 ? "▍" : ""), bx + 24, by + 74);
   }
   screenCanvas.tex.needsUpdate = true;
 }
@@ -1137,6 +1213,7 @@ let lastScreen = 0;
 function loop(now) {
   const t = clock.getElapsedTime();
   if (tween) tween(now);
+  stepMode(now);
   controls.update();
 
   // hover lift / scale
@@ -1152,20 +1229,9 @@ function loop(now) {
   if (!reduced) {
     // cat: tail sways; on hover it swishes faster, head tilts, ears flick; petting = happy eyes
     const catHover = hovered === cat && !booting, petting = now < catPetUntil;
-    if (catRig) {
-      const r = catRig;
-      if (now > r.nextChange) {                                   // every so often she sits down, later stands back up
-        if (r.state === "stand") { r.state = "sit"; r.nextChange = now + 16000 + Math.random() * 10000; r.nextLick = now + 3000 + Math.random() * 2000; }
-        else { r.state = "stand"; r.nextChange = now + 9000 + Math.random() * 8000; }
-      }
-      if (r.state === "sit" && r.sit > 0.95 && now > r.nextLick) { r.lickUntil = now + 3400; r.nextLick = now + 6500 + Math.random() * 5000; }
-      const sitGoal = r.state === "sit" ? 1 : 0, lickGoal = now < r.lickUntil ? 1 : 0;
-      const before = r.sit + r.lick;
-      r.sit += (sitGoal - r.sit) * 0.02;
-      r.lick += (lickGoal - r.lick) * 0.07;
-      if (Math.abs(r.sit + r.lick - before) > 1e-4 || r.lick > 0.01) poseCat(r, t);
+    if (catRig) {   // tail: gentle sway, quicker on hover, big happy swish while petted
       const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
-      swishTail(r, amp, speed, (petting ? 5 : 1.5) * (1 - 0.7 * r.sit), t);
+      swishTail(catRig, amp, speed, petting ? 5 : 1.5, t);
     }
     catMood += ((catHover ? 1 : 0) - catMood) * 0.08;
     const tSpeed = 1.6 + catMood * 5.5, tAmp = 0.1 + catMood * 0.22;
@@ -1238,48 +1304,6 @@ function recolor(img, dark, mid, light) {
 }
 let catRig = null;
 const TAIL_BASE = new THREE.Vector3(0, 19.5, 22), TAIL_LEN = 19.5;
-const HIP = new THREE.Vector3(0, 5, 13), NECK = new THREE.Vector3(0, -10, 23), MOUTH = new THREE.Vector3(0, -22.6, 26.2);
-const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-// Bend one point (and optionally its normal) by the current sit / lick amounts. Rotations are in model space.
-function bendPoint(x, y, z, sw, hw, sit, pitch, yaw, out, n) {
-  if (hw > 0) {                               // head: turn (around Z) then dip (around X) at the neck
-    let a = yaw * hw, c = Math.cos(a), s = Math.sin(a), dx = x - NECK.x, dy = y - NECK.y;
-    x = NECK.x + dx * c - dy * s; y = NECK.y + dx * s + dy * c;
-    if (n) { const nx = n[0] * c - n[1] * s; n[1] = n[0] * s + n[1] * c; n[0] = nx; }
-    a = pitch * hw; c = Math.cos(a); s = Math.sin(a); dy = y - NECK.y; const dz = z - NECK.z;
-    y = NECK.y + dy * c - dz * s; z = NECK.z + dy * s + dz * c;
-    if (n) { const ny = n[1] * c - n[2] * s; n[2] = n[1] * s + n[2] * c; n[1] = ny; }
-  }
-  if (sw > 0 && sit > 0) {                    // rear: rotate down around the hips; haunches settle onto the desk
-    const a = -0.72 * sit * sw, c = Math.cos(a), s = Math.sin(a), dy = y - HIP.y, dz = z - HIP.z;
-    y = HIP.y + dy * c - dz * s; z = HIP.z + dy * s + dz * c;
-    if (z < 0.6) z = 0.6 - (0.6 - z) * 0.08;
-    if (n) { const ny = n[1] * c - n[2] * s; n[2] = n[1] * s + n[2] * c; n[1] = ny; }
-  }
-  out[0] = x; out[1] = y; out[2] = z;
-}
-const _p = [0, 0, 0], _n = [0, 0, 0];
-function poseCat(r, t) {
-  const sit = r.sit * r.sit * (3 - 2 * r.sit);                                   // eased
-  const pitch = (0.6 + 0.07 * Math.sin(t * 11)) * r.lick, yaw = 0.38 * r.lick;   // licking bob
-  const { orig, origN, posed, body, ws, wh } = r, P = r.pos.array, N = r.nor.array;
-  for (let k = 0; k < body.length; k++) {
-    const i = body[k] * 3;
-    _n[0] = origN[i]; _n[1] = origN[i + 1]; _n[2] = origN[i + 2];
-    bendPoint(orig[i], orig[i + 1], orig[i + 2], ws[k], wh[k], sit, pitch, yaw, _p, _n);
-    posed[i] = P[i] = _p[0]; posed[i + 1] = P[i + 1] = _p[1]; posed[i + 2] = P[i + 2] = _p[2];
-    N[i] = _n[0]; N[i + 1] = _n[1]; N[i + 2] = _n[2];
-  }
-  bendPoint(TAIL_BASE.x, TAIL_BASE.y, TAIL_BASE.z, 1, 0, sit, 0, 0, _p);
-  r.tailBase.set(_p[0], _p[1], _p[2]);
-  // tongue follows the mouth, flicking while she licks
-  bendPoint(MOUTH.x, MOUTH.y, MOUTH.z, 0, 1, sit, pitch, yaw, _p);
-  r.tongue.visible = r.lick > 0.6;
-  r.tongue.position.set(_p[0], _p[1] - 0.6, _p[2] - 1.2);
-  r.tongue.rotation.set(0.9 + pitch, 0, yaw);
-  r.tongue.scale.set(1, 0.55 + 0.45 * Math.abs(Math.sin(t * 11)), 1);
-  r.pos.needsUpdate = true; r.nor.needsUpdate = true;
-}
 function swishTail(r, amp, speed, lift, t) {
   const { posed, tail, wt, tailBase: b } = r, P = r.pos.array;
   for (let k = 0; k < tail.length; k++) {
@@ -1291,7 +1315,7 @@ function swishTail(r, amp, speed, lift, t) {
   }
   r.pos.needsUpdate = true;
 }
-const CAT_HEIGHT = 4.7; // ≈ 24 cm to the top of the head — real-cat size next to the 13" laptop
+const CAT_HEIGHT = 5.0; // ≈ 25 cm — real-cat size next to the 13" laptop
 async function loadCat() {
   const dir = "models/cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/";
   const tl = new THREE.TextureLoader(manager);
@@ -1303,29 +1327,16 @@ async function loadCat() {
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
   obj.traverse((m) => { if (m.isMesh) m.material = fur; });
   // The model has no skeleton, so we pose it by bending its vertices (model space: cm, Z-up, head at −y, tail at +y).
-  //  · rear half (y > 0)      → lowers around the hips to sit
-  //  · head + neck (y < −8)   → turns and dips towards the chest to lick
   //  · tail (thin strip behind the rump) → swishes
   obj.traverse((m) => {
     if (!m.isMesh) return;
     m.frustumCulled = false;
-    const pos = m.geometry.attributes.position, nor = m.geometry.attributes.normal;
-    const body = [], ws = [], wh = [], tail = [], wt = [];
+    const pos = m.geometry.attributes.position, tail = [], wt = [];
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-      const sw = smooth(0, 11, y), hw = smooth(-8, -13, y) * smooth(15, 21, z);
-      if (sw > 0 || hw > 0) { body.push(i); ws.push(sw); wh.push(hw); }
       if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { tail.push(i); wt.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
     }
-    const tongue = mesh(new THREE.CapsuleGeometry(0.55, 1.3, 4, 8), mat(0xe07c8a, { roughness: 0.35 }));
-    tongue.visible = false;
-    obj.add(tongue);
-    catRig = {
-      pos, nor, orig: Float32Array.from(pos.array), origN: Float32Array.from(nor.array), posed: Float32Array.from(pos.array),
-      body: Int32Array.from(body), ws: Float32Array.from(ws), wh: Float32Array.from(wh),
-      tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone(), tongue,
-      state: "stand", sit: 0, lick: 0, nextChange: performance.now() + 6000, nextLick: 0, lickUntil: 0
-    };
+    catRig = { pos, posed: Float32Array.from(pos.array), tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone() };
   });
   obj.rotation.x = -Math.PI / 2;            // model is Z-up
   const holder = new THREE.Group();
@@ -1337,7 +1348,7 @@ async function loadCat() {
   box.setFromObject(holder);
   const c = box.getCenter(new THREE.Vector3());
   obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
-  holder.position.set(6.6, 0, 1.1);
+  holder.position.set(7.0, 0, 1.0);
   holder.rotation.y = CAT_FACING;
   scene.add(holder);
   // swap the procedural cat out, keep the same hover / pet behaviour
@@ -1347,7 +1358,7 @@ async function loadCat() {
   hoverables[i] = holder;
   cat = holder;
 }
-const CAT_FACING = -1.0; // three-quarter view: you see her side, so sitting down is visible
+const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards the laptop
 
 // Ball on the marble floor — click to kick it
 let ball = null, ballVX = 0;

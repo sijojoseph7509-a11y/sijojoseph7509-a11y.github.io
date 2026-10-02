@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=24">
   <script type="importmap">
   {
     "imports": {
@@ -64,19 +64,27 @@
         </div>
       </header>
 
-      <aside class="widget" id="widget"></aside>
+      <aside class="widget glass" id="widget"></aside>
 
       <section class="win" id="win" role="dialog" aria-labelledby="winTitle">
-        <header class="win-bar" id="winBar">
+        <!-- macOS 27 layout: the sidebar runs the full height to the window edge, window controls sit on it -->
+        <aside class="side-wrap">
           <div class="lights">
             <button class="red" id="winClose" aria-label="Close window"></button>
             <button class="yellow" id="winMin" aria-label="Minimise window"></button>
             <button class="green" id="winMax" aria-label="Zoom window"></button>
           </div>
-          <span class="win-title" id="winTitle">About</span>
-        </header>
-        <div class="win-main">
           <nav class="sidebar" id="sidebar" aria-label="Sections"></nav>
+        </aside>
+        <div class="win-col">
+          <!-- unified toolbar -->
+          <header class="win-bar" id="winBar">
+            <span class="win-title" id="winTitle">About</span>
+            <div class="tb-tools" aria-hidden="true">
+              <span class="tb-btn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></span>
+              <span class="tb-btn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></span>
+            </div>
+          </header>
           <div class="win-body" id="winBody"></div>
         </div>
       </section>
@@ -87,9 +95,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=22"></script>
-  <script src="os.js?v=22"></script>
-  <script src="music.js?v=22"></script>
-  <script type="module" src="main.js?v=22"></script>
+  <script src="content.js?v=24"></script>
+  <script src="os.js?v=24"></script>
+  <script src="music.js?v=24"></script>
+  <script type="module" src="main.js?v=24"></script>
 </body>
 </html>
