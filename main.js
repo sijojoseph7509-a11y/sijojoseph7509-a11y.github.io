@@ -115,15 +115,15 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 const FOV = 30;
 const camera = new THREE.PerspectiveCamera(FOV, innerWidth / innerHeight, 0.5, 400);
-const HOME_TARGET = new THREE.Vector3(-0.6, 6.1, 0.0);
-const HOME_DIR = new THREE.Vector3(0, 0.44, 0.9).normalize();   // a little lower, so more of the wall shows   // ~31° above the desk, straight on
+const HOME_TARGET = new THREE.Vector3(-0.6, 8.6, 0.0);
+const HOME_DIR = new THREE.Vector3(0, 0.34, 0.94).normalize();   // ~20° above the desk, straight on — shows the tall wall + poster
 const HOME = { pos: new THREE.Vector3(), target: HOME_TARGET.clone(), zoom: 1 };
 function fitCamera() {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(27.5 / Math.tan(v / 2) * 0.62, 12.5 / Math.tan(h / 2));   // closer: desk + poster fill the view
+  const dist = Math.max(31 / Math.tan(v / 2) * 0.62, 12.5 / Math.tan(h / 2));   // fits the desk + the A1 poster above it
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
   scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
@@ -136,7 +136,7 @@ controls.target.copy(HOME.target);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
-const setZoomLimits = () => { controls.minDistance = HOME.dist * 0.4; controls.maxDistance = HOME.dist * 1.35; }; // zoom out only as far as the room still fills the view
+const setZoomLimits = () => { controls.minDistance = HOME.dist * 0.4; controls.maxDistance = HOME.dist * 1.2; }; // zoom out only as far as the room still fills the view
 setZoomLimits();
 controls.minPolarAngle = 0.55; controls.maxPolarAngle = 1.2;
 const homeAz = Math.atan2(HOME.pos.x - HOME.target.x, HOME.pos.z - HOME.target.z);
@@ -255,8 +255,8 @@ const grid = canvasTex(1024, 1024, (g, w, h) => {
   g.fillRect(0, 0, 3, h); g.fillRect(w / 2 - 1.5, 0, 3, h);
 });
 grid.tex.wrapS = grid.tex.wrapT = THREE.RepeatWrapping;
-grid.tex.repeat.set(240 / 4, 240 / 4);
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.2 }));
+grid.tex.repeat.set(600 / 4, 600 / 4);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.2 }));
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 floor.position.y = -14.8; // desk height ≈ 74 cm
@@ -371,19 +371,19 @@ const wallTex = canvasTex(512, 512, (g, w, h) => {
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},0.025)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
-wallTex.tex.repeat.set(11, 10);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), new THREE.MeshStandardMaterial({ map: wallTex.tex, roughness: 0.95 }));
-wall.position.set(TABLE.x, 2, WALL_Z);
+wallTex.tex.repeat.set(28, 24);
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, roughness: 0.95 }));
+wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
 for (const side of [-1, 1]) {   // side walls: turning the view shows a room corner, not empty black space
-  const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), wall.material);
+  const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), wall.material);
   sideWall.rotation.y = -side * Math.PI / 2;
-  sideWall.position.set(TABLE.x + side * 24, 2, WALL_Z + 45);
+  sideWall.position.set(TABLE.x + side * 24, 60, WALL_Z + 200);
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0xffffff, { roughness: 0.7 }), 1);
+const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0xffffff, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
@@ -430,7 +430,7 @@ for (const [tx, ty] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {   // bits of clea
   tape.position.set(tx * (POSTER.w / 2 - 0.1), ty * (POSTER.h / 2 - 0.08), 0.06); tape.rotation.z = tx * ty * 0.6;
   posterGroup.add(tape);
 }
-posterGroup.position.set(-7.8, 9.1, WALL_Z + 0.03);   // bottom edge just above the desk
+posterGroup.position.set(-7.8, 13.1, WALL_Z + 0.03);   // bottom edge sits just above the MacBook screen line
 scene.add(posterGroup);
 // (the poster is decoration only — not clickable)
 
@@ -1114,13 +1114,24 @@ function typeOnScreen() {
 
 /* ───────────────────────── Camera moves ───────────────────────── */
 let tween = null;
-function moveCamera(toPos, toTarget, toZoom, dur = 1100, done) {
+// cubic-bezier easing (same curves CSS uses) — Apple-style motion
+function bezier(x1, y1, x2, y2) {
+  const B = (t, a, b) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+  return (x) => {
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 22; i++) { t = (lo + hi) / 2; B(t, x1, x2) < x ? (lo = t) : (hi = t); }
+    return B(t, y1, y2);
+  };
+}
+const EASE_IN_OUT = bezier(0.42, 0, 0.2, 1);   // gentle start, long soft landing
+const EASE_APPLE = bezier(0.32, 0.72, 0, 1);    // Apple's standard "out" curve
+function moveCamera(toPos, toTarget, toZoom, dur = 1100, done, ease = EASE_IN_OUT) {
   const from = { pos: camera.position.clone(), target: controls.target.clone(), zoom: camera.zoom };
   const start = performance.now();
   controls.enabled = false;
   tween = (now) => {
     let k = Math.min(1, (now - start) / (reduced ? 1 : dur));
-    const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    const e = ease(k);
     camera.position.lerpVectors(from.pos, toPos, e);
     controls.target.lerpVectors(from.target, toTarget, e);
     camera.zoom = THREE.MathUtils.lerp(from.zoom, toZoom, e);
@@ -1129,6 +1140,16 @@ function moveCamera(toPos, toTarget, toZoom, dur = 1100, done) {
   };
 }
 let booting = false;
+// the laptop screen's rectangle on the page, in CSS pixels
+function screenRect() {
+  const xs = [], ys = [];
+  for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    const p = new THREE.Vector3(sx * SCREEN_W / 2, sy * SCREEN_H / 2, 0).applyMatrix4(screen.matrixWorld).project(camera);
+    xs.push((p.x + 1) / 2 * innerWidth); ys.push((1 - p.y) / 2 * innerHeight);
+  }
+  const l = Math.min(...xs), t = Math.min(...ys);
+  return { left: l, top: t, width: Math.max(...xs) - l, height: Math.max(...ys) - t };
+}
 function boot(app) {
   if (booting) return;
   booting = true;
@@ -1141,10 +1162,12 @@ function boot(app) {
   const d = Math.max((SCREEN_H * 1.15) / 2 / Math.tan(v / 2), (SCREEN_W * 1.15) / 2 / Math.tan(hf / 2));
   const normal = new THREE.Vector3();
   screen.getWorldDirection(normal);
-  moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1200, () => {
+  controls.minDistance = 0;   // let the camera fly right up to the screen (zoom limits would stop it short)
+  moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1250, () => {
+    // hand-off: the desktop grows out of exactly where the laptop screen is on your display
     window.OS.open(app, () => {
-      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1100, () => { booting = false; });
-    });
+      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => { booting = false; setZoomLimits(); }, EASE_APPLE);
+    }, screenRect());
   });
 }
 
