@@ -201,7 +201,7 @@ body { transition: background-color .7s var(--ease); }
 .side-profile b { display: block; font-size: 12px; }
 .side-profile span { font-size: 11px; color: var(--t3); }
 
-.win-col { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+.win-col { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
 /* unified toolbar: title + glass capsule tools, content scrolls underneath */
 .win-bar {
   position: absolute; z-index: 2; inset: 0 0 auto 0; height: 60px; padding: 0 18px 0 26px;
@@ -212,7 +212,7 @@ body { transition: background-color .7s var(--ease); }
 .tb-tools { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: var(--g-bar);
   box-shadow: inset 0 1px 0 var(--g-hi), 0 0 0 .5px var(--g-edge), 0 2px 8px rgba(0, 0, 0, .08); }
 .tb-btn { width: 30px; height: 26px; display: grid; place-items: center; border-radius: 999px; color: var(--t2); }
-.win-body { flex: 1; overflow: auto; padding: 72px 40px 40px; font-size: 15px; line-height: 1.5; color: var(--t1); }
+.win-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 72px 40px 40px; font-size: 15px; line-height: 1.5; color: var(--t1); }
 .win-body h1 { font-family: var(--display); font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.025em; margin: 0 0 6px; }
 .win-body h3 { font-size: 13px; font-weight: 600; color: var(--t3); margin: 26px 0 10px; }
 .win-body p { margin: 0 0 14px; color: var(--t2); }
@@ -251,13 +251,6 @@ body { transition: background-color .7s var(--ease); }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .big-link { display: inline-block; font-family: var(--display); font-size: 26px; font-weight: 600; letter-spacing: -.02em; color: var(--accent); text-decoration: none; margin: 4px 0 18px; }
 .big-link:hover { text-decoration: underline; }
-
-/* Poster viewer (Preview-style) */
-.viewer { margin: 0; height: 100%; min-height: 360px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.viewer img { flex: 1; min-height: 0; max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px;
-  box-shadow: 0 0 0 .5px var(--g-edge), 0 18px 48px rgba(0, 0, 0, .28); background: #fff; }
-.viewer figcaption { text-align: center; font-size: 13px; color: var(--t2); }
-.viewer figcaption b { display: block; color: var(--t1); font-size: 14px; }
 
 /* Dock — glass shelf with layered-glass icons */
 .dock {
