@@ -6,6 +6,7 @@ import { ColladaLoader } from "three/addons/loaders/ColladaLoader.js";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const S = window.SITE;
 const $ = (s) => document.querySelector(s);
@@ -120,7 +121,7 @@ function fitCamera() {
   camera.updateProjectionMatrix();
   const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(17 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
+  const dist = Math.max(19 / Math.tan(v / 2) * 0.62, 10.5 / Math.tan(h / 2));
   HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
   HOME.dist = dist;
   scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
@@ -178,11 +179,16 @@ function canvasTex(w, h, draw) {
   return { tex: t, canvas: c, g };
 }
 // Flat text that lies on the floor
-function floorText(lines, { size = 120, font = UI, weight = 700, color = "#f5f5f7", width = 6, italic = false, gap = 1.15, align = "left" } = {}) {
+function floorText(lines, { size = 120, font = UI, weight = 700, color = "#f5f5f7", width = 6, italic = false, gap = 1.15, align = "left", bg = null } = {}) {
   const pad = 20;
   const W = 2048;
   const H = Math.ceil(lines.reduce((s, l) => s + (l.size || size) * gap, 0) + pad * 2);
   const { tex } = canvasTex(W, H, (g) => {
+    if (bg) {
+      g.font = `${weight} ${lines[0].size || size}px ${font}`;
+      const tw = Math.max(...lines.map((l) => g.measureText(l.text).width)) * 1.02 + pad * 3;
+      g.fillStyle = bg; g.beginPath(); g.roundRect(0, 0, Math.min(W, tw), H, H / 2.2); g.fill();
+    }
     let y = pad;
     for (const l of lines) {
       const sz = l.size || size;
@@ -250,51 +256,112 @@ grid.tex.repeat.set(240 / 4, 240 / 4);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.2 }));
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
-floor.position.y = -8.45;
+floor.position.y = -14.8; // desk height ≈ 74 cm
 scene.add(floor);
 
-/* ───────────────────────── Wooden desk ───────────────────────── */
-const wood = canvasTex(2048, 512, (g, w, h) => {
-  g.fillStyle = "#5e3b20"; g.fillRect(0, 0, w, h);
-  // planks
-  for (let p = 0; p < 4; p++) {
-    const y0 = (p * h) / 4;
-    g.fillStyle = ["#5e3b20", "#56361c", "#654023", "#5a391e"][p];
-    g.fillRect(0, y0, w, h / 4);
-    // grain
-    for (let i = 0; i < 38; i++) {
-      const y = y0 + Math.random() * (h / 4);
-      g.strokeStyle = `rgba(${Math.random() > 0.5 ? "30,16,6" : "150,100,60"},${0.08 + Math.random() * 0.14})`;
-      g.lineWidth = 0.6 + Math.random() * 2.2;
-      g.beginPath();
-      const amp = 2 + Math.random() * 7, f = 0.002 + Math.random() * 0.006, ph = Math.random() * 10;
-      for (let x = 0; x <= w; x += 16) g.lineTo(x, y + Math.sin(x * f + ph) * amp + Math.sin(x * f * 3.1) * amp * 0.3);
-      g.stroke();
-    }
-    // a knot
-    const kx = Math.random() * w, ky = y0 + h / 8;
-    for (let r = 4; r < 26; r += 4) { g.strokeStyle = "rgba(70,40,18,.18)"; g.lineWidth = 1.5; g.beginPath(); g.ellipse(kx, ky, r * 2.4, r * 0.7, 0, 0, 7); g.stroke(); }
-    g.fillStyle = "rgba(40,22,10,.35)"; g.fillRect(0, y0, w, 2);
-  }
-});
-wood.tex.wrapS = wood.tex.wrapT = THREE.RepeatWrapping;
-const woodMat = new THREE.MeshPhysicalMaterial({ map: wood.tex, roughness: 0.55, clearcoat: 0.35, clearcoatRoughness: 0.5 });
-const TABLE = { x: 0.2, z: 1.6, w: 19, d: 10, t: 0.45 };
-const tableTop = rbox(TABLE.w, TABLE.t, TABLE.d, 0.12, woodMat, 3);
-tableTop.position.set(TABLE.x, -TABLE.t / 2, TABLE.z);
-scene.add(tableTop);
-const legMat = mat(0x2e1d10, { roughness: 0.6 });
-const tableLegs = [];
-for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-  const leg = rbox(0.55, 8, 0.55, 0.08, legMat, 2);
-  leg.position.set(TABLE.x + sx * (TABLE.w / 2 - 0.9), -TABLE.t - 4, TABLE.z + sz * (TABLE.d / 2 - 0.9));
-  scene.add(leg); tableLegs.push(leg);
-}
-const apron = rbox(TABLE.w - 1.4, 0.5, TABLE.d - 1.4, 0.05, legMat, 2);
-apron.position.set(TABLE.x, -TABLE.t - 0.25, TABLE.z);
-scene.add(apron);
 
-/* ───────────────────────── Wall + framed artwork ───────────────────────── */
+/* ───────────────────────── Sijo's desk (from the photo) ─────────────────────────
+   Dark laminate desk: solid side panel on the left, open cubby shelf on the right,
+   a zebra-print fleece throw over the top and a desk mat. Top surface at y = 0.   */
+const TABLE = { x: 0.2, z: 1.6, w: 19, d: 10, t: 0.5 };
+const DESK_H = 14.8;                                   // ≈ 74 cm
+const X0 = TABLE.x - TABLE.w / 2, X1 = TABLE.x + TABLE.w / 2, Z0 = TABLE.z - TABLE.d / 2, Z1 = TABLE.z + TABLE.d / 2;
+const laminate = mat(0x221e1c, { roughness: 0.5, clearcoat: 0.25 });
+const deskPart = (w, h, d, x, y, z, m = laminate) => { const p = rbox(w, h, d, 0.04, m, 2); p.position.set(x, y, z); scene.add(p); return p; };
+const LEG_Y = -(DESK_H + TABLE.t) / 2, LEG_H = DESK_H - TABLE.t;
+deskPart(TABLE.w, TABLE.t, TABLE.d, TABLE.x, -TABLE.t / 2, TABLE.z);            // top
+deskPart(0.6, LEG_H, TABLE.d - 0.3, X0 + 0.5, LEG_Y, TABLE.z - 0.1);             // left side panel
+const CX0 = 2.9, CX1 = X1 - 0.2, CXM = (CX0 + CX1) / 2, CW = CX1 - CX0;          // right cubby unit
+deskPart(0.5, LEG_H, TABLE.d - 0.3, CX1 - 0.25, LEG_Y, TABLE.z - 0.1);
+deskPart(0.5, LEG_H, TABLE.d - 0.3, CX0 + 0.25, LEG_Y, TABLE.z - 0.1);
+deskPart(CW - 1, 0.4, TABLE.d - 0.6, CXM, -5.2, TABLE.z - 0.2);                  // shelf
+deskPart(CW - 1, 0.4, TABLE.d - 0.6, CXM, -DESK_H + 0.9, TABLE.z - 0.2);         // bottom
+deskPart(CW, LEG_H, 0.2, CXM, LEG_Y, Z0 + 0.25);                                  // back of the cubby
+deskPart(TABLE.w - 1.2, 1.8, 0.25, TABLE.x, -1.4, Z0 + 0.35);                    // back rail
+// on the shelf: a keyboard and a small white charger, like in the photo
+const shelfTop = -5.0;
+const shelfKb = canvasTex(512, 160, (g, w, h) => {
+  g.fillStyle = "#2a2a2c"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#4a4a4e";
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 15; c++) g.fillRect(10 + c * 33, 10 + r * 29, 28, 24);
+});
+const kb2 = rbox(4.6, 0.3, 1.6, 0.08, mat(0x2a2a2c), 2);
+kb2.position.set(CXM - 0.6, shelfTop + 0.15, TABLE.z + 1.4); kb2.rotation.y = 0.05;
+const kb2Face = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1.4), new THREE.MeshStandardMaterial({ map: shelfKb.tex, roughness: 0.7 }));
+kb2Face.rotation.x = -Math.PI / 2; kb2Face.position.y = 0.16; kb2.add(kb2Face);
+const charger = rbox(0.8, 0.8, 0.8, 0.12, mat(0xf5f5f7, { roughness: 0.4 }), 3);
+charger.position.set(CXM + 2.4, shelfTop + 0.4, TABLE.z + 1.8);
+scene.add(kb2, charger);
+
+// Zebra-print fleece throw (original pattern) — top, front drape and side drapes
+function zebraTex(w, h, seed = 1) {
+  return canvasTex(w, h, (g) => {
+    g.fillStyle = "#eee8dd"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#0e0e0e";
+    const n = Math.round(h / 44);
+    for (let i = 0; i < n; i++) {                       // each stripe: a wavy band that swells and tapers
+      const y0 = (i / n) * (h + w * 0.35) - w * 0.35 + Math.sin(i * 3.1 + seed) * 10;
+      const top = [], bot = [];
+      for (let x = -60; x <= w + 60; x += 20) {
+        const y = y0 + x * 0.35 + Math.sin(x * 0.009 + i * 0.8 + seed) * 22 + Math.sin(x * 0.031 + i * 2.1) * 7;
+        const thick = Math.max(0, 9 + 15 * Math.sin(x * 0.006 + i * 1.9 + seed) + 6 * Math.sin(x * 0.021 + i));
+        top.push([x, y - thick]); bot.push([x, y + thick]);
+      }
+      g.beginPath(); g.moveTo(top[0][0], top[0][1]);
+      top.forEach(([x, y]) => g.lineTo(x, y));
+      bot.reverse().forEach(([x, y]) => g.lineTo(x, y));
+      g.closePath(); g.fill();
+    }
+  }).tex;
+}
+const fleece = (map) => new THREE.MeshPhysicalMaterial({ map, roughness: 1, sheen: 0.2, sheenRoughness: 0.9, sheenColor: new THREE.Color(0xffffff), side: THREE.DoubleSide });
+const throwTop = new THREE.Mesh(new THREE.PlaneGeometry(TABLE.w + 0.3, TABLE.d + 0.3), fleece(zebraTex(2048, 1080, 1)));
+throwTop.rotation.x = -Math.PI / 2; throwTop.position.set(TABLE.x, 0.012, TABLE.z);
+throwTop.receiveShadow = true;
+scene.add(throwTop);
+function drape(width, height, seed) {   // a hanging fleece edge with soft folds and an uneven hem
+  const geo = new THREE.PlaneGeometry(width, height, 80, 8);
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), down = (height / 2 - y) / height;          // 0 at top, 1 at hem
+    p.setZ(i, (Math.sin(x * 1.6 + seed) * 0.09 + Math.sin(x * 0.55 + seed * 2) * 0.06) * down);
+    if (down > 0.98) p.setY(i, y - Math.abs(Math.sin(x * 0.9 + seed)) * 0.35);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, fleece(zebraTex(2048, Math.round(2048 * height / width), seed + 3)));
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+const frontDrape = drape(TABLE.w + 0.3, 3.2, 1);
+frontDrape.position.set(TABLE.x, -1.6 + 0.01, Z1 + 0.16);
+const leftDrape = drape(TABLE.d + 0.3, 2.4, 2);
+leftDrape.rotation.y = -Math.PI / 2; leftDrape.position.set(X0 - 0.16, -1.2 + 0.01, TABLE.z);
+const rightDrape = drape(TABLE.d + 0.3, 2.4, 3);
+rightDrape.rotation.y = Math.PI / 2; rightDrape.position.set(X1 + 0.16, -1.2 + 0.01, TABLE.z);
+scene.add(frontDrape, leftDrape, rightDrape);
+
+// Desk mat — original design in deep blue-violet tones, stitched edge
+const deskMatTex = canvasTex(2048, 680, (g, w, h) => {
+  const lg = g.createLinearGradient(0, 0, w, h);
+  lg.addColorStop(0, "#0d1030"); lg.addColorStop(0.45, "#2a1f6b"); lg.addColorStop(0.75, "#3657c9"); lg.addColorStop(1, "#7fb6ff");
+  g.fillStyle = lg; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 6; i++) {   // soft light streaks
+    g.strokeStyle = `rgba(190,210,255,${0.05 + i * 0.015})`; g.lineWidth = 2 + i * 1.5;
+    g.beginPath(); g.moveTo(w * (0.3 + i * 0.08), h); g.bezierCurveTo(w * (0.45 + i * 0.07), h * 0.5, w * (0.55 + i * 0.06), h * 0.35, w, h * (0.1 + i * 0.05)); g.stroke();
+  }
+  for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.35})`; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, Math.random() * 1.8, 0, 7); g.fill(); }
+  g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 3; g.setLineDash([10, 8]);
+  g.strokeRect(14, 14, w - 28, h - 28);
+});
+const MAT = { x: -3.1, z: 4.6, w: 11.4, d: 3.8 };
+const deskMat = rbox(MAT.w, 0.06, MAT.d, 0.03, mat(0x0d1030, { roughness: 0.8 }), 2);
+deskMat.position.set(MAT.x, 0.04, MAT.z);
+const deskMatFace = new THREE.Mesh(new THREE.PlaneGeometry(MAT.w - 0.06, MAT.d - 0.06), new THREE.MeshStandardMaterial({ map: deskMatTex.tex, roughness: 0.85 }));
+deskMatFace.rotation.x = -Math.PI / 2; deskMatFace.position.y = 0.031; deskMatFace.receiveShadow = true;
+deskMat.add(deskMatFace);
+scene.add(deskMat);
+
+/* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
 const wallTex = canvasTex(512, 512, (g, w, h) => {
   g.fillStyle = "#2c2b2a"; g.fillRect(0, 0, w, h);
@@ -307,43 +374,88 @@ wall.position.set(TABLE.x, 2, WALL_Z);
 wall.receiveShadow = true;
 scene.add(wall);
 const skirting = rbox(160, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
-skirting.position.set(TABLE.x, -8.2, WALL_Z + 0.06);
+skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
-// Original abstract artwork — warm paper, layered shapes, a single fine line
-const art = canvasTex(1200, 900, (g, w, h) => {
-  g.fillStyle = "#efe7da"; g.fillRect(0, 0, w, h);
-  g.fillStyle = "#e3d6c2"; g.fillRect(0, h * 0.62, w, h * 0.38);           // horizon band
-  g.fillStyle = "#e8642c"; g.beginPath(); g.arc(w * 0.66, h * 0.42, h * 0.24, 0, 7); g.fill();   // sun
-  g.fillStyle = "#1f3a5f"; g.beginPath(); g.moveTo(0, h); g.lineTo(0, h * 0.7); g.quadraticCurveTo(w * 0.28, h * 0.42, w * 0.55, h * 0.74); g.lineTo(w * 0.55, h); g.fill(); // hill
-  g.fillStyle = "#7e9a86"; g.beginPath(); g.moveTo(w * 0.35, h); g.quadraticCurveTo(w * 0.7, h * 0.55, w, h * 0.68); g.lineTo(w, h); g.fill();
-  g.fillStyle = "#f2c14e"; g.fillRect(w * 0.14, h * 0.18, w * 0.16, w * 0.16);  // square
-  g.strokeStyle = "#1d1d1f"; g.lineWidth = 5; g.beginPath(); g.moveTo(w * 0.08, h * 0.56); g.bezierCurveTo(w * 0.35, h * 0.3, w * 0.55, h * 0.95, w * 0.92, h * 0.22); g.stroke();
-  g.fillStyle = "#1d1d1f"; g.beginPath(); g.arc(w * 0.92, h * 0.22, 9, 0, 7); g.fill();
-  for (let i = 0; i < 14000; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * 0.04})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } // paper grain
-  g.fillStyle = "rgba(29,29,31,.55)"; g.font = `500 22px ${UI}`; g.textAlign = "right"; g.fillText("S.J. — Horizon, 2026", w - 36, h - 30);
+// Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
+const poster = canvasTex(1240, 1754, (g, w, h) => {
+  g.fillStyle = "#f6f4ef"; g.fillRect(0, 0, w, h);
+  const red = "#c7262e";
+  const big = (ch, x, y, size, rot = 0) => {
+    g.save(); g.translate(x, y); g.rotate(rot);
+    g.fillStyle = red; g.font = `800 ${size}px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle";
+    if ("letterSpacing" in g) g.letterSpacing = "0px";
+    g.fillText(ch, 0, 0); g.restore();
+  };
+  // the red SOMETHING letters, scattered and rotated
+  big("S", 250, 230, 470); big("T", 1010, 200, 470); big("O", 560, 560, 470);
+  big("H", 1060, 820, 470); big("I", 760, 860, 470, -0.62); big("M", 270, 1000, 470, -Math.PI / 2);
+  big("N", 680, 1350, 470); big("E", 230, 1560, 430, Math.PI / 2); big("G", 1060, 1630, 470, Math.PI);
+  // black statement text, tight and heavy
+  const line = (t, y, align = "left") => {
+    g.fillStyle = "#111"; g.font = `800 82px ${UI}`; g.textBaseline = "alphabetic";
+    if ("letterSpacing" in g) g.letterSpacing = "-5px";
+    g.textAlign = align; g.fillText(t, align === "left" ? 46 : w - 40, y);
+  };
+  line("TO CREATE A SOLUTION", 150); line("FOR SOMETHING", 252);
+  line("SOMETHING THAT HAS", 560, "right"); line("EVEN BIGGER CAUSE", 662, "right"); line("THAN ME", 764, "right");
+  line("SOMETHING THAT I AM", 1080); line("SUPPOSED TO MAKE", 1182);
+  line("TO BEGIN AN ERA", 1500, "right");
+  // small vertical credits
+  const vert = (t, x, y, rot) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = "#111"; g.font = `700 22px ${UI}`; if ("letterSpacing" in g) g.letterSpacing = "1px"; g.textAlign = "center"; g.fillText(t, 0, 0); g.restore(); };
+  vert("SIJO JOSEPH", 40, 620, Math.PI / 2);
+  vert("GIVE ME THE WISDOM THAT SITS BY YOUR THRONE", w - 32, 1180, Math.PI / 2);
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * 0.03})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } // paper grain
 });
-const artwork = new THREE.Group();
-const frame = rbox(7.4, 5.6, 0.22, 0.04, mat(0x151515, { roughness: 0.4 }), 2);
-const matBoard = new THREE.Mesh(new THREE.PlaneGeometry(7.0, 5.2), new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: 0.9 }));
-matBoard.position.z = 0.115;
-const canvasArt = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 4.2), new THREE.MeshStandardMaterial({ map: art.tex, roughness: 0.85 }));
-canvasArt.position.z = 0.12;
-artwork.add(frame, matBoard, canvasArt);
-artwork.position.set(-4.2, 6.0, WALL_Z + 0.12);
-artwork.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-scene.add(artwork);
-interactive(artwork, "“Horizon” — an original piece", () => { Sound.click(); boot("about"); });
-// Picture light
-const picLight = new THREE.SpotLight(0xffe2b8, 40, 12, 0.6, 0.7, 1.5);
-picLight.position.set(-4.2, 9.8, WALL_Z + 1.8);
-picLight.target = artwork;
-scene.add(picLight);
-const lampBar = rbox(3.2, 0.14, 0.3, 0.06, mat(0x8a8d91, { metalness: 0.8, roughness: 0.3 }), 2);
-lampBar.position.set(-4.2, 9.15, WALL_Z + 0.55);
-const lampArm = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), mat(0x8a8d91, { metalness: 0.8, roughness: 0.3 }));
-lampArm.rotation.x = Math.PI / 2; lampArm.position.set(-4.2, 9.15, WALL_Z + 0.25);
-scene.add(lampBar, lampArm);
+const posterGroup = new THREE.Group();
+const POSTER = { w: 5.6, h: 7.92 };   // A-series proportions
+const paperGeo = new THREE.PlaneGeometry(POSTER.w, POSTER.h, 12, 16);
+{ const p = paperGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 0.04 * Math.pow(Math.abs(x) / (POSTER.w / 2), 3) + 0.03 * Math.pow(Math.max(0, -y) / (POSTER.h / 2), 4)); } paperGeo.computeVertexNormals(); }
+const paper = new THREE.Mesh(paperGeo, new THREE.MeshStandardMaterial({ map: poster.tex, roughness: 0.8 }));
+paper.castShadow = paper.receiveShadow = true;
+posterGroup.add(paper);
+for (const [tx, ty] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {   // bits of clear tape at the corners
+  const tape = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.22), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, roughness: 0.3 }));
+  tape.position.set(tx * (POSTER.w / 2 - 0.1), ty * (POSTER.h / 2 - 0.08), 0.06); tape.rotation.z = tx * ty * 0.6;
+  posterGroup.add(tape);
+}
+posterGroup.position.set(-4.6, 6.5, WALL_Z + 0.03);
+scene.add(posterGroup);
+interactive(posterGroup, "My poster — “To begin an era”", () => { Sound.click(); boot("about"); });
+
+// Woven wire-cage pendant lamp (like the one in Sijo's room), warm bulb inside
+const lamp = new THREE.Group();
+const CAGE_H = 4.2;
+const cageR = (t) => 0.7 + Math.sin(Math.min(1, t * 1.12) * Math.PI) * 0.95 - t * 0.25;   // urn-shaped profile
+const strands = [];
+for (let k = 0; k < 38; k++) {
+  const a0 = (k / 38) * Math.PI * 2, turns = (Math.random() - 0.5) * 3.2, pts = [];
+  for (let j = 0; j <= 26; j++) {
+    const t = j / 26, a = a0 + turns * t + Math.sin(t * 8 + k) * 0.18, r = cageR(t) * (0.97 + Math.random() * 0.06);
+    pts.push(new THREE.Vector3(Math.cos(a) * r, -t * CAGE_H, Math.sin(a) * r));
+  }
+  strands.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 52, 0.024, 4, false));
+}
+for (const t of [0, 1]) { const ring = new THREE.TorusGeometry(cageR(t), 0.035, 6, 48); ring.rotateX(Math.PI / 2); ring.translate(0, -t * CAGE_H, 0); strands.push(ring); }
+const cage = new THREE.Mesh(mergeGeometries(strands), mat(0x2b2522, { metalness: 0.55, roughness: 0.45 }));
+cage.castShadow = true;
+const capTop = mesh(new THREE.CylinderGeometry(0.45, 0.75, 0.3, 24), mat(0x1c1a19, { roughness: 0.5 }));
+capTop.position.y = 0.1;
+const cord = mesh(new THREE.CylinderGeometry(0.035, 0.035, 30, 6), mat(0x1c1a19));
+cord.position.y = 15;
+const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 14), new THREE.MeshBasicMaterial({ color: 0xffd39a }));
+bulb.position.y = -1.5;
+const glowTex = canvasTex(128, 128, (g) => { const rg = g.createRadialGradient(64, 64, 0, 64, 64, 64); rg.addColorStop(0, "rgba(255,200,130,.9)"); rg.addColorStop(1, "rgba(255,170,90,0)"); g.fillStyle = rg; g.fillRect(0, 0, 128, 128); }).tex;
+const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+glowSprite.scale.setScalar(3.4); glowSprite.position.y = -1.5;
+const lampLight = new THREE.PointLight(0xffb468, 55, 34, 2);
+lampLight.position.y = -1.5;
+if (innerWidth > 760) { lampLight.castShadow = true; lampLight.shadow.mapSize.set(512, 512); lampLight.shadow.bias = -0.003; lampLight.shadow.radius = 3; }
+lamp.add(cage, capTop, cord, bulb, glowSprite, lampLight);
+lamp.position.set(0.4, 11.6, -0.8);
+scene.add(lamp);
+
+
 
 /* ───────────────────────── The laptop (13" silver) ───────────────────────── */
 // Proportions follow a 13" ultrabook: ~30.4 × 21.5 cm, ~1.1 cm thick (1 unit ≈ 5 cm).
@@ -645,7 +757,7 @@ S.projects.forEach((p, i) => {
   projectFiles.add(f);
   interactive(f, `📁 ${p.title}`, () => { Sound.click(); boot("work"); });
 });
-projectFiles.position.set(0, 0.02, 0);
+projectFiles.position.set(0, 0.08, 0);
 
 scene.add(projectFiles);
 
@@ -675,6 +787,53 @@ phone.rotation.y = 0.5;
 scene.add(phone);
 interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); });
 
+// 2d. Things from Sijo's real desk: plant in a white pot, green water bottle, black soundbar
+const plant = new THREE.Group();
+const pot2 = mesh(new THREE.CylinderGeometry(0.75, 0.6, 1.2, 32), mat(0xf4f4f2, { roughness: 0.5, clearcoat: 0.3 }));
+pot2.position.y = 0.6;
+const soil2 = mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 24), mat(0x3b2a20, { roughness: 1 }));
+soil2.position.y = 1.15;
+plant.add(pot2, soil2);
+const leafGeo = new THREE.SphereGeometry(0.5, 16, 10);
+leafGeo.scale(1, 0.18, 0.62);
+const leafMat = mat(0x4f8a4a, { roughness: 0.55 }), stemMat = mat(0x3d6b38, { roughness: 0.7 });
+for (let i = 0; i < 9; i++) {      // a small rubber-plant style cluster
+  const a = (i / 9) * Math.PI * 2 + (i % 2) * 0.3, h = 1.6 + (i % 3) * 0.55, r = 0.35 + (i % 3) * 0.15;
+  const stem = mesh(new THREE.CylinderGeometry(0.03, 0.04, h - 1.0, 6), stemMat);
+  stem.position.set(Math.cos(a) * r * 0.4, 1.15 + (h - 1.0) / 2, Math.sin(a) * r * 0.4);
+  stem.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25);
+  const leaf = mesh(leafGeo, leafMat);
+  leaf.position.set(Math.cos(a) * (r + 0.35), h, Math.sin(a) * (r + 0.35));
+  leaf.rotation.set(0.35 * Math.sin(a), -a, 0.5);
+  plant.add(stem, leaf);
+}
+plant.position.set(-3.9, 0, -2.7);
+scene.add(plant);
+interactive(plant, "My desk plant 🌱", () => { Sound.click(); wiggle(plant); });
+
+const bottle = new THREE.Group();
+const bottleMat = new THREE.MeshPhysicalMaterial({ color: 0x3e9a62, roughness: 0.1, transmission: 0.55, thickness: 0.4, transparent: true, opacity: 0.85 });
+const bBody = mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.4, 28), bottleMat);
+bBody.position.y = 1.2;
+for (let i = 0; i < 6; i++) { const ring = mesh(new THREE.TorusGeometry(0.46, 0.03, 6, 28), bottleMat); ring.rotation.x = Math.PI / 2; ring.position.y = 0.2 + i * 0.16; bottle.add(ring); }
+const bShoulder = mesh(new THREE.CylinderGeometry(0.28, 0.45, 0.35, 28), bottleMat);
+bShoulder.position.y = 2.57;
+const bCap = mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.32, 24), mat(0x2f7a4c, { roughness: 0.4 }));
+bCap.position.y = 2.9;
+bottle.add(bBody, bShoulder, bCap);
+bottle.position.set(-5.3, 0, -3.0);
+scene.add(bottle);
+
+const soundbar = new THREE.Group();
+const sbBody = rbox(5.2, 0.9, 1.0, 0.42, mat(0x18181a, { roughness: 0.6 }), 6);
+sbBody.position.y = 0.45;
+const sbGrille = rbox(4.6, 0.62, 0.02, 0.08, mat(0x101012, { roughness: 0.95 }), 2);
+sbGrille.position.set(0, 0.47, 0.5);
+soundbar.add(sbBody, sbGrille);
+soundbar.position.set(-0.1, 0, -3.0);
+scene.add(soundbar);
+interactive(soundbar, "Music on / off ♪", () => $("#soundBtn").click());
+
 // 3. Headphones — left back (sound toggle)
 const phones = new THREE.Group();
 // Lying flat: the headband rests on the desk and the ear cups sit face-down on their cushions
@@ -696,7 +855,7 @@ const cups = [-1, 1].map((sx) => {
   return g;
 });
 phones.add(band, bandPad, ...cups);
-phones.position.set(6.3, 0, -2.0); // back-right: between the pen stand and the cat
+phones.position.set(5.4, 0, -2.3); // back-right: between the pen stand and the cat
 phones.rotation.y = 0.35;
 scene.add(phones);
 interactive(phones, "Sound on / off", () => $("#soundBtn").click());
@@ -734,7 +893,7 @@ sketchPencil.position.set(-0.2, 0.1, 0.25);
 hobby.add(hobbyBoard, hobbyPages, hobbyFace, elastic, sketchPencil);
 hobby.position.y = 0.48; hobby.rotation.y = -0.12;
 books.add(under, underPages, hobby);
-books.position.set(-4.6, 0, 2.0);
+books.position.set(-5.4, 0.01, 1.2);
 books.rotation.y = 0.35;
 scene.add(books);
 interactive(books, "My weekend sketchbook", () => { Sound.click(); boot("about"); });
@@ -788,14 +947,14 @@ scene.add(rolesBlock);
 const menu = [["Work", "work"], ["Skills", "skills"], ["Resume", "resume"], ["Contact", "contact"]];
 menu.forEach(([label, key], i) => {
   const m = floorText([{ text: label + " ›", size: 160, weight: 600, spacing: -0.02 }], { width: 2.6 });
-  m.position.set(-7.2 + i * 0.25, 0.01, 3.4 + i * 0.8);
+  m.position.set(-7.2 + i * 0.25, 0.08, 3.4 + i * 0.8);   // on the desk mat
   scene.add(m);
   interactive(m, `Open ${label.toLowerCase()}`, () => boot(key));
 });
 
 // "Let's connect" — left back, with three tiles
-const connect = floorText([{ text: "Let's connect.", size: 130, weight: 600, spacing: -0.02, color: "#d1d1d6" }], { width: 4.4 });
-connect.position.set(-6.9, 0.01, -2.0);
+const connect = floorText([{ text: "Let's connect.", size: 130, weight: 600, spacing: -0.02, color: "#f5f5f7" }], { width: 4.4, bg: "rgba(18,18,20,.82)" });
+connect.position.set(-6.9, 0.03, -2.0);
 scene.add(connect);
 const tileDefs = [["@", "Email", S.links.mail], ["in", "LinkedIn", S.links.linkedin], ["Bē", "Behance", S.links.behance]];
 tileDefs.forEach(([glyph, label, url], i) => {
@@ -993,19 +1152,20 @@ function loop(now) {
   if (!reduced) {
     // cat: tail sways; on hover it swishes faster, head tilts, ears flick; petting = happy eyes
     const catHover = hovered === cat && !booting, petting = now < catPetUntil;
-    if (catTail) {
-      const { pos, orig, idx, w, base } = catTail, a = pos.array;
-      const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
-      for (let k = 0; k < idx.length; k++) {
-        const i = idx[k] * 3, wk = w[k], wc = Math.pow(wk, 1.4);
-        const ang = amp * wc * Math.sin(t * speed - wk * 2.2);      // wave travels down the tail
-        const lift = (petting ? 5 : 1.5) * wc * (0.5 + 0.5 * Math.sin(t * speed * 0.5 - wk * 1.5));
-        const dx = orig[i] - base.x, dy = orig[i + 1] - base.y, c = Math.cos(ang), s = Math.sin(ang);
-        a[i] = base.x + dx * c - dy * s;          // swish side to side (around the vertical axis)
-        a[i + 1] = base.y + dx * s + dy * c;
-        a[i + 2] = orig[i + 2] + lift;            // and curl the tip upward
+    if (catRig) {
+      const r = catRig;
+      if (now > r.nextChange) {                                   // every so often she sits down, later stands back up
+        if (r.state === "stand") { r.state = "sit"; r.nextChange = now + 16000 + Math.random() * 10000; r.nextLick = now + 3000 + Math.random() * 2000; }
+        else { r.state = "stand"; r.nextChange = now + 9000 + Math.random() * 8000; }
       }
-      pos.needsUpdate = true;
+      if (r.state === "sit" && r.sit > 0.95 && now > r.nextLick) { r.lickUntil = now + 3400; r.nextLick = now + 6500 + Math.random() * 5000; }
+      const sitGoal = r.state === "sit" ? 1 : 0, lickGoal = now < r.lickUntil ? 1 : 0;
+      const before = r.sit + r.lick;
+      r.sit += (sitGoal - r.sit) * 0.02;
+      r.lick += (lickGoal - r.lick) * 0.07;
+      if (Math.abs(r.sit + r.lick - before) > 1e-4 || r.lick > 0.01) poseCat(r, t);
+      const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
+      swishTail(r, amp, speed, (petting ? 5 : 1.5) * (1 - 0.7 * r.sit), t);
     }
     catMood += ((catHover ? 1 : 0) - catMood) * 0.08;
     const tSpeed = 1.6 + catMood * 5.5, tAmp = 0.1 + catMood * 0.22;
@@ -1032,7 +1192,7 @@ function loop(now) {
     ball.position.x += ballVX;
     ball.children[0].rotation.z -= ballVX / BALL_R;
     ballVX *= 0.985;
-    if ((ball.position.x < -6.6 && ballVX < 0) || (ball.position.x > 6.8 && ballVX > 0)) ballVX *= -0.8; // bounce off the legs
+    if ((ball.position.x < -7.6 && ballVX < 0) || (ball.position.x > 1.2 && ballVX > 0)) ballVX *= -0.8; // bounce off the side panel / cubby
   }
   if (wiggleT >= 0) {
     wiggleT += 0.06;
@@ -1057,30 +1217,6 @@ manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) *
 const shadowsOn = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } });
 
 // Table: scaled to the desk footprint, top surface at y = 0; floor + skirting follow its legs
-const DESK_HEIGHT = 14.8;
-async function loadTable() {
-  const dae = await new ColladaLoader(manager).loadAsync("models/table/table_dae/table.dae");
-  const holder = new THREE.Group();
-  holder.add(dae.scene);
-  shadowsOn(holder);
-  let box = new THREE.Box3().setFromObject(holder);
-  let size = box.getSize(new THREE.Vector3());
-  if (size.z > size.x) { holder.rotation.y = Math.PI / 2; box.setFromObject(holder); size = box.getSize(new THREE.Vector3()); }
-  const sx = TABLE.w / size.x;
-  holder.scale.set(sx, DESK_HEIGHT / size.y, TABLE.d / size.z);   // 95 × 50 cm top, 74 cm tall
-  box.setFromObject(holder);
-  const c = box.getCenter(new THREE.Vector3());
-  holder.position.set(TABLE.x - c.x, -box.max.y, TABLE.z - c.z);
-  // black-stained wood: keep the grain from the model's texture, remap it to near-black
-  const woodTex = await new THREE.TextureLoader(manager).loadAsync("models/table/table_dae/table_final_map.jpg");
-  const black = new THREE.MeshPhysicalMaterial({ map: recolor(woodTex.image, [12, 12, 13], [34, 33, 32], [70, 66, 62]), roughness: 0.5, clearcoat: 0.45, clearcoatRoughness: 0.35 });
-  holder.traverse((m) => { if (m.isMesh) m.material = black; });
-  scene.add(holder);
-  [tableTop, apron, ...tableLegs].forEach((o) => scene.remove(o));
-  box.setFromObject(holder);
-  floor.position.y = box.min.y;
-  skirting.position.y = box.min.y + 0.25;
-}
 
 // Fur texture recoloured to ginger: keep the light/dark detail, remap it onto a ginger ramp
 function gingerize(img) { return recolor(img, [96, 44, 14], [210, 122, 56], [250, 222, 184]); }
@@ -1100,8 +1236,62 @@ function recolor(img, dark, mid, light) {
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 }
-let catTail = null;
-const CAT_HEIGHT = 5.0; // ≈ 25 cm at the shoulder / head — real-cat size next to the 13" laptop
+let catRig = null;
+const TAIL_BASE = new THREE.Vector3(0, 19.5, 22), TAIL_LEN = 19.5;
+const HIP = new THREE.Vector3(0, 5, 13), NECK = new THREE.Vector3(0, -10, 23), MOUTH = new THREE.Vector3(0, -22.6, 26.2);
+const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+// Bend one point (and optionally its normal) by the current sit / lick amounts. Rotations are in model space.
+function bendPoint(x, y, z, sw, hw, sit, pitch, yaw, out, n) {
+  if (hw > 0) {                               // head: turn (around Z) then dip (around X) at the neck
+    let a = yaw * hw, c = Math.cos(a), s = Math.sin(a), dx = x - NECK.x, dy = y - NECK.y;
+    x = NECK.x + dx * c - dy * s; y = NECK.y + dx * s + dy * c;
+    if (n) { const nx = n[0] * c - n[1] * s; n[1] = n[0] * s + n[1] * c; n[0] = nx; }
+    a = pitch * hw; c = Math.cos(a); s = Math.sin(a); dy = y - NECK.y; const dz = z - NECK.z;
+    y = NECK.y + dy * c - dz * s; z = NECK.z + dy * s + dz * c;
+    if (n) { const ny = n[1] * c - n[2] * s; n[2] = n[1] * s + n[2] * c; n[1] = ny; }
+  }
+  if (sw > 0 && sit > 0) {                    // rear: rotate down around the hips; haunches settle onto the desk
+    const a = -0.72 * sit * sw, c = Math.cos(a), s = Math.sin(a), dy = y - HIP.y, dz = z - HIP.z;
+    y = HIP.y + dy * c - dz * s; z = HIP.z + dy * s + dz * c;
+    if (z < 0.6) z = 0.6 - (0.6 - z) * 0.08;
+    if (n) { const ny = n[1] * c - n[2] * s; n[2] = n[1] * s + n[2] * c; n[1] = ny; }
+  }
+  out[0] = x; out[1] = y; out[2] = z;
+}
+const _p = [0, 0, 0], _n = [0, 0, 0];
+function poseCat(r, t) {
+  const sit = r.sit * r.sit * (3 - 2 * r.sit);                                   // eased
+  const pitch = (0.6 + 0.07 * Math.sin(t * 11)) * r.lick, yaw = 0.38 * r.lick;   // licking bob
+  const { orig, origN, posed, body, ws, wh } = r, P = r.pos.array, N = r.nor.array;
+  for (let k = 0; k < body.length; k++) {
+    const i = body[k] * 3;
+    _n[0] = origN[i]; _n[1] = origN[i + 1]; _n[2] = origN[i + 2];
+    bendPoint(orig[i], orig[i + 1], orig[i + 2], ws[k], wh[k], sit, pitch, yaw, _p, _n);
+    posed[i] = P[i] = _p[0]; posed[i + 1] = P[i + 1] = _p[1]; posed[i + 2] = P[i + 2] = _p[2];
+    N[i] = _n[0]; N[i + 1] = _n[1]; N[i + 2] = _n[2];
+  }
+  bendPoint(TAIL_BASE.x, TAIL_BASE.y, TAIL_BASE.z, 1, 0, sit, 0, 0, _p);
+  r.tailBase.set(_p[0], _p[1], _p[2]);
+  // tongue follows the mouth, flicking while she licks
+  bendPoint(MOUTH.x, MOUTH.y, MOUTH.z, 0, 1, sit, pitch, yaw, _p);
+  r.tongue.visible = r.lick > 0.6;
+  r.tongue.position.set(_p[0], _p[1] - 0.6, _p[2] - 1.2);
+  r.tongue.rotation.set(0.9 + pitch, 0, yaw);
+  r.tongue.scale.set(1, 0.55 + 0.45 * Math.abs(Math.sin(t * 11)), 1);
+  r.pos.needsUpdate = true; r.nor.needsUpdate = true;
+}
+function swishTail(r, amp, speed, lift, t) {
+  const { posed, tail, wt, tailBase: b } = r, P = r.pos.array;
+  for (let k = 0; k < tail.length; k++) {
+    const i = tail[k] * 3, wk = wt[k], wc = Math.pow(wk, 1.4);
+    const ang = amp * wc * Math.sin(t * speed - wk * 2.2), c = Math.cos(ang), s = Math.sin(ang);
+    const dx = posed[i] - b.x, dy = posed[i + 1] - b.y;
+    P[i] = b.x + dx * c - dy * s; P[i + 1] = b.y + dx * s + dy * c;
+    P[i + 2] = posed[i + 2] + lift * wc * (0.5 + 0.5 * Math.sin(t * speed * 0.5 - wk * 1.5));
+  }
+  r.pos.needsUpdate = true;
+}
+const CAT_HEIGHT = 4.7; // ≈ 24 cm to the top of the head — real-cat size next to the 13" laptop
 async function loadCat() {
   const dir = "models/cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/";
   const tl = new THREE.TextureLoader(manager);
@@ -1112,16 +1302,30 @@ async function loadCat() {
   ]);
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
   obj.traverse((m) => { if (m.isMesh) m.material = fur; });
-  // Tail = thin strip (|x| < 1.8) that starts behind the rump (y > 19.5) at ~20–24 cm height, in model units (cm, Z-up)
-  const TAIL_BASE = new THREE.Vector3(0, 19.5, 22), TAIL_LEN = 19.5;
+  // The model has no skeleton, so we pose it by bending its vertices (model space: cm, Z-up, head at −y, tail at +y).
+  //  · rear half (y > 0)      → lowers around the hips to sit
+  //  · head + neck (y < −8)   → turns and dips towards the chest to lick
+  //  · tail (thin strip behind the rump) → swishes
   obj.traverse((m) => {
     if (!m.isMesh) return;
-    const pos = m.geometry.attributes.position, idx = [], w = [];
+    m.frustumCulled = false;
+    const pos = m.geometry.attributes.position, nor = m.geometry.attributes.normal;
+    const body = [], ws = [], wh = [], tail = [], wt = [];
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-      if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { idx.push(i); w.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
+      const sw = smooth(0, 11, y), hw = smooth(-8, -13, y) * smooth(15, 21, z);
+      if (sw > 0 || hw > 0) { body.push(i); ws.push(sw); wh.push(hw); }
+      if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { tail.push(i); wt.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
     }
-    if (idx.length) catTail = { pos, orig: Float32Array.from(pos.array), idx: Int32Array.from(idx), w: Float32Array.from(w), base: TAIL_BASE };
+    const tongue = mesh(new THREE.CapsuleGeometry(0.55, 1.3, 4, 8), mat(0xe07c8a, { roughness: 0.35 }));
+    tongue.visible = false;
+    obj.add(tongue);
+    catRig = {
+      pos, nor, orig: Float32Array.from(pos.array), origN: Float32Array.from(nor.array), posed: Float32Array.from(pos.array),
+      body: Int32Array.from(body), ws: Float32Array.from(ws), wh: Float32Array.from(wh),
+      tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone(), tongue,
+      state: "stand", sit: 0, lick: 0, nextChange: performance.now() + 6000, nextLick: 0, lickUntil: 0
+    };
   });
   obj.rotation.x = -Math.PI / 2;            // model is Z-up
   const holder = new THREE.Group();
@@ -1133,7 +1337,7 @@ async function loadCat() {
   box.setFromObject(holder);
   const c = box.getCenter(new THREE.Vector3());
   obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
-  holder.position.set(7.0, 0, 1.0);
+  holder.position.set(6.6, 0, 1.1);
   holder.rotation.y = CAT_FACING;
   scene.add(holder);
   // swap the procedural cat out, keep the same hover / pet behaviour
@@ -1143,11 +1347,11 @@ async function loadCat() {
   hoverables[i] = holder;
   cat = holder;
 }
-const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards the laptop
+const CAT_FACING = -1.0; // three-quarter view: you see her side, so sitting down is visible
 
 // Ball on the marble floor — click to kick it
 let ball = null, ballVX = 0;
-const BALL_R = 2.2; // a real size-5 football is ≈22 cm across
+const BALL_R = 1.5; // ≈15 cm across — reads in proportion with the desk
 async function loadBall() {
   const dir = "models/football/";
   const tl = new THREE.TextureLoader(manager);
@@ -1169,7 +1373,7 @@ async function loadBall() {
   spin.add(inner);
   ball = new THREE.Group();
   ball.add(spin);
-  ball.position.set(-3.6, floor.position.y + BALL_R, 2.4); // on the floor under the desk, between the legs
+  ball.position.set(-3.2, floor.position.y + BALL_R, 0.8); // on the floor, tucked under the desk
   scene.add(ball);
   interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
 }
@@ -1212,7 +1416,7 @@ async function loadHeadphones() {
   hoverables[i] = holder;
 }
 
-await Promise.allSettled([loadTable(), loadCat(), loadBall(), loadHeadphones()]).then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model failed to load, using the built-in version:", x.reason)));
+await Promise.allSettled([loadCat(), loadBall(), loadHeadphones()]).then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model failed to load, using the built-in version:", x.reason)));
 if (ball) ball.position.y = floor.position.y + BALL_R; // the table may have moved the floor
 
 /* ───────────────────────── Start ───────────────────────── */
