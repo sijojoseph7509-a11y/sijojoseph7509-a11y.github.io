@@ -18,7 +18,9 @@ async function page({ mobile = false, route } = {}) {
   p.problems = [];
   p.on("pageerror", (e) => p.problems.push("JS error: " + e.message));
   p.on("console", (m) => { if (m.type() === "error") p.problems.push("console: " + m.text()); });
-  p.on("requestfailed", (r) => { if (!r.failure()?.errorText.includes("ABORTED") || !route) p.problems.push("failed: " + r.url()); });
+  // cancelled requests (ERR_ABORTED) aren't bugs — tests close pages mid-download and some dev servers report streamed
+  // downloads as aborted; real failures still show up as 4xx/5xx responses, other network errors or missing models
+  p.on("requestfailed", (r) => { const err = r.failure()?.errorText || ""; if (!err.includes("ABORTED")) p.problems.push("failed: " + r.url() + " " + err); });
   p.on("response", (r) => { if (r.status() >= 400) p.problems.push(r.status() + " " + r.url()); });
   if (route) { await p.setRequestInterception(true); p.on("request", (req) => route(req) || req.continue()); }
   p.ctx = ctx;
@@ -79,18 +81,30 @@ await check("Opening the laptop hides the pointer for this visit; the hint comes
 });
 
 for (const mobile of [false, true]) {
-  await check(`${mobile ? "Phone" : "Desktop"}: every clickable thing is on screen at home and when leaning in`, async () => {
+  await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 }); await sleep(600);
-    const home = await p.evaluate(() => Desk.offscreen());
-    expect(home.length === 0, "off-screen at home: " + home.join(", "));
+    const home = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me/.test(l)));   // close-up: ball + wall lettering may be out of frame
+    expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
+    await p.click("#zoomBtn"); await sleep(1400);
+    const room = await p.evaluate(() => Desk.offscreen());
+    expect(room.length === 0, "off-screen in the room view: " + room.join(", "));
     await p.click("#zoomBtn"); await sleep(1300);
-    const lean = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me/.test(l)));   // the ball/wall lettering may leave the frame when leaning over the desk
-    expect(lean.length === 0, "off-screen when leaning in: " + lean.join(", "));
-    await p.click("#zoomBtn"); await sleep(1200);
-    expect(!(await p.evaluate(() => Desk.state().zoomed)), "zoom button did not return"); await p.ctx.close();
+    expect(!(await p.evaluate(() => Desk.state().room)), "zoom button did not come back to the desk"); await p.ctx.close();
   });
 }
+
+await check("Laptop pointer fades out while the view is dragged, comes back when still", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(900);
+  const op = () => p.$eval("#coach", (c) => +getComputedStyle(c).opacity);
+  expect(await op() > 0.9, "pointer not visible at rest");
+  await p.mouse.move(700, 450); await p.mouse.down();
+  for (let i = 0; i < 12; i++) { await p.mouse.move(700 + i * 15, 450); await sleep(30); }
+  await sleep(150);
+  expect(await op() < 0.2, "pointer still visible while dragging");
+  await p.mouse.up(); await sleep(1500);
+  expect(await op() > 0.9, "pointer did not come back"); await p.ctx.close();
+});
 
 await check("Back button / phone back-swipe closes the Mac and stays on the site", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);

@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=46` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=47` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -192,7 +192,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 ### 8.1 Room
 | Object | Detail |
 |---|---|
-| Back wall | Plane 400 × 220 at (0.2, 60, −3.75). Procedural plaster noise texture tinted **#45403b** (warm graphite, v1.5; was near-black #2c2b2a, which felt oppressive). Receives shadows. |
+| Back wall | Plane 400 × 220 at (0.2, 60, −3.75). Procedural plaster noise texture tinted **#87a081 soft sage green** (v1.7; before: warm graphite #45403b, and near-black #2c2b2a). Skirting #56634f. Name lettering is dark green-black (#1e2a1f / #344536 / #3d5040) so it reads on the sage. Receives shadows. |
 | Side walls | Two planes 400 × 220 at x = 0.2 ± **44** (v1.5; were ± 24 and boxed the desk in), y 60, centred z = WALL_Z + 200 (span z −3.75 → 396). Same material as back wall. Added so orbiting never shows the void. |
 | Skirting | 400 × 0.5 × 0.12 at y = −14.55, tinted #232221. |
 | Floor | Plane 600 × 600 at y = −14.8. Procedural **cream-white marble** (veins, clouding, grout every 2 units), clearcoat 0.8. |
@@ -250,7 +250,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 
 | Setting | Value |
 |---|---|
-| Camera (v1.6) | **Seated eye level of a 6 ft person**: eyes 10 units (50 cm) above the desk top ≈ 124 cm above the floor (`EYE_Y`). Vertical FOV 56° (62° on portrait phones). `solveView(points)` finds the nearest chair distance + up/down look at which a list of points fits on screen, clear of the top menu pill and the hint pill. **Home** = `HOME_SEE` (poster, name + roles, laptop, cat, desk front, football on the floor → the whole room). **Lean in** (zoom button) = `LEAN_SEE` (just the desk: every folder, label, tile, gadget). Scroll/pinch zoom goes toward the cursor (`zoomToCursor`). Both views re-solved on resize. |
+| Camera (v1.7) | Two solved views (`solveDesk`, `solveRoom`): **HOME = desk close-up** from ≈20° right and ≈35° above (`DESK_DIR`), closest distance at which every desk item (`DESK_SEE`) fits clear of the top/bottom pills. **ROOM** (zoom button "step back") = seated eye level of a 6 ft person (`EYE_Y` = 10 units ≈ 124 cm above the floor) fitting poster, name, desk and the football (`ROOM_SEE`). Vertical FOV 56° (62° portrait). Scroll/pinch zooms toward the cursor. Re-solved on resize; orbit limits cover both views. |
 | Camera (before v1.5) | `PerspectiveCamera`, FOV 30°, high and looking down ~20° — felt "odd" / top-down |
 | Home target | `(−0.6, 8.6, 0.0)` |
 | Home direction | `normalize(0, 0.34, 0.94)` — ~20° above the desk, straight on |
@@ -530,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.7) | Start view = desk close-up from slight right + above; zoom button steps back to the eye-level room (football in play). "Click the laptop" pointer pinned on the laptop screen and fades out while the view moves. "Open portfolio without 3D" on a frosted pill. Sage green wall + dark name lettering. QA: pointer-fade check; aborted requests ignored. |
 | (v1.6) | Room view at eye level includes the floor + football (ball moved to the desk front, rolls between the panels); zoom button = "lean in" over the desk; zoom-to-cursor; lamp raised to mid-poster; "Click the laptop" pointer shows on every visit until the laptop is opened. QA: every clickable thing on screen at home + leaning in (`Desk.offscreen()`), pointer returns after refresh, tap test finds the cat wherever it is (`Desk.screenPos()`). |
 | (v1.5) | Seated eye-level camera (6 ft person) with an automatic framing solver; room widened (side walls ± 44) and wall lightened to warm graphite; softer vignette; nav/skip link contrast ≥ 4.5:1; larger name lettering. Reviewed with the design-critique skill. |
 | (v1.4) | Phone/UX pass: welcome screen (fixes music not starting, accidental first-tap boot, learning curve), first-visit laptop pointer, back-swipe closes the Mac (history entry), reopening returns to the desk, hint restored after the Mac, touch tap labels no longer stuck or invisible, "tap/click" wording, no "boot" jargon, iOS audio unlock + silent switch, safe-area insets, narrow-phone nav/dock/clock fixes, half-size poster texture on phones, GPU context-loss recovery, honest no-WebGL message. QA skill extended to ~25 checks. |

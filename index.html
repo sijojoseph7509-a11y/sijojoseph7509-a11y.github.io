@@ -11,7 +11,7 @@
     // Self-update: phones often reopen a saved copy of this page. If a newer version has been
     // published (version.json, never cached), load it. BUILD must match version.json and ?v= below.
     (() => {
-      const BUILD = "46";
+      const BUILD = "47";
       const check = () => fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((v) => {
@@ -36,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
   <script type="importmap">
   {
     "imports": {
@@ -50,7 +50,7 @@
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/OrbitControls.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin>
-  <link rel="modulepreload" href="main.js?v=46">
+  <link rel="modulepreload" href="main.js?v=47">
 </head>
 <body>
   <!-- 3D desk -->
@@ -59,8 +59,8 @@
   <div class="grain" aria-hidden="true"></div>
 
   <!-- HUD -->
-  <button class="hud hud-left" id="zoomBtn" aria-label="Zoom in">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M8 11h6M11 8v6" id="zoomIcon"/></svg>
+  <button class="hud hud-left" id="zoomBtn" aria-label="Step back to see the room">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M8 11h6" id="zoomIcon"/></svg>
   </button>
   <button class="hud hud-right" id="soundBtn" aria-label="Mute sound">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="soundWaves" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
@@ -161,9 +161,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=46"></script>
-  <script src="os.js?v=46"></script>
-  <script src="music.js?v=46"></script>
-  <script type="module" src="main.js?v=46"></script>
+  <script src="content.js?v=47"></script>
+  <script src="os.js?v=47"></script>
+  <script src="music.js?v=47"></script>
+  <script type="module" src="main.js?v=47"></script>
 </body>
 </html>
