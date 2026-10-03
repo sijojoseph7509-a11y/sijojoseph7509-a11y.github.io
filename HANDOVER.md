@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=44` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=45` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -192,8 +192,8 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 ### 8.1 Room
 | Object | Detail |
 |---|---|
-| Back wall | Plane 400 × 220 at (0.2, 60, −3.75). Procedural plaster noise texture tinted **#2c2b2a** (charcoal). Receives shadows. |
-| Side walls | Two planes 400 × 220 at x = 0.2 ± 24, y 60, centred z = WALL_Z + 200 (span z −3.75 → 396). Same material as back wall. Added so orbiting never shows the void. |
+| Back wall | Plane 400 × 220 at (0.2, 60, −3.75). Procedural plaster noise texture tinted **#45403b** (warm graphite, v1.5; was near-black #2c2b2a, which felt oppressive). Receives shadows. |
+| Side walls | Two planes 400 × 220 at x = 0.2 ± **44** (v1.5; were ± 24 and boxed the desk in), y 60, centred z = WALL_Z + 200 (span z −3.75 → 396). Same material as back wall. Added so orbiting never shows the void. |
 | Skirting | 400 × 0.5 × 0.12 at y = −14.55, tinted #232221. |
 | Floor | Plane 600 × 600 at y = −14.8. Procedural **cream-white marble** (veins, clouding, grout every 2 units), clearcoat 0.8. |
 | Background / fog | Scene background #1d1d1f. Fog colour = background; near = camera distance + 30, far = + 130. |
@@ -250,7 +250,8 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 
 | Setting | Value |
 |---|---|
-| Camera | `PerspectiveCamera`, **FOV 30°**, near 0.5, far 400 |
+| Camera (v1.5) | **Seated eye level of a 6 ft person**: eyes 10 units (50 cm) above the desk top ≈ 124 cm above the floor (`EYE_Y`). Vertical FOV 48° (58° on portrait phones). `fitCamera()` solves for the nearest chair distance and the best up/down look so every point in `MUST_SEE` (poster, name + roles, laptop, cat, headset, front of the desk) fits on screen with room for the top menu pill and the hint pill. Re-solved on resize. |
+| Camera (before v1.5) | `PerspectiveCamera`, FOV 30°, high and looking down ~20° — felt "odd" / top-down |
 | Home target | `(−0.6, 8.6, 0.0)` |
 | Home direction | `normalize(0, 0.34, 0.94)` — ~20° above the desk, straight on |
 | Home distance | `max( 31 / tan(vFOV/2) × 0.62 , 12.5 / tan(hFOV/2) )` — first term fits the wall + desk vertically; second fits ~25 units of width on tall/phone screens. Recomputed on resize. |
@@ -529,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.5) | Seated eye-level camera (6 ft person) with an automatic framing solver; room widened (side walls ± 44) and wall lightened to warm graphite; softer vignette; nav/skip link contrast ≥ 4.5:1; larger name lettering. Reviewed with the design-critique skill. |
 | (v1.4) | Phone/UX pass: welcome screen (fixes music not starting, accidental first-tap boot, learning curve), first-visit laptop pointer, back-swipe closes the Mac (history entry), reopening returns to the desk, hint restored after the Mac, touch tap labels no longer stuck or invisible, "tap/click" wording, no "boot" jargon, iOS audio unlock + silent switch, safe-area insets, narrow-phone nav/dock/clock fixes, half-size poster texture on phones, GPU context-loss recovery, honest no-WebGL message. QA skill extended to ~25 checks. |
 | (v1.3) | Old cached copies on phones showed the cartoon cat (old code + deleted model files): legacy model paths restored, self-update via `version.json`. Code review fixes: no crash with a stale cached os.js, no reload loop, repaint on resize behind the desktop, honest progress bar, one MODEL manifest. Added `window.Desk.state()` and the site-qa skill. |
 | (v1.2) | Cat mesh quantised (343 KB) + smaller textures → 1.06 MB of models; football UVs fixed (was plain white in v1.1); late models fade in; adaptive quality for slow GPUs; favicon (no more 404). |

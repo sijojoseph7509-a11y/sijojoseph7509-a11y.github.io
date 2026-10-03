@@ -11,7 +11,7 @@
     // Self-update: phones often reopen a saved copy of this page. If a newer version has been
     // published (version.json, never cached), load it. BUILD must match version.json and ?v= below.
     (() => {
-      const BUILD = "44";
+      const BUILD = "45";
       const check = () => fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((v) => {
@@ -36,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=44">
+  <link rel="stylesheet" href="styles.css?v=45">
   <script type="importmap">
   {
     "imports": {
@@ -50,7 +50,7 @@
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/OrbitControls.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin>
-  <link rel="modulepreload" href="main.js?v=44">
+  <link rel="modulepreload" href="main.js?v=45">
 </head>
 <body>
   <!-- 3D desk -->
@@ -161,9 +161,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=44"></script>
-  <script src="os.js?v=44"></script>
-  <script src="music.js?v=44"></script>
-  <script type="module" src="main.js?v=44"></script>
+  <script src="content.js?v=45"></script>
+  <script src="os.js?v=45"></script>
+  <script src="music.js?v=45"></script>
+  <script type="module" src="main.js?v=45"></script>
 </body>
 </html>
