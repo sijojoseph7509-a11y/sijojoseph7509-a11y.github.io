@@ -164,47 +164,58 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 // Seated eye level: a 6 ft (183 cm) person sitting at the desk has their eyes ≈124 cm above the floor —
-// 50 cm above the 74 cm desk top = 10 units (1 unit ≈ 5 cm). The camera always sits at that height, looking
-// across the desk; it only moves back (as if leaning back in the chair) until the key things fit the screen.
+// 50 cm above the 74 cm desk top = 10 units. The camera always sits at that height; a small solver finds the
+// nearest chair distance + look angle at which a list of things all fit on screen (clear of the nav/hint pills).
 const EYE_Y = 10, VIEW_X = -0.6, WALL_FACE = -3.7;
-const fovFor = (aspect) => (aspect < 1 ? 58 : 48);   // a touch wider on portrait phones
+const fovFor = (aspect) => (aspect < 1 ? 62 : 56);   // a natural, slightly wide view so the floor, ball and room show
 const camera = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.5, 400);
-// what must be in view at home: the A1 poster, name + roles, the whole laptop, the cat and the headset
-const MUST_SEE = [
+const V = (list) => list.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+// Home view: the room — poster, name + roles, everything on the desk, and the football on the floor
+const HOME_SEE = V([
   [-13.75, 21.4, WALL_FACE], [-1.9, 21.4, WALL_FACE], [-13.75, 4.8, WALL_FACE],   // poster
   [12.6, 10.9, WALL_FACE], [12.6, 6.2, WALL_FACE],                                  // name + roles
-  [-3.1, 0, 2.6], [3.1, 0, 2.6],                                                     // laptop front corners
-  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [6.3, 4.4, -2.0],                                  // cat, headset
-  [-8.2, 0, 5.4], [6.2, 0, 5.9]                                                      // front of the desk: mat labels + project folders
-].map(([x, y, z]) => new THREE.Vector3(x, y, z));
-const HOME = { pos: new THREE.Vector3(), target: new THREE.Vector3(), zoom: 1, dist: 20 };
-function fitCamera() {
-  camera.aspect = innerWidth / innerHeight;
-  camera.fov = fovFor(camera.aspect);
-  const zoom = camera.zoom, savedPos = camera.position.clone(), savedQ = camera.quaternion.clone();
-  camera.zoom = 1; camera.updateProjectionMatrix();   // solve for the un-zoomed view
+  [-3.1, 0, 2.6], [3.1, 0, 2.6], [8.3, 5.2, 0.4], [8.3, 0, 2.8],                    // laptop, cat
+  [-8.6, 0, 5.4], [9.2, 0, 6.0],                                                     // front corners of the desk (mat labels, folders)
+  [-4.5, -14.8, 7.7], [-4.5, -11.8, 6.2]                                             // the football on the floor at the front of the desk
+]);
+// "Lean in" view (zoom button): just the desk, so every folder, label, tile and gadget is easy to tap
+const LEAN_SEE = V([
+  [-9.0, 0, 6.2], [9.4, 0, 6.2], [-9.0, 0, -1.0],                                    // desk front corners, connect tiles
+  [-8.5, 3.3, -2.9], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [6.3, 4.4, -2.0]               // bottle, laptop lid, cat, headset
+]);
+function solveView(points, out) {
   const p = new THREE.Vector3(), look = new THREE.Vector3();
   const fits = (z, ty) => {
     camera.position.set(VIEW_X, EYE_Y, z); camera.lookAt(look.set(VIEW_X, ty, WALL_FACE)); camera.updateMatrixWorld();
     let worst = 0;
     // keep clear of the on-screen buttons: top menu pill above, hint pill below
-    for (const v of MUST_SEE) { p.copy(v).project(camera); if (p.z > 1) return -1; worst = Math.max(worst, Math.abs(p.x) / 0.94, p.y / 0.8, -p.y / 0.8); }
+    for (const v of points) { p.copy(v).project(camera); if (p.z > 1) return -1; worst = Math.max(worst, Math.abs(p.x) / 0.94, p.y / 0.8, -p.y / 0.8); }
     return worst <= 1 ? worst : -1;
   };
   let best = null;
-  for (let z = 15; z <= 140 && !best; z += 0.25) {          // nearest chair position where everything fits…
-    for (let ty = 3; ty <= 13; ty += 0.25) {               // …with the best-balanced up/down look
+  for (let z = 12; z <= 160 && !best; z += 0.25) {          // nearest chair position where everything fits…
+    for (let ty = -12; ty <= 13; ty += 0.25) {             // …with the best-balanced up/down look
       const w = fits(z, ty);
       if (w >= 0 && (!best || w < best.w)) best = { z, ty, w };
     }
   }
-  best = best || { z: 40, ty: 8 };
-  camera.position.copy(savedPos); camera.quaternion.copy(savedQ); camera.zoom = zoom; camera.updateProjectionMatrix();   // the solver only measured
-  HOME.pos.set(VIEW_X, EYE_Y, best.z);
+  best = best || { z: 45, ty: 4 };
+  out.pos.set(VIEW_X, EYE_Y, best.z);
   // orbit around a point on the desk's centre line (not the far wall), so dragging feels like turning your head
   const dir = new THREE.Vector3(0, best.ty - EYE_Y, WALL_FACE - best.z).normalize();
-  HOME.target.copy(HOME.pos).addScaledVector(dir, (best.z - 0) / -dir.z);
-  HOME.dist = HOME.pos.distanceTo(HOME.target);
+  out.target.copy(out.pos).addScaledVector(dir, best.z / -dir.z);
+  out.dist = out.pos.distanceTo(out.target);
+  return out;
+}
+const HOME = { pos: new THREE.Vector3(), target: new THREE.Vector3(), zoom: 1, dist: 20 };
+const LEAN = { pos: new THREE.Vector3(), target: new THREE.Vector3(), zoom: 1, dist: 10 };
+function fitCamera() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = fovFor(camera.aspect);
+  const zoom = camera.zoom, savedPos = camera.position.clone(), savedQ = camera.quaternion.clone();
+  camera.zoom = 1; camera.updateProjectionMatrix();   // solve for the un-zoomed view
+  solveView(HOME_SEE, HOME); solveView(LEAN_SEE, LEAN);
+  camera.position.copy(savedPos); camera.quaternion.copy(savedQ); camera.zoom = zoom; camera.updateProjectionMatrix();   // the solver only measured
   scene.fog.near = HOME.dist + 40; scene.fog.far = HOME.dist + 150;   // fog always starts behind the room
 }
 fitCamera();
@@ -215,12 +226,13 @@ controls.target.copy(HOME.target);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
+controls.zoomToCursor = true;   // scroll / pinch zooms toward what you point at, so nothing slides out of reach
 // zoom / look-around limits are relative to the home view (recomputed on resize)
 function setZoomLimits() {
-  controls.minDistance = HOME.dist * 0.45; controls.maxDistance = HOME.dist * 1.15;
-  const off = new THREE.Vector3().subVectors(HOME.pos, HOME.target);
-  const polar = Math.acos(off.y / off.length()), az = Math.atan2(off.x, off.z);
-  controls.minPolarAngle = Math.max(0.35, polar - 0.5); controls.maxPolarAngle = Math.min(1.62, polar + 0.12);   // look down onto the desk, barely below eye level
+  controls.minDistance = Math.min(LEAN.dist, HOME.dist) * 0.6; controls.maxDistance = HOME.dist * 1.1;
+  const angles = (v) => { const o = new THREE.Vector3().subVectors(v.pos, v.target); return [Math.acos(o.y / o.length()), Math.atan2(o.x, o.z)]; };
+  const [ph, az] = angles(HOME), [pl] = angles(LEAN);   // both views must sit inside the limits
+  controls.minPolarAngle = Math.max(0.35, Math.min(ph, pl) - 0.4); controls.maxPolarAngle = Math.min(1.62, Math.max(ph, pl) + 0.15);   // look down onto the desk, barely below eye level
   controls.minAzimuthAngle = az - 0.55; controls.maxAzimuthAngle = az + 0.55;
 }
 setZoomLimits();
@@ -546,7 +558,7 @@ const lampLight = new THREE.PointLight(0xffb468, 55, 34, 2);
 lampLight.position.y = -1.5;
 if (innerWidth > 760) { lampLight.castShadow = true; lampLight.shadow.mapSize.set(512, 512); lampLight.shadow.bias = -0.003; lampLight.shadow.radius = 3; }
 lamp.add(cage, capTop, cord, bulb, glowSprite, lampLight);
-lamp.position.set(0.4, 11.6, -0.8);
+lamp.position.set(0.4, 15.4, -0.8);   // cage centred at about half the poster's height
 scene.add(lamp);
 
 
@@ -1090,6 +1102,7 @@ function boot(app) {
   moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1250, () => {
     // hand-off: the desktop grows out of exactly where the laptop screen is on your display
     window.OS.open(app, () => {
+      setZoomed(false);
       moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => { booting = false; setZoomLimits(); $("#hint").style.opacity = ""; }, EASE_APPLE);
     }, screenRect());
   });
@@ -1148,30 +1161,35 @@ let tapTimer = 0;
 renderer.domElement.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") { hovered = null; hideTooltip(); } });   // a lifted finger "leaves" too — tap labels clear on their own timer
 
 // Zoom button
+// Zoom button: lean in over the desk (every folder, label and gadget in reach) / sit back to the room view
 let zoomedIn = false;
+function setZoomed(on) {
+  zoomedIn = on;
+  $("#zoomIcon").setAttribute("d", on ? "M20 20l-3.5-3.5M8 11h6" : "M20 20l-3.5-3.5M8 11h6M11 8v6");
+  $("#zoomBtn").setAttribute("aria-label", on ? "Sit back" : "Lean in over the desk");
+}
 $("#zoomBtn").addEventListener("click", () => {
-  zoomedIn = !zoomedIn;
+  if (booting) return;
+  setZoomed(!zoomedIn);
   Sound.click();
-  moveCamera(camera.position.clone(), controls.target.clone(), zoomedIn ? 1.7 : 1, 600);
-  $("#zoomIcon").setAttribute("d", zoomedIn ? "M20 20l-3.5-3.5M8 11h6" : "M20 20l-3.5-3.5M8 11h6M11 8v6");
-  $("#zoomBtn").setAttribute("aria-label", zoomedIn ? "Zoom out" : "Zoom in");
+  const v = zoomedIn ? LEAN : HOME;
+  moveCamera(v.pos, v.target, 1, 800);
 });
 
 let wiggleT = -1, wiggleObj = null;
 function wiggle(o) { wiggleObj = o; wiggleT = 0; }
 
-/* ───────────────────────── First-visit pointer over the laptop ───────────────────────── */
+/* ───────────────────────── "Click the laptop" pointer (until it's opened this visit) ───────────────────────── */
 const coach = $("#coach"), coachAnchor = new THREE.Vector3();
-let coachOn = false;
-try { coachOn = localStorage.getItem("openedLaptop") !== "1"; } catch (_) { coachOn = true; }
+let coachOn = true;   // shown on every visit/refresh until the laptop is opened in this visit
 function coachShow() { if (coachOn) coach.hidden = false; }
-function coachDone() { coachOn = false; coach.hidden = true; try { localStorage.setItem("openedLaptop", "1"); } catch (_) {} }
+function coachDone() { coachOn = false; coach.hidden = true; }
 function placeCoach() {
   if (coach.hidden) return;
   screen.localToWorld(coachAnchor.set(0, SCREEN_H / 2 + 0.25, 0)).project(camera);
   const x = (coachAnchor.x + 1) / 2 * innerWidth, y = (1 - coachAnchor.y) / 2 * innerHeight;
   coach.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
-  coach.style.opacity = booting || tween || coachAnchor.z > 1 ? 0 : 1;
+  coach.style.opacity = booting || tween || coachAnchor.z > 1 || y < 110 ? 0 : 1;   // never under the top menu pill
 }
 
 /* ───────────────────────── Loop ───────────────────────── */
@@ -1237,7 +1255,7 @@ function loop(now) {
     ball.position.x += ballVX * f;
     ball.children[0].rotation.z -= ballVX * f / BALL_R;
     ballVX *= Math.pow(0.985, f);
-    const BX0 = X0 + 0.8 + BALL_R + 0.05, BX1 = CX0 - BALL_R - 0.05;   // inside faces of the left panel / cubby
+    const BX0 = X0 + 0.8 + BALL_R + 0.05, BX1 = CX0 - BALL_R - 0.05;   // rolls under the desk front, between the left panel and the cubby
     if (ball.position.x < BX0) { ball.position.x = BX0; ballVX = Math.abs(ballVX) * 0.75; }
     if (ball.position.x > BX1) { ball.position.x = BX1; ballVX = -Math.abs(ballVX) * 0.75; }
   }
@@ -1255,7 +1273,7 @@ addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   fitCamera();
   setZoomLimits();
-  if (!booting && !tween) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); }
+  if (!booting && !tween) { const v = zoomedIn ? LEAN : HOME; camera.position.copy(v.pos); controls.target.copy(v.target); camera.zoom = 1; camera.updateProjectionMatrix(); }
   if (started) renderer.render(scene, camera);   // setSize clears the canvas; repaint even if the loop is paused behind the desktop
 });
 
@@ -1392,7 +1410,7 @@ async function loadBall() {
   spin.add(inner);
   ball = new THREE.Group();
   ball.add(spin);
-  ball.position.set(-3.2, floor.position.y + BALL_R, 0.8); // on the floor, tucked under the desk
+  ball.position.set(-4.5, floor.position.y + BALL_R, 6.2); // on the floor at the front of the desk (under the throw's hem), in view
   reveal(ball);
   interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
 }
@@ -1455,7 +1473,12 @@ requestAnimationFrame(loop);
 window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
-  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing }) };
+  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, zoomed: zoomedIn }),
+  // clickable things whose centre is outside the current view (should be none at home and when leaned in)
+  // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
+  screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
+    const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return { x: (c.x + 1) / 2 * innerWidth, y: (1 - c.y) / 2 * innerHeight }; },
+  offscreen: () => hoverables.filter((o) => { const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return Math.abs(c.x) > 0.98 || Math.abs(c.y) > 0.98 || c.z > 1; }).map((o) => o.userData.hover.label) };
 $("#hint").textContent = TOUCH ? "Drag to look around · Tap the laptop to open" : "Drag to look around · Click the laptop to open my portfolio";
 $("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
