@@ -9,10 +9,29 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 const S = window.SITE;
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let shownProgress = 0;
 const setProgress = (p, msg) => {
+  p = shownProgress = Math.max(shownProgress, p);   // never runs backwards (models report progress while fonts load)
   $("#loaderBar").style.width = p + "%";
   $("#loaderPct").textContent = `${msg} ${Math.round(p)}%`;
 };
+
+// Start the model downloads right away (the 3D engine has arrived — this module only runs after it).
+// They run in the background while fonts load and the desk is built; the loaders below pick them up.
+const T0 = performance.now();
+const manager = new THREE.LoadingManager();
+manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) * 45, "loading models…");
+const fetched = new Map();
+function fetchAsset(url) {   // one download per file; a failed download is forgotten so a retry fetches it again
+  if (!fetched.has(url)) {
+    const loader = /\.(jpe?g|png)$/.test(url) ? new THREE.ImageLoader(manager) : new THREE.FileLoader(manager).setResponseType("arraybuffer");
+    fetched.set(url, loader.loadAsync(url).catch((err) => { fetched.delete(url); throw err; }));
+  }
+  return fetched.get(url);
+}
+["models/cat/cat.glb", "models/cat/cat_diffuse.jpg", "models/cat/cat_bump.jpg", "models/headphones/headphones.glb",
+ "models/football/football.glb", "models/football/BaseColor.jpg", "models/football/Normal.jpg", "models/football/Roughness.jpg"]
+  .forEach((u) => fetchAsset(u).catch(() => {}));
 
 // Apple-style type: the system font where available (San Francisco on Apple devices), Inter elsewhere
 const UI = '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif';
@@ -1146,12 +1165,10 @@ addEventListener("resize", () => {
 });
 
 /* ───────────────────────── Downloaded models (cat, football, headset) ─────────────────────────
-   All three are small meshopt-compressed GLBs (see HANDOVER §14). They're preloaded from index.html,
-   so the downloads start before this script even runs.                                          */
-const manager = new THREE.LoadingManager();
-manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) * 45, "loading models…");
-const gltfLoader = new GLTFLoader(manager).setMeshoptDecoder(MeshoptDecoder);
-const texLoader = new THREE.TextureLoader(manager);
+   All three are small meshopt-compressed GLBs (see HANDOVER §14). Their downloads were started at
+   the top of this file (fetchAsset); here they're parsed and placed.                            */
+const gltfLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const loadGLB = async (url) => gltfLoader.parseAsync(await fetchAsset(url), "");
 // Models that arrive after the desk is already showing fade in instead of popping
 let started = false;
 const fading = [];
@@ -1173,7 +1190,13 @@ function stepFades(now) {
 }
 const shadowsOn = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } });
 // glTF UVs are top-down, so textures loaded separately must not be flipped
-const loadTex = (url, srgb = false) => texLoader.loadAsync(url).then((t) => { t.flipY = false; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; });
+const loadTex = (url, srgb = false) => fetchAsset(url).then((img) => {
+  const t = new THREE.Texture(img);
+  t.flipY = false; t.needsUpdate = true;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+});
 
 // Fur texture recoloured to ginger: keep the light/dark detail, remap it onto a ginger ramp
 function gingerize(img) { return recolor(img, [96, 44, 14], [210, 122, 56], [250, 222, 184]); }
@@ -1210,7 +1233,7 @@ function swishTail(r, amp, speed, lift, t) {
 const CAT_HEIGHT = 5.0; // ≈ 25 cm — real-cat size next to the 13" laptop
 async function loadCat() {
   const [gltf, diffuse, bump] = await Promise.all([
-    gltfLoader.loadAsync("models/cat/cat.glb"),
+    loadGLB("models/cat/cat.glb"),
     loadTex("models/cat/cat_diffuse.jpg"),
     loadTex("models/cat/cat_bump.jpg")
   ]);
@@ -1262,7 +1285,7 @@ const BALL_R = 1.5; // ≈15 cm across — reads in proportion with the desk
 async function loadBall() {
   const dir = "models/football/";
   const [gltf, base, normal, rough] = await Promise.all([
-    gltfLoader.loadAsync(dir + "football.glb"),
+    loadGLB(dir + "football.glb"),
     loadTex(dir + "BaseColor.jpg", true), loadTex(dir + "Normal.jpg"), loadTex(dir + "Roughness.jpg")
   ]);
   const leather = new THREE.MeshStandardMaterial({ map: base, normalMap: normal, roughnessMap: rough, roughness: 1, metalness: 0 });
@@ -1284,7 +1307,7 @@ async function loadBall() {
 }
 
 async function loadHeadphones() {
-  const gltf = await gltfLoader.loadAsync("models/headphones/headphones.glb");
+  const gltf = await loadGLB("models/headphones/headphones.glb");
   const model = gltf.scene;
   model.traverse((m) => {
     if (!m.isMesh) return;
@@ -1324,7 +1347,8 @@ const models = Promise.allSettled([attempt(loadCat), attempt(loadBall), attempt(
   .then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model could not be loaded:", x.reason)));
 // Don't hold the page hostage on a slow connection: after a few seconds the desk opens anyway
 // and any model still downloading appears as soon as it arrives.
-await Promise.race([models, new Promise((r) => setTimeout(r, 6000))]);
+// (counted from when this script started, so a slow font download doesn't add to it)
+await Promise.race([models, new Promise((r) => setTimeout(r, Math.max(0, 5000 - (performance.now() - T0))))]);
 
 /* ───────────────────────── Start ───────────────────────── */
 drawScreen(0);

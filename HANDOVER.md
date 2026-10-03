@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=40` |
+| **Asset version (cache-buster)** | `?v=42` |
 
 ---
 
@@ -140,12 +140,12 @@ Script load order in `index.html` (classic scripts first, module last):
 ## 6. Architecture and runtime flow
 
 ### 6.1 Start-up sequence (`main.js`)
-0. `index.html` preloads three.js, `main.js`, all three GLBs and their textures (`<link rel=modulepreload/preload>` — **after** the import map, which must come first), so every download starts in parallel immediately.
+0. `index.html` modulepreloads three.js, its addons and `main.js` (**after** the import map, which must come first). The very first thing `main.js` does is start downloading all model files (`fetchAsset`) — deliberately *not* from `index.html`, because on slow connections they would starve the three.js download (measured: three.js arrived last, at 14.7 s on 3G).
 1. Loader visible (black, SJ ring, progress bar, "Good things take time").
 2. Wait for web fonts (`document.fonts.load`, capped at 3 s) so canvas textures draw with the right type.
 3. Create renderer (WebGL, antialias, pixel ratio ≤ 2, ACES tone mapping, PCF soft shadows), scene, perspective camera, OrbitControls.
 4. Build all procedural geometry synchronously (desk, throw, mat, walls, floor, poster, lamp, laptop, objects, wall lettering, desk labels).
-5. Load the cat, football and headset through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 7 s**; anything still downloading pops in when it arrives.
+5. Load the cat, football and headset through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 5 s from script start**; anything still downloading pops in when it arrives.
 6. Draw the laptop screen canvas, `renderer.compileAsync` (capped at 4 s), start the `requestAnimationFrame` loop, fade the loader.
 7. If `?open=` is present, auto-boot into that section after 0.9 s.
 
@@ -420,7 +420,7 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 
 ## 18. Performance
 
-- v1.2: models + textures ≈ **1.06 MB**, whole first visit ≈ 1.5 MB (was ≈ 9.6 MB of models; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than ~6 s + 4 s shader warm-up; models arriving later fade in (`reveal()`).
+- v1.2: models + textures ≈ **1.06 MB**, whole first visit ≈ 1.5 MB (was ≈ 9.6 MB of models; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than 5 s (from script start) + 4 s shader warm-up; models arriving later fade in (`reveal()`).
 - **Adaptive quality** (`adaptQuality` in main.js): if the median frame time over 90 frames is > 28 ms, pixel ratio drops to 1; if still slow, lamp shadows go off and the sun shadow map drops to 1024².
 - The desk is rendered only while visible — not while the Mac desktop covers it.
 - Shadow maps: sun 2048², lamp 512² ×6 (desktop only).

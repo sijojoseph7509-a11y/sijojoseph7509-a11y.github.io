@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=41">
+  <link rel="stylesheet" href="styles.css?v=42">
   <script type="importmap">
   {
     "imports": {
@@ -18,20 +18,12 @@
     }
   }
   </script>
-  <!-- (after the import map, which must come first) start every big download immediately, in parallel, instead of one after another once the script runs -->
-  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js" crossorigin fetchpriority="high">
+  <!-- (after the import map, which must come first) fetch the 3D engine in parallel straight away; the models are fetched by main.js once the engine has arrived, so on slow connections they never compete with it -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/OrbitControls.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin>
-  <link rel="modulepreload" href="main.js?v=41">
-  <link rel="preload" href="models/cat/cat.glb" as="fetch" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/cat/cat_diffuse.jpg" as="image" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/cat/cat_bump.jpg" as="image" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/headphones/headphones.glb" as="fetch" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/football/football.glb" as="fetch" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/football/BaseColor.jpg" as="image" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/football/Normal.jpg" as="image" crossorigin fetchpriority="low">
-  <link rel="preload" href="models/football/Roughness.jpg" as="image" crossorigin fetchpriority="low">
+  <link rel="modulepreload" href="main.js?v=42">
 </head>
 <body>
   <!-- 3D desk -->
@@ -128,9 +120,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=41"></script>
-  <script src="os.js?v=41"></script>
-  <script src="music.js?v=41"></script>
-  <script type="module" src="main.js?v=41"></script>
+  <script src="content.js?v=42"></script>
+  <script src="os.js?v=42"></script>
+  <script src="music.js?v=42"></script>
+  <script type="module" src="main.js?v=42"></script>
 </body>
 </html>
