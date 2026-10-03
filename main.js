@@ -162,22 +162,50 @@ scene.fog = new THREE.Fog(BG, 70, 170);
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-// Perspective camera with a longish lens (30° FOV): natural depth without wide-angle distortion.
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
-const FOV = 30;
-const camera = new THREE.PerspectiveCamera(FOV, innerWidth / innerHeight, 0.5, 400);
-const HOME_TARGET = new THREE.Vector3(-0.6, 8.6, 0.0);
-const HOME_DIR = new THREE.Vector3(0, 0.34, 0.94).normalize();   // ~20° above the desk, straight on — shows the tall wall + poster
-const HOME = { pos: new THREE.Vector3(), target: HOME_TARGET.clone(), zoom: 1 };
+// Seated eye level: a 6 ft (183 cm) person sitting at the desk has their eyes ≈124 cm above the floor —
+// 50 cm above the 74 cm desk top = 10 units (1 unit ≈ 5 cm). The camera always sits at that height, looking
+// across the desk; it only moves back (as if leaning back in the chair) until the key things fit the screen.
+const EYE_Y = 10, VIEW_X = -0.6, WALL_FACE = -3.7;
+const fovFor = (aspect) => (aspect < 1 ? 58 : 48);   // a touch wider on portrait phones
+const camera = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.5, 400);
+// what must be in view at home: the A1 poster, name + roles, the whole laptop, the cat and the headset
+const MUST_SEE = [
+  [-13.75, 21.4, WALL_FACE], [-1.9, 21.4, WALL_FACE], [-13.75, 4.8, WALL_FACE],   // poster
+  [12.6, 10.9, WALL_FACE], [12.6, 6.2, WALL_FACE],                                  // name + roles
+  [-3.1, 0, 2.6], [3.1, 0, 2.6],                                                     // laptop front corners
+  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [6.3, 4.4, -2.0],                                  // cat, headset
+  [-8.2, 0, 5.4], [6.2, 0, 5.9]                                                      // front of the desk: mat labels + project folders
+].map(([x, y, z]) => new THREE.Vector3(x, y, z));
+const HOME = { pos: new THREE.Vector3(), target: new THREE.Vector3(), zoom: 1, dist: 20 };
 function fitCamera() {
   camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  const v = THREE.MathUtils.degToRad(FOV), h = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
-  // far enough to fit the wall art + desk vertically, and the artwork-to-name width (~21 units) horizontally on tall screens
-  const dist = Math.max(31 / Math.tan(v / 2) * 0.62, 12.5 / Math.tan(h / 2));   // fits the desk + the A1 poster above it
-  HOME.pos.copy(HOME_TARGET).addScaledVector(HOME_DIR, dist);
-  HOME.dist = dist;
-  scene.fog.near = dist + 30; scene.fog.far = dist + 130;   // fog always starts behind the room
+  camera.fov = fovFor(camera.aspect);
+  const zoom = camera.zoom, savedPos = camera.position.clone(), savedQ = camera.quaternion.clone();
+  camera.zoom = 1; camera.updateProjectionMatrix();   // solve for the un-zoomed view
+  const p = new THREE.Vector3(), look = new THREE.Vector3();
+  const fits = (z, ty) => {
+    camera.position.set(VIEW_X, EYE_Y, z); camera.lookAt(look.set(VIEW_X, ty, WALL_FACE)); camera.updateMatrixWorld();
+    let worst = 0;
+    // keep clear of the on-screen buttons: top menu pill above, hint pill below
+    for (const v of MUST_SEE) { p.copy(v).project(camera); if (p.z > 1) return -1; worst = Math.max(worst, Math.abs(p.x) / 0.94, p.y / 0.8, -p.y / 0.8); }
+    return worst <= 1 ? worst : -1;
+  };
+  let best = null;
+  for (let z = 15; z <= 140 && !best; z += 0.25) {          // nearest chair position where everything fits…
+    for (let ty = 3; ty <= 13; ty += 0.25) {               // …with the best-balanced up/down look
+      const w = fits(z, ty);
+      if (w >= 0 && (!best || w < best.w)) best = { z, ty, w };
+    }
+  }
+  best = best || { z: 40, ty: 8 };
+  camera.position.copy(savedPos); camera.quaternion.copy(savedQ); camera.zoom = zoom; camera.updateProjectionMatrix();   // the solver only measured
+  HOME.pos.set(VIEW_X, EYE_Y, best.z);
+  // orbit around a point on the desk's centre line (not the far wall), so dragging feels like turning your head
+  const dir = new THREE.Vector3(0, best.ty - EYE_Y, WALL_FACE - best.z).normalize();
+  HOME.target.copy(HOME.pos).addScaledVector(dir, (best.z - 0) / -dir.z);
+  HOME.dist = HOME.pos.distanceTo(HOME.target);
+  scene.fog.near = HOME.dist + 40; scene.fog.far = HOME.dist + 150;   // fog always starts behind the room
 }
 fitCamera();
 camera.position.copy(HOME.pos);
@@ -187,11 +215,15 @@ controls.target.copy(HOME.target);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
-const setZoomLimits = () => { controls.minDistance = HOME.dist * 0.4; controls.maxDistance = HOME.dist * 1.2; }; // zoom out only as far as the room still fills the view
+// zoom / look-around limits are relative to the home view (recomputed on resize)
+function setZoomLimits() {
+  controls.minDistance = HOME.dist * 0.45; controls.maxDistance = HOME.dist * 1.15;
+  const off = new THREE.Vector3().subVectors(HOME.pos, HOME.target);
+  const polar = Math.acos(off.y / off.length()), az = Math.atan2(off.x, off.z);
+  controls.minPolarAngle = Math.max(0.35, polar - 0.5); controls.maxPolarAngle = Math.min(1.62, polar + 0.12);   // look down onto the desk, barely below eye level
+  controls.minAzimuthAngle = az - 0.55; controls.maxAzimuthAngle = az + 0.55;
+}
 setZoomLimits();
-controls.minPolarAngle = 0.55; controls.maxPolarAngle = 1.2;
-const homeAz = Math.atan2(HOME.pos.x - HOME.target.x, HOME.pos.z - HOME.target.z);
-controls.minAzimuthAngle = homeAz - 0.6; controls.maxAzimuthAngle = homeAz + 0.6;
 controls.update();
 
 // Lights — a dark room lit by cool moonlight, with the pendant lamp always on
@@ -422,18 +454,18 @@ const wallTex = canvasTex(512, 512, (g, w, h) => {
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
 wallTex.tex.repeat.set(28, 24);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x2c2b2a, roughness: 0.95 }));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x45403b, roughness: 0.95 }));
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
-for (const side of [-1, 1]) {   // side walls: turning the view shows a room corner, not empty black space
+for (const side of [-1, 1]) {   // side walls: far enough out that they frame the room instead of boxing in the desk
   const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), wall.material);
   sideWall.rotation.y = -side * Math.PI / 2;
-  sideWall.position.set(TABLE.x + side * 24, 60, WALL_Z + 200);
+  sideWall.position.set(TABLE.x + side * 44, 60, WALL_Z + 200);   // a roomy space (≈4.4 m wide), not a box around the desk
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0x232221, { roughness: 0.7 }), 1);
+const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0x2e2a27, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
@@ -873,9 +905,9 @@ scene.add(cup);
 const nameBlock = floorText([
   { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#f5f5f7" },
   { text: S.title, size: 112, weight: 500, color: "#d1d1d6", spacing: -0.01 }
-], { width: 8.4, gap: 1.2 });
+], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
 nameBlock.rotation.x = 0;
-nameBlock.position.set(6.6, 9.4, WALL_Z + 0.03);
+nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
 scene.add(nameBlock);
 interactive(nameBlock, "About me", () => boot("about"));
 
@@ -884,9 +916,9 @@ const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
   { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 },
   { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 }
-], { width: 8.4, gap: 1.4 });
+], { width: 9.6, gap: 1.4 });
 rolesBlock.rotation.x = 0;
-rolesBlock.position.set(6.6, 7.2, WALL_Z + 0.03);
+rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
 scene.add(rolesBlock);
 
 window.OS.setDark(false);   // the desktop uses the light glass look
@@ -1050,7 +1082,7 @@ function boot(app) {
   coachDone();
   const screenWorld = new THREE.Vector3();
   screen.getWorldPosition(screenWorld);
-  const v = THREE.MathUtils.degToRad(FOV), hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
+  const v = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
   const d = Math.max((SCREEN_H * 1.15) / 2 / Math.tan(v / 2), (SCREEN_W * 1.15) / 2 / Math.tan(hf / 2));
   const normal = new THREE.Vector3();
   screen.getWorldDirection(normal);

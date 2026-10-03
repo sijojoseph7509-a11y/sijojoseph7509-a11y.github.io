@@ -29,7 +29,7 @@ button { font: inherit; color: inherit; }
 .stage:active { cursor: grabbing; }
 .stage.pointer { cursor: pointer; }
 .stage canvas { display: block; }
-.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 55% 50%, transparent 50%, #0c0c0d 120%); }
+.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 85% 90% at 50% 45%, transparent 62%, rgba(12, 12, 13, .45) 120%); }   /* a soft lens falloff, not a dark frame */
 .grain { display: none; }
 
 .hud {
@@ -54,6 +54,7 @@ body { transition: background-color .7s var(--ease); }
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .15);
   white-space: nowrap; transition: opacity .5s; pointer-events: none;
 }
+.skip { color: #5aaeff !important; text-shadow: 0 1px 6px rgba(0, 0, 0, .45); }
 .skip { position: fixed; right: calc(20px + env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 4; font-size: 13px; color: var(--blue); text-decoration: none; font-weight: 500; }
 .skip:hover { text-decoration: underline; }
 /* Top nav — same blue + font as the "open portfolio" link, on the same frosted glass as the hint pill */
@@ -65,7 +66,7 @@ body { transition: background-color .7s var(--ease); }
 }
 .topnav a {
   padding: 8px 16px; border-radius: 99px; font-family: var(--font); font-size: 13px; font-weight: 500;
-  color: var(--blue); text-decoration: none; letter-spacing: -.01em; transition: background .2s;
+  color: #5aaeff; text-decoration: none; letter-spacing: -.01em; transition: background .2s;   /* brighter than --blue: ≥4.5:1 on the glass over the warm wall */
 }
 .topnav a:hover { background: rgba(255, 255, 255, .08); text-decoration: none; }
 .topnav a:focus-visible { outline: 2px solid rgba(10, 132, 255, .6); outline-offset: 1px; }
