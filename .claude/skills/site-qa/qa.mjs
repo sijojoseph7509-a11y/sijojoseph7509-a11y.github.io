@@ -106,6 +106,17 @@ await check("Zooming out (scroll) ends in the room view, centred on the desk", a
   return "laptop " + (off * 100).toFixed(1) + "% from centre";
 });
 
+await check("Zooming in (scroll) from anywhere heads for the laptop", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(600);
+  await p.mouse.move(120, 120);   // far top-left corner — zoom must still go to the laptop, not the cursor
+  for (let i = 0; i < 6; i++) { await p.mouse.wheel({ deltaY: -160 }); await sleep(80); }
+  await sleep(1500);
+  const s = await p.evaluate(() => ({ at: Desk.screenPos("Open my portfolio"), w: innerWidth, h: innerHeight }));
+  const off = Math.hypot(s.at.x / s.w - 0.5, s.at.y / s.h - 0.5);
+  expect(off < 0.15, "laptop is " + (off * 100).toFixed(0) + "% away from the centre after zooming in"); await p.ctx.close();
+  return "laptop " + (off * 100).toFixed(0) + "% from centre";
+});
+
 await check("Laptop pointer fades out while the view is dragged, comes back when still", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(900);
   const op = () => p.$eval("#coach", (c) => +getComputedStyle(c).opacity);

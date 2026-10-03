@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=50` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=51` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -530,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.1) | Zooming in (scroll/pinch) from anywhere glides the orbit centre onto the laptop (`focusLaptop`); only a real zoom-out gesture switches to the room view. Removed the desk-mat text links and the "Let's connect" + @/in/Bē tiles. Phone resized to a real iPhone 15 (147.6 × 71.6 × 7.8 mm). **New wallpaper** (`assets/wallpaper.jpg`, 1232×770): Sijo's selfie cropped to exclude the two other people, a third person's hand clone-patched out, then extended to landscape with Adobe generative expand (seed 90210) and cropped above an AI-invented hand; the hillside on the right is AI-generated. QA: zoom-in-to-laptop check (30 checks). |
 | (v2.0) | Opening view matches Sijo's reference desk photo: low, front-left, close, laptop right of centre. Zooming out still lands on the centred room view. |
 | (v1.9) | Zooming out always ends centred: scrolling/pinching out past the start view glides into the centred room view; zoom-to-cursor applies only when zooming in (zooming out was pulling the view sideways). QA: scroll-out check (laptop within 3% of screen centre). |
 | (v1.8) | Start view stepped back to poster + lamp + name + whole desk from slight right/above; room view centred on the desk; wall back to warm graphite; **Sijo's photo is the wallpaper** (`assets/wallpaper.jpg`, 768×1024) on the 3D laptop screen (cover-crop, `WALL_FOCUS`) and the Mac desktop (`.os-screen`); the laptop screen's "Hi, I'm Sijo" window moved right so the photo's subject stays visible. |
