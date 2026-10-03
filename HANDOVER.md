@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=45` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=46` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -214,7 +214,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 | **Poster** (Sijo's own work) | **A1: 11.88 × 16.82 units** (594 × 841 mm) at (−7.8, 13.1, WALL_Z + 0.03) — bottom edge just above the MacBook screen line. Canvas 2048 × 2896 (drawn on a 1240-wide layout at 2×). Red #c7262e scattered "SOMETHING" letters; black (#0a0a0a, Inter 900, 84 px, −5 px tracking) lines: "TO CREATE A SOLUTION / FOR SOMETHING / SOMETHING THAT HAS / EVEN BIGGER CAUSE / THAN ME / SOMETHING THAT I AM / SUPPOSED TO MAKE / TO BEGIN AN ERA"; vertical "SIJO JOSEPH" (left) and "GIVE ME THE WISDOM THAT SITS BY YOUR THRONE" (right). Paper curl + 4 clear tape pieces. | **None** (decoration only, by request). |
 | **Name lettering** | Plane 8.4 wide at (6.6, 9.4) — "Sijo Joseph." (Inter 700, 210 px) + "Multidisciplinary Designer" (112 px, #d1d1d6). | Click → About. |
 | **Roles lettering** | Plane 8.4 wide at (6.6, 7.2) — two lines of roles joined with " · " (92 px, #aeaeb2). | — |
-| **Pendant lamp** | Woven wire cage (38 random tube strands + 2 rings, merged, #2b2522 metal), urn profile 4.2 tall; cap, 30-unit cord; bulb #ffd39a + additive glow sprite. Hangs at (0.4, 11.6, −0.8); sways ±0.025 rad. Point light #ffb468, intensity **55**, distance 34, decay 2; casts 512 px shadows on screens wider than 760 px only. | None (the light/dark toggle was removed). |
+| **Pendant lamp** | Woven wire cage (38 random tube strands + 2 rings, merged, #2b2522 metal), urn profile 4.2 tall; cap, 30-unit cord; bulb #ffd39a + additive glow sprite. Hangs at (0.4, **15.4**, −0.8) (v1.6: raised so the cage sits at about half the poster's height); sways ±0.025 rad. Point light #ffb468, intensity **55**, distance 34, decay 2; casts 512 px shadows on screens wider than 760 px only. | None (the light/dark toggle was removed). |
 
 ### 8.4 Laptop (13", Midnight)
 | Item | Detail |
@@ -250,7 +250,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 
 | Setting | Value |
 |---|---|
-| Camera (v1.5) | **Seated eye level of a 6 ft person**: eyes 10 units (50 cm) above the desk top ≈ 124 cm above the floor (`EYE_Y`). Vertical FOV 48° (58° on portrait phones). `fitCamera()` solves for the nearest chair distance and the best up/down look so every point in `MUST_SEE` (poster, name + roles, laptop, cat, headset, front of the desk) fits on screen with room for the top menu pill and the hint pill. Re-solved on resize. |
+| Camera (v1.6) | **Seated eye level of a 6 ft person**: eyes 10 units (50 cm) above the desk top ≈ 124 cm above the floor (`EYE_Y`). Vertical FOV 56° (62° on portrait phones). `solveView(points)` finds the nearest chair distance + up/down look at which a list of points fits on screen, clear of the top menu pill and the hint pill. **Home** = `HOME_SEE` (poster, name + roles, laptop, cat, desk front, football on the floor → the whole room). **Lean in** (zoom button) = `LEAN_SEE` (just the desk: every folder, label, tile, gadget). Scroll/pinch zoom goes toward the cursor (`zoomToCursor`). Both views re-solved on resize. |
 | Camera (before v1.5) | `PerspectiveCamera`, FOV 30°, high and looking down ~20° — felt "odd" / top-down |
 | Home target | `(−0.6, 8.6, 0.0)` |
 | Home direction | `normalize(0, 0.34, 0.94)` — ~20° above the desk, straight on |
@@ -530,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.6) | Room view at eye level includes the floor + football (ball moved to the desk front, rolls between the panels); zoom button = "lean in" over the desk; zoom-to-cursor; lamp raised to mid-poster; "Click the laptop" pointer shows on every visit until the laptop is opened. QA: every clickable thing on screen at home + leaning in (`Desk.offscreen()`), pointer returns after refresh, tap test finds the cat wherever it is (`Desk.screenPos()`). |
 | (v1.5) | Seated eye-level camera (6 ft person) with an automatic framing solver; room widened (side walls ± 44) and wall lightened to warm graphite; softer vignette; nav/skip link contrast ≥ 4.5:1; larger name lettering. Reviewed with the design-critique skill. |
 | (v1.4) | Phone/UX pass: welcome screen (fixes music not starting, accidental first-tap boot, learning curve), first-visit laptop pointer, back-swipe closes the Mac (history entry), reopening returns to the desk, hint restored after the Mac, touch tap labels no longer stuck or invisible, "tap/click" wording, no "boot" jargon, iOS audio unlock + silent switch, safe-area insets, narrow-phone nav/dock/clock fixes, half-size poster texture on phones, GPU context-loss recovery, honest no-WebGL message. QA skill extended to ~25 checks. |
 | (v1.3) | Old cached copies on phones showed the cartoon cat (old code + deleted model files): legacy model paths restored, self-update via `version.json`. Code review fixes: no crash with a stale cached os.js, no reload loop, repaint on resize behind the desktop, honest progress bar, one MODEL manifest. Added `window.Desk.state()` and the site-qa skill. |
