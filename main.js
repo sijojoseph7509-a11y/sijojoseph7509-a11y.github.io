@@ -165,10 +165,10 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 // Two camera views, each found by a small solver: the nearest distance at which a list of points fits on
 // screen (clear of the top menu pill and the hint pill).
-//  · HOME — a close-up of the desk from slightly right and a little above: everything on it is big and tappable.
+//  · HOME — from slightly right and a little above, a step back: poster, lamp, name and the whole desk.
 //  · ROOM (zoom button) — seated eye level of a 6 ft person (eyes ≈124 cm above the floor = 10 units above the
 //    desk top), taking in the whole room: poster, name, desk and the football on the floor to play with.
-const EYE_Y = 10, VIEW_X = -0.6, WALL_FACE = -3.7;
+const EYE_Y = 10, VIEW_X = 0.2, WALL_FACE = -3.7;   // VIEW_X = the desk's centre line, so the room view is centred on the desk
 const fovFor = (aspect) => (aspect < 1 ? 62 : 56);
 const camera = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.5, 400);
 const V = (list) => list.map(([x, y, z]) => new THREE.Vector3(x, y, z));
@@ -183,7 +183,11 @@ const DESK_SEE = V([
   [-9.0, 0, 6.2], [9.4, 0, 6.2], [-9.0, 0, -1.0], [9.4, 0, -3.0],                   // desk corners (front + back right), connect tiles
   [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [6.3, 4.6, -2.0]   // bottle, plant, laptop lid, cat, headset
 ]);
-const DESK_DIR = new THREE.Vector3(Math.sin(0.36) * Math.cos(0.62), Math.sin(0.62), Math.cos(0.36) * Math.cos(0.62));   // ≈20° to the right, ≈35° from above
+const HOME_SEE = V([
+  [-13.75, 21.4, WALL_FACE], [-1.9, 21.4, WALL_FACE], [-13.75, 4.8, WALL_FACE],   // poster
+  [12.6, 10.9, WALL_FACE], [12.6, 6.2, WALL_FACE]                                   // name + roles
+]).concat(DESK_SEE);
+const DESK_DIR = new THREE.Vector3(Math.sin(0.36) * Math.cos(0.42), Math.sin(0.42), Math.cos(0.36) * Math.cos(0.42));   // ≈20° to the right, ≈24° from above
 const _p = new THREE.Vector3(), _look = new THREE.Vector3();
 function fitScore(points) {   // 0…1 = how much of the safe screen area the points use; -1 = something doesn't fit
   camera.updateMatrixWorld();
@@ -208,13 +212,13 @@ function solveRoom(out) {   // eye height fixed; find the chair distance + up/do
   out.dist = out.pos.distanceTo(out.target);
   return out;
 }
-function solveDesk(out) {   // fixed viewing direction; find the closest distance + the best aim point on the desk
+function solveDesk(out, points) {   // fixed viewing direction; find the closest distance + the best aim point
   let best = null;
   for (let d = 8; d <= 120 && !best; d += 0.25) {
-    for (let ty = -2; ty <= 4; ty += 0.25) for (let tz = -1; tz <= 3; tz += 0.5) {
+    for (let ty = -2; ty <= 10; ty += 0.5) for (let tz = -1; tz <= 3; tz += 1) {
       _look.set(0.2, ty, tz);
       camera.position.copy(_look).addScaledVector(DESK_DIR, d); camera.lookAt(_look);
-      const w = fitScore(DESK_SEE);
+      const w = fitScore(points);
       if (w >= 0 && (!best || w < best.w)) best = { d, ty, tz, w };
     }
   }
@@ -231,7 +235,7 @@ function fitCamera() {
   camera.fov = fovFor(camera.aspect);
   const zoom = camera.zoom, savedPos = camera.position.clone(), savedQ = camera.quaternion.clone();
   camera.zoom = 1; camera.updateProjectionMatrix();   // solve for the un-zoomed view
-  solveDesk(HOME); solveRoom(ROOM);
+  solveDesk(HOME, HOME_SEE); solveRoom(ROOM);
   camera.position.copy(savedPos); camera.quaternion.copy(savedQ); camera.zoom = zoom; camera.updateProjectionMatrix();   // the solver only measured
   scene.fog.near = ROOM.dist + 40; scene.fog.far = ROOM.dist + 150;   // fog always starts behind the room
 }
@@ -483,7 +487,7 @@ const wallTex = canvasTex(512, 512, (g, w, h) => {
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
 wallTex.tex.repeat.set(28, 24);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x87a081, roughness: 0.95 }));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x45403b, roughness: 0.95 }));
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
@@ -494,7 +498,7 @@ for (const side of [-1, 1]) {   // side walls: far enough out that they frame th
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0x56634f, { roughness: 0.7 }), 1);
+const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0x2e2a27, { roughness: 0.7 }), 1);
 skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
@@ -932,8 +936,8 @@ scene.add(cup);
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Name block — hung on the wall like studio lettering, right of the poster
 const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#1e2a1f" },   // deep green-black: reads on the sage wall
-  { text: S.title, size: 112, weight: 500, color: "#344536", spacing: -0.01 }
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#f5f5f7" },
+  { text: S.title, size: 112, weight: 500, color: "#d1d1d6", spacing: -0.01 }
 ], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
 nameBlock.rotation.x = 0;
 nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
@@ -943,8 +947,8 @@ interactive(nameBlock, "About me", () => boot("about"));
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#3d5040", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#3d5040", spacing: 0 }
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 }
 ], { width: 9.6, gap: 1.4 });
 rolesBlock.rotation.x = 0;
 rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
@@ -985,19 +989,29 @@ tileDefs.forEach(([glyph, label, url], i) => {
 
 /* ───────────────────────── Live screen (macOS-style desktop) ───────────────────────── */
 let screenMode = "idle", typed = "", typeTimer = 0;
+// laptop wallpaper: Sijo's photo. WALL_FOCUS = which part of the photo to keep when cropping (0–1 across, 0–1 down)
+const WALL_FOCUS = [0.3, 0.72];
+const wallImg = new Image();
+wallImg.src = "assets/wallpaper.jpg";
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
   const g = screenCanvas.g, W = screenCanvas.canvas.width, H = screenCanvas.canvas.height;
-  // Wallpaper: soft, slowly drifting colour blobs (original)
-  g.fillStyle = "#4b3fd1"; g.fillRect(0, 0, W, H);
-  const blobs = [[0.15, 0.25, "#7d6cff"], [0.85, 0.15, "#ff8fb1"], [0.8, 0.9, "#ffb36b"], [0.2, 0.95, "#3fc6ff"], [0.5, 0.5, "#e46aa0"]];
-  blobs.forEach(([bx, by, c], i) => {
-    const x = (bx + Math.sin(t * 0.25 + i) * 0.04) * W, y = (by + Math.cos(t * 0.2 + i * 2) * 0.04) * H;
-    const rg = g.createRadialGradient(x, y, 0, x, y, W * 0.55);
-    rg.addColorStop(0, c); rg.addColorStop(1, c + "00");
-    g.fillStyle = rg; g.fillRect(0, 0, W, H);
-  });
+  // Wallpaper: Sijo's photo (cover-cropped, keeping him in frame); the original colour blobs until it has loaded
+  if (wallImg.complete && wallImg.naturalWidth) {
+    const iw = wallImg.naturalWidth, ih = wallImg.naturalHeight, k = Math.max(W / iw, H / ih);
+    const sw = W / k, sh = H / k, sx = (iw - sw) * WALL_FOCUS[0], sy = (ih - sh) * WALL_FOCUS[1];
+    g.drawImage(wallImg, sx, sy, sw, sh, 0, 0, W, H);
+  } else {
+    g.fillStyle = "#4b3fd1"; g.fillRect(0, 0, W, H);
+    const blobs = [[0.15, 0.25, "#7d6cff"], [0.85, 0.15, "#ff8fb1"], [0.8, 0.9, "#ffb36b"], [0.2, 0.95, "#3fc6ff"], [0.5, 0.5, "#e46aa0"]];
+    blobs.forEach(([bx, by, c], i) => {
+      const x = (bx + Math.sin(t * 0.25 + i) * 0.04) * W, y = (by + Math.cos(t * 0.2 + i * 2) * 0.04) * H;
+      const rg = g.createRadialGradient(x, y, 0, x, y, W * 0.55);
+      rg.addColorStop(0, c); rg.addColorStop(1, c + "00");
+      g.fillStyle = rg; g.fillRect(0, 0, W, H);
+    });
+  }
   const dark = false;   // the screen uses the light glass look
   if (dark) { g.fillStyle = "rgba(0,0,0,0.28)"; g.fillRect(0, 0, W, H); }
   // Menu bar — transparent, text straight on the wallpaper (macOS 27)
@@ -1031,7 +1045,7 @@ function drawScreen(t) {
   const ink = dark ? "#f5f5f7" : "#1d1d1f", ink2 = dark ? "#aeaeb2" : "#6e6e73";
   // Centre window — glass, larger corners, sidebar to the edge, controls on the sidebar
   if (screenMode === "idle") {
-    const bw = 420, bh = 210, bx = (W - bw) / 2, by = 116;
+    const bw = 400, bh = 210, bx = W - bw - 44, by = 116;   // right of centre, so Sijo in the wallpaper photo stays visible
     glass(bx, by, bw, bh, 22, dark ? "rgba(34,34,38,0.88)" : "rgba(250,250,252,0.9)");
     g.fillStyle = dark ? "rgba(70,70,78,0.55)" : "rgba(228,228,236,0.75)"; rr(g, bx + 6, by + 6, 92, bh - 12, 16); g.fill();
     ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 22 + i * 17, by + 24, 5.5, 0, 7); g.fill(); });
@@ -1044,10 +1058,10 @@ function drawScreen(t) {
     g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, cx - 70, by + 138, 140, 34, 17); g.fill(); g.globalAlpha = 1;
     g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText(TOUCH ? "Tap to open" : "Click to open", cx, by + 156);
   } else if (screenMode === "typing") {
-    const bw = 460, bh = 170, bx = (W - bw) / 2, by = 130;
+    const bw = 440, bh = 170, bx = W - bw - 44, by = 130;
     glass(bx, by, bw, bh, 22, "rgba(28,28,30,0.92)");
     ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 22 + i * 17, by + 22, 5.5, 0, 7); g.fill(); });
-    g.fillStyle = "#a1a1a6"; g.textAlign = "center"; g.font = `600 12px ${UI}`; g.fillText("Terminal", W / 2, by + 22);
+    g.fillStyle = "#a1a1a6"; g.textAlign = "center"; g.font = `600 12px ${UI}`; g.fillText("Terminal", bx + bw / 2, by + 22);
     g.fillStyle = "#f5f5f7"; g.textAlign = "left"; g.font = `500 20px "SF Mono", Menlo, monospace`;
     g.fillText("sijo@desk ~ % " + typed + (Math.floor(t * 3) % 2 ? "▍" : ""), bx + 24, by + 74);
   }
