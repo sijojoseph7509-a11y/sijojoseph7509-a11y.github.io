@@ -54,9 +54,13 @@ body { transition: background-color .7s var(--ease); }
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .15);
   white-space: nowrap; transition: opacity .5s; pointer-events: none;
 }
-.skip { color: #5aaeff !important; text-shadow: 0 1px 6px rgba(0, 0, 0, .45); }
+/* frosted pill like the hint, so it never blends into the wall behind it */
+.skip { padding: 8px 14px; border-radius: 99px; color: #5aaeff !important; background: var(--glass-dark);
+  backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .15), 0 6px 18px rgba(0, 0, 0, .25); }
+.skip:hover { text-decoration: none !important; background: rgba(70, 70, 76, .6); }
 .skip { position: fixed; right: calc(20px + env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 4; font-size: 13px; color: var(--blue); text-decoration: none; font-weight: 500; }
-.skip:hover { text-decoration: underline; }
+
 /* Top nav — same blue + font as the "open portfolio" link, on the same frosted glass as the hint pill */
 .topnav {
   position: fixed; top: calc(24px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 5;
@@ -126,7 +130,7 @@ body { transition: background-color .7s var(--ease); }
 
 /* "Tap the laptop" pointer for first-time visitors — positioned over the laptop every frame by main.js */
 .coach { position: fixed; z-index: 4; left: 0; top: 0; pointer-events: none; display: grid; justify-items: center; gap: 4px;
-  font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; transition: opacity .3s; }
+  font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; transition: opacity .25s; }
 .coach span { padding: 7px 13px; border-radius: 999px; background: var(--blue); box-shadow: 0 6px 20px rgba(10, 132, 255, .45); }
 .coach i { width: 0; height: 0; border: 7px solid transparent; border-top-color: var(--blue); border-bottom: 0; }
 .coach { animation: coachBob 1.6s ease-in-out infinite; }
