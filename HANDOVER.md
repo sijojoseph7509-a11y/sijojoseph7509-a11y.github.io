@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=49` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=50` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -250,7 +250,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 
 | Setting | Value |
 |---|---|
-| Camera (v1.7) | Two solved views (`solveDesk`, `solveRoom`): **HOME** (v1.8) = from ≈20° right and ≈24° above (`DESK_DIR`), the closest distance at which the poster, name and every desk item (`HOME_SEE`) fit clear of the top/bottom pills — like the early versions' wall-and-desk view. **ROOM** (zoom button "step back") = centred on the desk (`VIEW_X` 0.2), seated eye level of a 6 ft person (`EYE_Y` = 10 units ≈ 124 cm above the floor) fitting poster, name, desk and the football (`ROOM_SEE`). Vertical FOV 56° (62° portrait). Scroll/pinch zooms toward the cursor. Re-solved on resize; orbit limits cover both views. |
+| Camera (v1.7) | Two solved views (`solveDesk`, `solveRoom`): **HOME** (v2.0) = a desk-setup-photo angle: from the front-left (`HOME_AZ` −0.45 rad ≈ 26°), low (`HOME_EL` 0.22 rad ≈ 13° above the desk), aimed a little left of the laptop (`HOME_AIM_X` −2) so the laptop sits right of centre; closest distance at which `HOME_SEE` (bottle, plant, laptop, cat, headset, mat front edge, lamp bulb) fits — desk ends and the poster top may crop. **ROOM** (zoom button "step back") = centred on the desk (`VIEW_X` 0.2), seated eye level of a 6 ft person (`EYE_Y` = 10 units ≈ 124 cm above the floor) fitting poster, name, desk and the football (`ROOM_SEE`). Vertical FOV 56° (62° portrait). Scroll/pinch zooms toward the cursor. Re-solved on resize; orbit limits cover both views. |
 | Camera (before v1.5) | `PerspectiveCamera`, FOV 30°, high and looking down ~20° — felt "odd" / top-down |
 | Home target | `(−0.6, 8.6, 0.0)` |
 | Home direction | `normalize(0, 0.34, 0.94)` — ~20° above the desk, straight on |
@@ -530,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.0) | Opening view matches Sijo's reference desk photo: low, front-left, close, laptop right of centre. Zooming out still lands on the centred room view. |
 | (v1.9) | Zooming out always ends centred: scrolling/pinching out past the start view glides into the centred room view; zoom-to-cursor applies only when zooming in (zooming out was pulling the view sideways). QA: scroll-out check (laptop within 3% of screen centre). |
 | (v1.8) | Start view stepped back to poster + lamp + name + whole desk from slight right/above; room view centred on the desk; wall back to warm graphite; **Sijo's photo is the wallpaper** (`assets/wallpaper.jpg`, 768×1024) on the 3D laptop screen (cover-crop, `WALL_FOCUS`) and the Mac desktop (`.os-screen`); the laptop screen's "Hi, I'm Sijo" window moved right so the photo's subject stays visible. |
 | (v1.7) | Start view = desk close-up from slight right + above; zoom button steps back to the eye-level room (football in play). "Click the laptop" pointer pinned on the laptop screen and fades out while the view moves. "Open portfolio without 3D" on a frosted pill. Sage green wall + dark name lettering. QA: pointer-fade check; aborted requests ignored. |
