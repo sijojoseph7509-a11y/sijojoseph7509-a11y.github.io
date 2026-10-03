@@ -801,12 +801,13 @@ projectFiles.position.set(0, 0.08, 0);
 
 scene.add(projectFiles);
 
-// 2c. Smartphone face-up on the desk
+// 2c. Smartphone face-up on the desk — real iPhone 15 size: 147.6 × 71.6 × 7.8 mm ≈ 2.95 × 1.43 × 0.16 units
+const PH = { w: 1.43, l: 2.95, t: 0.16 };
 const phone = new THREE.Group();
-const phoneBody = rbox(1.05, 0.1, 2.15, 0.16, SILVER, 6);
-phoneBody.position.y = 0.05;
-const phoneGlass = rbox(1.0, 0.012, 2.1, 0.15, mat(0x0b0b0c, { roughness: 0.08, clearcoat: 1 }), 4);
-phoneGlass.position.y = 0.105;
+const phoneBody = rbox(PH.w, PH.t, PH.l, 0.2, SILVER, 6);
+phoneBody.position.y = PH.t / 2;
+const phoneGlass = rbox(PH.w - 0.05, 0.012, PH.l - 0.05, 0.19, mat(0x0b0b0c, { roughness: 0.08, clearcoat: 1 }), 4);
+phoneGlass.position.y = PH.t + 0.002;
 const phoneScreenTex = canvasTex(256, 540, (g, w, h) => {
   const lg = g.createLinearGradient(0, 0, w, h);
   lg.addColorStop(0, "#5e5ce6"); lg.addColorStop(0.55, "#bf5af2"); lg.addColorStop(1, "#ff9f0a");
@@ -819,10 +820,10 @@ const phoneScreenTex = canvasTex(256, 540, (g, w, h) => {
   g.font = `400 18px ${UI}`; g.fillText("Let's work together →", 40, 436);
   g.fillStyle = "#000"; g.beginPath(); g.roundRect(w / 2 - 42, 14, 84, 24, 12); g.fill();
 });
-const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 2.02), new THREE.MeshBasicMaterial({ map: phoneScreenTex.tex, toneMapped: false }));
-phoneScreen.rotation.x = -Math.PI / 2; phoneScreen.position.y = 0.113;
+const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(PH.w - 0.1, PH.l - 0.1), new THREE.MeshBasicMaterial({ map: phoneScreenTex.tex, toneMapped: false }));
+phoneScreen.rotation.x = -Math.PI / 2; phoneScreen.position.y = PH.t + 0.01;
 phone.add(phoneBody, phoneGlass, phoneScreen);
-phone.position.set(3.4, 0, 4.4);
+phone.position.set(3.9, 0, 4.1);
 phone.rotation.y = 0.5;
 scene.add(phone);
 interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); });
@@ -963,40 +964,12 @@ scene.add(rolesBlock);
 window.OS.setDark(false);   // the desktop uses the light glass look
 
 
-// Menu — left front (each word is its own clickable label)
-const menu = [["Work", "work"], ["Skills", "skills"], ["Resume", "resume"], ["Contact", "contact"]];
-menu.forEach(([label, key], i) => {
-  const m = floorText([{ text: label + " ›", size: 160, weight: 600, spacing: -0.02 }], { width: 2.6 });
-  m.position.set(-7.2 + i * 0.25, 0.08, 3.4 + i * 0.8);   // on the desk mat
-  scene.add(m);
-  interactive(m, `Open ${label.toLowerCase()}`, () => boot(key));
-});
-
-// "Let's connect" — left back, with three tiles
-const connect = floorText([{ text: "Let's connect.", size: 130, weight: 600, spacing: -0.02, color: "#f5f5f7" }], { width: 4.4, bg: "rgba(18,18,20,.82)" });
-connect.position.set(-6.9, 0.03, -2.0);
-scene.add(connect);
-const tileDefs = [["@", "Email", S.links.mail], ["in", "LinkedIn", S.links.linkedin], ["Bē", "Behance", S.links.behance]];
-tileDefs.forEach(([glyph, label, url], i) => {
-  const { tex } = canvasTex(256, 256, (g) => {
-    g.fillStyle = "#1d1d1f"; g.font = `700 112px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle";
-    g.fillText(glyph, 128, 136);
-  });
-  const tile = new THREE.Group();
-  const block = rbox(0.9, 0.18, 0.9, 0.08, PLASTIC);
-  block.position.y = 0.09;
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), new THREE.MeshStandardMaterial({ map: tex, transparent: true }));
-  face.rotation.x = -Math.PI / 2; face.position.y = 0.185;
-  tile.add(block, face);
-  tile.position.set(-8.0 + i * 1.15, 0, -1.0);
-  scene.add(tile);
-  interactive(tile, label, () => { Sound.click(); window.open(url, url.startsWith("mailto:") ? "_self" : "_blank", "noopener"); });
-});
+// (the desk-mat text links and the "Let's connect" tiles were removed — the top menu and the Mac's dock cover them)
 
 /* ───────────────────────── Live screen (macOS-style desktop) ───────────────────────── */
 let screenMode = "idle", typed = "", typeTimer = 0;
 // laptop wallpaper: Sijo's photo. WALL_FOCUS = which part of the photo to keep when cropping (0–1 across, 0–1 down)
-const WALL_FOCUS = [0.3, 0.72];
+const WALL_FOCUS = [0, 0.4];   // landscape photo, Sijo on the left — keep the left edge
 const wallImg = new Image();
 wallImg.src = "assets/wallpaper.jpg";
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
@@ -1208,12 +1181,23 @@ function setRoomView(on) {
 // Zooming OUT always ends centred: pulling back past the start view glides into the centred room view
 // (the start view looks from the right, so a plain dolly-out drifted left). Zoom-to-cursor only applies when
 // zooming in — zooming out toward/away from the cursor also pushed the view sideways.
-renderer.domElement.addEventListener("wheel", (e) => { controls.zoomToCursor = e.deltaY < 0; }, { capture: true, passive: true });
+// Zooming IN — from anywhere on the screen — always heads for the laptop: the orbit centre glides onto the
+// laptop screen while the camera dollies in (instead of zooming toward the cursor).
+controls.zoomToCursor = false;
+const laptopFocus = new THREE.Vector3();
+let focusUntil = 0;
+function focusLaptop() { screen.getWorldPosition(laptopFocus); focusUntil = performance.now() + 900; }
+let zoomOutUntil = 0;   // set only by a real zoom-out gesture (scroll down / pinch together)
+renderer.domElement.addEventListener("wheel", (e) => { if (e.deltaY < 0) focusLaptop(); else if (e.deltaY > 0) zoomOutUntil = performance.now() + 600; }, { capture: true, passive: true });
 let pinchStart = 0;
 renderer.domElement.addEventListener("touchstart", (e) => { if (e.touches.length === 2) pinchStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }, { capture: true, passive: true });
-renderer.domElement.addEventListener("touchmove", (e) => { if (e.touches.length === 2 && pinchStart) controls.zoomToCursor = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) > pinchStart; }, { capture: true, passive: true });
+renderer.domElement.addEventListener("touchmove", (e) => {
+  if (e.touches.length !== 2 || !pinchStart) return;
+  const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  if (d > pinchStart + 4) focusLaptop(); else if (d < pinchStart - 4) zoomOutUntil = performance.now() + 600;
+}, { capture: true, passive: true });
 controls.addEventListener("change", () => {
-  if (tween || booting || roomView) return;
+  if (tween || booting || roomView || performance.now() > zoomOutUntil) return;   // only a real zoom-out gesture switches views
   if (camera.position.distanceTo(controls.target) > HOME.dist * 1.12) { setRoomView(true); moveCamera(ROOM.pos, ROOM.target, 1, 900); }
 });
 $("#zoomBtn").addEventListener("click", () => {
@@ -1276,6 +1260,7 @@ function loop(now) {
   const dt = lastNow ? now - lastNow : 1000 / 60;
   const f = Math.min(3, dt / (1000 / 60)) || 1;   // frame-rate independence: 1 at 60 fps
   lastNow = now;
+  if (now < focusUntil && !tween && !booting) controls.target.lerp(laptopFocus, Math.min(1, 0.12 * f));   // zoom-in heads for the laptop
   adaptQuality(dt);
   if (fading.length) stepFades(now);
   if (tween) tween(now);
