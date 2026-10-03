@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d1d1f">
   <title>Sijo Joseph — Multidisciplinary Designer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231d1d1f'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23f5f5f7' stroke-width='3'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Helvetica,Arial,sans-serif' font-weight='700' font-size='24' fill='%23f5f5f7'%3ESJ%3C/text%3E%3C/svg%3E">
   <meta name="description" content="Sijo Joseph — product designer, brand strategist and experience designer.">
@@ -10,7 +11,7 @@
     // Self-update: phones often reopen a saved copy of this page. If a newer version has been
     // published (version.json, never cached), load it. BUILD must match version.json and ?v= below.
     (() => {
-      const BUILD = "43";
+      const BUILD = "44";
       const check = () => fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((v) => {
@@ -35,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=43">
+  <link rel="stylesheet" href="styles.css?v=44">
   <script type="importmap">
   {
     "imports": {
@@ -49,7 +50,7 @@
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/OrbitControls.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin>
-  <link rel="modulepreload" href="main.js?v=43">
+  <link rel="modulepreload" href="main.js?v=44">
 </head>
 <body>
   <!-- 3D desk -->
@@ -69,7 +70,8 @@
     <a href="#resume" data-boot="resume">Resume</a>
     <a href="#contact" data-boot="contact">Contact</a>
   </nav>
-  <p class="hint" id="hint">drag to look around · click the laptop to boot</p>
+  <p class="hint" id="hint">Drag to look around · Click the laptop to open my portfolio</p>
+  <div class="coach" id="coach" hidden aria-hidden="true"><span id="coachText">Click the laptop</span><i></i></div>
   <a class="skip" href="#" id="skipLink">open portfolio without 3D →</a>
   <div class="tooltip" id="tooltip" role="status"></div>
 
@@ -80,8 +82,21 @@
       <div class="loader-bar"><i id="loaderBar"></i></div>
       <span class="loader-quote">Good things take time</span>
       <span class="loader-pct" id="loaderPct">assembling desk… 0%</span>
+      <!-- shown when the desk is ready: one tap to enter (this tap is also what lets the browser play music) -->
+      <div class="intro" id="intro" hidden>
+        <h1 class="intro-title">Welcome to my desk</h1>
+        <ul class="intro-tips">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12m0-1.5v-2a1.5 1.5 0 0 1 3 0V12m0-1.5a1.5 1.5 0 0 1 3 0V12m0-.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.6-2.2L4.4 15.6a1.6 1.6 0 0 1 2.5-2L8 15"/></svg><span><b data-touch="Drag" data-mouse="Drag">Drag</b> to look around</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span><b data-touch="Tap" data-mouse="Click">Tap</b> things on the desk — the cat likes it</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg><span><b data-touch="Tap the laptop" data-mouse="Click the laptop">Tap the laptop</b> to open my portfolio</span></li>
+        </ul>
+        <button class="intro-go" id="introGo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Enter</button>
+        <button class="intro-quiet" id="introQuiet">Enter without sound</button>
+      </div>
     </div>
   </div>
+  <!-- if the GPU drops the 3D scene (low memory on some phones) -->
+  <div class="glitch" id="glitch" hidden role="alert"><p>The 3D desk needs a fresh start.</p><button id="glitchReload">Reload</button><a href="#" id="glitchSimple">Open the simple portfolio</a></div>
 
   <!-- Desktop (opens when the laptop boots) -->
   <div class="os" id="os" hidden>
@@ -146,9 +161,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=43"></script>
-  <script src="os.js?v=43"></script>
-  <script src="music.js?v=43"></script>
-  <script type="module" src="main.js?v=43"></script>
+  <script src="content.js?v=44"></script>
+  <script src="os.js?v=44"></script>
+  <script src="music.js?v=44"></script>
+  <script type="module" src="main.js?v=44"></script>
 </body>
 </html>
