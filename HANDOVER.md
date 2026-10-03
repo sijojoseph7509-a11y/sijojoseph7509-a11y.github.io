@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Project handover & technical reference |
-| **Version** | 1.3 — 3 October 2026 (load time, bug fixes, stale-cache fix, automated QA) |
+| **Version** | 1.4 — 3 October 2026 (load time, bug fixes, stale-cache fix, phone/UX pass, automated QA) |
 | **Owner** | Sijo Joseph (GitHub: `sijojoseph7509-a11y`) |
 | **Prepared by** | Claude (AI assistant), working with Sijo Joseph |
 | **Live site** | https://sijojoseph7509-a11y.github.io |
@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=43` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=44` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -147,7 +147,9 @@ Script load order in `index.html` (classic scripts first, module last):
 4. Build all procedural geometry synchronously (desk, throw, mat, walls, floor, poster, lamp, laptop, objects, wall lettering, desk labels).
 5. Load the cat, football and headset through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 5 s from script start**; anything still downloading pops in when it arrives.
 6. Draw the laptop screen canvas, `renderer.compileAsync` (capped at 4 s), start the `requestAnimationFrame` loop, fade the loader.
-7. If `?open=` is present, auto-boot into that section after 0.9 s.
+7. **Welcome screen** (inside `#loader`, `.ready` state): three tips + **Enter** / "Enter without sound". That tap is the user gesture browsers require for audio, so music starts on it; it also stops a first "wake-up" tap from landing on the laptop. Wording switches to "Tap" on touch devices (`TOUCH` = `pointer: coarse`).
+8. After Enter, first-time visitors see a bobbing **"Tap the laptop" pointer** (`#coach`, positioned over the laptop every frame) until they open the laptop once (`localStorage.openedLaptop`).
+9. If `?open=` is present, the welcome screen is skipped and it boots into that section after 0.9 s.
 
 ### 6.2 Render loop (`loop(now)`)
 Per frame (skipped entirely while the Mac desktop fully covers the scene — `OS.isCovering()`; animation steps are scaled by frame time so 120 Hz screens don't run double speed): camera tween (if any) → `controls.update()` → hover lift/scale for interactive objects → power-key pulse → cat tail swish → hearts → football roll → wiggle → laptop screen redraw (every 33 ms, ~30 fps) → render.
@@ -161,6 +163,7 @@ Per frame (skipped entirely while the Mac desktop fully covers the scene — `OS
 3. `os.js` sets the desktop's transform so it exactly covers that rectangle, then transitions to full size over **620 ms** with `cubic-bezier(0.32, 0.72, 0, 1)` while the backdrop fades in. The window pops in after a 0.18 s delay.
 4. Closing (dock "Back to desk", Esc, menu "Back to Desk", ⌘Q item) reverses: desktop shrinks back into the stored rectangle (540 ms), then the camera flies home over **1150 ms** with `EASE_APPLE`, and zoom limits are restored.
 5. `prefers-reduced-motion`: the zoom is skipped (instant open/close).
+6. **History:** opening the desktop pushes a history entry, so the browser back button / phone back-swipe closes it (`popstate`) instead of leaving the site; closing from the UI pops that entry. Reopening the tab (bfcache `pageshow`, or after > 10 min hidden) closes the desktop so visitors start at the desk.
 
 ### 6.5 Global objects
 | Global | Defined in | API |
@@ -384,6 +387,8 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 
 ## 15. Audio
 
+**Phones (v1.4):** the audio context is created only inside a gesture; *every* tap/click/key retries until `ctx.state === "running"` (iOS refuses the first touch-down and suspends audio on app switches); `navigator.audioSession.type = "playback"` (or a silent looping `<audio>` on older iOS) so the iPhone **silent switch doesn't mute the music**. Hover/click blips are skipped until audio is running.
+
 - **Music (`music.js`)** — original lo-fi loop synthesised live: **76 BPM**, eighth-note grid with 0.12 swing; 4-bar progression Fmaj7 · Em7 · Dm9 · Cmaj7(add9); triangle/sine pads (lowpass 900 Hz), sine bass, soft keys melody chosen per bar from 5 motifs, kick / noise snare / hats, vinyl-crackle bed; master → lowpass 5.2 kHz → compressor; 2.5 s fade-in, 0.8 s fade-out. **No samples or recordings → no copyright issues.**
 - Starts on the first pointer/keyboard gesture (browser autoplay rules) unless muted.
 - **UI sounds (`Sound` in main.js)**: hover blip (880 Hz sine), click (520 Hz square), boot arpeggio (C-E-G-C), purr (55 Hz saw + 24 Hz tremolo, 1.8 s).
@@ -524,6 +529,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.4) | Phone/UX pass: welcome screen (fixes music not starting, accidental first-tap boot, learning curve), first-visit laptop pointer, back-swipe closes the Mac (history entry), reopening returns to the desk, hint restored after the Mac, touch tap labels no longer stuck or invisible, "tap/click" wording, no "boot" jargon, iOS audio unlock + silent switch, safe-area insets, narrow-phone nav/dock/clock fixes, half-size poster texture on phones, GPU context-loss recovery, honest no-WebGL message. QA skill extended to ~25 checks. |
 | (v1.3) | Old cached copies on phones showed the cartoon cat (old code + deleted model files): legacy model paths restored, self-update via `version.json`. Code review fixes: no crash with a stale cached os.js, no reload loop, repaint on resize behind the desktop, honest progress bar, one MODEL manifest. Added `window.Desk.state()` and the site-qa skill. |
 | (v1.2) | Cat mesh quantised (343 KB) + smaller textures → 1.06 MB of models; football UVs fixed (was plain white in v1.1); late models fade in; adaptive quality for slow GPUs; favicon (no more 404). |
 | (v1.1) | Load time: compressed GLB models (9.6 → 2.1 MB), parallel preloading, 7 s loader cap, async shader compile, no `transmission`, 2048 shadows, render paused behind the desktop. Bugs: cartoon fallback cat removed (it clipped the headset), folder spots no longer overlap, Enter/Space boots, frame-rate-independent animation, ⌘Q label → Esc, drag `pointercancel`. |
