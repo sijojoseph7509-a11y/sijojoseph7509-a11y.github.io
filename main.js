@@ -165,7 +165,8 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 // Scale reference: the 13" laptop is 6 units wide (≈30 cm), so 1 unit ≈ 5 cm.
 // Two camera views, each found by a small solver: the nearest distance at which a list of points fits on
 // screen (clear of the top menu pill and the hint pill).
-//  · HOME — from slightly right and a little above, a step back: poster, lamp, name and the whole desk.
+//  · HOME — like a desk-setup photo: from the front-left, low (just above the desk), fairly close. The desk runs
+//    across the frame, the laptop sits right of centre, the poster and lamp rise above it (top of the poster may crop).
 //  · ROOM (zoom button) — seated eye level of a 6 ft person (eyes ≈124 cm above the floor = 10 units above the
 //    desk top), taking in the whole room: poster, name, desk and the football on the floor to play with.
 const EYE_Y = 10, VIEW_X = 0.2, WALL_FACE = -3.7;   // VIEW_X = the desk's centre line, so the room view is centred on the desk
@@ -183,11 +184,15 @@ const DESK_SEE = V([
   [-9.0, 0, 6.2], [9.4, 0, 6.2], [-9.0, 0, -1.0], [9.4, 0, -3.0],                   // desk corners (front + back right), connect tiles
   [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [6.3, 4.6, -2.0]   // bottle, plant, laptop lid, cat, headset
 ]);
-const HOME_SEE = V([
-  [-13.75, 21.4, WALL_FACE], [-1.9, 21.4, WALL_FACE], [-13.75, 4.8, WALL_FACE],   // poster
-  [12.6, 10.9, WALL_FACE], [12.6, 6.2, WALL_FACE]                                   // name + roles
-]).concat(DESK_SEE);
-const DESK_DIR = new THREE.Vector3(Math.sin(0.36) * Math.cos(0.42), Math.sin(0.42), Math.cos(0.36) * Math.cos(0.42));   // ≈20° to the right, ≈24° from above
+const HOME_SEE = V([   // what the opening shot frames (desk ends and the poster's top are allowed to crop, like a photo)
+  [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7],                 // bottle, plant
+  [-3.1, 0, 2.6], [3.1, 0, 2.6], [0, 4.4, -1.6],        // laptop
+  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [6.3, 4.6, -2.0],     // cat, headset
+  [-6.5, 0, 6.3], [2.0, 0, 6.3],                         // front edge of the mat (Work › Skills › … labels)
+  [0.4, 13.6, -0.8]                                      // the lamp's bulb
+]);
+const HOME_AZ = -0.45, HOME_EL = 0.22;   // ≈26° to the left, ≈13° above the desk (a low, photographic angle)
+const DESK_DIR = new THREE.Vector3(Math.sin(HOME_AZ) * Math.cos(HOME_EL), Math.sin(HOME_EL), Math.cos(HOME_AZ) * Math.cos(HOME_EL));
 const _p = new THREE.Vector3(), _look = new THREE.Vector3();
 function fitScore(points) {   // 0…1 = how much of the safe screen area the points use; -1 = something doesn't fit
   camera.updateMatrixWorld();
@@ -212,18 +217,19 @@ function solveRoom(out) {   // eye height fixed; find the chair distance + up/do
   out.dist = out.pos.distanceTo(out.target);
   return out;
 }
+const HOME_AIM_X = -2.0;   // aim a little left of the laptop, so (as in the reference photo) the laptop sits right of centre
 function solveDesk(out, points) {   // fixed viewing direction; find the closest distance + the best aim point
   let best = null;
   for (let d = 8; d <= 120 && !best; d += 0.25) {
     for (let ty = -2; ty <= 10; ty += 0.5) for (let tz = -1; tz <= 3; tz += 1) {
-      _look.set(0.2, ty, tz);
+      _look.set(HOME_AIM_X, ty, tz);
       camera.position.copy(_look).addScaledVector(DESK_DIR, d); camera.lookAt(_look);
       const w = fitScore(points);
       if (w >= 0 && (!best || w < best.w)) best = { d, ty, tz, w };
     }
   }
   best = best || { d: 30, ty: 1, tz: 1 };
-  out.target.set(0.2, best.ty, best.tz);
+  out.target.set(HOME_AIM_X, best.ty, best.tz);
   out.pos.copy(out.target).addScaledVector(DESK_DIR, best.d);
   out.dist = best.d;
   return out;
