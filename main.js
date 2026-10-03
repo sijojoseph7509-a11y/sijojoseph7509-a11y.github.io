@@ -250,7 +250,7 @@ controls.enablePan = false;
 controls.zoomToCursor = true;   // scroll / pinch zooms toward what you point at, so nothing slides out of reach
 // zoom / look-around limits cover both views (recomputed on resize)
 function setZoomLimits() {
-  controls.minDistance = HOME.dist * 0.55; controls.maxDistance = ROOM.dist * 1.1;
+  controls.minDistance = HOME.dist * 0.55; controls.maxDistance = Math.max(ROOM.dist, HOME.dist) * 1.2;
   const angles = (v) => { const o = new THREE.Vector3().subVectors(v.pos, v.target); return [Math.acos(o.y / o.length()), Math.atan2(o.x, o.z)]; };
   const [ph, ah] = angles(HOME), [pr, ar] = angles(ROOM);
   controls.minPolarAngle = Math.max(0.3, Math.min(ph, pr) - 0.35); controls.maxPolarAngle = Math.min(1.62, Math.max(ph, pr) + 0.12);
@@ -1199,6 +1199,17 @@ function setRoomView(on) {
   $("#zoomIcon").setAttribute("d", on ? "M20 20l-3.5-3.5M8 11h6M11 8v6" : "M20 20l-3.5-3.5M8 11h6");
   $("#zoomBtn").setAttribute("aria-label", on ? "Back to the desk close-up" : "Step back to see the room");
 }
+// Zooming OUT always ends centred: pulling back past the start view glides into the centred room view
+// (the start view looks from the right, so a plain dolly-out drifted left). Zoom-to-cursor only applies when
+// zooming in — zooming out toward/away from the cursor also pushed the view sideways.
+renderer.domElement.addEventListener("wheel", (e) => { controls.zoomToCursor = e.deltaY < 0; }, { capture: true, passive: true });
+let pinchStart = 0;
+renderer.domElement.addEventListener("touchstart", (e) => { if (e.touches.length === 2) pinchStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }, { capture: true, passive: true });
+renderer.domElement.addEventListener("touchmove", (e) => { if (e.touches.length === 2 && pinchStart) controls.zoomToCursor = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) > pinchStart; }, { capture: true, passive: true });
+controls.addEventListener("change", () => {
+  if (tween || booting || roomView) return;
+  if (camera.position.distanceTo(controls.target) > HOME.dist * 1.12) { setRoomView(true); moveCamera(ROOM.pos, ROOM.target, 1, 900); }
+});
 $("#zoomBtn").addEventListener("click", () => {
   if (booting) return;
   setRoomView(!roomView);
@@ -1513,7 +1524,7 @@ requestAnimationFrame(loop);
 window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
-  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView }),
+  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist }),
   // clickable things whose centre is outside the current view (should be none at home and when leaned in)
   // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
