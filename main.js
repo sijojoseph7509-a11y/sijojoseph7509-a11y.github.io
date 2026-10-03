@@ -7,6 +7,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const S = window.SITE;
+const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let shownProgress = 0;
@@ -53,26 +54,49 @@ try {
 } catch (_) {}
 setProgress(45, "assembling desk…");
 
-/* ───────────────────────── Sound (tiny synth blips) ───────────────────────── */
+/* ───────────────────────── Sound (tiny synth blips + the music) ─────────────────────────
+   Browsers only let a page make sound after a real tap/click/key, and phones are stricter:
+   iOS counts the *end* of a tap (not the touch-down), mutes Web Audio when the silent switch is on,
+   and suspends audio when you switch apps. So: the audio context is only created inside a gesture,
+   every gesture re-tries until audio is really running, and the session is marked as "playback". */
 const Sound = (() => {
-  let ctx, muted = false;
+  let ctx = null, muted = false, silentLoop = null;
   try { muted = localStorage.getItem("muted") === "1"; } catch (_) {}
+  const running = () => ctx && ctx.state === "running";
   const blip = (freq, dur = 0.06, type = "square", vol = 0.04) => {
-    if (muted) return;
-    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (muted || !running()) return;
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type; o.frequency.value = freq;
     g.gain.setValueAtTime(vol, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
     o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
   };
+  // iPhone silent switch: ask for "playback" audio (Safari 17+); older iOS gets the same effect from a silent looping <audio>
+  function playbackSession() {
+    try { if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; } } catch (_) {}
+    if (silentLoop || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+    const rate = 8000, n = rate / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const str = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * 2, true);
+    silentLoop = new Audio(URL.createObjectURL(new Blob([buf], { type: "audio/wav" })));
+    silentLoop.loop = true; silentLoop.setAttribute("playsinline", ""); silentLoop.play().catch(() => {});
+  }
+  // call from inside a user gesture: creates/resumes audio and starts the music (unless muted)
+  function unlock() {
+    if (muted) return;
+    playbackSession();
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const go = () => { if (running() && !muted) window.Music.start(ctx); };
+    if (running()) go(); else ctx.resume().then(go).catch(() => {});
+  }
   return {
+    unlock,
     hover: () => blip(880, 0.03, "sine", 0.02),
     click: () => blip(520, 0.07),
     boot: () => [262, 330, 392, 523].forEach((f, i) => setTimeout(() => blip(f, 0.14, "triangle", 0.05), i * 110)),
     purr() {
-      if (muted) return;
-      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (muted || !running()) return;
       const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), t = ctx.currentTime;
       o.type = "sawtooth"; o.frequency.value = 55;
       lfo.frequency.value = 24; lg.gain.value = 0.03;
@@ -82,28 +106,26 @@ const Sound = (() => {
       o.connect(f).connect(g).connect(ctx.destination);
       o.start(t); lfo.start(t); o.stop(t + 1.8); lfo.stop(t + 1.8);
     },
-    audio() { return (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)()); },
-    toggle() {
-      muted = !muted;
+    setMuted(m) {
+      muted = !!m;
       try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {}
-      if (muted) window.Music.stop(); else window.Music.start(this.audio());
+      if (muted) { window.Music.stop(); if (silentLoop) silentLoop.pause(); } else unlock();
+      $("#soundBtn").classList.toggle("muted", muted);
+      $("#soundBtn").setAttribute("aria-label", muted ? "Turn sound on" : "Mute sound");
       return muted;
     },
-    get muted() { return muted; }
+    toggle() { return this.setMuted(!muted); },
+    get muted() { return muted; },
+    get state() { return ctx ? ctx.state : "none"; }
   };
 })();
 window.Sound = Sound;
 $("#soundBtn").classList.toggle("muted", Sound.muted);
-// Background music starts on the first tap/click (browsers block audio before a user gesture)
-const startMusic = () => { if (!Sound.muted) window.Music.start(Sound.audio()); };
-addEventListener("pointerdown", startMusic, { once: true });
-addEventListener("keydown", startMusic, { once: true });
-$("#soundBtn").addEventListener("click", () => {
-  const m = Sound.toggle();
-  $("#soundBtn").classList.toggle("muted", m);
-  $("#soundBtn").setAttribute("aria-label", m ? "Turn sound on" : "Mute sound");
-  if (!m) Sound.click();
-});
+// Every real gesture re-tries until audio is actually running (phones may refuse the first one,
+// and iOS suspends audio when you switch apps — the next tap brings it back)
+const gestureUnlock = () => { if (Sound.state !== "running") Sound.unlock(); };
+for (const ev of ["pointerup", "touchend", "click", "keydown"]) addEventListener(ev, gestureUnlock, true);
+$("#soundBtn").addEventListener("click", () => { if (!Sound.toggle()) setTimeout(() => Sound.click(), 60); });
 
 /* Open the portfolio without 3D */
 $("#skipLink").addEventListener("click", (e) => { e.preventDefault(); window.OS.open("about"); });
@@ -115,12 +137,17 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 } catch (err) {
-  // No WebGL — go straight to the 2D portfolio
+  // No WebGL — open the simple portfolio and say why
   $("#loader").classList.add("done");
   window.OS.open("about");
+  window.OS.toast("3D isn't available in this browser — here's the simple version");
   throw err;
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// Some phones drop the GPU context under memory pressure: offer a clean reload instead of a frozen/black desk
+renderer.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); $("#glitch").hidden = false; });
+$("#glitchReload").addEventListener("click", () => location.reload());
+$("#glitchSimple").addEventListener("click", (e) => { e.preventDefault(); $("#glitch").hidden = true; window.OS.open("about"); });
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -411,8 +438,9 @@ skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
-const poster = canvasTex(2048, 2896, (g, w, h) => {
-  g.scale(2048 / 1240, 2896 / 1754); w = 1240; h = 1754;   // draw on the 1240-wide layout, rendered at 2× sharpness
+const POSTER_PX = TOUCH ? 1024 : 2048;   // phones: half resolution (¼ of the GPU memory) — still sharp at phone size
+const poster = canvasTex(POSTER_PX, Math.round(POSTER_PX * 1754 / 1240), (g, w, h) => {
+  g.scale(w / 1240, h / 1754); w = 1240; h = 1754;   // draw on the 1240-wide layout, rendered at up to 2× sharpness
   g.fillStyle = "#f6f4ef"; g.fillRect(0, 0, w, h);
   const red = "#c7262e";
   const big = (ch, x, y, size, rot = 0) => {
@@ -598,7 +626,7 @@ const screenCanvas = canvasTex(800, 512, () => {});
 const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenCanvas.tex, toneMapped: false }));
 screen.position.set(0, LID_H / 2 - 0.08, LID_T / 2 + 0.012);
 lid.add(screen);
-interactive(screen, "Click to boot", () => boot("about"));
+interactive(screen, "Open my portfolio", () => boot("about"));
 // Camera notch
 const notch = rbox(0.62, 0.17, 0.01, 0.05, mat(0x0b0b0c), 2);
 notch.position.set(0, LID_H - 0.13, LID_T / 2 + 0.014);
@@ -953,7 +981,7 @@ function drawScreen(t) {
     g.font = `400 14px ${UI}`; g.fillStyle = ink2; g.fillText(S.title, cx, by + 114);
     const pulse = 0.85 + Math.sin(t * 3) * 0.15;
     g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, cx - 70, by + 138, 140, 34, 17); g.fill(); g.globalAlpha = 1;
-    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText("Click to open", cx, by + 156);
+    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText(TOUCH ? "Tap to open" : "Click to open", cx, by + 156);
   } else if (screenMode === "typing") {
     const bw = 460, bh = 170, bx = (W - bw) / 2, by = 130;
     glass(bx, by, bw, bh, 22, "rgba(28,28,30,0.92)");
@@ -1019,6 +1047,7 @@ function boot(app) {
   Sound.boot();
   hideTooltip();
   $("#hint").style.opacity = 0;
+  coachDone();
   const screenWorld = new THREE.Vector3();
   screen.getWorldPosition(screenWorld);
   const v = THREE.MathUtils.degToRad(FOV), hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
@@ -1029,7 +1058,7 @@ function boot(app) {
   moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1250, () => {
     // hand-off: the desktop grows out of exactly where the laptop screen is on your display
     window.OS.open(app, () => {
-      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => { booting = false; setZoomLimits(); }, EASE_APPLE);
+      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => { booting = false; setZoomLimits(); $("#hint").style.opacity = ""; }, EASE_APPLE);
     }, screenRect());
   });
 }
@@ -1052,7 +1081,7 @@ function pick(e) {
   return null;
 }
 renderer.domElement.addEventListener("pointermove", (e) => {
-  if (booting || tween) return;
+  if (booting || tween || e.pointerType === "touch") return;   // a moving finger is a drag — no hover states on touch
   const o = pick(e);
   if (o !== hovered) {
     hovered = o;
@@ -1070,11 +1099,21 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   if (!downAt || booting) return;
   const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
   downAt = null;
-  if (moved > 6) return; // that was a drag, not a click
+  if (moved > (e.pointerType === "touch" ? 12 : 6)) return; // that was a drag, not a click
   const o = pick(e);
-  if (o) o.userData.hover.onClick();
+  if (!o) return;
+  if (e.pointerType === "touch") {   // touch has no hover: show the label and lift briefly, then let them go
+    hovered = o;
+    tip.textContent = o.userData.hover.label;
+    tip.style.left = e.clientX + "px"; tip.style.top = e.clientY + "px";
+    tip.classList.add("show");
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { hovered = null; hideTooltip(); }, 1200);
+  }
+  o.userData.hover.onClick();
 });
-renderer.domElement.addEventListener("pointerleave", () => { hovered = null; hideTooltip(); });
+let tapTimer = 0;
+renderer.domElement.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") { hovered = null; hideTooltip(); } });   // a lifted finger "leaves" too — tap labels clear on their own timer
 
 // Zoom button
 let zoomedIn = false;
@@ -1088,6 +1127,20 @@ $("#zoomBtn").addEventListener("click", () => {
 
 let wiggleT = -1, wiggleObj = null;
 function wiggle(o) { wiggleObj = o; wiggleT = 0; }
+
+/* ───────────────────────── First-visit pointer over the laptop ───────────────────────── */
+const coach = $("#coach"), coachAnchor = new THREE.Vector3();
+let coachOn = false;
+try { coachOn = localStorage.getItem("openedLaptop") !== "1"; } catch (_) { coachOn = true; }
+function coachShow() { if (coachOn) coach.hidden = false; }
+function coachDone() { coachOn = false; coach.hidden = true; try { localStorage.setItem("openedLaptop", "1"); } catch (_) {} }
+function placeCoach() {
+  if (coach.hidden) return;
+  screen.localToWorld(coachAnchor.set(0, SCREEN_H / 2 + 0.25, 0)).project(camera);
+  const x = (coachAnchor.x + 1) / 2 * innerWidth, y = (1 - coachAnchor.y) / 2 * innerHeight;
+  coach.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
+  coach.style.opacity = booting || tween || coachAnchor.z > 1 ? 0 : 1;
+}
 
 /* ───────────────────────── Loop ───────────────────────── */
 // Weak GPUs (budget phones, old laptops): if the desk renders below ~35 fps, step quality down —
@@ -1131,10 +1184,11 @@ function loop(now) {
   }
   btnCap.material.emissiveIntensity = 0.25 + (Math.sin(t * 3) * 0.5 + 0.5) * 0.6;
 
-  if (!reduced) {
-    // cat: gentle tail sway, quicker on hover, big happy swish while petted
-    if (catRig) {
-      const petting = now < catPetUntil, catHover = hovered === cat && !booting;
+  {
+    // cat: gentle tail sway, quicker on hover, big happy swish while petted (reduced motion: only when petted)
+    const petting = now < catPetUntil;
+    if (catRig && (!reduced || petting)) {
+      const catHover = hovered === cat && !booting;
       const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
       swishTail(catRig, amp, speed, petting ? 5 : 1.5, t);
     }
@@ -1161,6 +1215,7 @@ function loop(now) {
     if (wiggleT > 1) { wiggleObj.rotation.z = 0; wiggleT = -1; }
   }
   if (now - lastScreen > 33) { drawScreen(t); lastScreen = now; }
+  placeCoach();
   renderer.render(scene, camera);
 }
 
@@ -1366,13 +1421,43 @@ started = true;
 requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
-  covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length }) };
-setTimeout(() => $("#loader").classList.add("done"), 300);
+  covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
+  booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
+  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing }) };
+$("#hint").textContent = TOUCH ? "Drag to look around · Tap the laptop to open" : "Drag to look around · Click the laptop to open my portfolio";
+$("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
-if (deep) setTimeout(() => boot(deep), 900);
+let entered = false;
+function enter(withSound) {
+  if (entered) return;
+  entered = true;
+  Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
+  $("#loader").classList.add("done");
+  document.activeElement?.blur?.();
+  coachShow();
+}
+if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
+else {
+  document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = TOUCH ? b.dataset.touch : b.dataset.mouse));
+  $("#loader").classList.add("ready");
+  $("#intro").hidden = false;
+  $("#introGo").addEventListener("click", () => enter(true));
+  $("#introQuiet").addEventListener("click", () => enter(false));
+  $("#introGo").focus({ preventScroll: true });
+}
+
+// Coming back to the site later (reopened tab, back/forward cache, or after 10+ min away) starts at the desk,
+// not inside the Mac
+let hiddenAt = 0;
+const backToDesk = () => { if (window.OS.isOpen()) window.OS.close(); };
+addEventListener("pageshow", (e) => { if (e.persisted) backToDesk(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) backToDesk();
+});
 // Enter / Space boots the laptop (when nothing else on the page has focus)
 addEventListener("keydown", (e) => {
-  if ((e.key === "Enter" || e.key === " ") && !window.OS.isOpen() && (document.activeElement === document.body || !document.activeElement)) {
+  if (entered && (e.key === "Enter" || e.key === " ") && !window.OS.isOpen() && (document.activeElement === document.body || !document.activeElement)) {
     e.preventDefault(); boot("about");
   }
 });

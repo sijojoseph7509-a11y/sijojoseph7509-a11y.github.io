@@ -24,7 +24,13 @@ async function page({ mobile = false, route } = {}) {
   p.ctx = ctx;
   return p;
 }
-const ready = (p, ms = 60000) => p.waitForFunction(() => window.Desk && Desk.state().started, { timeout: ms, polling: 100 });
+// waits for the desk, then taps "Enter" on the welcome screen (pass enter=false to stay on it)
+async function ready(p, ms = 60000, enter = true) {
+  await p.waitForFunction(() => window.Desk && Desk.state().started, { timeout: ms, polling: 100 });
+  if (enter && await p.$eval("#intro", (e) => !e.hidden).catch(() => false)) {
+    await p.click("#introGo"); await p.waitForFunction(() => document.getElementById("loader").classList.contains("done"));
+  }
+}
 async function check(name, fn) {
   try { const note = await fn(); results.push(["PASS", name, note || ""]); }
   catch (e) { results.push(["FAIL", name, e.message.split("\n")[0]]); }
@@ -44,6 +50,76 @@ await check("Phone: loads with all models and no errors", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 });
   await sleep(1000); clean(p); await p.ctx.close();
+});
+
+await check("Welcome screen: Enter starts the music and shows the laptop pointer", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
+  expect(await p.$eval("#intro", (e) => !e.hidden), "welcome screen not shown");
+  await p.click("#introGo"); await sleep(800);
+  const s = await p.evaluate(() => Desk.state());
+  expect(s.audio === "running" && s.music, "music not playing: " + s.audio);
+  expect(await p.$eval("#coach", (e) => !e.hidden), "laptop pointer not shown"); clean(p); await p.ctx.close();
+});
+
+await check("Welcome screen: 'Enter without sound' stays silent", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
+  await p.click("#introQuiet"); await sleep(600);
+  const s = await p.evaluate(() => Desk.state());
+  expect(!s.music && (await p.$eval("#soundBtn", (b) => b.classList.contains("muted"))), "sound still on"); await p.ctx.close();
+});
+
+await check("Opening the laptop hides the pointer for good; the hint comes back after", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(400);
+  await p.keyboard.press("Enter"); await p.waitForFunction(() => Desk.state().covering, { timeout: 10000 });
+  await p.keyboard.press("Escape"); await p.waitForFunction(() => !Desk.state().booting, { timeout: 10000 }); await sleep(700);
+  expect(await p.$eval("#hint", (h) => getComputedStyle(h).opacity === "1"), "hint still hidden after returning");
+  expect(await p.$eval("#coach", (e) => e.hidden), "pointer still shown");
+  expect(await p.evaluate(() => localStorage.getItem("openedLaptop")) === "1", "not remembered"); await p.ctx.close();
+});
+
+await check("Back button / phone back-swipe closes the Mac and stays on the site", async () => {
+  const p = await page({ mobile: true }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
+  await p.waitForFunction(() => OS.isOpen(), { timeout: 10000 }); await sleep(800);
+  const url = p.url(); await p.evaluate(() => history.back()); await sleep(1500);
+  expect(p.url() === url, "left the page: " + p.url());
+  expect(await p.evaluate(() => !OS.isOpen()), "Mac still open"); clean(p); await p.ctx.close();
+});
+
+await check("Reopening the tab later (back/forward cache) starts at the desk", async () => {
+  const p = await page(); await p.goto(BASE + "?open=about&qa=" + Date.now()); await ready(p);
+  await p.waitForFunction(() => OS.isOpen(), { timeout: 10000 }); await sleep(800);
+  await p.evaluate(() => dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }))); await sleep(1500);
+  expect(await p.evaluate(() => !OS.isOpen()), "Mac still open after reopening"); await p.ctx.close();
+});
+
+await check("Phone: a tap's label and lift clear by themselves", async () => {
+  const p = await page({ mobile: true }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(800);
+  await p.touchscreen.tap(305, 520); await sleep(300);
+  const label = await p.$eval("#tooltip", (t) => t.classList.contains("show") ? t.textContent : "");
+  expect(label.includes("pet me"), "tapping the cat showed no label (got '" + label + "')");
+  await sleep(1500);
+  expect(!(await p.$eval("#tooltip", (t) => t.classList.contains("show"))), "label stuck after a tap");
+});
+
+for (const [w, h] of [[320, 568], [360, 780], [430, 932]]) {
+  await check(`Phone ${w}×${h}: dock, clock and top menu fit`, async () => {
+    const p = await page({ mobile: true }); await p.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await p.goto(BASE + "?open=about&qa=" + Date.now()); await ready(p); await p.waitForFunction(() => OS.isOpen()); await sleep(800);
+    const off = await p.$$eval("#dock .dock-item", (els) => els.filter((e) => { const r = e.getBoundingClientRect(), d = e.parentElement.getBoundingClientRect(); return r.left < d.left - 0.5 || r.right > d.right + 0.5 || r.right > innerWidth; }).length);
+    expect(off === 0, off + " dock icon(s) cut off");
+    await p.evaluate(() => OS.close()); await p.waitForFunction(() => !OS.isOpen()); await sleep(1400);
+    const hit = await p.evaluate(() => { const n = document.querySelector(".topnav").getBoundingClientRect(); return [...document.querySelectorAll(".hud")].some((h) => { const r = h.getBoundingClientRect(); return r.right > n.left && r.left < n.right && r.bottom > n.top && r.top < n.bottom; }); });
+    expect(!hit, "top menu pill overlaps the zoom/sound buttons");
+    const clock = await p.$eval("#clock", (c) => c.getBoundingClientRect().height);
+    expect(clock < 24, "clock wraps onto two lines"); await p.ctx.close();
+  });
+}
+
+await check("Phone landscape: the welcome card fits on screen", async () => {
+  const p = await page({ mobile: true }); await p.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
+  const b = await p.$eval("#introQuiet", (e) => e.getBoundingClientRect().bottom);
+  expect(b <= 390, "'Enter without sound' is below the screen (" + Math.round(b) + "px)"); await p.ctx.close();
 });
 
 for (const sec of ["about", "work", "skills", "resume", "contact"]) {

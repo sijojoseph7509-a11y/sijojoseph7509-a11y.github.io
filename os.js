@@ -153,7 +153,7 @@
     win.style.animation = "none"; void win.offsetWidth; win.style.animation = "";
     document.querySelectorAll("[data-open]").forEach((b) => {
       const on = b.dataset.open === current;
-      if (b.classList.contains("side-item")) b.classList.toggle("active", on);
+      if (b.classList.contains("side-item")) { b.classList.toggle("active", on); if (on) b.scrollIntoView({ block: "nearest", inline: "nearest" }); }   // phones: the tab row scrolls
       if (b.classList.contains("dock-item")) b.classList.toggle("running", on);
     });
   }
@@ -306,8 +306,8 @@
   // Menu-bar clock, macOS style: "Sat 3 Oct  3:02 AM"
   const tick = () => {
     const d = new Date();
-    $("#clock").textContent = d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }) + "  " +
-      d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    $("#clock").textContent = innerWidth < 500 ? time : d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }) + "  " + time;
   };
   tick(); setInterval(tick, 15000);
 
@@ -319,8 +319,18 @@
     const to = screen.getBoundingClientRect();
     return `translate(${r.left - to.left}px, ${r.top - to.top}px) scale(${r.width / to.width}, ${r.height / to.height})`;
   };
+  // Back button / phone back-swipe: opening the desktop adds a history step, so "back" closes it
+  // (returning to the desk) instead of leaving the site.
+  let skipPop = false;
+  addEventListener("popstate", () => {
+    if (skipPop) { skipPop = false; return; }
+    if (!os.hidden) close(true);
+  });
+  try { if (history.state && history.state.sjDesktop) history.replaceState(null, ""); } catch (_) {}   // reloaded while open
+
   function open(key = "about", closeCb, fromRect) {
     onClose = closeCb || (() => {});
+    try { if (!(history.state && history.state.sjDesktop)) history.pushState({ sjDesktop: 1 }, ""); } catch (_) {}
     closing = false; settled = false;
     os.hidden = false;
     win.classList.remove("max");
@@ -344,8 +354,9 @@
       screen.style.animation = "none"; void os.offsetWidth; screen.style.animation = "";
     }
   }
-  function close() {
-    if (closing) return;
+  function close(fromHistory) {
+    if (closing || os.hidden) return;
+    if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.back(); } } catch (_) {} }
     closeMenu(); closeSpotlight();
     const finish = () => {
       os.hidden = true; closing = false;
@@ -366,5 +377,5 @@
   // true while the desktop fully covers the 3D scene (the zoom-out/zoom-in animations still need it rendered)
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
-  window.OS = { open, close, setDark, isOpen: () => !os.hidden, isCovering };
+  window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isCovering, toast };
 })();

@@ -5,7 +5,7 @@ description: Automated bug check for Sijo's 3D portfolio site. Use after any cha
 
 # Site QA
 
-Runs 15 real-browser checks against the site with headless Google Chrome and prints ✅/❌ per check.
+Runs ~25 real-browser checks against the site with headless Google Chrome and prints ✅/❌ per check.
 
 ## Run it
 
@@ -24,6 +24,12 @@ Runs 15 real-browser checks against the site with headless Google Chrome and pri
 - Failure paths: a model that fails to download leaves no stand-in and no crash; an old cached `os.js` doesn't crash the new `main.js`
 - Self-update: a newer `version.json` reloads the page exactly once (no loop)
 - Legacy model paths still exist for old cached pages
+- Welcome screen: Enter starts the music + shows the laptop pointer; "Enter without sound" stays silent
+- Opening the laptop hides the pointer for good; the hint returns after closing the Mac
+- Back button / phone back-swipe closes the Mac without leaving the site; reopening the tab starts at the desk
+- Touch: a tap's label/lift clears itself; dock + menu-bar clock fit at 320, 360 and 430 px; welcome card fits in landscape
+
+Not covered (needs a real iPhone): iOS silent-switch audio, Safari toolbar overlap, low-memory GPU crashes — check those by hand on a phone.
 
 ## Also look at
 - Read the console of the live site on a real phone if the user reports a device-specific glitch — the most common cause is a stale cached copy (see HANDOVER §19, self-update).
