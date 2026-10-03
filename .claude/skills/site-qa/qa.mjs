@@ -68,14 +68,29 @@ await check("Welcome screen: 'Enter without sound' stays silent", async () => {
   expect(!s.music && (await p.$eval("#soundBtn", (b) => b.classList.contains("muted"))), "sound still on"); await p.ctx.close();
 });
 
-await check("Opening the laptop hides the pointer for good; the hint comes back after", async () => {
+await check("Opening the laptop hides the pointer for this visit; the hint comes back; a refresh shows the pointer again", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(400);
   await p.keyboard.press("Enter"); await p.waitForFunction(() => Desk.state().covering, { timeout: 10000 });
   await p.keyboard.press("Escape"); await p.waitForFunction(() => !Desk.state().booting, { timeout: 10000 }); await sleep(700);
   expect(await p.$eval("#hint", (h) => getComputedStyle(h).opacity === "1"), "hint still hidden after returning");
-  expect(await p.$eval("#coach", (e) => e.hidden), "pointer still shown");
-  expect(await p.evaluate(() => localStorage.getItem("openedLaptop")) === "1", "not remembered"); await p.ctx.close();
+  expect(await p.$eval("#coach", (e) => e.hidden), "pointer still shown after opening the laptop");
+  await p.reload(); await ready(p); await sleep(400);
+  expect(await p.$eval("#coach", (e) => !e.hidden), "pointer not shown again after a refresh"); await p.ctx.close();
 });
+
+for (const mobile of [false, true]) {
+  await check(`${mobile ? "Phone" : "Desktop"}: every clickable thing is on screen at home and when leaning in`, async () => {
+    const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
+    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 }); await sleep(600);
+    const home = await p.evaluate(() => Desk.offscreen());
+    expect(home.length === 0, "off-screen at home: " + home.join(", "));
+    await p.click("#zoomBtn"); await sleep(1300);
+    const lean = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me/.test(l)));   // the ball/wall lettering may leave the frame when leaning over the desk
+    expect(lean.length === 0, "off-screen when leaning in: " + lean.join(", "));
+    await p.click("#zoomBtn"); await sleep(1200);
+    expect(!(await p.evaluate(() => Desk.state().zoomed)), "zoom button did not return"); await p.ctx.close();
+  });
+}
 
 await check("Back button / phone back-swipe closes the Mac and stays on the site", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
@@ -94,7 +109,9 @@ await check("Reopening the tab later (back/forward cache) starts at the desk", a
 
 await check("Phone: a tap's label and lift clear by themselves", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(800);
-  await p.touchscreen.tap(305, 520); await sleep(300);
+  await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
+  const at = await p.evaluate(() => Desk.screenPos("pet me"));
+  await p.touchscreen.tap(Math.round(at.x), Math.round(at.y)); await sleep(300);
   const label = await p.$eval("#tooltip", (t) => t.classList.contains("show") ? t.textContent : "");
   expect(label.includes("pet me"), "tapping the cat showed no label (got '" + label + "')");
   await sleep(1500);
