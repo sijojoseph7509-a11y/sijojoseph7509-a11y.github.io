@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=39` |
+| **Asset version (cache-buster)** | `?v=40` |
 
 ---
 
@@ -123,12 +123,12 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. I
 ├── HANDOVER.md                   this document
 └── models/
     ├── cat/
-    │   ├── cat.glb               915 KB  realistic cat mesh, meshopt-compressed, unquantised floats (Z-up, cm — the tail rig needs raw positions)
-    │   ├── cat_diffuse.jpg       347 KB  recoloured to ginger at runtime
-    │   └── cat_bump.jpg          285 KB
+    │   ├── cat.glb               343 KB  realistic cat mesh, meshopt-compressed + quantised (unpacked to float cm at load for the tail rig)
+    │   ├── cat_diffuse.jpg       238 KB  recoloured to ginger at runtime (keep it RGB — a greyscale JPEG shifts the tone darker)
+    │   └── cat_bump.jpg           83 KB  (512 px)
     ├── football/
-    │   ├── football.glb           70 KB  (from the FBX, simplified to 15k triangles)
-    │   ├── BaseColor.jpg / Normal.jpg / Roughness.jpg   (512 px, ~110 KB each)
+    │   ├── football.glb           89 KB  (from the FBX, simplified to 15k triangles)
+    │   ├── BaseColor.jpg (512 px) / Normal.jpg / Roughness.jpg (256 px)
     └── headphones/headphones.glb  166 KB  (simplified from a 97 MB OBJ, meshopt-compressed)
 ```
 
@@ -369,9 +369,9 @@ All downloaded by Sijo into `~/Downloads`. **Licences have not been verified** �
 
 | Model | Source file | Processing done | In repo |
 |---|---|---|---|
-| Cat | `Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64.zip` (OBJ, 3ds Max export, Z-up, cm) | v1.1: `gltfpack -i cat.obj -o cat.glb -noq -cc -tr`, then image references stripped from the GLB (textures are loaded separately). `-noq` keeps raw float positions so the tail rig thresholds still work. Rotated to Y-up, scaled to 5.0 units tall at runtime; diffuse **recoloured to ginger at runtime**; bump kept. Textures use `flipY = false` (glTF UVs). | yes (1.5 MB incl. textures) |
+| Cat | `Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64.zip` (OBJ, 3ds Max export, Z-up, cm) | v1.2: `gltfpack -i cat.obj -o cat.glb -cc -kv -vtf`, then image references stripped from the GLB (textures are loaded separately). Positions are quantised; `loadCat` unpacks them to float cm through the node matrix so the tail-rig thresholds still work. **`-vtf` (float UVs) is required**: quantised UVs rely on a texture transform in the glTF material, which is lost because we replace the material. Rotated to Y-up, scaled to 5.0 units tall at runtime; diffuse **recoloured to ginger at runtime**; bump kept. Textures use `flipY = false` (glTF UVs). | yes (0.66 MB incl. textures) |
 | Headset | `headphone.rar` → "Razer kraken.obj" (97 MB, ~896k triangles, C4D) | Simplified with `gltfpack -si 0.03` → 29.5k triangles; v1.1 re-packed with `-cc` → 166 KB; untextured materials restyled; green brand accents greyed. Model of a branded product — see §25. | yes |
-| Football | `73-soccer_ball.zip` → `football.fbx` + PBR PNGs | v1.1: FBX → OBJ with three.js `FBXLoader` + `OBJExporter` in Node, then `gltfpack -si 0.4 -sv -kv -vt 14 -cc` → 70 KB GLB; textures 512 px JPEG. | yes (0.4 MB) |
+| Football | `73-soccer_ball.zip` → `football.fbx` + PBR PNGs | v1.1: FBX → OBJ with three.js `FBXLoader` + `OBJExporter` in Node, then `gltfpack -si 0.4 -sv -kv -vtf -cc` → 89 KB GLB (float UVs, see cat note); textures 512/256 px JPEG. | yes (0.4 MB) |
 | Table (retired) | `15-table_dae.rar` | Used for a while, then replaced by the procedural desk from Sijo's photo; files removed from repo. | no |
 | Ball (retired) | `xh0avas9ej9c-Ball.zip` | Replaced by the matte football. | no |
 | Not used | `34-cat3d.rar` (SketchUp only), `9182knlssry8-Mac201512.rar` (Blender only; contains Apple wallpaper), `plant 1.zip`, `plants 2.rar`, `sshpy95hl0qo-table.wood.rar` (3ds Max only) | — | no |
@@ -420,7 +420,8 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 
 ## 18. Performance
 
-- v1.1: models + textures ≈ **2.1 MB** (was ≈ 9.6 MB; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than ~7 s + 4 s shader warm-up.
+- v1.2: models + textures ≈ **1.06 MB**, whole first visit ≈ 1.5 MB (was ≈ 9.6 MB of models; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than ~6 s + 4 s shader warm-up; models arriving later fade in (`reveal()`).
+- **Adaptive quality** (`adaptQuality` in main.js): if the median frame time over 90 frames is > 28 ms, pixel ratio drops to 1; if still slow, lamp shadows go off and the sun shadow map drops to 1024².
 - The desk is rendered only while visible — not while the Mac desktop covers it.
 - Shadow maps: sun 2048², lamp 512² ×6 (desktop only).
 - Laptop screen canvas redraws at ~30 fps; cat tail updates ~6,200 vertices per frame.
@@ -519,6 +520,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.2) | Cat mesh quantised (343 KB) + smaller textures → 1.06 MB of models; football UVs fixed (was plain white in v1.1); late models fade in; adaptive quality for slow GPUs; favicon (no more 404). |
 | (v1.1) | Load time: compressed GLB models (9.6 → 2.1 MB), parallel preloading, 7 s loader cap, async shader compile, no `transmission`, 2048 shadows, render paused behind the desktop. Bugs: cartoon fallback cat removed (it clipped the headset), folder spots no longer overlap, Enter/Space boots, frame-rate-independent animation, ⌘Q label → Esc, drag `pointercancel`. |
 
 (Earlier non-git iterations — the first flat site, the retro CRT, the paper plane, the butterfly, the procedural cats — predate the repository.)

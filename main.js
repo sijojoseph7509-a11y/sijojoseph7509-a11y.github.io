@@ -1064,6 +1064,22 @@ let wiggleT = -1, wiggleObj = null;
 function wiggle(o) { wiggleObj = o; wiggleT = 0; }
 
 /* ───────────────────────── Loop ───────────────────────── */
+// Weak GPUs (budget phones, old laptops): if the desk renders below ~35 fps, step quality down —
+// first render at 1× pixel density, then drop the lamp's shadows and halve the sun's shadow map.
+const perf = { dts: [], step: 0 };
+function adaptQuality(dt) {
+  if (perf.step >= 2 || document.hidden || dt > 500) return;   // ignore pauses (background tab, etc.)
+  perf.dts.push(dt);
+  if (perf.dts.length < 90) return;
+  const median = perf.dts.sort((a, b) => a - b)[45];
+  perf.dts = [];
+  if (median < 28) { perf.step = 2; return; }   // smooth enough — stop measuring
+  perf.step++;
+  if (perf.step === 1 && renderer.getPixelRatio() > 1) { renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); }
+  else { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
+}
+
 const clock = new THREE.Clock();
 let lastScreen = 0, lastNow = 0;
 function loop(now) {
@@ -1071,8 +1087,11 @@ function loop(now) {
   // the Mac desktop covers the scene: skip rendering it (saves battery; the last frame stays on screen)
   if (window.OS.isCovering()) { lastNow = now; return; }
   const t = clock.getElapsedTime();
-  const f = Math.min(3, (now - (lastNow || now)) / (1000 / 60)) || 1;   // frame-rate independence: 1 at 60 fps
+  const dt = lastNow ? now - lastNow : 1000 / 60;
+  const f = Math.min(3, dt / (1000 / 60)) || 1;   // frame-rate independence: 1 at 60 fps
   lastNow = now;
+  adaptQuality(dt);
+  if (fading.length) stepFades(now);
   if (tween) tween(now);
   controls.update();
 
@@ -1133,6 +1152,25 @@ const manager = new THREE.LoadingManager();
 manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) * 45, "loading models…");
 const gltfLoader = new GLTFLoader(manager).setMeshoptDecoder(MeshoptDecoder);
 const texLoader = new THREE.TextureLoader(manager);
+// Models that arrive after the desk is already showing fade in instead of popping
+let started = false;
+const fading = [];
+function reveal(obj) {
+  scene.add(obj);
+  if (!started || reduced) return;
+  const mats = new Set();
+  obj.traverse((m) => { if (m.isMesh) mats.add(m.material); });
+  const list = [...mats].map((m) => ({ m, transparent: m.transparent, opacity: m.opacity }));
+  list.forEach(({ m }) => { m.transparent = true; m.opacity = 0; m.needsUpdate = true; });
+  fading.push({ list, start: performance.now() });
+}
+function stepFades(now) {
+  for (let i = fading.length - 1; i >= 0; i--) {
+    const k = Math.min(1, (now - fading[i].start) / 600);
+    fading[i].list.forEach((x) => { x.m.opacity = x.opacity * k; });
+    if (k === 1) { fading[i].list.forEach((x) => { x.m.transparent = x.transparent; x.m.needsUpdate = true; }); fading.splice(i, 1); }
+  }
+}
 const shadowsOn = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } });
 // glTF UVs are top-down, so textures loaded separately must not be flipped
 const loadTex = (url, srgb = false) => texLoader.loadAsync(url).then((t) => { t.flipY = false; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; });
@@ -1185,8 +1223,15 @@ async function loadCat() {
     if (!m.isMesh) return;
     m.material = fur;
     m.frustumCulled = false;
-    let pos = m.geometry.attributes.position;
-    if (pos.isInterleavedBufferAttribute) { pos = pos.clone(); m.geometry.setAttribute("position", pos); }
+    // the GLB stores quantised positions (small download); unpack them to plain floats in model space (cm)
+    // so the tail rig can bend them: float = stored value × the node's dequantisation transform
+    const src = m.geometry.attributes.position, v = new THREE.Vector3(), arr = new Float32Array(src.count * 3);
+    m.updateMatrix();
+    for (let i = 0; i < src.count; i++) { v.fromBufferAttribute(src, i).applyMatrix4(m.matrix).toArray(arr, i * 3); }
+    const pos = new THREE.BufferAttribute(arr, 3);
+    m.geometry.setAttribute("position", pos);
+    m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.set(1, 1, 1);
+    m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere();
     const tail = [], wt = [];
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
@@ -1206,7 +1251,7 @@ async function loadCat() {
   obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
   holder.position.set(7.0, 0, 1.0);
   holder.rotation.y = CAT_FACING;
-  scene.add(holder);
+  reveal(holder);
   cat = interactive(holder, "pet me? 🥺", petCat);
 }
 const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards the laptop
@@ -1234,7 +1279,7 @@ async function loadBall() {
   ball = new THREE.Group();
   ball.add(spin);
   ball.position.set(-3.2, floor.position.y + BALL_R, 0.8); // on the floor, tucked under the desk
-  scene.add(ball);
+  reveal(ball);
   interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
 }
 
@@ -1269,7 +1314,7 @@ async function loadHeadphones() {
   inner.position.set(-c.x, -box.min.y, -c.z);
   holder.position.copy(HEADSET_POS);
   holder.rotation.y = -0.25;   // turned slightly towards the viewer
-  scene.add(holder);
+  reveal(holder);
   interactive(holder, "Sound on / off", () => $("#soundBtn").click());
 }
 
@@ -1279,7 +1324,7 @@ const models = Promise.allSettled([attempt(loadCat), attempt(loadBall), attempt(
   .then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model could not be loaded:", x.reason)));
 // Don't hold the page hostage on a slow connection: after a few seconds the desk opens anyway
 // and any model still downloading appears as soon as it arrives.
-await Promise.race([models, new Promise((r) => setTimeout(r, 7000))]);
+await Promise.race([models, new Promise((r) => setTimeout(r, 6000))]);
 
 /* ───────────────────────── Start ───────────────────────── */
 drawScreen(0);
@@ -1287,6 +1332,7 @@ setProgress(98, "warming up…");
 // compile shaders without freezing the page (uses parallel compilation where the GPU driver supports it)
 try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
 setProgress(100, "ready");
+started = true;
 requestAnimationFrame(loop);
 setTimeout(() => $("#loader").classList.add("done"), 300);
 const deep = new URLSearchParams(location.search).get("open");
