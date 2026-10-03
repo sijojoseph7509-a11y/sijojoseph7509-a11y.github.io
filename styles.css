@@ -177,12 +177,8 @@ body { transition: background-color .7s var(--ease); }
   position: relative; width: min(1180px, 100%); height: min(760px, 100%);
   border-radius: 20px; overflow: hidden; color: var(--t1);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 0 0 9px #0d0d0e, 0 0 0 10px #4a4a4e, 0 50px 120px rgba(0, 0, 0, .7);
-  background:
-    radial-gradient(60% 70% at 15% 20%, #7d6cff 0%, transparent 60%),
-    radial-gradient(55% 60% at 85% 15%, #ff8fb1 0%, transparent 60%),
-    radial-gradient(70% 70% at 80% 90%, #ffb36b 0%, transparent 60%),
-    radial-gradient(60% 60% at 20% 95%, #3fc6ff 0%, transparent 60%),
-    linear-gradient(135deg, #4b3fd1, #e46aa0);
+  /* wallpaper: Sijo's photo (same crop focus as the 3D laptop screen); the gradient shows until it loads */
+  background: url("assets/wallpaper.jpg") 30% 72% / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);
   animation: wake .7s var(--ease);
   transition: filter .7s var(--ease);
 }
