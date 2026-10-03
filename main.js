@@ -19,8 +19,11 @@ const setProgress = (p, msg) => {
 // Start the model downloads right away (the 3D engine has arrived — this module only runs after it).
 // They run in the background while fonts load and the desk is built; the loaders below pick them up.
 const T0 = performance.now();
+let started = false;            // true once the desk is on screen and the render loop runs
+const fading = [];              // models currently fading in (see reveal)
 const manager = new THREE.LoadingManager();
-manager.onProgress = (url, loaded, total) => setProgress(50 + (loaded / total) * 45, "loading models…");
+let modelFrac = 0, deskBuilt = false;   // model progress only drives the bar once the desk itself is built
+manager.onProgress = (url, loaded, total) => { modelFrac = loaded / total; if (deskBuilt) setProgress(50 + modelFrac * 45, "loading models…"); };
 const fetched = new Map();
 function fetchAsset(url) {   // one download per file; a failed download is forgotten so a retry fetches it again
   if (!fetched.has(url)) {
@@ -29,9 +32,13 @@ function fetchAsset(url) {   // one download per file; a failed download is forg
   }
   return fetched.get(url);
 }
-["models/cat/cat.glb", "models/cat/cat_diffuse.jpg", "models/cat/cat_bump.jpg", "models/headphones/headphones.glb",
- "models/football/football.glb", "models/football/BaseColor.jpg", "models/football/Normal.jpg", "models/football/Roughness.jpg"]
-  .forEach((u) => fetchAsset(u).catch(() => {}));
+// every model file, in one place: prefetched here, used by loadCat / loadBall / loadHeadphones below
+const MODEL = {
+  cat: "models/cat/cat.glb", catDiffuse: "models/cat/cat_diffuse.jpg", catBump: "models/cat/cat_bump.jpg",
+  headset: "models/headphones/headphones.glb",
+  ball: "models/football/football.glb", ballColor: "models/football/BaseColor.jpg", ballNormal: "models/football/Normal.jpg", ballRough: "models/football/Roughness.jpg"
+};
+Object.values(MODEL).forEach((u) => fetchAsset(u).catch(() => {}));
 
 // Apple-style type: the system font where available (San Francisco on Apple devices), Inter elsewhere
 const UI = '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif';
@@ -1104,7 +1111,7 @@ let lastScreen = 0, lastNow = 0;
 function loop(now) {
   requestAnimationFrame(loop);
   // the Mac desktop covers the scene: skip rendering it (saves battery; the last frame stays on screen)
-  if (window.OS.isCovering()) { lastNow = now; return; }
+  if (window.OS.isCovering?.()) { lastNow = now; return; }   // ?. — a stale cached os.js may not have it
   const t = clock.getElapsedTime();
   const dt = lastNow ? now - lastNow : 1000 / 60;
   const f = Math.min(3, dt / (1000 / 60)) || 1;   // frame-rate independence: 1 at 60 fps
@@ -1162,6 +1169,7 @@ addEventListener("resize", () => {
   fitCamera();
   setZoomLimits();
   if (!booting && !tween) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); }
+  if (started) renderer.render(scene, camera);   // setSize clears the canvas; repaint even if the loop is paused behind the desktop
 });
 
 /* ───────────────────────── Downloaded models (cat, football, headset) ─────────────────────────
@@ -1170,8 +1178,6 @@ addEventListener("resize", () => {
 const gltfLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const loadGLB = async (url) => gltfLoader.parseAsync(await fetchAsset(url), "");
 // Models that arrive after the desk is already showing fade in instead of popping
-let started = false;
-const fading = [];
 function reveal(obj) {
   scene.add(obj);
   if (!started || reduced) return;
@@ -1233,9 +1239,9 @@ function swishTail(r, amp, speed, lift, t) {
 const CAT_HEIGHT = 5.0; // ≈ 25 cm — real-cat size next to the 13" laptop
 async function loadCat() {
   const [gltf, diffuse, bump] = await Promise.all([
-    loadGLB("models/cat/cat.glb"),
-    loadTex("models/cat/cat_diffuse.jpg"),
-    loadTex("models/cat/cat_bump.jpg")
+    loadGLB(MODEL.cat),
+    loadTex(MODEL.catDiffuse),
+    loadTex(MODEL.catBump)
   ]);
   const obj = gltf.scene;
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
@@ -1283,10 +1289,8 @@ const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards t
 let ball = null, ballVX = 0;
 const BALL_R = 1.5; // ≈15 cm across — reads in proportion with the desk
 async function loadBall() {
-  const dir = "models/football/";
   const [gltf, base, normal, rough] = await Promise.all([
-    loadGLB(dir + "football.glb"),
-    loadTex(dir + "BaseColor.jpg", true), loadTex(dir + "Normal.jpg"), loadTex(dir + "Roughness.jpg")
+    loadGLB(MODEL.ball), loadTex(MODEL.ballColor, true), loadTex(MODEL.ballNormal), loadTex(MODEL.ballRough)
   ]);
   const leather = new THREE.MeshStandardMaterial({ map: base, normalMap: normal, roughnessMap: rough, roughness: 1, metalness: 0 });
   gltf.scene.traverse((m) => { if (m.isMesh) m.material = leather; });
@@ -1307,7 +1311,7 @@ async function loadBall() {
 }
 
 async function loadHeadphones() {
-  const gltf = await loadGLB("models/headphones/headphones.glb");
+  const gltf = await loadGLB(MODEL.headset);
   const model = gltf.scene;
   model.traverse((m) => {
     if (!m.isMesh) return;
@@ -1341,6 +1345,8 @@ async function loadHeadphones() {
   interactive(holder, "Sound on / off", () => $("#soundBtn").click());
 }
 
+deskBuilt = true;
+setProgress(50 + modelFrac * 45, "loading models…");
 // Each model retries once (flaky networks), then is simply left out — never a broken stand-in.
 const attempt = (load) => load().catch((err) => { console.warn("Model failed, retrying:", err); return load(); });
 const models = Promise.allSettled([attempt(loadCat), attempt(loadBall), attempt(loadHeadphones)])
@@ -1358,6 +1364,9 @@ try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) 
 setProgress(100, "ready");
 started = true;
 requestAnimationFrame(loop);
+// read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
+window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
+  covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length }) };
 setTimeout(() => $("#loader").classList.add("done"), 300);
 const deep = new URLSearchParams(location.search).get("open");
 if (deep) setTimeout(() => boot(deep), 900);

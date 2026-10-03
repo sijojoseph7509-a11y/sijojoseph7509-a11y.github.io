@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Project handover & technical reference |
-| **Version** | 1.1 — 3 October 2026 (load-time + bug-fix pass) |
+| **Version** | 1.3 — 3 October 2026 (load time, bug fixes, stale-cache fix, automated QA) |
 | **Owner** | Sijo Joseph (GitHub: `sijojoseph7509-a11y`) |
 | **Prepared by** | Claude (AI assistant), working with Sijo Joseph |
 | **Live site** | https://sijojoseph7509-a11y.github.io |
@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=42` |
+| **Asset version (cache-buster)** | `?v=43` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -433,16 +433,20 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 ## 19. Deployment and cache-busting
 
 1. Edit files.
-2. **Bump the version** on all asset links (five scripts/styles + the `main.js` modulepreload) in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
-3. `git add -A && git commit -m "…" && git push origin main`
-4. Wait ~1 minute; confirm with `curl -s https://sijojoseph7509-a11y.github.io/index.html | grep "v=N"`.
-5. Hard-refresh on devices (or open in a private tab).
+2. **Bump the version — in three places, all the same number:** every `?v=N` in `index.html` (five scripts/styles + the `main.js` modulepreload), `const BUILD = "N"` in the inline self-update script in `index.html`, and `version.json`.
+   - *Why:* phones often reopen a saved copy of the page. The inline script fetches `version.json` (never cached) on load, on back/forward restore, and when the tab returns after > 60 s away; if it's newer than `BUILD`, the page reloads itself at `?v=N` (a fresh URL, so it can't come from cache). It never loops (URL + sessionStorage guards) and never reloads while the Mac desktop is open.
+   - **Never delete a model file an older version used** without leaving it in place for a few weeks: a phone showing an old cached page will request it, and old code falls back to broken stand-ins (this is what produced the cartoon cat on Sijo's phone on 3 Oct 2026). The pre-v39 cat OBJ and football FBX are kept at their old paths for this reason — see the README in that folder.
+3. **Run the QA skill** (`.claude/skills/site-qa/SKILL.md`) against the local server; fix every ❌. in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
+4. `git add -A && git commit -m "…" && git push origin main`
+5. Wait ~1 minute; confirm with `curl -s https://sijojoseph7509-a11y.github.io/version.json`, then run the QA skill against the live URL.
 
 Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` for commits made with the assistant.
 
 ---
 
 ## 20. QA checklist
+
+**Automated:** `.claude/skills/site-qa/qa.mjs` — 15 headless-Chrome checks (loads, models, deep links, boot/Esc, menus, Spotlight, scrolling, resize, model-failure path, stale-cache path, self-update, legacy paths). See its SKILL.md. `window.Desk.state()` in the browser console shows what's loaded. The manual list below covers what the script can't see (looks, feel, real devices).
 
 **3D page**
 - [ ] Loader shows SJ + progress + "Good things take time", then fades.
@@ -475,7 +479,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 3. **Phone pinch zoom-out** fix (bigger room + 1.2× cap) was verified by reasoning and desktop testing; the preview tool could not simulate a pinch. Confirm on a real phone.
 4. ~~Stale code comments / leftovers~~ — cleaned up in v1.1 (unused loaders, light/dark mode code, fallback cat/headphones, stale comments).
 5. **Single large `main.js`** (~1,460 lines). Candidates to split: `scene/room.js`, `scene/desk.js`, `scene/objects.js`, `screen.js`, `camera.js`.
-6. **No automated tests / no linting / no CI.** QA is manual (§20).
+6. Automated QA exists (§20) but isn't wired to CI — run it before each push.
 7. **SEO/social**: no Open Graph image or description tags beyond `<meta name="description">`; no favicon; no `404.html`.
 8. **Accessibility**: 3D objects aren't keyboard-focusable; rely on the skip link / nav.
 9. **Browser cache**: forgetting to bump `?v=` causes stale mixes.
@@ -520,6 +524,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v1.3) | Old cached copies on phones showed the cartoon cat (old code + deleted model files): legacy model paths restored, self-update via `version.json`. Code review fixes: no crash with a stale cached os.js, no reload loop, repaint on resize behind the desktop, honest progress bar, one MODEL manifest. Added `window.Desk.state()` and the site-qa skill. |
 | (v1.2) | Cat mesh quantised (343 KB) + smaller textures → 1.06 MB of models; football UVs fixed (was plain white in v1.1); late models fade in; adaptive quality for slow GPUs; favicon (no more 404). |
 | (v1.1) | Load time: compressed GLB models (9.6 → 2.1 MB), parallel preloading, 7 s loader cap, async shader compile, no `transmission`, 2048 shadows, render paused behind the desktop. Bugs: cartoon fallback cat removed (it clipped the headset), folder spots no longer overlap, Enter/Space boots, frame-rate-independent animation, ⌘Q label → Esc, drag `pointercancel`. |
 
