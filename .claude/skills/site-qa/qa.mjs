@@ -94,6 +94,18 @@ for (const mobile of [false, true]) {
   });
 }
 
+await check("Zooming out (scroll) ends in the room view, centred on the desk", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(600);
+  await p.mouse.move(250, 450);   // off to the left — zooming out must not drift toward/away from the cursor
+  for (let i = 0; i < 8; i++) { await p.mouse.wheel({ deltaY: 220 }); await sleep(60); }
+  await sleep(1800);
+  const s = await p.evaluate(() => ({ room: Desk.state().room, at: Desk.screenPos("Open my portfolio"), w: innerWidth }));
+  expect(s.room, "did not switch to the room view");
+  const off = Math.abs(s.at.x - s.w / 2) / s.w;
+  expect(off < 0.03, "laptop is " + (off * 100).toFixed(1) + "% off centre"); await p.ctx.close();
+  return "laptop " + (off * 100).toFixed(1) + "% from centre";
+});
+
 await check("Laptop pointer fades out while the view is dragged, comes back when still", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(900);
   const op = () => p.$eval("#coach", (c) => +getComputedStyle(c).opacity);
