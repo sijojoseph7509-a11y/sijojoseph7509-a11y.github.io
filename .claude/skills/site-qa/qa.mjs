@@ -161,6 +161,12 @@ for (const [w, h] of [[320, 568], [360, 780], [430, 932]]) {
     await p.goto(BASE + "?open=about&qa=" + Date.now()); await ready(p); await p.waitForFunction(() => OS.isOpen()); await sleep(800);
     const off = await p.$$eval("#dock .dock-item", (els) => els.filter((e) => { const r = e.getBoundingClientRect(), d = e.parentElement.getBoundingClientRect(); return r.left < d.left - 0.5 || r.right > d.right + 0.5 || r.right > innerWidth; }).length);
     expect(off === 0, off + " dock icon(s) cut off");
+    const names = await p.$$eval("#dock .name", (els) => els.map((e) => { const r = e.getBoundingClientRect(), d = e.closest(".dock").getBoundingClientRect();
+      return { t: e.textContent, ok: getComputedStyle(e).opacity === "1" && r.width > 0 && r.left >= d.left - 1 && r.right <= d.right + 1 && e.scrollWidth <= e.clientWidth + 1 }; }));
+    const bad = names.filter((n) => !n.ok).map((n) => n.t);
+    expect(names.length === 8 && bad.length === 0, "dock names hidden or cut off: " + bad.join(", "));
+    const clear = await p.evaluate(() => document.getElementById("win").getBoundingClientRect().bottom <= document.getElementById("dock").getBoundingClientRect().top);
+    expect(clear, "window runs behind the dock");
     await p.evaluate(() => OS.close()); await p.waitForFunction(() => !OS.isOpen()); await sleep(1400);
     const hit = await p.evaluate(() => { const n = document.querySelector(".topnav").getBoundingClientRect(); return [...document.querySelectorAll(".hud")].some((h) => { const r = h.getBoundingClientRect(); return r.right > n.left && r.left < n.right && r.bottom > n.top && r.top < n.bottom; }); });
     expect(!hit, "top menu pill overlaps the zoom/sound buttons");
