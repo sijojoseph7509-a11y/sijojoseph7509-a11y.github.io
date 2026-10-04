@@ -46,7 +46,8 @@ button { font: inherit; color: inherit; }
 .hud-left { left: calc(20px + env(safe-area-inset-left)); } .hud-right { right: calc(20px + env(safe-area-inset-right)); }
 .hud.muted #soundWaves { display: none; }
 body { transition: background-color .7s var(--ease); }
-.vignette, .hud, .hint { transition: background .7s var(--ease), color .7s var(--ease), box-shadow .7s var(--ease); }
+.vignette, .hud, .hint { transition: background .7s var(--ease), color .7s var(--ease), box-shadow .7s var(--ease);   max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis;
+}
 .hint {
   position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); margin: 0; z-index: 4;
   padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 500; color: var(--ink);
@@ -178,7 +179,7 @@ body { transition: background-color .7s var(--ease); }
   border-radius: 20px; overflow: hidden; color: var(--t1);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 0 0 9px #0d0d0e, 0 0 0 10px #4a4a4e, 0 50px 120px rgba(0, 0, 0, .7);
   /* wallpaper: Sijo's photo (same crop focus as the 3D laptop screen); the gradient shows until it loads */
-  background: url("assets/wallpaper.jpg") 0% 40% / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);
+  background: var(--wallpaper, none) var(--wall-pos, 0% 40%) / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);
   animation: wake .7s var(--ease);
   transition: filter .7s var(--ease);
 }
@@ -377,6 +378,7 @@ button.mb-icon:hover { background: rgba(255, 255, 255, .22); }
 @keyframes bounce { 30% { translate: 0 -16px; } 60% { translate: 0 0; } 80% { translate: 0 -5px; } }
 .dock-sep { width: 1px; align-self: stretch; margin: 6px 4px; background: var(--sep); }
 
+@media (max-aspect-ratio: 1/1) { .os-screen { --wall-pos: 9% 55%; } }   /* portrait: keep his face in view */
 @media (max-width: 760px) {
   .os { padding: 0; }
   .menubar { padding-top: env(safe-area-inset-top); height: calc(30px + env(safe-area-inset-top)); }
@@ -392,6 +394,7 @@ button.mb-icon:hover { background: rgba(255, 255, 255, .22); }
   .side-wrap { width: auto; flex-direction: row; align-items: center; padding: 8px 8px 0; gap: 8px; }
   .side-wrap > .lights { padding: 0 6px; }
   .sidebar { flex-direction: row; gap: 4px; padding: 5px; overflow-x: auto; border-radius: 999px; }
+  .sidebar { -webkit-mask: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }   /* fade = "scroll for more" */
   .sidebar h4, .side-profile { display: none; }
   .side-item { width: auto; white-space: nowrap; border-radius: 999px; }
   .win-bar { position: relative; height: 48px; padding: 0 16px; background: none; }
