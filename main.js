@@ -464,7 +464,8 @@ const rightDrape = drape(TABLE.d + 0.3, 2.4, 3);
 rightDrape.rotation.y = Math.PI / 2; rightDrape.position.set(X1 + 0.16, -1.2 + 0.01, TABLE.z);
 scene.add(frontDrape, leftDrape, rightDrape);
 
-// Desk mat — original design in deep blue-violet tones, stitched edge
+// Desk mat — Sijo's real mat (assets/deskmat.jpg, photographed and cropped to 3:1). The procedural blue-violet
+// design below is only a placeholder while the photo loads.
 const deskMatTex = canvasTex(2048, 680, (g, w, h) => {
   const lg = g.createLinearGradient(0, 0, w, h);
   lg.addColorStop(0, "#0d1030"); lg.addColorStop(0.45, "#2a1f6b"); lg.addColorStop(0.75, "#3657c9"); lg.addColorStop(1, "#7fb6ff");
@@ -484,6 +485,12 @@ const deskMatFace = new THREE.Mesh(new THREE.PlaneGeometry(MAT.w - 0.06, MAT.d -
 deskMatFace.rotation.x = -Math.PI / 2; deskMatFace.position.y = 0.031; deskMatFace.receiveShadow = true;
 deskMat.add(deskMatFace);
 scene.add(deskMat);
+new THREE.TextureLoader().load(TOUCH ? "assets/deskmat-phone.jpg" : "assets/deskmat.jpg", (t) => {
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();   // stays crisp at the low, grazing camera angle
+  deskMatFace.material.map = t; deskMatFace.material.needsUpdate = true;
+  deskMatTex.tex.dispose();
+});
 
 /* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
@@ -509,7 +516,7 @@ skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
 scene.add(skirting);
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
-const POSTER_PX = TOUCH ? 1024 : 2048;   // phones: half resolution (¼ of the GPU memory) — still sharp at phone size
+const POSTER_PX = 2048;   // full resolution on phones too (half-size looked soft on high-density phone screens)
 const poster = canvasTex(POSTER_PX, Math.round(POSTER_PX * 1754 / 1240), (g, w, h) => {
   g.scale(w / 1240, h / 1754); w = 1240; h = 1754;   // draw on the 1240-wide layout, rendered at up to 2× sharpness
   g.fillStyle = "#f6f4ef"; g.fillRect(0, 0, w, h);
@@ -693,7 +700,8 @@ const glassBezel = rbox(LAP_W - 0.1, LID_H - 0.1, 0.015, 0.07, mat(0x0b0b0c, { r
 glassBezel.position.set(0, LID_H / 2, LID_T / 2 + 0.002);
 lid.add(glassBezel);
 const SCREEN_W = 5.62, SCREEN_H = 3.6;
-const screenCanvas = canvasTex(800, 512, () => {});
+const SCREEN_PX = 2;   // the laptop screen is laid out at 800×512 and rendered at 2× (1600×1024) so it stays sharp up close
+const screenCanvas = canvasTex(800 * SCREEN_PX, 512 * SCREEN_PX, () => {});
 const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenCanvas.tex, toneMapped: false }));
 screen.position.set(0, LID_H / 2 - 0.08, LID_T / 2 + 0.012);
 lid.add(screen);
@@ -808,7 +816,8 @@ const phoneBody = rbox(PH.w, PH.t, PH.l, 0.2, SILVER, 6);
 phoneBody.position.y = PH.t / 2;
 const phoneGlass = rbox(PH.w - 0.05, 0.012, PH.l - 0.05, 0.19, mat(0x0b0b0c, { roughness: 0.08, clearcoat: 1 }), 4);
 phoneGlass.position.y = PH.t + 0.002;
-const phoneScreenTex = canvasTex(256, 540, (g, w, h) => {
+const phoneScreenTex = canvasTex(512, 1080, (g, w, h) => {
+  g.scale(2, 2); w = 256; h = 540;   // laid out at 256×540, rendered at 2× for sharpness
   const lg = g.createLinearGradient(0, 0, w, h);
   lg.addColorStop(0, "#5e5ce6"); lg.addColorStop(0.55, "#bf5af2"); lg.addColorStop(1, "#ff9f0a");
   g.fillStyle = lg; g.fillRect(0, 0, w, h);
@@ -975,7 +984,8 @@ wallImg.src = "assets/wallpaper.jpg";
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
-  const g = screenCanvas.g, W = screenCanvas.canvas.width, H = screenCanvas.canvas.height;
+  const g = screenCanvas.g, W = 800, H = 512;
+  g.setTransform(SCREEN_PX, 0, 0, SCREEN_PX, 0, 0);
   // Wallpaper: Sijo's photo (cover-cropped, keeping him in frame); the original colour blobs until it has loaded
   if (wallImg.complete && wallImg.naturalWidth) {
     const iw = wallImg.naturalWidth, ih = wallImg.naturalHeight, k = Math.max(W / iw, H / ih);
@@ -1236,16 +1246,21 @@ function placeCoach() {
 /* ───────────────────────── Loop ───────────────────────── */
 // Weak GPUs (budget phones, old laptops): if the desk renders below ~35 fps, step quality down —
 // first render at 1× pixel density, then drop the lamp's shadows and halve the sun's shadow map.
-const perf = { dts: [], step: 0 };
+// Only judged once things have settled (≥4 s after the desk appears, not while the camera is flying or models are
+// fading in) — the first seconds include shader compiles and made phones look slow, dropping them to 1× (blurry).
+const perf = { dts: [], step: 0, from: 0 };
 function adaptQuality(dt) {
-  if (perf.step >= 2 || document.hidden || dt > 500) return;   // ignore pauses (background tab, etc.)
+  if (perf.step >= 2 || document.hidden || dt > 500 || tween || fading.length) return;   // ignore pauses + busy moments
+  const now = performance.now();
+  if (!perf.from) perf.from = now + 4000;
+  if (now < perf.from) return;
   perf.dts.push(dt);
-  if (perf.dts.length < 90) return;
-  const median = perf.dts.sort((a, b) => a - b)[45];
+  if (perf.dts.length < 120) return;
+  const median = perf.dts.sort((a, b) => a - b)[60];
   perf.dts = [];
-  if (median < 28) { perf.step = 2; return; }   // smooth enough — stop measuring
+  if (median < 40) { perf.step = 2; return; }   // 25 fps or better — keep full quality, stop measuring
   perf.step++;
-  if (perf.step === 1 && renderer.getPixelRatio() > 1) { renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); }
+  if (perf.step === 1 && renderer.getPixelRatio() > 1.5) { renderer.setPixelRatio(1.5); renderer.setSize(innerWidth, innerHeight); }   // gentle step: 1.5×, never 1×
   else { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
   console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
 }
