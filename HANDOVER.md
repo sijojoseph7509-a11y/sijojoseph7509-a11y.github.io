@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=53` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=54` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -96,7 +96,7 @@ python3 -m http.server 4173        # any static server works
 
 | Layer | Choice | Version / source | Notes |
 |---|---|---|---|
-| 3D engine | Three.js | **0.165.0** via import map → `cdn.jsdelivr.net/npm/three@0.165.0` | Pinned. Upgrading may change lighting/colour defaults — re-test. |
+| 3D engine | Three.js | **0.165.0**, self-hosted in `vendor/three/` (v2.4; was jsDelivr CDN) | Pinned. Upgrading may change lighting/colour defaults — re-test. |
 | Three addons | OrbitControls, RoundedBoxGeometry, RoomEnvironment, GLTFLoader + MeshoptDecoder, BufferGeometryUtils (`mergeGeometries`) | same CDN, `examples/jsm/` | All three models are meshopt-compressed GLBs. |
 | UI | Hand-written HTML/CSS/JS | — | No framework. |
 | Fonts | System font stack (SF Pro on Apple devices) → **Inter** fallback; **Caveat** (sticky note) | Google Fonts | Canvas text waits for fonts (max 3 s) before drawing. |
@@ -439,10 +439,10 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 ## 19. Deployment and cache-busting
 
 1. Edit files.
-2. **Bump the version — in three places, all the same number:** every `?v=N` in `index.html` (five scripts/styles + the `main.js` modulepreload), `const BUILD = "N"` in the inline self-update script in `index.html`, and `version.json`.
+2. **Bump the version — in two places, the same number:** every `?v=N` in `index.html` (update.js, styles, content/os/music/main.js + the main.js modulepreload) and `version.json`. (v2.4: the self-update script moved to `update.js` and reads its version from its own `?v=`; main.js and os.js append the same number to every image/model URL, so replaced assets are never stale.)
    - *Why:* phones often reopen a saved copy of the page. The inline script fetches `version.json` (never cached) on load, on back/forward restore, and when the tab returns after > 60 s away; if it's newer than `BUILD`, the page reloads itself at `?v=N` (a fresh URL, so it can't come from cache). It never loops (URL + sessionStorage guards) and never reloads while the Mac desktop is open.
    - **Never delete a model file an older version used** without leaving it in place for a few weeks: a phone showing an old cached page will request it, and old code falls back to broken stand-ins (this is what produced the cartoon cat on Sijo's phone on 3 Oct 2026). The pre-v39 cat OBJ and football FBX are kept at their old paths for this reason — see the README in that folder.
-3. **Run the QA skill** (`.claude/skills/site-qa/SKILL.md`) against the local server; fix every ❌. in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
+3. **Run the QA skill, the bug sweep and the security audit** (`.claude/skills/site-security/`) (`.claude/skills/site-qa/SKILL.md`) against the local server; fix every ❌. in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
 4. `git add -A && git commit -m "…" && git push origin main`
 5. Wait ~1 minute; confirm with `curl -s https://sijojoseph7509-a11y.github.io/version.json`, then run the QA skill against the live URL.
 
@@ -530,6 +530,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.4) | Bug sweep tool (11 devices, layout + wallpaper + errors, screenshots) found: hint pill wider than narrow windows; Mac wallpaper cropped away from Sijo's face on portrait screens; images/models had no version so updates could show stale ones; phone tab row cut off with no scroll cue — all fixed. **Security:** three.js self-hosted under `vendor/three/` (no CDN), Content-Security-Policy + referrer policy meta tags, self-update moved to `update.js` (no inline scripts), `safeUrl()` for content links, all template content escaped; new `site-security` skill with an audit script (15 checks). |
 | (v2.3) | **Desk mat = Sijo's real mat** (photo IMG_5856, cropped 3:1: `assets/deskmat.jpg` 3072×1024 desktop, `assets/deskmat-phone.jpg` 2048×683 phone; anisotropic filtering). Clarity: poster texture full 2048 px on phones too; laptop screen canvas rendered at 2× (1600×1024, layout still 800×512 via `SCREEN_PX`); phone lock screen at 2×; adaptive quality now waits 4 s after start, ignores camera moves/fade-ins, triggers only below 25 fps, and steps to 1.5× (never 1×). Note: the mat artwork is a third-party anime illustration (see §25). |
 | (v2.2) | Dock shows each app's name under its icon, always (About, Work, Skills, Resume, Contact, LinkedIn, Behance, Desk); labels scale down on narrow phones so whole names fit at 320 px; windows/toast moved up to clear the taller dock. QA: dock names visible + inside the dock, window never behind the dock. |
 | (v2.1) | Zooming in (scroll/pinch) from anywhere glides the orbit centre onto the laptop (`focusLaptop`); only a real zoom-out gesture switches to the room view. Removed the desk-mat text links and the "Let's connect" + @/in/Bē tiles. Phone resized to a real iPhone 15 (147.6 × 71.6 × 7.8 mm). **New wallpaper** (`assets/wallpaper.jpg`, 1232×770): Sijo's selfie cropped to exclude the two other people, a third person's hand clone-patched out, then extended to landscape with Adobe generative expand (seed 90210) and cropped above an AI-invented hand; the hillside on the right is AI-generated. QA: zoom-in-to-laptop check (30 checks). |
@@ -561,6 +562,8 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 ---
 
 ## 25. Legal, credits and IP notes
+
+- **Desk mat artwork (v2.3):** Sijo's own mat, but the print is a third-party anime illustration (Sasuke, *Naruto*); reproduced at Sijo's request.
 
 - **Original work** (by Sijo / produced for this project): all procedural geometry, textures, wallpapers, icons, desk mat design, zebra pattern, music and sounds.
 - **Sijo's own artwork**: the typographic poster ("To begin an era") — reproduced with his permission as the owner.

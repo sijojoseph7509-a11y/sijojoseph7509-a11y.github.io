@@ -28,16 +28,20 @@ manager.onProgress = (url, loaded, total) => { modelFrac = loaded / total; if (d
 const fetched = new Map();
 function fetchAsset(url) {   // one download per file; a failed download is forgotten so a retry fetches it again
   if (!fetched.has(url)) {
-    const loader = /\.(jpe?g|png)$/.test(url) ? new THREE.ImageLoader(manager) : new THREE.FileLoader(manager).setResponseType("arraybuffer");
+    const loader = /\.(jpe?g|png)(\?|$)/.test(url) ? new THREE.ImageLoader(manager) : new THREE.FileLoader(manager).setResponseType("arraybuffer");
     fetched.set(url, loader.loadAsync(url).catch((err) => { fetched.delete(url); throw err; }));
   }
   return fetched.get(url);
 }
 // every model file, in one place: prefetched here, used by loadCat / loadBall / loadHeadphones below
+// Release number (main.js is loaded as main.js?v=N): appended to every asset URL so a new release never shows
+// stale cached images/models (files keep their names when replaced).
+const BUILD = new URL(import.meta.url).searchParams.get("v") || "dev";
+const asset = (u) => `${u}?v=${BUILD}`;
 const MODEL = {
-  cat: "models/cat/cat.glb", catDiffuse: "models/cat/cat_diffuse.jpg", catBump: "models/cat/cat_bump.jpg",
-  headset: "models/headphones/headphones.glb",
-  ball: "models/football/football.glb", ballColor: "models/football/BaseColor.jpg", ballNormal: "models/football/Normal.jpg", ballRough: "models/football/Roughness.jpg"
+  cat: asset("models/cat/cat.glb"), catDiffuse: asset("models/cat/cat_diffuse.jpg"), catBump: asset("models/cat/cat_bump.jpg"),
+  headset: asset("models/headphones/headphones.glb"),
+  ball: asset("models/football/football.glb"), ballColor: asset("models/football/BaseColor.jpg"), ballNormal: asset("models/football/Normal.jpg"), ballRough: asset("models/football/Roughness.jpg")
 };
 Object.values(MODEL).forEach((u) => fetchAsset(u).catch(() => {}));
 
@@ -485,7 +489,7 @@ const deskMatFace = new THREE.Mesh(new THREE.PlaneGeometry(MAT.w - 0.06, MAT.d -
 deskMatFace.rotation.x = -Math.PI / 2; deskMatFace.position.y = 0.031; deskMatFace.receiveShadow = true;
 deskMat.add(deskMatFace);
 scene.add(deskMat);
-new THREE.TextureLoader().load(TOUCH ? "assets/deskmat-phone.jpg" : "assets/deskmat.jpg", (t) => {
+new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.jpg" : "assets/deskmat.jpg"), (t) => {
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();   // stays crisp at the low, grazing camera angle
   deskMatFace.material.map = t; deskMatFace.material.needsUpdate = true;
@@ -980,7 +984,7 @@ let screenMode = "idle", typed = "", typeTimer = 0;
 // laptop wallpaper: Sijo's photo. WALL_FOCUS = which part of the photo to keep when cropping (0–1 across, 0–1 down)
 const WALL_FOCUS = [0, 0.4];   // landscape photo, Sijo on the left — keep the left edge
 const wallImg = new Image();
-wallImg.src = "assets/wallpaper.jpg";
+wallImg.src = asset("assets/wallpaper.jpg");
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
@@ -1536,7 +1540,8 @@ window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hove
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
     const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return { x: (c.x + 1) / 2 * innerWidth, y: (1 - c.y) / 2 * innerHeight }; },
   offscreen: () => hoverables.filter((o) => { const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return Math.abs(c.x) > 0.98 || Math.abs(c.y) > 0.98 || c.z > 1; }).map((o) => o.userData.hover.label) };
-$("#hint").textContent = TOUCH ? "Drag to look around · Tap the laptop to open" : "Drag to look around · Click the laptop to open my portfolio";
+const setHint = () => { $("#hint").textContent = TOUCH ? "Drag to look around · Tap the laptop to open" : innerWidth < 700 ? "Drag to look around · Click the laptop to open" : "Drag to look around · Click the laptop to open my portfolio"; };
+setHint(); addEventListener("resize", setHint);
 $("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
 let entered = false;

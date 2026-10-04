@@ -3,6 +3,8 @@
 (() => {
   const S = window.SITE;
   const $ = (s) => document.querySelector(s);
+  // Security: links from content.js may only be web or email links — never "javascript:" or other schemes
+  const safeUrl = (u) => (/^(https?:\/\/|mailto:)/i.test(String(u || "").trim()) ? String(u).trim() : "#");
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   const MOD = isMac ? "⌘" : "Ctrl+";
@@ -65,7 +67,7 @@
             <div class="cover" style="background:linear-gradient(135deg, ${esc(p.color)}, ${esc(p.color)}cc)"></div>
             <div class="meta"><small>${esc(p.tag)}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>
               <span class="more${live ? "" : " muted"}">${live ? "View case study ›" : "Case study coming soon"}</span></div>`;
-          return live ? `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="card soon">${inner}</div>`;
+          return live ? `<a class="card" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${inner}</a>` : `<div class="card soon">${inner}</div>`;
         }).join("")}
         </div>`
     },
@@ -86,38 +88,41 @@
         <ul class="list">${S.experience.map((e) => `
           <li><div><b>${esc(e.company)}</b><span>${esc(e.role)}</span></div><span class="yr">${esc(e.from)} – ${esc(e.to)}</span></li>`).join("")}
         </ul>
-        ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn" href="${esc(S.resumeUrl)}" target="_blank" rel="noopener">Download résumé</a>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}`
+        ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Download résumé</a>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}`
     },
     contact: {
       title: "Contact", key: "5",
       html: () => `
         <h1>Let's make something together.</h1>
         <p class="sub">Open to product, brand, experience and 3D projects — full-time roles and collaborations.</p>
-        <a class="big-link" href="mailto:${esc(S.email)}">${esc(S.email)}</a>
+        <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
         <div class="btn-row">
-          <a class="btn" href="${esc(S.links.mail)}">Send an email</a>
-          <a class="btn alt" href="${esc(S.links.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>
-          <a class="btn alt" href="${esc(S.links.behance)}" target="_blank" rel="noopener">Behance</a>
-          <a class="btn alt" href="${esc(S.links.github)}" target="_blank" rel="noopener">GitHub</a>
+          <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
+          <a class="btn alt" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener">LinkedIn</a>
+          <a class="btn alt" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener">Behance</a>
+          <a class="btn alt" href="${esc(safeUrl(S.links.github))}" target="_blank" rel="noopener">GitHub</a>
         </div>`
     }
   };
 
   const os = $("#os"), win = $("#win"), body = $("#winBody"), screen = $("#osScreen");
+  // wallpaper URL carries the release number (os.js?v=N) so a replaced photo is never served stale from cache
+  const BUILD = (document.currentScript && new URL(document.currentScript.src).searchParams.get("v")) || "dev";
+  screen.style.setProperty("--wallpaper", `url("assets/wallpaper.jpg?v=${BUILD}")`);
   let onClose = () => {}, current = "about";
   const sound = () => window.Sound && window.Sound.click();
 
   // Sidebar
   $("#sidebar").innerHTML = `<h4>Portfolio</h4>` +
-    Object.entries(apps).map(([k, a]) => `<button class="side-item" data-open="${k}">${line(k)}${a.title}</button>`).join("") +
+    Object.entries(apps).map(([k, a]) => `<button class="side-item" data-open="${k}">${line(k)}${esc(a.title)}</button>`).join("") +
     `<div class="side-profile"><span class="avatar">SJ</span><div><b>${esc(S.name)}</b><span>${esc(S.location)}</span></div></div>`;
 
   // Dock
   $("#dock").innerHTML = Object.entries(apps).map(([k, a]) =>
-      `<button class="dock-item" data-open="${k}" aria-label="${a.title}">${appIcon(k)}<span class="name">${a.title}</span></button>`).join("") +
+      `<button class="dock-item" data-open="${k}" aria-label="${esc(a.title)}">${appIcon(k)}<span class="name">${esc(a.title)}</span></button>`).join("") +
     `<span class="dock-sep"></span>` +
-    `<a class="dock-item" href="${esc(S.links.linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
-    `<a class="dock-item" href="${esc(S.links.behance)}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
+    `<a class="dock-item" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
+    `<a class="dock-item" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
     `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Desk</span></button>`;
 
   // Dock magnification
@@ -258,7 +263,7 @@
     ...Object.entries(apps).map(([k, a]) => ({ label: a.title, hint: "Section", icon: k, run: () => show(k) })),
     ...S.projects.map((p) => ({ label: p.title, hint: p.tag, icon: "work", run: () => show("work") })),
     ...S.skills.flatMap((g) => g.items.map((i) => ({ label: i, hint: g.group, icon: "skills", run: () => show("skills") }))),
-    { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (location.href = S.links.mail) },
+    { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (location.href = safeUrl(S.links.mail)) },
     { label: "Back to desk", hint: "Close the Mac", icon: "desk", run: () => close() }
   ];
   let spSel = 0, spItems = [];
