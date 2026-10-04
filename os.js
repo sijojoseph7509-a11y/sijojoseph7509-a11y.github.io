@@ -118,7 +118,7 @@
     `<span class="dock-sep"></span>` +
     `<a class="dock-item" href="${esc(S.links.linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
     `<a class="dock-item" href="${esc(S.links.behance)}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
-    `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Back to desk</span></button>`;
+    `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Desk</span></button>`;
 
   // Dock magnification
   const dock = $("#dock");
