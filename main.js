@@ -1240,8 +1240,11 @@ function placeCoach() {
   if (camera.position.distanceToSquared(lastCamPos) > 1e-6 || 1 - Math.abs(camera.quaternion.dot(lastCamQ)) > 1e-7) camStillSince = now;
   lastCamPos.copy(camera.position); lastCamQ.copy(camera.quaternion);
   const settling = now - camStillSince < 350;
-  screen.localToWorld(coachAnchor.set(0, SCREEN_H * 0.32, 0)).project(camera);   // on the upper part of the screen itself — stays clear of the top menu in the close-up
-  const x = (coachAnchor.x + 1) / 2 * innerWidth, y = (1 - coachAnchor.y) / 2 * innerHeight;
+  // Pin the arrow tip to the middle of the lid's top edge (centred on the laptop, pointing down at the screen);
+  // if that would sit under the top menu pill, drop it onto the upper part of the screen instead.
+  const at = (ly) => { screen.localToWorld(coachAnchor.set(0, ly, 0)).project(camera); return [(coachAnchor.x + 1) / 2 * innerWidth, (1 - coachAnchor.y) / 2 * innerHeight - 4]; };
+  let [x, y] = at(SCREEN_H / 2 + 0.3);
+  if (y < 120) [x, y] = at(SCREEN_H * 0.3);
   coach.style.opacity = booting || tween || settling || coachAnchor.z > 1 || y < 110 ? 0 : 1;   // never while moving, never under the top menu pill
   if (settling) return;   // keep it parked where it was while it fades out
   coach.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;

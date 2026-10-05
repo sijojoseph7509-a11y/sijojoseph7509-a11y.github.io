@@ -129,6 +129,11 @@
     `<a class="dock-item" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
     `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Desk</span></button>`;
 
+  // Full screen: the dock slides up when the mouse reaches the bottom edge, and hides again when it leaves
+  $(".dock-zone").addEventListener("mouseenter", () => screen.classList.add("dock-peek"));
+  $("#dock").addEventListener("mouseleave", () => screen.classList.remove("dock-peek"));
+  screen.addEventListener("mousemove", (e) => { if (screen.classList.contains("dock-peek") && e.clientY < screen.getBoundingClientRect().bottom - 120) screen.classList.remove("dock-peek"); });
+
   // Dock magnification
   const dock = $("#dock");
   dock.addEventListener("mousemove", (e) => {
@@ -162,7 +167,7 @@
     try { const st = history.state || {}; if (st.sjCase) history.replaceState({ sjDesktop: 1, sjCase: slug }, ""); else history.pushState({ sjDesktop: 1, sjCase: slug }, ""); } catch (_) {}
     caseSlug = slug; current = "work";
     win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement();
-    screen.classList.add("case-fs");
+    screen.classList.add("case-fs"); os.classList.add("case-fs");
     $("#winTitle").textContent = p.title;
     body.classList.add("case-mode");
     body.innerHTML = `<header class="fs-bar">
@@ -186,7 +191,7 @@
   function exitCase(fromHistory) {
     if (!caseSlug) return;
     caseSlug = null;
-    screen.classList.remove("case-fs");
+    screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
   function show(key, fromHistory) {
@@ -414,7 +419,7 @@
   function close(fromHistory) {
     if (closing || os.hidden) return;
     if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.go(history.state.sjCase ? -2 : -1); } } catch (_) {} }
-    caseSlug = null; screen.classList.remove("case-fs");
+    caseSlug = null; screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
     closeMenu(); closeSpotlight();
     const finish = () => {
       os.hidden = true; closing = false;

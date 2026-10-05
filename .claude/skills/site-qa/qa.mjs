@@ -244,8 +244,9 @@ for (const mobile of [false, true]) {
     await p.click("#winBody [data-case]"); await sleep(900);
     const fs = await p.evaluate(() => { const scr = document.getElementById("osScreen").getBoundingClientRect(), w = document.getElementById("win").getBoundingClientRect();
       const hidden = (sel) => { const e = document.querySelector(sel); const cs = getComputedStyle(e); return cs.display === "none" || +cs.opacity === 0; };
-      return { fills: Math.abs(w.width - scr.width) < 2 && Math.abs(w.height - scr.height) < 2, dock: hidden("#dock"), side: hidden(".side-wrap"), menubar: hidden(".menubar"), bar: !!document.querySelector(".fs-bar") }; });
-    expect(fs.fills && fs.dock && fs.side && fs.menubar && fs.bar, "not full screen: " + JSON.stringify(fs));
+      return { fills: Math.abs(w.width - scr.width) < 2 && Math.abs(w.bottom - scr.bottom) < 2 && w.top - scr.top <= 31,   // (30 px notch strip on desktops)
+        screenFillsBrowser: scr.width >= innerWidth - 1 && scr.height >= innerHeight - 1, dock: hidden("#dock"), side: hidden(".side-wrap"), menubar: hidden(".menubar"), bar: !!document.querySelector(".fs-bar") }; });
+    expect(fs.fills && fs.screenFillsBrowser && fs.dock && fs.side && fs.menubar && fs.bar, "not full screen: " + JSON.stringify(fs));
     await p.click('.fs-nav [data-case]:last-of-type').catch(() => {}); await sleep(500);   // next project keeps full screen
     expect(await p.evaluate(() => document.getElementById("osScreen").classList.contains("case-fs")), "next project left full screen");
     await p.keyboard.press("Escape"); await sleep(600);

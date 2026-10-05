@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=56` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=57` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -540,6 +540,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.7) | MacBook display look: thin black bezel + aluminium edge, 18 px corners, camera **notch** (`.notch`, desktop/tablet only; menus behind it hidden below 1100/900 px like macOS). Full screen now fills the whole browser (`.os.case-fs`), with a 30 px notch strip above the case bar; the dock slides up when the mouse reaches the bottom edge (`.dock-zone` → `.dock-peek`). "Designer" widget hidden while a window is open. "Click the laptop" pinned to the middle of the lid's top edge. |
 | (v2.6) | Case studies open full screen inside the Mac with their own navigation bar; Esc/back return to Work. QA 33 checks. |
 | (v2.5) | Interview answers in About/desk (Kerala → Bangalore, smart/lazy/adventurous, poster meaning, Shea the cat, games/football/bike rides, phonk/Malayalam/Hindi, email). Placeholder projects and experience removed. Three Figma case studies (cleaned "Web" copies) in a new case-study viewer. New `copy-check` skill (notes, placeholders, AI-style tells, symbols). QA 31 checks incl. case studies. |
 | (v2.4) | Bug sweep tool (11 devices, layout + wallpaper + errors, screenshots) found: hint pill wider than narrow windows; Mac wallpaper cropped away from Sijo's face on portrait screens; images/models had no version so updates could show stale ones; phone tab row cut off with no scroll cue — all fixed. **Security:** three.js self-hosted under `vendor/three/` (no CDN), Content-Security-Policy + referrer policy meta tags, self-update moved to `update.js` (no inline scripts), `safeUrl()` for content links, all template content escaped; new `site-security` skill with an audit script (15 checks). |
