@@ -703,20 +703,19 @@ lid.add(lidShell);
 const glassBezel = rbox(LAP_W - 0.1, LID_H - 0.1, 0.015, 0.07, mat(0x0b0b0c, { roughness: 0.15, metalness: 0.2 }), 2);
 glassBezel.position.set(0, LID_H / 2, LID_T / 2 + 0.002);
 lid.add(glassBezel);
-const SCREEN_W = 5.62, SCREEN_H = 3.6;
+// MacBook Air 13" display: 2560 × 1664 (≈1.538 : 1), thin even bezels, a slightly deeper chin, notch drawn on the screen
+const SCREEN_W = 5.8, SCREEN_H = 3.77;
+// one notch definition shared with the Mac desktop (styles.css .notch): fraction of display width / height
+const NOTCH = { w: 0.074, h: 0.0395, r: 0.38 };   // r = bottom corner radius as a fraction of the notch height
 const SCREEN_PX = 2;   // the laptop screen is laid out at 800×512 and rendered at 2× (1600×1024) so it stays sharp up close
-const screenCanvas = canvasTex(800 * SCREEN_PX, 512 * SCREEN_PX, () => {});
+const SCREEN_CW = 800, SCREEN_CH = Math.round(800 * SCREEN_H / SCREEN_W);   // canvas layout size, same aspect as the display
+const screenCanvas = canvasTex(SCREEN_CW * SCREEN_PX, SCREEN_CH * SCREEN_PX, () => {});
 const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenCanvas.tex, toneMapped: false }));
-screen.position.set(0, LID_H / 2 - 0.08, LID_T / 2 + 0.012);
+screen.position.set(0, LID_H - 0.1 - SCREEN_H / 2, LID_T / 2 + 0.012);   // 0.1 top bezel; the rest is the chin
 lid.add(screen);
 interactive(screen, "Open my portfolio", () => boot("about"));
 // Camera notch
-const notch = rbox(0.62, 0.17, 0.01, 0.05, mat(0x0b0b0c), 2);
-notch.position.set(0, LID_H - 0.13, LID_T / 2 + 0.014);
-lid.add(notch);
-const camDot = mesh(new THREE.CircleGeometry(0.025, 12), mat(0x22324a, { roughness: 0.1 }));
-camDot.position.set(0, LID_H - 0.11, LID_T / 2 + 0.02);
-lid.add(camDot);
+// (the camera notch is part of the screen image — drawn in drawScreen, identical to the Mac desktop's notch)
 
 // Screen glow onto the desk
 const glow = new THREE.PointLight(0xdcd6ff, 1.2, 6, 2);
@@ -988,7 +987,7 @@ wallImg.src = asset("assets/wallpaper.jpg");
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
-  const g = screenCanvas.g, W = 800, H = 512;
+  const g = screenCanvas.g, W = SCREEN_CW, H = SCREEN_CH;
   g.setTransform(SCREEN_PX, 0, 0, SCREEN_PX, 0, 0);
   // Wallpaper: Sijo's photo (cover-cropped, keeping him in frame); the original colour blobs until it has loaded
   if (wallImg.complete && wallImg.naturalWidth) {
@@ -1007,15 +1006,16 @@ function drawScreen(t) {
   }
   const dark = false;   // the screen uses the light glass look
   if (dark) { g.fillStyle = "rgba(0,0,0,0.28)"; g.fillRect(0, 0, W, H); }
-  // Menu bar — transparent, text straight on the wallpaper (macOS 27)
-  g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 6;
+  // Menu bar — transparent, text straight on the wallpaper; same proportions as the Mac desktop (menu bar = notch height)
+  const mbH = H * NOTCH.h, mbY = mbH / 2, k = H / 760;   // k: the desktop's 760 px-tall screen → this canvas
+  g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 4;
   g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "left";
-  g.font = `800 13px ${UI}`; g.fillText("SJ", 14, 14);
-  g.font = `700 13px ${UI}`; g.fillText("Portfolio", 42, 14);
-  g.font = `400 13px ${UI}`;
-  ["File", "Edit", "View", "Go", "Window", "Help"].forEach((m, i) => g.fillText(m, 112 + [0, 38, 76, 118, 148, 208][i], 14));
+  g.font = `800 ${13 * k}px ${UI}`; g.fillText("SJ", 22 * k, mbY);
+  g.font = `700 ${13 * k}px ${UI}`; g.fillText("Portfolio", 74 * k, mbY);
+  g.font = `400 ${13 * k}px ${UI}`;
+  ["File", "Edit", "View", "Go", "Window", "Help"].forEach((m, i) => g.fillText(m, (172 + [0, 50, 102, 158, 202, 262][i]) * k, mbY));
   g.textAlign = "right";
-  g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 14, 14);
+  g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), W - 22 * k, mbY);
   g.restore();
   // glass helper: tinted fill + bright top highlight + darker edge
   const glass = (x, y, w, h, r, fill) => {
@@ -1058,6 +1058,20 @@ function drawScreen(t) {
     g.fillStyle = "#f5f5f7"; g.textAlign = "left"; g.font = `500 20px "SF Mono", Menlo, monospace`;
     g.fillText("sijo@desk ~ % " + typed + (Math.floor(t * 3) % 2 ? "▍" : ""), bx + 24, by + 74);
   }
+  // Notch (MacBook Air): flared top corners, rounded bottom, camera — the same shape as the Mac desktop's
+  const nw = W * NOTCH.w, nh = mbH, nr = nh * NOTCH.r, fl = nh * 0.28, nx = (W - nw) / 2;
+  g.fillStyle = "#050506"; g.beginPath();
+  g.moveTo(nx - fl, 0); g.quadraticCurveTo(nx, 0, nx, fl);
+  g.lineTo(nx, nh - nr); g.quadraticCurveTo(nx, nh, nx + nr, nh);
+  g.lineTo(nx + nw - nr, nh); g.quadraticCurveTo(nx + nw, nh, nx + nw, nh - nr);
+  g.lineTo(nx + nw, fl); g.quadraticCurveTo(nx + nw, 0, nx + nw + fl, 0); g.closePath(); g.fill();
+  const cam = g.createRadialGradient(W / 2 - nh * 0.06, nh * 0.44, 0, W / 2, nh * 0.5, nh * 0.18);
+  cam.addColorStop(0, "#2a3a5c"); cam.addColorStop(1, "#0b0f18"); g.fillStyle = cam;
+  g.beginPath(); g.arc(W / 2, nh * 0.5, nh * 0.17, 0, 7); g.fill();
+  // rounded top display corners (the glass bezel shows through)
+  const cr = 18 * k; g.fillStyle = "#0b0b0c";
+  for (const sx of [0, 1]) { g.beginPath(); const x0 = sx ? W : 0, dir = sx ? -1 : 1;
+    g.moveTo(x0, 0); g.lineTo(x0 + dir * cr, 0); g.quadraticCurveTo(x0, 0, x0, cr); g.closePath(); g.fill(); }
   screenCanvas.tex.needsUpdate = true;
 }
 function typeOnScreen() {
@@ -1082,17 +1096,26 @@ function bezier(x1, y1, x2, y2) {
     return B(t, y1, y2);
   };
 }
-const EASE_IN_OUT = bezier(0.42, 0, 0.2, 1);   // gentle start, long soft landing
+const EASE_IN_OUT = bezier(0.45, 0, 0.15, 1);  // gentle start, long soft landing (camera fly-ins)
 const EASE_APPLE = bezier(0.32, 0.72, 0, 1);    // Apple's standard "out" curve
+// Camera moves glide like a real camera: the look-at point slides, the viewing direction swings along an arc
+// (spherical interpolation) and the distance changes logarithmically, so a dolly-in feels even all the way.
+const _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion(), _ofs = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1);
 function moveCamera(toPos, toTarget, toZoom, dur = 1100, done, ease = EASE_IN_OUT) {
   const from = { pos: camera.position.clone(), target: controls.target.clone(), zoom: camera.zoom };
+  const offA = from.pos.clone().sub(from.target), offB = toPos.clone().sub(toTarget);
+  const lenA = Math.max(offA.length(), 1e-3), lenB = Math.max(offB.length(), 1e-3);
+  _qa.setFromUnitVectors(_z, offA.clone().normalize()); _qb.setFromUnitVectors(_z, offB.clone().normalize());
+  const qa = _qa.clone(), qb = _qb.clone();
   const start = performance.now();
   controls.enabled = false;
   tween = (now) => {
     let k = Math.min(1, (now - start) / (reduced ? 1 : dur));
     const e = ease(k);
-    camera.position.lerpVectors(from.pos, toPos, e);
     controls.target.lerpVectors(from.target, toTarget, e);
+    _ofs.copy(_z).applyQuaternion(new THREE.Quaternion().slerpQuaternions(qa, qb, e)).multiplyScalar(Math.exp(Math.log(lenA) + (Math.log(lenB) - Math.log(lenA)) * e));
+    camera.position.copy(controls.target).add(_ofs);
+    if (k === 1) camera.position.copy(toPos);
     camera.zoom = THREE.MathUtils.lerp(from.zoom, toZoom, e);
     camera.updateProjectionMatrix();
     if (k === 1) { tween = null; controls.enabled = true; done && done(); }
@@ -1292,7 +1315,7 @@ function loop(now) {
   for (const o of hoverables) {
     const h = o.userData.hover;
     const target = o === hovered && !booting ? 1 : 0;
-    h.lift += (target - h.lift) * 0.18;
+    h.lift += (target - h.lift) * (1 - Math.pow(0.82, f));   // same feel at 60 or 120 fps
     const s = 1 + h.lift * 0.05;
     o.scale.set(h.base.x * s, h.base.y * s, h.base.z * s);
   }

@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=58` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=59` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -540,6 +540,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.9) | Desk laptop = MacBook Air display (SCREEN 5.8 × 3.77, 2560×1664 aspect, thin bezels, chin); the notch is drawn on the screen canvas from the shared `NOTCH` proportions (7.4 % wide, menu-bar tall), identical to the desktop `.notch`. Motion: real spring curves via CSS `linear()` (`--spring`, `--smooth`), camera fly-ins swing on an arc with log-distance dolly, full-screen enter/exit is a FLIP zoom (`morphWindow`), macOS-style dock launch bounce and minimise-into-dock, frame-rate-independent hover. |
 | (v2.8) | Case studies re-exported at 2× (Figma resolution) as WebP with 1×/2× srcset; the area around the Mac display is a clean dark surround (no 3D laptop lid showing above it). |
 | (v2.7) | MacBook display look: thin black bezel + aluminium edge, 18 px corners, camera **notch** (`.notch`, desktop/tablet only; menus behind it hidden below 1100/900 px like macOS). Full screen now fills the whole browser (`.os.case-fs`), with a 30 px notch strip above the case bar; the dock slides up when the mouse reaches the bottom edge (`.dock-zone` → `.dock-peek`). "Designer" widget hidden while a window is open. "Click the laptop" pinned to the middle of the lid's top edge. |
 | (v2.6) | Case studies open full screen inside the Mac with their own navigation bar; Esc/back return to Work. QA 33 checks. |
