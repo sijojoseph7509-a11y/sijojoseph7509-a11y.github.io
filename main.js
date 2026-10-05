@@ -473,13 +473,14 @@ new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.jpg" : "asset
 
 /* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
+const WALL_BROWN_EARLY = 0x45302a;
 const wallTex = canvasTex(512, 512, (g, w, h) => {
   g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h);   // neutral plaster; the charcoal wall colour is a material tint
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},0.025)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
 wallTex.tex.repeat.set(28, 24);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x5e1510, roughness: 0.92 }));   // oxblood red (deep, like the reference)
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: WALL_BROWN_EARLY, roughness: 0.92 }));   // chocolate brown (hidden behind the panels)
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
@@ -490,30 +491,37 @@ for (const side of [-1, 1]) {   // side walls: far enough out that they frame th
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-// Black panelled wainscot (dado at ≈90 cm), skirting, crown moulding and a dark ceiling — on all three walls
+// Tone-on-tone panelled walls in warm chocolate brown (Sijo's reference): tall upper panels, a dado rail at ≈90 cm,
+// lower panels, skirting and crown moulding — mouldings the same colour as the wall, read only through light and shadow.
 const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling
-const BAY = 16;   // one raised panel per 80 cm
-const panelTex = canvasTex(512, 576, (g, w, h) => {
-  const u = w / BAY;   // px per unit
-  const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, "#151515"); lg.addColorStop(1, "#0d0d0d");
+const BAY = 16;   // one panel per 80 cm
+const WALL_BROWN = 0x45302a;
+const panelTex = canvasTex(512, 1760, (g, w, h) => {
+  const u = w / BAY;   // px per unit (canvas top = ceiling, bottom = floor)
+  const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, "#3e2a20"); lg.addColorStop(1, "#4a3226");
   g.fillStyle = lg; g.fillRect(0, 0, w, h);
-  const x0 = 1.6 * u, y0 = 2.2 * u, x1 = w - 1.6 * u, y1 = h - 3.4 * u;
-  const frame = (inset, light, dark, lw) => {
-    g.lineWidth = lw;
-    g.strokeStyle = light; g.beginPath(); g.moveTo(x0 + inset, y1 - inset); g.lineTo(x0 + inset, y0 + inset); g.lineTo(x1 - inset, y0 + inset); g.stroke();
-    g.strokeStyle = dark; g.beginPath(); g.moveTo(x1 - inset, y0 + inset); g.lineTo(x1 - inset, y1 - inset); g.lineTo(x0 + inset, y1 - inset); g.stroke();
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 230 : 0},${Math.random() > 0.5 ? 210 : 0},0.018)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }   // matte paint
+  const box = (y0, y1) => {
+    const x0 = 1.7 * u, x1 = w - 1.7 * u;
+    const frame = (inset, light, dark, lw) => {
+      g.lineWidth = lw;
+      g.strokeStyle = light; g.beginPath(); g.moveTo(x0 + inset, y1 - inset); g.lineTo(x0 + inset, y0 + inset); g.lineTo(x1 - inset, y0 + inset); g.stroke();
+      g.strokeStyle = dark; g.beginPath(); g.moveTo(x1 - inset, y0 + inset); g.lineTo(x1 - inset, y1 - inset); g.lineTo(x0 + inset, y1 - inset); g.stroke();
+    };
+    frame(0, "#684934", "#1f140d", 6); frame(8, "#26190f", "#5a3f2d", 3); frame(14, "#563b2a", "#25180f", 4);   // a raised moulding profile
   };
-  frame(0, "#363636", "#000000", 6); frame(9, "#000000", "#2c2c2c", 4); frame(16, "#262626", "#050505", 3);   // a raised moulding profile
+  box(4.5 * u, (55 - 18 - 2.6) * u);            // tall upper panel
+  box((55 - 18 + 2.4) * u, (55 - 3.2) * u);     // lower panel
 });
 panelTex.tex.wrapS = THREE.RepeatWrapping;
-const TRIM = mat(0x111111, { roughness: 0.55, clearcoat: 0.2 });
-const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x0c0c0c, { roughness: 0.9 }));
+const TRIM = mat(0x4a3124, { roughness: 0.8 });
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x2a1d15, { roughness: 0.9 }));
 ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
 function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
   const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
   const tex = panelTex.tex.clone(); tex.needsUpdate = true; tex.repeat.set(len / BAY, 1);
-  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, DADO_Y - FLOOR_Y), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }));
-  panels.position.set(0, (FLOOR_Y + DADO_Y) / 2, 0.02); panels.receiveShadow = true;
+  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.88 }));
+  panels.position.set(0, (FLOOR_Y + CEIL_Y) / 2, 0.02); panels.receiveShadow = true;
   const dado = rbox(len, 0.7, 0.45, 0.12, TRIM, 2); dado.position.set(0, DADO_Y, 0.22);
   const skirt = rbox(len, 1.4, 0.35, 0.08, TRIM, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
   const crown = rbox(len, 2.2, 1.1, 0.25, TRIM, 2); crown.position.set(0, CEIL_Y - 1.1, 0.55);
@@ -523,7 +531,8 @@ function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z 
   return grp;
 }
 trimWall(88.4, TABLE.x, WALL_Z, 0);
-trimWall(400, TABLE.x - 44, WALL_Z + 200, Math.PI / 2);
+const leftWall = trimWall(400, TABLE.x - 44, WALL_Z + 200, Math.PI / 2);
+const onLeft = (z) => (WALL_Z + 200) - z;     // world z → local x on the left wall
 const rightWall = trimWall(400, TABLE.x + 44, WALL_Z + 200, -Math.PI / 2);   // window, curtain and the corner things live here
 const onRight = (z) => z - (WALL_Z + 200);   // world z → local x on the right wall
 
@@ -959,16 +968,39 @@ cup.position.set(3.6, 0, -2.6);
 scene.add(cup);
 
 /* ───────────────────────── Window corner on the right wall (from Sijo's photo) ─────────────────────────
-   A curtained window, a keyboard leaning under the curtain, and plants. */
-const WIN_Z0 = 3, WIN_Z1 = 27, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
+   A window with the curtain drawn half open (sun by day, moon by night — click it), plants in the back-right corner;
+   the keyboard leans on the opposite (left) wall. */
+const WIN_Z0 = 9, WIN_Z1 = 31, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
 const corner = new THREE.Group(); rightWall.add(corner);
 // window frame + daylight glass behind the curtain
 const winW = WIN_Z1 - WIN_Z0, winC = onRight((WIN_Z0 + WIN_Z1) / 2);
-const winFrame = rbox(winW + 1.2, ROD_Y - DADO_Y - 1, 0.5, 0.1, mat(0xe9e3d6, { roughness: 0.6 }), 2);
-winFrame.position.set(winC, (ROD_Y + DADO_Y + 1) / 2 - 0.5, 0.25);
-const glass = new THREE.Mesh(new THREE.PlaneGeometry(winW - 0.6, ROD_Y - DADO_Y - 2.4), new THREE.MeshBasicMaterial({ color: 0xdfe8ef }));
-glass.position.set(winC, winFrame.position.y, 0.52);
-corner.add(winFrame, glass);
+const WIN_Y0 = DADO_Y + 1, WIN_Y1 = ROD_Y - 1.5, winH = WIN_Y1 - WIN_Y0, winY = (WIN_Y0 + WIN_Y1) / 2;
+const frameMat = mat(0xe9e3d6, { roughness: 0.6 });
+for (const [w, h, x, y] of [[winW + 1.2, 0.7, winC, WIN_Y1], [winW + 1.2, 0.9, winC, WIN_Y0], [0.7, winH, winC - winW / 2, winY], [0.7, winH, winC + winW / 2, winY],
+  [0.35, winH, winC, winY], [winW, 0.35, winC, WIN_Y0 + winH * 0.62]]) { const b = rbox(w, h, 0.6, 0.06, frameMat, 1); b.position.set(x, y, 0.3); corner.add(b); }   // frame + mullions
+// the view outside: a day sky and a night sky, cross-faded
+const skyTex = (night) => canvasTex(512, 512, (g, w, h) => {
+  const lg = g.createLinearGradient(0, 0, 0, h);
+  if (night) { lg.addColorStop(0, "#050a1c"); lg.addColorStop(1, "#1b2a4d"); } else { lg.addColorStop(0, "#7fb6ea"); lg.addColorStop(0.7, "#cfe5f6"); lg.addColorStop(1, "#f6f0dc"); }
+  g.fillStyle = lg; g.fillRect(0, 0, w, h);
+  if (night) {
+    for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; g.fillRect(Math.random() * w, Math.random() * h * 0.75, 1.6, 1.6); }
+    const mg = g.createRadialGradient(w * 0.68, h * 0.24, 0, w * 0.68, h * 0.24, 70); mg.addColorStop(0, "rgba(220,230,255,.55)"); mg.addColorStop(1, "rgba(220,230,255,0)");
+    g.fillStyle = mg; g.fillRect(0, 0, w, h); g.fillStyle = "#f4f2e6"; g.beginPath(); g.arc(w * 0.68, h * 0.24, 22, 0, 7); g.fill();
+    g.fillStyle = "#0b1022"; for (let x = 0; x < w; x += 34) g.fillRect(x, h - 60 - Math.random() * 70, 30, 200);   // city skyline with a few lit windows
+    g.fillStyle = "#ffd58a"; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, h - 20 - Math.random() * 100, 3, 4);
+  } else {
+    const sg = g.createRadialGradient(w * 0.7, h * 0.18, 0, w * 0.7, h * 0.18, 150); sg.addColorStop(0, "rgba(255,250,225,1)"); sg.addColorStop(1, "rgba(255,250,225,0)");
+    g.fillStyle = sg; g.fillRect(0, 0, w, h);
+    g.fillStyle = "rgba(255,255,255,.75)"; for (const [x, y, r] of [[0.2, 0.3, 40], [0.28, 0.27, 30], [0.12, 0.33, 26], [0.55, 0.45, 34], [0.62, 0.43, 24]]) { g.beginPath(); g.arc(x * w, y * h, r, 0, 7); g.fill(); }
+    g.fillStyle = "#a7b6ad"; for (let x = 0; x < w; x += 34) g.fillRect(x, h - 50 - Math.random() * 60, 30, 200);   // hazy buildings
+  }
+}).tex;
+const glassGeo = new THREE.PlaneGeometry(winW - 0.6, winH - 0.6);
+const glassDay = new THREE.Mesh(glassGeo, new THREE.MeshBasicMaterial({ map: skyTex(false), toneMapped: false }));
+const glassNight = new THREE.Mesh(glassGeo, new THREE.MeshBasicMaterial({ map: skyTex(true), transparent: true, opacity: 0, toneMapped: false }));
+glassDay.position.set(winC, winY, 0.2); glassNight.position.set(winC, winY, 0.22);
+corner.add(glassDay, glassNight);
 // curtain: cream linen with maroon ogee medallions and roses, gathered in grommet pleats
 const curtainTex = canvasTex(512, 832, (g, w, h) => {
   g.fillStyle = "#ebe2cf"; g.fillRect(0, 0, w, h);
@@ -1001,23 +1033,26 @@ const curtainTex = canvasTex(512, 832, (g, w, h) => {
 });
 curtainTex.tex.wrapS = curtainTex.tex.wrapT = THREE.RepeatWrapping;
 const CUR_H = ROD_Y - (DADO_Y + 2.5), CUR_W = winW + 2;
-curtainTex.tex.repeat.set(CUR_W / 5.6, CUR_H / 9.1);   // ≈5 medallions across, as in the photo
-const curGeo = new THREE.PlaneGeometry(CUR_W, CUR_H, 120, 10);
-{ const p = curGeo.attributes.position;
+// Half open: two panels gathered to the sides (deeper pleats), the middle of the window clear
+const PANEL_W = CUR_W * 0.3;
+const curtainPanel = (cx) => {
+  const geo = new THREE.PlaneGeometry(PANEL_W, CUR_H, 80, 10), p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), down = (CUR_H / 2 - y) / CUR_H;
-    p.setZ(i, Math.sin(x * Math.PI / 1.2) * (0.42 - 0.12 * down) + Math.sin(x * 0.7) * 0.15);
-    if (down > 0.985) p.setY(i, y - Math.abs(Math.sin(x * 1.3)) * 0.25); }
-  curGeo.computeVertexNormals(); }
-const curtain = new THREE.Mesh(curGeo, new THREE.MeshStandardMaterial({ map: curtainTex.tex, roughness: 0.95, side: THREE.DoubleSide }));
-curtain.position.set(winC + 0.6, ROD_Y - CUR_H / 2 - 0.3, ROD_OUT); curtain.receiveShadow = true;
-corner.add(curtain);
+    p.setZ(i, Math.sin(x * Math.PI / 0.75) * (0.62 - 0.1 * down) + Math.sin(x * 0.9) * 0.18);
+    if (down > 0.985) p.setY(i, y - Math.abs(Math.sin(x * 1.7)) * 0.25); }
+  geo.computeVertexNormals();
+  const tex = curtainTex.tex.clone(); tex.needsUpdate = true; tex.repeat.set(PANEL_W * 1.6 / 5.6, CUR_H / 9.1);   // gathered fabric: pattern compressed
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, side: THREE.DoubleSide }));
+  m.position.set(cx, ROD_Y - CUR_H / 2 - 0.3, ROD_OUT); m.receiveShadow = true; corner.add(m); return m;
+};
+const curtainL = curtainPanel(winC - CUR_W / 2 + PANEL_W / 2), curtainR = curtainPanel(winC + CUR_W / 2 - PANEL_W / 2);
 // black curtain rod with grommets and end caps
 const RAIL_Z0 = WIN_Z0 - 1.5, railL = WIN_Z1 + 1 - RAIL_Z0;
 const rod = mesh(new THREE.CylinderGeometry(0.16, 0.16, railL, 12), mat(0x161616, { metalness: 0.6, roughness: 0.35 }));
 rod.rotation.z = Math.PI / 2; rod.position.set(onRight(RAIL_Z0 + railL / 2), ROD_Y, ROD_OUT); corner.add(rod);
 for (const z of [RAIL_Z0, WIN_Z1 + 1]) { const cap = mesh(new THREE.SphereGeometry(0.32, 12, 8), mat(0xe9e3d6)); cap.position.set(onRight(z), ROD_Y, ROD_OUT); corner.add(cap); }
 const grommetMat = mat(0x1a1a1a, { metalness: 0.7, roughness: 0.3 });
-for (let x = -CUR_W / 2 + 0.6; x < CUR_W / 2; x += 2.4) { const gr = mesh(new THREE.TorusGeometry(0.34, 0.07, 6, 16), grommetMat); gr.position.set(curtain.position.x + x, ROD_Y, ROD_OUT); corner.add(gr); }
+for (const c of [curtainL, curtainR]) for (let x = -PANEL_W / 2 + 0.4; x < PANEL_W / 2; x += 1.5) { const gr = mesh(new THREE.TorusGeometry(0.34, 0.07, 6, 16), grommetMat); gr.position.set(c.position.x + x, ROD_Y, ROD_OUT); corner.add(gr); }
 // keyboard leaning against the wall under the curtain (silver-blue body, speakers, keys)
 const kbTex = canvasTex(256, 760, (g, w, h) => {
   g.fillStyle = "#1d2a52"; g.fillRect(0, 0, w, h);
@@ -1034,13 +1069,14 @@ const kbTex = canvasTex(256, 760, (g, w, h) => {
 const keyboard = rbox(6.4, 19, 1.4, 0.4, mat(0x1d2a52, { roughness: 0.45, clearcoat: 0.3 }), 3);
 const kbFace = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 18.8), new THREE.MeshStandardMaterial({ map: kbTex.tex, roughness: 0.4 }));
 kbFace.position.z = 0.72; keyboard.add(kbFace);
-keyboard.position.set(onRight(10.5), FLOOR_Y + 9.5, 1.6); keyboard.rotation.x = -0.07;
-corner.add(keyboard);
+keyboard.position.set(onLeft(9), FLOOR_Y + 9.5, 1.6); keyboard.rotation.x = -0.07;   // on the opposite (left) wall
+keyboard.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+leftWall.add(keyboard);
 // fluted white pedestal with a peace lily, and two floor pots
 const pedGeo = new THREE.CylinderGeometry(2.2, 2.3, 9, 64, 1);
 { const p = pedGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), r = Math.hypot(x, z); if (r > 1) { const k = 1 + 0.035 * Math.cos(a * 28); p.setX(i, x * k); p.setZ(i, z * k); } } pedGeo.computeVertexNormals(); }
 const pedestal = mesh(pedGeo, mat(0xf3f1ec, { roughness: 0.75 }));
-pedestal.position.set(onRight(23.5), FLOOR_Y + 4.5, 3); corner.add(pedestal);
+pedestal.position.set(onRight(WALL_Z + 3.2), FLOOR_Y + 4.5, 3.4); corner.add(pedestal);   // plants gather in the back-right corner
 const lilyMat = mat(0x2f5a2c, { roughness: 0.5 }), potWhite = mat(0xf5f5f2, { roughness: 0.4, clearcoat: 0.4 });
 const lily = new THREE.Group();
 const lPot = mesh(new THREE.CylinderGeometry(1.3, 1.0, 1.9, 24), potWhite); lPot.position.y = 0.95; lily.add(lPot);
@@ -1055,12 +1091,76 @@ const spiky = (n, len, col, spread) => { const grp = new THREE.Group(), m = mat(
 const terra = new THREE.Group();
 const tPot = mesh(new THREE.CylinderGeometry(1.5, 1.1, 2.6, 24), mat(0xb3613f, { roughness: 0.8 })); tPot.position.y = 1.3;
 const spider = spiky(16, 4.2, 0x6f9a3e, 0.75); spider.position.y = 2.5; terra.add(tPot, spider);
-terra.position.set(onRight(17), FLOOR_Y, 4.8); corner.add(terra);
+terra.position.set(onRight(WALL_Z + 7.6), FLOOR_Y, 2.4); corner.add(terra);
 const aloePot = new THREE.Group();
 const aPot = mesh(new THREE.CylinderGeometry(1.25, 1.0, 2.4, 24), potWhite); aPot.position.y = 1.2;
 const aloe = spiky(10, 5.2, 0x5f8f55, 0.45); aloe.position.y = 2.3; aloePot.add(aPot, aloe);
-aloePot.position.set(onRight(20), FLOOR_Y, 6.6); corner.add(aloePot);
+aloePot.position.set(onRight(WALL_Z + 3.4), FLOOR_Y, 7.4); corner.add(aloePot);
 corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });   // far from the lamp — skip shadow cost
+
+/* ───────────────────────── Day ↔ night through the window ─────────────────────────
+   Sunlight streams in through the gap between the curtains (a soft light shaft + a warm patch on the floor, and the
+   main light comes from the window side). Click the window to switch; it starts at the visitor's local time of day. */
+const WX = TABLE.x + 44 - 0.6;                                         // just inside the right wall
+const GAP_Z0 = (WIN_Z0 + WIN_Z1) / 2 - CUR_W / 2 + PANEL_W, GAP_Z1 = (WIN_Z0 + WIN_Z1) / 2 + CUR_W / 2 - PANEL_W;
+const SUN_DIR = new THREE.Vector3(-1, -1.15, -0.25).normalize();
+const toFloor = (y, z) => { const t = (y - (FLOOR_Y + 0.04)) / -SUN_DIR.y; return new THREE.Vector3(WX + SUN_DIR.x * t, FLOOR_Y + 0.04, z + SUN_DIR.z * t); };
+const WQ = [[WIN_Y1, GAP_Z0], [WIN_Y1, GAP_Z1], [WIN_Y0, GAP_Z1], [WIN_Y0, GAP_Z0]].map(([y, z]) => new THREE.Vector3(WX, y, z));
+const FQ = WQ.map((v) => toFloor(v.y, v.z));
+// light shaft: the four sides of the beam, bright at the window, fading toward the floor (additive, no depth write)
+const shaftGeo = new THREE.BufferGeometry(), sp = [], sc = [];
+const warm = [0.5, 0.42, 0.3], faint = [0.05, 0.04, 0.03];
+for (let i = 0; i < 4; i++) { const a = WQ[i], b = WQ[(i + 1) % 4], c = FQ[(i + 1) % 4], d = FQ[i];
+  for (const [v, col] of [[a, warm], [b, warm], [c, faint], [a, warm], [c, faint], [d, faint]]) { sp.push(v.x, v.y, v.z); sc.push(...col); } }
+shaftGeo.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3)); shaftGeo.setAttribute("color", new THREE.Float32BufferAttribute(sc, 3));
+const shaftMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+const shaft = new THREE.Mesh(shaftGeo, shaftMat); shaft.renderOrder = 5; scene.add(shaft);
+// the patch of sun on the floor (soft-edged)
+const patchTex = canvasTex(256, 256, (g, w, h) => { g.filter = "blur(13px)"; g.fillStyle = "#fff"; g.fillRect(26, 26, w - 52, h - 52); }).tex;
+const patchGeo = new THREE.BufferGeometry();
+patchGeo.setAttribute("position", new THREE.Float32BufferAttribute([FQ[0], FQ[1], FQ[2], FQ[0], FQ[2], FQ[3]].flatMap((v) => [v.x, v.y, v.z]), 3));
+patchGeo.setAttribute("uv", new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0], 2));
+const patchMat = new THREE.MeshBasicMaterial({ map: patchTex, color: 0xffd9a0, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+const sunPatch = new THREE.Mesh(patchGeo, patchMat); sunPatch.renderOrder = 4; scene.add(sunPatch);
+// the look of each time of day
+const LOOK = {
+  day:   { sun: 2.1, sunC: 0xfff0d6, hemi: 0.62, hemiG: 0x4a3a33, rim: 0.3, lamp: 28, glow: 0.55, exp: 1.02, shaft: 0.55, shaftC: 0xffffff, patch: 0.5, patchC: 0xffd9a0 },
+  night: { sun: 0.32, sunC: 0x8aa2ff, hemi: 0.16, hemiG: 0x17141c, rim: 0.12, lamp: 62, glow: 1, exp: 1.0, shaft: 0.07, shaftC: 0x8fa8ff, patch: 0.14, patchC: 0x9db3ff }
+};
+sun.position.copy(SUN_DIR).multiplyScalar(-45);                           // the key light now comes from the window
+const _c1 = new THREE.Color(), _c2 = new THREE.Color();
+const mixC = (out, a, b, k) => out.copy(_c1.setHex(a)).lerp(_c2.setHex(b), k);
+let dayMix = 0, dayTarget = 0;   // 0 = day, 1 = night
+function applyDay(k) {
+  const D = LOOK.day, N = LOOK.night, f = (a, b) => a + (b - a) * k;
+  sun.intensity = f(D.sun, N.sun); mixC(sun.color, D.sunC, N.sunC, k);
+  hemi.intensity = f(D.hemi, N.hemi); mixC(hemi.groundColor, D.hemiG, N.hemiG, k);
+  rim.intensity = f(D.rim, N.rim);
+  lampLight.intensity = f(D.lamp, N.lamp); glowSprite.material.opacity = f(D.glow, N.glow);
+  renderer.toneMappingExposure = f(D.exp, N.exp);
+  shaftMat.opacity = f(D.shaft, N.shaft); mixC(shaftMat.color, D.shaftC, N.shaftC, k);
+  patchMat.opacity = f(D.patch, N.patch); mixC(patchMat.color, D.patchC, N.patchC, k);
+  glassNight.material.opacity = k;
+}
+let dayAnim = null;
+const smoothK = (k) => k * k * (3 - 2 * k);
+function setNight(night, instant) {
+  dayTarget = night ? 1 : 0;
+  windowHit.userData.hover.label = night ? "Let the sun in ☀" : "Let the night in ☾";
+  if (instant || reduced) { dayMix = dayTarget; applyDay(dayMix); dayAnim = null; return; }
+  dayAnim = { from: dayMix, start: performance.now() };
+}
+function stepDay(now) {
+  if (!dayAnim) return;
+  const k = Math.min(1, (now - dayAnim.start) / 1800);
+  dayMix = dayAnim.from + (dayTarget - dayAnim.from) * smoothK(k); applyDay(dayMix);
+  if (k === 1) dayAnim = null;
+}
+// click target: the whole window and curtains
+const windowHit = new THREE.Mesh(new THREE.BoxGeometry(CUR_W + 1, ROD_Y - WIN_Y0 + 1, ROD_OUT + 0.6), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+windowHit.position.set(winC, (ROD_Y + WIN_Y0) / 2, (ROD_OUT + 0.6) / 2); corner.add(windowHit);
+interactive(windowHit, "Let the night in ☾", () => { Sound.click(); setNight(dayTarget === 0); });
+{ const h = new Date().getHours(); setNight(h < 6 || h >= 18, true); }   // start at the visitor's own time of day
 
 
 
@@ -1420,6 +1520,7 @@ function loop(now) {
   if (now < focusUntil && !tween && !booting) controls.target.lerp(laptopFocus, Math.min(1, 0.12 * f));   // zoom-in heads for the laptop
   adaptQuality(dt);
   if (fading.length) stepFades(now);
+  stepDay(now);
   if (tween) tween(now);
   controls.update();
 
@@ -1672,7 +1773,8 @@ requestAnimationFrame(loop);
 window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
-  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist }),
+  ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
+  toggleDay: () => setNight(dayTarget === 0),
   // clickable things whose centre is outside the current view (should be none at home and when leaned in)
   // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
