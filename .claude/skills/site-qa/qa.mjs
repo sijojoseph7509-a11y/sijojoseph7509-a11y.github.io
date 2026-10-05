@@ -237,6 +237,28 @@ await check("Case studies: every one opens, its images load, and no notes-to-sel
   return slugs.join(", ");
 });
 
+for (const mobile of [false, true]) {
+  await check(`${mobile ? "Phone" : "Desktop"}: a case study opens full screen; Esc and the back gesture return to Work`, async () => {
+    const p = await page({ mobile }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
+    await p.waitForFunction(() => OS.isOpen(), { timeout: 10000 }); await sleep(700);
+    await p.click("#winBody [data-case]"); await sleep(900);
+    const fs = await p.evaluate(() => { const scr = document.getElementById("osScreen").getBoundingClientRect(), w = document.getElementById("win").getBoundingClientRect();
+      const hidden = (sel) => { const e = document.querySelector(sel); const cs = getComputedStyle(e); return cs.display === "none" || +cs.opacity === 0; };
+      return { fills: Math.abs(w.width - scr.width) < 2 && Math.abs(w.height - scr.height) < 2, dock: hidden("#dock"), side: hidden(".side-wrap"), menubar: hidden(".menubar"), bar: !!document.querySelector(".fs-bar") }; });
+    expect(fs.fills && fs.dock && fs.side && fs.menubar && fs.bar, "not full screen: " + JSON.stringify(fs));
+    await p.click('.fs-nav [data-case]:last-of-type').catch(() => {}); await sleep(500);   // next project keeps full screen
+    expect(await p.evaluate(() => document.getElementById("osScreen").classList.contains("case-fs")), "next project left full screen");
+    await p.keyboard.press("Escape"); await sleep(600);
+    const afterEsc = await p.evaluate(() => ({ open: OS.isOpen(), fs: document.getElementById("osScreen").classList.contains("case-fs"), title: document.getElementById("winTitle").textContent }));
+    expect(afterEsc.open && !afterEsc.fs && afterEsc.title === "Work", "Esc should return to the Work list: " + JSON.stringify(afterEsc));
+    await p.click("#winBody [data-case]"); await sleep(700);
+    const url = p.url(); await p.evaluate(() => history.back()); await sleep(900);
+    const afterBack = await p.evaluate(() => ({ open: OS.isOpen(), fs: document.getElementById("osScreen").classList.contains("case-fs") }));
+    expect(p.url() === url && afterBack.open && !afterBack.fs, "back gesture should return to Work: " + JSON.stringify(afterBack));
+    clean(p); await p.ctx.close();
+  });
+}
+
 await check("Window body scrolls (Work section on a phone)", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => OS.isOpen()); await sleep(800);
