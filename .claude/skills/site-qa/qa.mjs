@@ -219,6 +219,24 @@ await check("Desktop UI: menus, Spotlight search, shortcuts, share", async () =>
   clean(p); await p.ctx.close();
 });
 
+await check("Case studies: every one opens, its images load, and no notes-to-self are left", async () => {
+  const p = await page(); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
+  await p.waitForFunction(() => OS.isOpen(), { timeout: 10000 }); await sleep(600);
+  const slugs = await p.$$eval("#winBody [data-case]", (b) => b.map((x) => x.dataset.case));
+  expect(slugs.length >= 1, "no case-study cards in Work");
+  for (const slug of slugs) {
+    await p.evaluate((s) => document.querySelector(`#winBody [data-case="${s}"], [data-case="${s}"]`).click(), slug); await sleep(500);
+    const r = await p.evaluate(async () => { const imgs = [...document.querySelectorAll(".case img")];
+      await Promise.all(imgs.map((i) => (i.loading = "eager", i.decode().catch(() => null))));
+      return { n: imgs.length, broken: imgs.filter((i) => !i.naturalWidth).map((i) => i.src.split("/").slice(-2).join("/")), alt: imgs.map((i) => i.alt).join(" ") }; });
+    expect(r.n > 5 && r.broken.length === 0, slug + ": " + r.n + " images, broken: " + r.broken.join(", "));
+    expect(!/note for sijo|to verify|add a real|todo/i.test(r.alt), slug + ": notes left in the descriptions");
+    await p.evaluate(() => OS.close()); await p.evaluate(() => OS.open("work")); await sleep(400);
+  }
+  clean(p); await p.ctx.close();
+  return slugs.join(", ");
+});
+
 await check("Window body scrolls (Work section on a phone)", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?open=work&qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => OS.isOpen()); await sleep(800);

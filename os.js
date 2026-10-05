@@ -60,8 +60,12 @@
       title: "Work", key: "2",
       html: () => `
         <h1>Selected work</h1>
-        <p class="sub">${S.projects.length} projects across product, brand, experience and 3D.</p>
+        <p class="sub">${S.projects.length} case studies across product, design systems and information design.</p>
         <div class="cards">${S.projects.map((p) => {
+          if (p.case) return `<button class="card" data-case="${esc(p.case.slug)}" aria-label="Open the ${esc(p.title)} case study">
+            <div class="cover" style="background:${esc(p.color)} url('work/${esc(p.case.slug)}/${esc(p.case.cover)}?v=${BUILD}') center / cover"></div>
+            <div class="meta"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>
+              <span class="more">View case study ›</span></div></button>`;
           const live = p.url && p.url !== "#";
           const inner = `
             <div class="cover" style="background:linear-gradient(135deg, ${esc(p.color)}, ${esc(p.color)}cc)"></div>
@@ -75,7 +79,7 @@
       title: "Skills", key: "3",
       html: () => `
         <h1>What I do</h1>
-        <p class="sub">A multidisciplinary toolkit — from research to pixels to polygons.</p>
+        <p class="sub">A multidisciplinary toolkit, from research to pixels to polygons.</p>
         ${S.skills.map((g) => `
           <h3>${esc(g.group)}</h3>
           <ul class="chips">${g.items.map((i) => `<li class="chip">${esc(i)}</li>`).join("")}</ul>`).join("")}`
@@ -84,17 +88,17 @@
       title: "Resume", key: "4",
       html: () => `
         <h1>Experience</h1>
-        <p class="sub">Where I've worked and what I did there.</p>
-        <ul class="list">${S.experience.map((e) => `
+        <p class="sub">${S.experience.length ? "Where I've worked and what I did there." : "My full work history is on my résumé. Ask and I'll send it over."}</p>
+        ${S.experience.length ? `<ul class="list">${S.experience.map((e) => `
           <li><div><b>${esc(e.company)}</b><span>${esc(e.role)}</span></div><span class="yr">${esc(e.from)} – ${esc(e.to)}</span></li>`).join("")}
-        </ul>
+        </ul>` : ""}
         ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Download résumé</a>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}`
     },
     contact: {
       title: "Contact", key: "5",
       html: () => `
         <h1>Let's make something together.</h1>
-        <p class="sub">Open to product, brand, experience and 3D projects — full-time roles and collaborations.</p>
+        <p class="sub">Open to product, brand, experience and 3D projects: full-time roles and collaborations.</p>
         <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
         <div class="btn-row">
           <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
@@ -146,7 +150,25 @@
   function resetWindowPlacement() {
     win.style.left = win.style.top = win.style.bottom = win.style.height = win.style.transform = "";
   }
+  // A case study: the Figma page, section by section (images load as they scroll into view)
+  function openCase(slug) {
+    const p = S.projects.find((x) => x.case && x.case.slug === slug);
+    if (!p) return show("work");
+    show("work");
+    $("#winTitle").textContent = p.title;
+    body.classList.add("case-mode");
+    body.innerHTML = `<div class="case">
+      <button class="case-back" data-open="work">‹ All work</button>
+      <p class="case-hint">Pinch to zoom in on the details.</p>
+      ${p.case.sections.map(([f, h, alt], i) => `<img src="work/${esc(slug)}/${esc(f)}?v=${BUILD}" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
+      <div class="case-end">${S.projects.filter((x) => x.case && x !== p).map((x) => `<button class="btn alt" data-case="${esc(x.case.slug)}">${esc(x.title)} ›</button>`).join("")}
+        <button class="btn alt" data-open="work">All work</button></div>
+    </div>`;
+    body.scrollTop = 0;
+  }
   function show(key) {
+    if (String(key).startsWith("case:")) return openCase(String(key).slice(5));
+    body.classList.remove("case-mode");
     const app = apps[key] || apps.about;
     current = key in apps ? key : "about";
     $("#winTitle").textContent = app.title;
@@ -167,6 +189,8 @@
   const zoom = () => { resetWindowPlacement(); win.classList.toggle("max"); };
 
   os.addEventListener("click", (e) => {
+    const c = e.target.closest("[data-case]");
+    if (c) { e.preventDefault(); closeMenu(); closeSpotlight(); openCase(c.dataset.case); sound(); return; }
     const t = e.target.closest("[data-open]");
     if (t) {
       e.preventDefault();
@@ -261,7 +285,7 @@
   const sp = $("#spotlight"), spInput = $("#spInput"), spResults = $("#spResults");
   const index = [
     ...Object.entries(apps).map(([k, a]) => ({ label: a.title, hint: "Section", icon: k, run: () => show(k) })),
-    ...S.projects.map((p) => ({ label: p.title, hint: p.tag, icon: "work", run: () => show("work") })),
+    ...S.projects.map((p) => ({ label: p.title, hint: p.tag, icon: "work", run: () => (p.case ? openCase(p.case.slug) : show("work")) })),
     ...S.skills.flatMap((g) => g.items.map((i) => ({ label: i, hint: g.group, icon: "skills", run: () => show("skills") }))),
     { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (location.href = safeUrl(S.links.mail)) },
     { label: "Back to desk", hint: "Close the Mac", icon: "desk", run: () => close() }
