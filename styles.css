@@ -244,12 +244,39 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 /* case-study viewer: the Figma page, full width of the window */
 .win-body.case-mode { padding: 60px 0 0; }
 .win-body.case-mode, .case, .case img { touch-action: pan-x pan-y pinch-zoom; }   /* phones: pinch to read the small print */
-.case-hint { display: none; margin: -2px 16px 10px; font-size: 12px; color: var(--t3); }
+.case-hint { display: none; margin: 0; padding: 8px 16px; font-size: 12px; color: var(--t3); }
 @media (pointer: coarse) { .case-hint { display: block; } }
 .case img { display: block; width: 100%; height: auto; background: var(--g-fill); }
-.case-back { position: sticky; top: 8px; z-index: 1; margin: 0 0 10px 16px; padding: 7px 14px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 500;
-  color: var(--accent); background: var(--g-win); box-shadow: inset 0 1px 0 var(--g-hi), 0 0 0 .5px var(--g-edge), 0 4px 14px rgba(0, 0, 0, .12); cursor: pointer; }
-.case-end { display: flex; flex-wrap: wrap; gap: 10px; padding: 28px 24px 36px; }
+/* ── Full-screen case study (like a full-screen Mac app) ── */
+.os-screen.case-fs .menubar, .os-screen.case-fs .widget, .os-screen.case-fs .dock { opacity: 0; pointer-events: none; }
+.menubar, .widget, .dock { transition: opacity .3s var(--ease); }
+.os-screen.case-fs .win { top: 0 !important; bottom: 0 !important; left: 0 !important; width: 100% !important; max-height: none !important;
+  transform: none !important; border-radius: 0; box-shadow: none; animation: none; }
+.os-screen.case-fs .side-wrap, .os-screen.case-fs .win-bar { display: none; }
+.win-body.case-mode { padding: 0; }
+.fs-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+  background: var(--g-win); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); border-bottom: .5px solid var(--sep); }
+.fs-bar .lights { flex: none; margin-right: 4px; }
+.fs-bar .lights .yellow:disabled { background: #c9c9cf; cursor: default; }
+.fs-title { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+.fs-title b { font-size: 14px; font-weight: 700; color: var(--t1); }
+.fs-title small { font-size: 12px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; }
+.fs-btn { flex: none; display: inline-grid; place-items: center; min-width: 32px; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 500;
+  color: var(--accent); background: var(--g-fill); cursor: pointer; transition: background .15s; }
+.fs-btn:hover { background: var(--g-fill-2); }
+.fs-nav { flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--t3); font-variant-numeric: tabular-nums; }
+.fs-nav .fs-btn { padding: 0; width: 30px; font-size: 16px; }
+.fs-share { padding: 0; width: 32px; color: var(--t2); }
+.case-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 40px 32px 48px; }
+.case-end span { width: 100%; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); }
+.case-next { border: 0; background: none; padding: 0; font: inherit; font-family: var(--display); font-size: 34px; font-weight: 700; letter-spacing: -.02em; color: var(--t1); cursor: pointer; }
+.case-next:hover { color: var(--accent); }
+@media (max-width: 600px) {
+  .fs-bar { gap: 8px; padding-left: 10px; padding-right: 10px; }
+  .fs-title small, .fs-share, .fs-nav span { display: none; }
+  .fs-bar .lights button { width: 12px; height: 12px; }
+  .case-next { font-size: 26px; }
+}
 .card.soon:hover { transform: none; }
 .card .more.muted { color: var(--t3); }
 

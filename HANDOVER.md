@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=55` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=56` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -352,6 +352,7 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 - Each file has a page **"Case Study v2 · Web"** (wrappers Tidewell `23:3`, Ledgerly `25:3`, Backwater `29:3`): a copy of "Case Study v2" with notes-to-self, the Notes section and Next-project footer removed, mistakes fixed and Ledgerly's contrast table filled with measured ratios. The original v2 pages are untouched.
 - Export: `get_screenshot` on the wrapper with `maxDimension` ≥ its height (gives 1440 px wide), then slice per section into `work/<slug>/NN.jpg` (JPEG 84). `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
 - Viewer: `openCase(slug)` in os.js (Work card, desk folder, Spotlight, deep link `?open=case:tidewell`); images lazy-load; pinch-zoom on phones.
+- **Full screen (v2.6):** a case study opens like a full-screen Mac app (`.os-screen.case-fs`): the window fills the Mac screen; menu bar, widget, sidebar and dock are hidden; a sticky `.fs-bar` has window buttons (red/green = back to Work), "‹ All work", title + discipline + status, ‹ n / N › project switching and share. Esc, the back gesture (history entry `{sjCase}`) and ⌘1–5 leave full screen; prev/next replace the history entry.
 - To update a case study: edit the Web page in Figma → run the copy-check skill on its text → re-export and re-slice → bump `?v=`.
 
 **Edit only `content.js`.** Everything (wall lettering, folders, desktop, Spotlight) reads from `window.SITE`. Then bump `?v=` and push.
@@ -539,6 +540,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.6) | Case studies open full screen inside the Mac with their own navigation bar; Esc/back return to Work. QA 33 checks. |
 | (v2.5) | Interview answers in About/desk (Kerala → Bangalore, smart/lazy/adventurous, poster meaning, Shea the cat, games/football/bike rides, phonk/Malayalam/Hindi, email). Placeholder projects and experience removed. Three Figma case studies (cleaned "Web" copies) in a new case-study viewer. New `copy-check` skill (notes, placeholders, AI-style tells, symbols). QA 31 checks incl. case studies. |
 | (v2.4) | Bug sweep tool (11 devices, layout + wallpaper + errors, screenshots) found: hint pill wider than narrow windows; Mac wallpaper cropped away from Sijo's face on portrait screens; images/models had no version so updates could show stale ones; phone tab row cut off with no scroll cue — all fixed. **Security:** three.js self-hosted under `vendor/three/` (no CDN), Content-Security-Policy + referrer policy meta tags, self-update moved to `update.js` (no inline scripts), `safeUrl()` for content links, all template content escaped; new `site-security` skill with an audit script (15 checks). |
 | (v2.3) | **Desk mat = Sijo's real mat** (photo IMG_5856, cropped 3:1: `assets/deskmat.jpg` 3072×1024 desktop, `assets/deskmat-phone.jpg` 2048×683 phone; anisotropic filtering). Clarity: poster texture full 2048 px on phones too; laptop screen canvas rendered at 2× (1600×1024, layout still 800×512 via `SCREEN_PX`); phone lock screen at 2×; adaptive quality now waits 4 s after start, ignores camera moves/fade-ins, triggers only below 25 fps, and steps to 1.5× (never 1×). Note: the mat artwork is a third-party anime illustration (see §25). |

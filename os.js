@@ -150,24 +150,48 @@
   function resetWindowPlacement() {
     win.style.left = win.style.top = win.style.bottom = win.style.height = win.style.transform = "";
   }
-  // A case study: the Figma page, section by section (images load as they scroll into view)
+  // A case study opens like a full-screen Mac app: the window fills the screen (no wallpaper, sidebar or dock)
+  // and one top bar handles navigation. Esc / the back gesture return to the Work list.
+  let caseSlug = null;
+  const SHARE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
   function openCase(slug) {
-    const p = S.projects.find((x) => x.case && x.case.slug === slug);
-    if (!p) return show("work");
-    show("work");
+    const list = S.projects.filter((x) => x.case);
+    const k = list.findIndex((x) => x.case.slug === slug);
+    if (k < 0) return show("work");
+    const p = list[k], prev = list[(k - 1 + list.length) % list.length], next = list[(k + 1) % list.length];
+    try { const st = history.state || {}; if (st.sjCase) history.replaceState({ sjDesktop: 1, sjCase: slug }, ""); else history.pushState({ sjDesktop: 1, sjCase: slug }, ""); } catch (_) {}
+    caseSlug = slug; current = "work";
+    win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement();
+    screen.classList.add("case-fs");
     $("#winTitle").textContent = p.title;
     body.classList.add("case-mode");
-    body.innerHTML = `<div class="case">
-      <button class="case-back" data-open="work">‹ All work</button>
+    body.innerHTML = `<header class="fs-bar">
+        <div class="lights"><button class="red" data-exit-case aria-label="Close case study"></button><button class="yellow" disabled aria-hidden="true" tabindex="-1"></button><button class="green" data-exit-case aria-label="Exit full screen"></button></div>
+        <button class="fs-btn" data-exit-case>‹ All work</button>
+        <div class="fs-title"><b>${esc(p.title)}</b><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small></div>
+        ${list.length > 1 ? `<nav class="fs-nav" aria-label="Case studies">
+          <button class="fs-btn" data-case="${esc(prev.case.slug)}" aria-label="Previous: ${esc(prev.title)}">‹</button>
+          <span>${k + 1} / ${list.length}</span>
+          <button class="fs-btn" data-case="${esc(next.case.slug)}" aria-label="Next: ${esc(next.title)}">›</button></nav>` : ""}
+        <button class="fs-btn fs-share" data-share aria-label="Copy link to this portfolio">${SHARE_ICON}</button>
+      </header>
+      <div class="case">
       <p class="case-hint">Pinch to zoom in on the details.</p>
       ${p.case.sections.map(([f, h, alt], i) => `<img src="work/${esc(slug)}/${esc(f)}?v=${BUILD}" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
-      <div class="case-end">${S.projects.filter((x) => x.case && x !== p).map((x) => `<button class="btn alt" data-case="${esc(x.case.slug)}">${esc(x.title)} ›</button>`).join("")}
-        <button class="btn alt" data-open="work">All work</button></div>
+      <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
+        <button class="btn alt" data-exit-case>All work</button></div>
     </div>`;
     body.scrollTop = 0;
   }
-  function show(key) {
+  function exitCase(fromHistory) {
+    if (!caseSlug) return;
+    caseSlug = null;
+    screen.classList.remove("case-fs");
+    if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
+  }
+  function show(key, fromHistory) {
     if (String(key).startsWith("case:")) return openCase(String(key).slice(5));
+    exitCase(fromHistory);
     body.classList.remove("case-mode");
     const app = apps[key] || apps.about;
     current = key in apps ? key : "about";
@@ -189,6 +213,8 @@
   const zoom = () => { resetWindowPlacement(); win.classList.toggle("max"); };
 
   os.addEventListener("click", (e) => {
+    if (e.target.closest("[data-exit-case]")) { e.preventDefault(); show("work"); sound(); return; }
+    if (e.target.closest("[data-share]")) { copyLink(); return; }
     const c = e.target.closest("[data-case]");
     if (c) { e.preventDefault(); closeMenu(); closeSpotlight(); openCase(c.dataset.case); sound(); return; }
     const t = e.target.closest("[data-open]");
@@ -320,6 +346,7 @@
     if (e.key === "Escape") {
       if (!sp.hidden) return closeSpotlight();
       if (!menu.hidden) return closeMenu();
+      if (caseSlug) return show("work");   // leave full screen first, like macOS
       return close();
     }
     const mod = isMac ? e.metaKey : e.ctrlKey;
@@ -353,6 +380,7 @@
   let skipPop = false;
   addEventListener("popstate", () => {
     if (skipPop) { skipPop = false; return; }
+    if (caseSlug) return show("work", true);   // back gesture inside a case study: return to the Work list
     if (!os.hidden) close(true);
   });
   try { if (history.state && history.state.sjDesktop) history.replaceState(null, ""); } catch (_) {}   // reloaded while open
@@ -385,7 +413,8 @@
   }
   function close(fromHistory) {
     if (closing || os.hidden) return;
-    if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.back(); } } catch (_) {} }
+    if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.go(history.state.sjCase ? -2 : -1); } } catch (_) {} }
+    caseSlug = null; screen.classList.remove("case-fs");
     closeMenu(); closeSpotlight();
     const finish = () => {
       os.hidden = true; closing = false;
