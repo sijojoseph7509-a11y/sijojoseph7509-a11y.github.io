@@ -347,41 +347,22 @@ function interactive(obj, label, onClick) {
 }
 
 /* ───────────────────────── Floor ───────────────────────── */
-// Cream-white marble tiles (2 × 2 units each; one texture = 2 × 2 tiles)
+// Black and cream checkerboard, laid on the diagonal (30 cm tiles = 6 units; one texture = 2 × 2 tiles)
 const grid = canvasTex(1024, 1024, (g, w, h) => {
-  g.fillStyle = "#efe8dc"; g.fillRect(0, 0, w, h);
-  // soft clouding
-  for (let i = 0; i < 260; i++) {
-    const x = Math.random() * w, y = Math.random() * h, r = 30 + Math.random() * 120;
-    const rg = g.createRadialGradient(x, y, 0, x, y, r);
-    const c = Math.random() > 0.5 ? "255,252,246" : "214,202,184";
-    rg.addColorStop(0, `rgba(${c},0.18)`); rg.addColorStop(1, `rgba(${c},0)`);
-    g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2);
+  const half = w / 2;
+  for (const [x, y, c] of [[0, 0, "#e8e1d4"], [half, half, "#e8e1d4"], [half, 0, "#141414"], [0, half, "#141414"]]) { g.fillStyle = c; g.fillRect(x, y, half, half); }
+  for (let i = 0; i < 14000; i++) {   // a little stone grain
+    const x = Math.random() * w, y = Math.random() * h, dark = (x < half) !== (y < half);
+    g.fillStyle = dark ? `rgba(255,255,255,${Math.random() * 0.035})` : `rgba(80,60,40,${Math.random() * 0.05})`;
+    g.fillRect(x, y, 2, 2);
   }
-  // veins: wandering lines, a few strong, many faint
-  for (let v = 0; v < 22; v++) {
-    let x = Math.random() * w, y = Math.random() * h, a = Math.random() * Math.PI * 2;
-    const strong = v < 5;
-    g.strokeStyle = strong ? "rgba(150,132,108,0.38)" : "rgba(170,155,135,0.16)";
-    g.lineWidth = strong ? 1.6 + Math.random() * 1.6 : 0.8;
-    g.shadowColor = "rgba(150,132,108,0.35)"; g.shadowBlur = strong ? 6 : 2;
-    g.beginPath(); g.moveTo(x, y);
-    for (let k = 0; k < 120; k++) {
-      a += (Math.random() - 0.5) * 0.45;
-      x += Math.cos(a) * 9; y += Math.sin(a) * 9;
-      g.lineTo(x, y);
-    }
-    g.stroke();
-  }
-  g.shadowBlur = 0;
-  // grout lines between the four tiles
-  g.fillStyle = "rgba(170,158,140,0.75)";
-  g.fillRect(0, 0, w, 3); g.fillRect(0, h / 2 - 1.5, w, 3);
-  g.fillRect(0, 0, 3, h); g.fillRect(w / 2 - 1.5, 0, 3, h);
+  g.fillStyle = "rgba(0,0,0,0.35)";   // hairline grout
+  g.fillRect(0, 0, w, 2); g.fillRect(0, half - 1, w, 2); g.fillRect(0, 0, 2, h); g.fillRect(half - 1, 0, 2, h);
 });
 grid.tex.wrapS = grid.tex.wrapT = THREE.RepeatWrapping;
-grid.tex.repeat.set(600 / 4, 600 / 4);
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.2 }));
+grid.tex.repeat.set(600 / 12, 600 / 12);
+grid.tex.center.set(0.5, 0.5); grid.tex.rotation = Math.PI / 4;   // diamonds, like the reference
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.35 }));
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 floor.position.y = -14.8; // desk height ≈ 74 cm
@@ -504,7 +485,7 @@ const wallTex = canvasTex(512, 512, (g, w, h) => {
 });
 wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
 wallTex.tex.repeat.set(28, 24);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x45403b, roughness: 0.95 }));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: 0x5e1510, roughness: 0.92 }));   // oxblood red (deep, like the reference)
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
@@ -515,9 +496,42 @@ for (const side of [-1, 1]) {   // side walls: far enough out that they frame th
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-const skirting = rbox(400, 0.5, 0.12, 0.03, mat(0x2e2a27, { roughness: 0.7 }), 1);
-skirting.position.set(TABLE.x, -14.8 + 0.25, WALL_Z + 0.06);
-scene.add(skirting);
+// Black panelled wainscot (dado at ≈90 cm), skirting, crown moulding and a dark ceiling — on all three walls
+const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling
+const BAY = 16;   // one raised panel per 80 cm
+const panelTex = canvasTex(512, 576, (g, w, h) => {
+  const u = w / BAY;   // px per unit
+  const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, "#151515"); lg.addColorStop(1, "#0d0d0d");
+  g.fillStyle = lg; g.fillRect(0, 0, w, h);
+  const x0 = 1.6 * u, y0 = 2.2 * u, x1 = w - 1.6 * u, y1 = h - 3.4 * u;
+  const frame = (inset, light, dark, lw) => {
+    g.lineWidth = lw;
+    g.strokeStyle = light; g.beginPath(); g.moveTo(x0 + inset, y1 - inset); g.lineTo(x0 + inset, y0 + inset); g.lineTo(x1 - inset, y0 + inset); g.stroke();
+    g.strokeStyle = dark; g.beginPath(); g.moveTo(x1 - inset, y0 + inset); g.lineTo(x1 - inset, y1 - inset); g.lineTo(x0 + inset, y1 - inset); g.stroke();
+  };
+  frame(0, "#363636", "#000000", 6); frame(9, "#000000", "#2c2c2c", 4); frame(16, "#262626", "#050505", 3);   // a raised moulding profile
+});
+panelTex.tex.wrapS = THREE.RepeatWrapping;
+const TRIM = mat(0x111111, { roughness: 0.55, clearcoat: 0.2 });
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x0c0c0c, { roughness: 0.9 }));
+ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
+function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
+  const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
+  const tex = panelTex.tex.clone(); tex.needsUpdate = true; tex.repeat.set(len / BAY, 1);
+  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, DADO_Y - FLOOR_Y), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }));
+  panels.position.set(0, (FLOOR_Y + DADO_Y) / 2, 0.02); panels.receiveShadow = true;
+  const dado = rbox(len, 0.7, 0.45, 0.12, TRIM, 2); dado.position.set(0, DADO_Y, 0.22);
+  const skirt = rbox(len, 1.4, 0.35, 0.08, TRIM, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
+  const crown = rbox(len, 2.2, 1.1, 0.25, TRIM, 2); crown.position.set(0, CEIL_Y - 1.1, 0.55);
+  const crownLip = rbox(len, 0.5, 1.6, 0.1, TRIM, 1); crownLip.position.set(0, CEIL_Y - 2.4, 0.8);
+  grp.add(panels, dado, skirt, crown, crownLip);
+  scene.add(grp);
+  return grp;
+}
+trimWall(88.4, TABLE.x, WALL_Z, 0);
+trimWall(400, TABLE.x - 44, WALL_Z + 200, Math.PI / 2);
+const rightWall = trimWall(400, TABLE.x + 44, WALL_Z + 200, -Math.PI / 2);   // window, curtain and the corner things live here
+const onRight = (z) => z - (WALL_Z + 200);   // world z → local x on the right wall
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
 const POSTER_PX = 2048;   // full resolution on phones too (half-size looked soft on high-density phone screens)
@@ -949,6 +963,124 @@ cup.add(cupBody, cupBottom);
 });
 cup.position.set(3.6, 0, -2.6);
 scene.add(cup);
+
+/* ───────────────────────── Window corner on the right wall (from Sijo's photo) ─────────────────────────
+   A curtained window and a clothes rail on one black rod, a keyboard leaning under the curtain, and plants. */
+const WIN_Z0 = 13, WIN_Z1 = 37, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
+const corner = new THREE.Group(); rightWall.add(corner);
+// window frame + daylight glass behind the curtain
+const winW = WIN_Z1 - WIN_Z0, winC = onRight((WIN_Z0 + WIN_Z1) / 2);
+const winFrame = rbox(winW + 1.2, ROD_Y - DADO_Y - 1, 0.5, 0.1, mat(0xe9e3d6, { roughness: 0.6 }), 2);
+winFrame.position.set(winC, (ROD_Y + DADO_Y + 1) / 2 - 0.5, 0.25);
+const glass = new THREE.Mesh(new THREE.PlaneGeometry(winW - 0.6, ROD_Y - DADO_Y - 2.4), new THREE.MeshBasicMaterial({ color: 0xdfe8ef }));
+glass.position.set(winC, winFrame.position.y, 0.52);
+corner.add(winFrame, glass);
+// curtain: cream linen with maroon ogee medallions and roses, gathered in grommet pleats
+const curtainTex = canvasTex(512, 832, (g, w, h) => {
+  g.fillStyle = "#ebe2cf"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 7000; i++) { g.fillStyle = `rgba(150,120,80,${Math.random() * 0.06})`; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 3); }   // linen weave
+  const medallion = (cx, cy, mw, mh) => {
+    const top = cy - mh / 2, bot = cy + mh / 2;
+    const shape = (k) => { g.beginPath(); g.moveTo(cx, top + mh * (1 - k) / 2);
+      for (const sx of [1, -1]) { g.bezierCurveTo(cx + sx * mw * 0.06 * k, top + mh * 0.16, cx + sx * mw * 0.5 * k, cy - mh * 0.28 * k, cx + sx * mw * 0.5 * k, cy);
+        g.bezierCurveTo(cx + sx * mw * 0.5 * k, cy + mh * 0.3 * k, cx + sx * mw * 0.1 * k, bot - mh * 0.12, cx, bot - mh * (1 - k) / 2);
+        if (sx === 1) g.moveTo(cx, top + mh * (1 - k) / 2); } };
+    g.fillStyle = "#7a1c22"; shape(1); g.fill();
+    g.strokeStyle = "#d9b77a"; g.lineWidth = 3; g.setLineDash([3, 6]); shape(0.88); g.stroke(); g.setLineDash([]);
+    // rose bouquet
+    g.fillStyle = "#6b4a2a"; for (const [dx, dy, r] of [[-0.18, 0.12, -0.6], [0.18, 0.1, 0.6], [-0.1, 0.24, -0.3], [0.12, 0.25, 0.3]]) { g.save(); g.translate(cx + dx * mw, cy + dy * mh); g.rotate(r); g.beginPath(); g.ellipse(0, 0, mw * 0.09, mw * 0.035, 0, 0, 7); g.fill(); g.restore(); }
+    for (const [dx, dy, s] of [[0, -0.02, 1], [-0.15, 0.13, 0.7], [0.15, 0.13, 0.7]]) {
+      const rx = cx + dx * mw, ry = cy + dy * mh, r = mw * 0.13 * s;
+      g.fillStyle = "#f1e8d6"; g.beginPath(); g.arc(rx, ry, r, 0, 7); g.fill();
+      g.strokeStyle = "#c9b48e"; g.lineWidth = 1.5; for (let k = 1; k <= 3; k++) { g.beginPath(); g.arc(rx, ry, r * k / 4, k, k + 4.2); g.stroke(); }
+    }
+  };
+  medallion(w / 2, h / 2, w * 0.86, h * 0.86);
+  for (const [x, y] of [[0, 0], [w, 0], [0, h], [w, h]]) medallion(x, y, w * 0.86, h * 0.86);   // staggered neighbours
+});
+curtainTex.tex.wrapS = curtainTex.tex.wrapT = THREE.RepeatWrapping;
+const CUR_H = ROD_Y - (DADO_Y + 2.5), CUR_W = winW + 2;
+curtainTex.tex.repeat.set(CUR_W / 4.4, CUR_H / 7.1);
+const curGeo = new THREE.PlaneGeometry(CUR_W, CUR_H, 120, 10);
+{ const p = curGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), down = (CUR_H / 2 - y) / CUR_H;
+    p.setZ(i, Math.sin(x * Math.PI / 1.2) * (0.42 - 0.12 * down) + Math.sin(x * 0.7) * 0.15);
+    if (down > 0.985) p.setY(i, y - Math.abs(Math.sin(x * 1.3)) * 0.25); }
+  curGeo.computeVertexNormals(); }
+const curtain = new THREE.Mesh(curGeo, new THREE.MeshStandardMaterial({ map: curtainTex.tex, roughness: 0.95, side: THREE.DoubleSide }));
+curtain.position.set(winC + 0.6, ROD_Y - CUR_H / 2 - 0.3, ROD_OUT); curtain.receiveShadow = true;
+corner.add(curtain);
+// one black rod for the curtain and the clothes, with grommets and end caps
+const RAIL_Z0 = 1.5, railL = WIN_Z1 + 1 - RAIL_Z0;
+const rod = mesh(new THREE.CylinderGeometry(0.16, 0.16, railL, 12), mat(0x161616, { metalness: 0.6, roughness: 0.35 }));
+rod.rotation.z = Math.PI / 2; rod.position.set(onRight(RAIL_Z0 + railL / 2), ROD_Y, ROD_OUT); corner.add(rod);
+for (const z of [RAIL_Z0, WIN_Z1 + 1]) { const cap = mesh(new THREE.SphereGeometry(0.32, 12, 8), mat(0xe9e3d6)); cap.position.set(onRight(z), ROD_Y, ROD_OUT); corner.add(cap); }
+const grommetMat = mat(0x1a1a1a, { metalness: 0.7, roughness: 0.3 });
+for (let x = -CUR_W / 2 + 0.6; x < CUR_W / 2; x += 2.4) { const gr = mesh(new THREE.TorusGeometry(0.34, 0.07, 6, 16), grommetMat); gr.position.set(curtain.position.x + x, ROD_Y, ROD_OUT); corner.add(gr); }
+// shirts on hangers (plaids, stripes and solids like the ones in the photo)
+const fabric = (base, kind, line) => canvasTex(128, 192, (g, w, h) => {
+  g.fillStyle = base; g.fillRect(0, 0, w, h);
+  g.strokeStyle = line; g.globalAlpha = 0.55;
+  if (kind === "check") { g.lineWidth = 3; for (let i = 0; i < w; i += 14) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); } for (let i = 0; i < h; i += 14) { g.beginPath(); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); } }
+  if (kind === "stripe") { g.lineWidth = 1.5; for (let i = 0; i < w; i += 6) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); } }
+  g.globalAlpha = 1;
+}).tex;
+const SHIRTS = [["#2b3442", "plain"], ["#5f6650", "check", "#2a2e22"], ["#3e5a74", "check", "#e9eef2"], ["#d7d3e2", "plain"], ["#5e2f32", "plain"], ["#b9ab93", "check", "#6b5a44"], ["#e6c9d0", "stripe", "#b98b97"], ["#7d6f62", "plain"]];
+const hangerMat = mat(0x2a2a2a, { roughness: 0.4 });
+SHIRTS.forEach(([c, kind, line], i) => {
+  const z = RAIL_Z0 + 1.2 + i * 1.25, sh = new THREE.Group();
+  const len = 13 + (i % 3) * 1.2;
+  const body = rbox(0.45, len, 8.6, 0.2, new THREE.MeshStandardMaterial({ map: fabric(c, kind, line), roughness: 0.95 }), 2);
+  body.position.y = -1.2 - len / 2;
+  const collar = rbox(0.6, 0.8, 2.2, 0.2, body.material, 1); collar.position.y = -1;
+  const hook = mesh(new THREE.TorusGeometry(0.35, 0.05, 6, 12, Math.PI * 1.4), hangerMat); hook.rotation.y = Math.PI / 2; hook.position.y = 0.05;
+  sh.add(body, collar, hook);
+  sh.position.set(onRight(z), ROD_Y, ROD_OUT); sh.rotation.x = (i % 2 ? 1 : -1) * 0.04; sh.rotation.y = (i % 3 - 1) * 0.12;
+  corner.add(sh);
+});
+// keyboard leaning against the wall under the curtain (silver-blue body, speakers, keys)
+const kbTex = canvasTex(256, 760, (g, w, h) => {
+  g.fillStyle = "#1d2a52"; g.fillRect(0, 0, w, h);
+  const kx = w * 0.56;
+  g.fillStyle = "#c9ced8"; g.fillRect(w * 0.16, h * 0.2, w * 0.3, h * 0.6);   // silver control panel
+  for (const y of [0.1, 0.9]) { const rg = g.createRadialGradient(w * 0.3, h * y, 4, w * 0.3, h * y, w * 0.22); rg.addColorStop(0, "#3b5aa8"); rg.addColorStop(1, "#14203f"); g.fillStyle = rg; g.beginPath(); g.arc(w * 0.3, h * y, w * 0.22, 0, 7); g.fill(); }
+  g.fillStyle = "#9fb9a6"; g.fillRect(w * 0.2, h * 0.42, w * 0.2, h * 0.08);   // LCD
+  g.fillStyle = "#2f3f7a"; for (let i = 0; i < 18; i++) g.fillRect(w * (0.19 + (i % 3) * 0.08), h * (0.25 + Math.floor(i / 3) * 0.025), w * 0.05, h * 0.012);
+  g.fillStyle = "#f4f2ec"; g.fillRect(kx, h * 0.04, w - kx - 8, h * 0.92);
+  const n = 36, kh = h * 0.92 / n;
+  g.strokeStyle = "#9a9a9a"; g.lineWidth = 1; for (let i = 0; i <= n; i++) { g.beginPath(); g.moveTo(kx, h * 0.04 + i * kh); g.lineTo(w - 8, h * 0.04 + i * kh); g.stroke(); }
+  g.fillStyle = "#111"; for (let i = 0; i < n; i++) if ([0, 1, 3, 4, 5].includes(i % 7)) g.fillRect(kx, h * 0.04 + (i + 0.65) * kh, (w - kx - 8) * 0.6, kh * 0.7);
+});
+const keyboard = rbox(6.4, 19, 1.4, 0.4, mat(0x1d2a52, { roughness: 0.45, clearcoat: 0.3 }), 3);
+const kbFace = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 18.8), new THREE.MeshStandardMaterial({ map: kbTex.tex, roughness: 0.4 }));
+kbFace.position.z = 0.72; keyboard.add(kbFace);
+keyboard.position.set(onRight(19), FLOOR_Y + 9.5, 1.6); keyboard.rotation.x = -0.07;
+corner.add(keyboard);
+// fluted white pedestal with a peace lily, and two floor pots
+const pedGeo = new THREE.CylinderGeometry(2.2, 2.3, 9, 64, 1);
+{ const p = pedGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), r = Math.hypot(x, z); if (r > 1) { const k = 1 + 0.035 * Math.cos(a * 28); p.setX(i, x * k); p.setZ(i, z * k); } } pedGeo.computeVertexNormals(); }
+const pedestal = mesh(pedGeo, mat(0xf3f1ec, { roughness: 0.75 }));
+pedestal.position.set(onRight(33), FLOOR_Y + 4.5, 3); corner.add(pedestal);
+const lilyMat = mat(0x2f5a2c, { roughness: 0.5 }), potWhite = mat(0xf5f5f2, { roughness: 0.4, clearcoat: 0.4 });
+const lily = new THREE.Group();
+const lPot = mesh(new THREE.CylinderGeometry(1.3, 1.0, 1.9, 24), potWhite); lPot.position.y = 0.95; lily.add(lPot);
+const lilyLeaf = new THREE.SphereGeometry(0.5, 12, 8); lilyLeaf.scale(0.75, 0.08, 2.4);
+for (let i = 0; i < 11; i++) { const a = (i / 11) * Math.PI * 2, h = 2.6 + (i % 3) * 0.9, lf = mesh(lilyLeaf, lilyMat);
+  lf.position.set(Math.cos(a) * 1.2, h, Math.sin(a) * 1.2); lf.rotation.set(0.9 * Math.sin(a), -a + Math.PI / 2, 0.9 * Math.cos(a) - 0.3); lily.add(lf);
+  const st = mesh(new THREE.CylinderGeometry(0.04, 0.05, h - 1.6, 5), lilyMat); st.position.set(Math.cos(a) * 0.5, 1.8 + (h - 1.6) / 2, Math.sin(a) * 0.5); st.rotation.set(0.25 * Math.sin(a), 0, -0.25 * Math.cos(a)); lily.add(st); }
+lily.position.set(pedestal.position.x, FLOOR_Y + 9, pedestal.position.z); corner.add(lily);
+const spiky = (n, len, col, spread) => { const grp = new THREE.Group(), m = mat(col, { roughness: 0.6 });
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + i, cone = mesh(new THREE.ConeGeometry(0.12, len * (0.7 + (i % 4) * 0.12), 5), m);
+    cone.position.set(Math.cos(a) * 0.3, len * 0.35, Math.sin(a) * 0.3); cone.rotation.set(Math.sin(a) * spread, 0, -Math.cos(a) * spread); grp.add(cone); } return grp; };
+const terra = new THREE.Group();
+const tPot = mesh(new THREE.CylinderGeometry(1.5, 1.1, 2.6, 24), mat(0xb3613f, { roughness: 0.8 })); tPot.position.y = 1.3;
+const spider = spiky(16, 4.2, 0x6f9a3e, 0.75); spider.position.y = 2.5; terra.add(tPot, spider);
+terra.position.set(onRight(26.5), FLOOR_Y, 4.8); corner.add(terra);
+const aloePot = new THREE.Group();
+const aPot = mesh(new THREE.CylinderGeometry(1.25, 1.0, 2.4, 24), potWhite); aPot.position.y = 1.2;
+const aloe = spiky(10, 5.2, 0x5f8f55, 0.45); aloe.position.y = 2.3; aloePot.add(aPot, aloe);
+aloePot.position.set(onRight(29.5), FLOOR_Y, 6.6); corner.add(aloePot);
+corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });   // far from the lamp — skip shadow cost
 
 
 
