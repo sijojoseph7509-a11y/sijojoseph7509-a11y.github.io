@@ -807,7 +807,7 @@ S.projects.forEach((p, i) => {
   f.position.set(fx + layer * 0.15, layer * 0.13, fz - layer * 0.1);
   f.rotation.y = fr + layer * 0.12;
   projectFiles.add(f);
-  interactive(f, `📁 ${p.title}`, () => { Sound.click(); boot("work"); });
+  interactive(f, `${p.title} case study`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); });
 });
 projectFiles.position.set(0, 0.08, 0);
 
@@ -905,7 +905,7 @@ const hobbyCover = canvasTex(512, 384, (g, w, h) => {
   g.fillStyle = "#6f8f7a"; g.beginPath(); g.moveTo(40, h * 0.7); g.lineTo(170, h * 0.3); g.lineTo(300, h * 0.7); g.fill();
   g.fillStyle = "#3f5f7a"; g.beginPath(); g.moveTo(190, h * 0.7); g.lineTo(320, h * 0.38); g.lineTo(470, h * 0.7); g.fill();
   g.strokeStyle = "#1d1d1f"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(80, h * 0.72); g.bezierCurveTo(200, h * 0.78, 260, h * 0.64, 430, h * 0.74); g.stroke();
-  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.fillText("Weekend", 40, h * 0.86); g.font = `400 26px ${UI}`; g.fillText("sketches · hobbies · notes", 40, h * 0.95);
+  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.fillText("Weekends", 40, h * 0.86); g.font = `400 26px ${UI}`; g.fillText("games · football · bike rides", 40, h * 0.95);
 });
 const hobby = new THREE.Group();
 const hobbyBoard = rbox(1.75, 0.08, 1.3, 0.03, new THREE.MeshStandardMaterial({ color: 0xe9e2d2, roughness: 0.85 }));
@@ -928,7 +928,7 @@ books.add(under, underPages, hobby);
 books.position.set(-5.4, 0.01, 1.2);
 books.rotation.y = 0.35;
 scene.add(books);
-interactive(books, "My weekend sketchbook", () => { Sound.click(); boot("about"); });
+interactive(books, "Weekends: games, football, bike rides", () => { Sound.click(); boot("about"); });
 
 // 5. Pencil cup — behind the computer, left
 const cup = new THREE.Group();
@@ -1447,7 +1447,7 @@ async function loadCat() {
   holder.position.set(7.0, 0, 1.0);
   holder.rotation.y = CAT_FACING;
   reveal(holder);
-  cat = interactive(holder, "pet me? 🥺", petCat);
+  cat = interactive(holder, "Shea says: pet me?", petCat);
 }
 const CAT_FACING = -0.55; // mostly facing the viewer, turned slightly towards the laptop
 

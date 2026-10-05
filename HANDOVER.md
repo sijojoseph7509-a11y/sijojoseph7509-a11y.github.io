@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=54` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=55` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -345,6 +345,15 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 
 ## 13. Content — how to edit, and what is still placeholder
 
+**v2.5 status:** About text, location (Bangalore), email, cat name (Shea), weekend hobbies (sketchbook) are **real**, from Sijo's interview. Projects are **Tidewell, Ledgerly and Backwater Line** (concept case studies, labelled as such). Still to add: LinkedIn, Behance, résumé PDF, work history (`experience: []` hides the list until filled), and Ekmaati (Sijo's real Semester 2 project). Interview answers not yet used: what he made as a teen, and the meaning of "the process for the outcome" (About assumes "never skip the process").
+
+### 13.1 Case studies (Work window)
+- Source: Figma files from Sijo's Design Portfolio (`/Users/sijo/Documents/Design Portfolio/HANDOVER.md` §3): Tidewell `s6WXmDrd36Frlkg1kVsvUg`, Ledgerly `K030R1Iv01ggC5Xf4Tu23h`, Backwater Line `6iuhjuMILOUIsgbqNKq8OG`.
+- Each file has a page **"Case Study v2 · Web"** (wrappers Tidewell `23:3`, Ledgerly `25:3`, Backwater `29:3`): a copy of "Case Study v2" with notes-to-self, the Notes section and Next-project footer removed, mistakes fixed and Ledgerly's contrast table filled with measured ratios. The original v2 pages are untouched.
+- Export: `get_screenshot` on the wrapper with `maxDimension` ≥ its height (gives 1440 px wide), then slice per section into `work/<slug>/NN.jpg` (JPEG 84). `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
+- Viewer: `openCase(slug)` in os.js (Work card, desk folder, Spotlight, deep link `?open=case:tidewell`); images lazy-load; pinch-zoom on phones.
+- To update a case study: edit the Web page in Figma → run the copy-check skill on its text → re-export and re-slice → bump `?v=`.
+
 **Edit only `content.js`.** Everything (wall lettering, folders, desktop, Spotlight) reads from `window.SITE`. Then bump `?v=` and push.
 
 | Field | Current value | Status |
@@ -530,6 +539,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.5) | Interview answers in About/desk (Kerala → Bangalore, smart/lazy/adventurous, poster meaning, Shea the cat, games/football/bike rides, phonk/Malayalam/Hindi, email). Placeholder projects and experience removed. Three Figma case studies (cleaned "Web" copies) in a new case-study viewer. New `copy-check` skill (notes, placeholders, AI-style tells, symbols). QA 31 checks incl. case studies. |
 | (v2.4) | Bug sweep tool (11 devices, layout + wallpaper + errors, screenshots) found: hint pill wider than narrow windows; Mac wallpaper cropped away from Sijo's face on portrait screens; images/models had no version so updates could show stale ones; phone tab row cut off with no scroll cue — all fixed. **Security:** three.js self-hosted under `vendor/three/` (no CDN), Content-Security-Policy + referrer policy meta tags, self-update moved to `update.js` (no inline scripts), `safeUrl()` for content links, all template content escaped; new `site-security` skill with an audit script (15 checks). |
 | (v2.3) | **Desk mat = Sijo's real mat** (photo IMG_5856, cropped 3:1: `assets/deskmat.jpg` 3072×1024 desktop, `assets/deskmat-phone.jpg` 2048×683 phone; anisotropic filtering). Clarity: poster texture full 2048 px on phones too; laptop screen canvas rendered at 2× (1600×1024, layout still 800×512 via `SCREEN_PX`); phone lock screen at 2×; adaptive quality now waits 4 s after start, ignores camera moves/fade-ins, triggers only below 25 fps, and steps to 1.5× (never 1×). Note: the mat artwork is a third-party anime illustration (see §25). |
 | (v2.2) | Dock shows each app's name under its icon, always (About, Work, Skills, Resume, Contact, LinkedIn, Behance, Desk); labels scale down on narrow phones so whole names fit at 320 px; windows/toast moved up to clear the taller dock. QA: dock names visible + inside the dock, window never behind the dock. |
