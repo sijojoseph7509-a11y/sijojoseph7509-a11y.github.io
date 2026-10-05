@@ -176,8 +176,9 @@ body { transition: background-color .7s var(--ease); }
 @keyframes fadein { from { opacity: 0; } }
 .os-screen {
   position: relative; width: min(1180px, 100%); height: min(760px, 100%);
-  border-radius: 20px; overflow: hidden; color: var(--t1);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 0 0 9px #0d0d0e, 0 0 0 10px #4a4a4e, 0 50px 120px rgba(0, 0, 0, .7);
+  border-radius: 18px; overflow: hidden; color: var(--t1);
+  /* a current MacBook display: thin black bezel, aluminium edge, rounded corners, notch (below) */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 0 0 10px #050506, 0 0 0 11px #2c2c2f, 0 0 0 12px #151517, 0 50px 120px rgba(0, 0, 0, .7);
   /* wallpaper: Sijo's photo (same crop focus as the 3D laptop screen); the gradient shows until it loads */
   background: var(--wallpaper, none) var(--wall-pos, 0% 40%) / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);
   animation: wake .7s var(--ease);
@@ -247,7 +248,28 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 .case-hint { display: none; margin: 0; padding: 8px 16px; font-size: 12px; color: var(--t3); }
 @media (pointer: coarse) { .case-hint { display: block; } }
 .case img { display: block; width: 100%; height: auto; background: var(--g-fill); }
-/* ── Full-screen case study (like a full-screen Mac app) ── */
+/* ── Notch (desktop/tablet only — phones have their own) ── */
+.notch { position: absolute; z-index: 20; top: 0; left: 50%; transform: translateX(-50%); width: clamp(110px, 14%, 180px); height: 30px;
+  background: #050506; border-radius: 0 0 11px 11px; pointer-events: none; }
+.notch::before, .notch::after { content: ""; position: absolute; top: 0; width: 8px; height: 8px; background: radial-gradient(circle at 0 100%, transparent 7.5px, #050506 8px); }
+.notch::before { left: -8px; } .notch::after { right: -8px; transform: scaleX(-1); }
+.notch i { position: absolute; left: 50%; top: 10px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #2a3a5c, #0b0f18 60%); box-shadow: 0 0 0 1.5px #111216; }
+.dock-zone { display: none; }
+
+/* ── Full-screen case study (like a full-screen Mac app): the display takes the whole browser window ── */
+.os.case-fs { padding: 0; background: #000; }
+.os.case-fs .os-screen { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; box-shadow: none; background: #121214; }
+@media (min-width: 761px) {
+  .os.case-fs .os-screen.case-fs .win { top: 30px !important; }   /* the strip beside the notch, as on a MacBook in full screen */
+  .os-screen.case-fs .fs-bar { padding-top: 10px; }
+}
+/* move the mouse to the bottom edge to reveal the dock (macOS full-screen behaviour) */
+@media (hover: hover) {
+  .os-screen.case-fs .dock-zone { display: block; position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 14px; }
+  .os-screen.case-fs .dock { transform: translate(-50%, 24px); transition: opacity .25s var(--ease), transform .3s var(--ease); }
+  .os-screen.case-fs.dock-peek .dock { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+}
 .os-screen.case-fs .menubar, .os-screen.case-fs .widget, .os-screen.case-fs .dock { opacity: 0; pointer-events: none; }
 .menubar, .widget, .dock { transition: opacity .3s var(--ease); }
 .os-screen.case-fs .win { top: 0 !important; bottom: 0 !important; left: 0 !important; width: 100% !important; max-height: none !important;
@@ -418,6 +440,7 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 @media (max-aspect-ratio: 1/1) { .os-screen { --wall-pos: 9% 55%; } }   /* portrait: keep his face in view */
 @media (max-width: 760px) {
   .os { padding: 0; }
+  .notch { display: none; }
   .menubar { padding-top: env(safe-area-inset-top); height: calc(30px + env(safe-area-inset-top)); }
   .mb-right > svg, .mb-right > .mb-icon:not(button) { display: none; }   /* Wi-Fi, battery, Control Centre: no room on a phone */
   #clock { white-space: nowrap; }
@@ -451,3 +474,8 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 button.card .cover::before, button.card .cover::after { display: none; }   /* real covers: no decorative shapes */
+/* like macOS: menus that would sit behind the notch are dropped on narrower displays (shortcuts still work) */
+@media (min-width: 761px) and (max-width: 1100px) { .mb-left [data-menu="window"], .mb-left [data-menu="help"] { display: none; } }
+@media (min-width: 761px) and (max-width: 900px) { .mb-left [data-menu="view"], .mb-left [data-menu="go"] { display: none; } }
+/* the "Designer" widget only shows on a clear desktop — there's never room beside an open window */
+.os-screen:has(#win:not([hidden])) .widget { display: none; }

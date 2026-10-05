@@ -17,7 +17,7 @@ const DEVICES = [
 // fixed UI that must be fully on screen and must not overlap each other
 const CHECKS = {
   desk: [".hud-left", ".hud-right", ".topnav", ".hint", ".skip", "#coach"],
-  mac: [".menubar", "#win", "#dock", "#clock", ".win-bar", ".lights"]
+  mac: [".menubar", "#win", "#dock", "#clock", ".win-bar", ".lights", "#menubar", ".mb-right", ".notch", ".widget", ".fs-bar .fs-title"]
 };
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: "new", args: ["--use-angle=metal"] });
 const issues = [];
@@ -36,7 +36,8 @@ async function inspect(p, dev, view) {
       const [a, ra] = rects[i], [b, rb] = rects[j];
       const nested = document.querySelector(a).contains(document.querySelector(b)) || document.querySelector(b).contains(document.querySelector(a));
       const ox = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left), oy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
-      if (!nested && ox > 2 && oy > 2) out.push(`${a} overlaps ${b}`);
+      const by_design = [a, b].sort().join("|") === ".menubar|.notch";   // the notch sits in the menu bar, as on a MacBook
+      if (!nested && !by_design && ox > 2 && oy > 2) out.push(`${a} overlaps ${b}`);
     }
     // text that is cut off (ellipsis / clipped) in visible buttons, labels and pills
     for (const e of document.querySelectorAll("button, a, .hint, .name, .chip, .side-item, #clock, .win-title, .coach span, .intro-tips span")) {
