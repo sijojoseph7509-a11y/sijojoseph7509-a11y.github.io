@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=57` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=58` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -350,7 +350,7 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 ### 13.1 Case studies (Work window)
 - Source: Figma files from Sijo's Design Portfolio (`/Users/sijo/Documents/Design Portfolio/HANDOVER.md` §3): Tidewell `s6WXmDrd36Frlkg1kVsvUg`, Ledgerly `K030R1Iv01ggC5Xf4Tu23h`, Backwater Line `6iuhjuMILOUIsgbqNKq8OG`.
 - Each file has a page **"Case Study v2 · Web"** (wrappers Tidewell `23:3`, Ledgerly `25:3`, Backwater `29:3`): a copy of "Case Study v2" with notes-to-self, the Notes section and Next-project footer removed, mistakes fixed and Ledgerly's contrast table filled with measured ratios. The original v2 pages are untouched.
-- Export: `get_screenshot` on the wrapper with `maxDimension` ≥ its height (gives 1440 px wide), then slice per section into `work/<slug>/NN.jpg` (JPEG 84). `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
+- **Export at 2× (Figma quality — never ship 1× only):** clone the Web wrapper, `rescale(2)` (2880 px wide), move its sections into two frames < 32,768 px tall (the screenshot height cap; precompute section y's first — removing children from the auto-layout wrapper reflows the rest), `get_screenshot` each with `maxDimension: 32768`, then delete the temp frames. Slice per section into `work/<slug>/NN@2x.webp` (2880 w) and `NN.webp` (1440 w, downscaled from the 2×), WebP q90. `<img srcset>` gives 2× to Retina screens and to phones (`(pointer: coarse) 200vw`, for pinch-zoom). Check sharpness at Retina size before shipping. `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
 - Viewer: `openCase(slug)` in os.js (Work card, desk folder, Spotlight, deep link `?open=case:tidewell`); images lazy-load; pinch-zoom on phones.
 - **Full screen (v2.6):** a case study opens like a full-screen Mac app (`.os-screen.case-fs`): the window fills the Mac screen; menu bar, widget, sidebar and dock are hidden; a sticky `.fs-bar` has window buttons (red/green = back to Work), "‹ All work", title + discipline + status, ‹ n / N › project switching and share. Esc, the back gesture (history entry `{sjCase}`) and ⌘1–5 leave full screen; prev/next replace the history entry.
 - To update a case study: edit the Web page in Figma → run the copy-check skill on its text → re-export and re-slice → bump `?v=`.
@@ -540,6 +540,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v2.8) | Case studies re-exported at 2× (Figma resolution) as WebP with 1×/2× srcset; the area around the Mac display is a clean dark surround (no 3D laptop lid showing above it). |
 | (v2.7) | MacBook display look: thin black bezel + aluminium edge, 18 px corners, camera **notch** (`.notch`, desktop/tablet only; menus behind it hidden below 1100/900 px like macOS). Full screen now fills the whole browser (`.os.case-fs`), with a 30 px notch strip above the case bar; the dock slides up when the mouse reaches the bottom edge (`.dock-zone` → `.dock-peek`). "Designer" widget hidden while a window is open. "Click the laptop" pinned to the middle of the lid's top edge. |
 | (v2.6) | Case studies open full screen inside the Mac with their own navigation bar; Esc/back return to Work. QA 33 checks. |
 | (v2.5) | Interview answers in About/desk (Kerala → Bangalore, smart/lazy/adventurous, poster meaning, Shea the cat, games/football/bike rides, phonk/Malayalam/Hindi, email). Placeholder projects and experience removed. Three Figma case studies (cleaned "Web" copies) in a new case-study viewer. New `copy-check` skill (notes, placeholders, AI-style tells, symbols). QA 31 checks incl. case studies. |

@@ -63,7 +63,7 @@
         <p class="sub">${S.projects.length} case studies across product, design systems and information design.</p>
         <div class="cards">${S.projects.map((p) => {
           if (p.case) return `<button class="card" data-case="${esc(p.case.slug)}" aria-label="Open the ${esc(p.title)} case study">
-            <div class="cover" style="background:${esc(p.color)} url('work/${esc(p.case.slug)}/${esc(p.case.cover)}?v=${BUILD}') center / cover"></div>
+            <div class="cover" style="background:${esc(p.color)} image-set(url('${caseImg(p.case.slug, p.case.cover)}') 1x, url('${caseImg(p.case.slug, p.case.cover, 2)}') 2x) center / cover"></div>
             <div class="meta"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>
               <span class="more">View case study ›</span></div></button>`;
           const live = p.url && p.url !== "#";
@@ -158,6 +158,8 @@
   // A case study opens like a full-screen Mac app: the window fills the screen (no wallpaper, sidebar or dock)
   // and one top bar handles navigation. Esc / the back gesture return to the Work list.
   let caseSlug = null;
+  // case-study images: 1× and 2× (Figma resolution) — the browser picks the sharp one for the screen
+  const caseImg = (slug, f, x = 1) => esc(`work/${slug}/${x === 2 ? f.replace(/\.(\w+)$/, "@2x.$1") : f}?v=${BUILD}`);
   const SHARE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
   function openCase(slug) {
     const list = S.projects.filter((x) => x.case);
@@ -182,7 +184,7 @@
       </header>
       <div class="case">
       <p class="case-hint">Pinch to zoom in on the details.</p>
-      ${p.case.sections.map(([f, h, alt], i) => `<img src="work/${esc(slug)}/${esc(f)}?v=${BUILD}" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
+      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
       <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
         <button class="btn alt" data-exit-case>All work</button></div>
     </div>`;
