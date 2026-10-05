@@ -347,26 +347,20 @@ function interactive(obj, label, onClick) {
 }
 
 /* ───────────────────────── Floor ───────────────────────── */
-// Black and cream checkerboard, laid on the diagonal (30 cm tiles = 6 units; one texture = 2 × 2 tiles)
-const grid = canvasTex(1024, 1024, (g, w, h) => {
-  const half = w / 2;
-  for (const [x, y, c] of [[0, 0, "#e8e1d4"], [half, half, "#e8e1d4"], [half, 0, "#141414"], [0, half, "#141414"]]) { g.fillStyle = c; g.fillRect(x, y, half, half); }
-  for (let i = 0; i < 14000; i++) {   // a little stone grain
-    const x = Math.random() * w, y = Math.random() * h, dark = (x < half) !== (y < half);
-    g.fillStyle = dark ? `rgba(255,255,255,${Math.random() * 0.035})` : `rgba(80,60,40,${Math.random() * 0.05})`;
-    g.fillRect(x, y, 2, 2);
-  }
-  g.fillStyle = "rgba(0,0,0,0.35)";   // hairline grout
-  g.fillRect(0, 0, w, 2); g.fillRect(0, half - 1, w, 2); g.fillRect(0, 0, 2, h); g.fillRect(half - 1, 0, 2, h);
-});
+// Flake epoxy floor from Sijo's photo (assets/floor.jpg ≈ 45 cm square = 9 units), mirror-tiled so seams don't show.
+// A plain grey stands in until the photo has loaded.
+const grid = canvasTex(64, 64, (g, w, h) => { g.fillStyle = "#b7b8b4"; g.fillRect(0, 0, w, h); });
 grid.tex.wrapS = grid.tex.wrapT = THREE.RepeatWrapping;
-grid.tex.repeat.set(600 / 12, 600 / 12);
-grid.tex.center.set(0.5, 0.5); grid.tex.rotation = Math.PI / 4;   // diamonds, like the reference
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.35 }));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, color: 0xa9aaa6, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.35 }));   // sealed epoxy, toned so the flakes read
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 floor.position.y = -14.8; // desk height ≈ 74 cm
 scene.add(floor);
+new THREE.TextureLoader().load(asset("assets/floor.jpg"), (t) => {
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
+  t.repeat.set(600 / 13, 600 / 13); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  floor.material.map = t; floor.material.needsUpdate = true;
+});
 
 
 /* ───────────────────────── Sijo's desk (from the photo) ─────────────────────────
@@ -965,7 +959,7 @@ cup.position.set(3.6, 0, -2.6);
 scene.add(cup);
 
 /* ───────────────────────── Window corner on the right wall (from Sijo's photo) ─────────────────────────
-   A curtained window and a clothes rail on one black rod, a keyboard leaning under the curtain, and plants. */
+   A curtained window, a keyboard leaning under the curtain, and plants. */
 const WIN_Z0 = 3, WIN_Z1 = 27, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
 const corner = new THREE.Group(); rightWall.add(corner);
 // window frame + daylight glass behind the curtain
@@ -1017,34 +1011,13 @@ const curGeo = new THREE.PlaneGeometry(CUR_W, CUR_H, 120, 10);
 const curtain = new THREE.Mesh(curGeo, new THREE.MeshStandardMaterial({ map: curtainTex.tex, roughness: 0.95, side: THREE.DoubleSide }));
 curtain.position.set(winC + 0.6, ROD_Y - CUR_H / 2 - 0.3, ROD_OUT); curtain.receiveShadow = true;
 corner.add(curtain);
-// one black rod for the curtain and the clothes, with grommets and end caps
-const RAIL_Z0 = -2.6, railL = WIN_Z1 + 1 - RAIL_Z0;
+// black curtain rod with grommets and end caps
+const RAIL_Z0 = WIN_Z0 - 1.5, railL = WIN_Z1 + 1 - RAIL_Z0;
 const rod = mesh(new THREE.CylinderGeometry(0.16, 0.16, railL, 12), mat(0x161616, { metalness: 0.6, roughness: 0.35 }));
 rod.rotation.z = Math.PI / 2; rod.position.set(onRight(RAIL_Z0 + railL / 2), ROD_Y, ROD_OUT); corner.add(rod);
 for (const z of [RAIL_Z0, WIN_Z1 + 1]) { const cap = mesh(new THREE.SphereGeometry(0.32, 12, 8), mat(0xe9e3d6)); cap.position.set(onRight(z), ROD_Y, ROD_OUT); corner.add(cap); }
 const grommetMat = mat(0x1a1a1a, { metalness: 0.7, roughness: 0.3 });
 for (let x = -CUR_W / 2 + 0.6; x < CUR_W / 2; x += 2.4) { const gr = mesh(new THREE.TorusGeometry(0.34, 0.07, 6, 16), grommetMat); gr.position.set(curtain.position.x + x, ROD_Y, ROD_OUT); corner.add(gr); }
-// shirts on hangers (plaids, stripes and solids like the ones in the photo)
-const fabric = (base, kind, line) => canvasTex(128, 192, (g, w, h) => {
-  g.fillStyle = base; g.fillRect(0, 0, w, h);
-  g.strokeStyle = line; g.globalAlpha = 0.55;
-  if (kind === "check") { g.lineWidth = 3; for (let i = 0; i < w; i += 14) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); } for (let i = 0; i < h; i += 14) { g.beginPath(); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); } }
-  if (kind === "stripe") { g.lineWidth = 1.5; for (let i = 0; i < w; i += 6) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); } }
-  g.globalAlpha = 1;
-}).tex;
-const SHIRTS = [["#2b3442", "plain"], ["#5f6650", "check", "#2a2e22"], ["#3e5a74", "check", "#e9eef2"], ["#d7d3e2", "plain"], ["#5e2f32", "plain"], ["#b9ab93", "check", "#6b5a44"], ["#e6c9d0", "stripe", "#b98b97"], ["#7d6f62", "plain"]];
-const hangerMat = mat(0x2a2a2a, { roughness: 0.4 });
-SHIRTS.forEach(([c, kind, line], i) => {
-  const z = RAIL_Z0 + 1.2 + i * 1.25, sh = new THREE.Group();
-  const len = 13 + (i % 3) * 1.2;
-  const body = rbox(0.45, len, 8.6, 0.2, new THREE.MeshStandardMaterial({ map: fabric(c, kind, line), roughness: 0.95 }), 2);
-  body.position.y = -1.2 - len / 2;
-  const collar = rbox(0.6, 0.8, 2.2, 0.2, body.material, 1); collar.position.y = -1;
-  const hook = mesh(new THREE.TorusGeometry(0.35, 0.05, 6, 12, Math.PI * 1.4), hangerMat); hook.rotation.y = Math.PI / 2; hook.position.y = 0.05;
-  sh.add(body, collar, hook);
-  sh.position.set(onRight(z), ROD_Y, ROD_OUT); sh.rotation.x = (i % 2 ? 1 : -1) * 0.04; sh.rotation.y = (i % 3 - 1) * 0.12;
-  corner.add(sh);
-});
 // keyboard leaning against the wall under the curtain (silver-blue body, speakers, keys)
 const kbTex = canvasTex(256, 760, (g, w, h) => {
   g.fillStyle = "#1d2a52"; g.fillRect(0, 0, w, h);

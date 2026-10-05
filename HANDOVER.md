@@ -11,7 +11,7 @@
 | **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
 | **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
 | **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=60` — must match `BUILD` in index.html and `version.json` |
+| **Asset version (cache-buster)** | `?v=61` — must match `BUILD` in index.html and `version.json` |
 
 ---
 
@@ -540,6 +540,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | `383baf0` | Nav: no hover underline |
 | `e32d7f1` | Mac experience overhaul, closer camera, loading quote |
 | `4787a8c` | Apple-style boot zoom, poster above the Mac, phone zoom-out fix |
+| (v3.1) | Floor = flake epoxy from Sijo's photo (`assets/floor.jpg`, 9-unit tiles, mirrored repeat, clearcoat). Clothes rail and shirts removed; the rod spans only the curtain. |
 | (v3.0) | Room restyled from Sijo's reference: oxblood red walls (#5e1510) over black panelled wainscot (`trimWall()`: panel texture, dado rail at 90 cm, skirting, crown moulding), dark ceiling at 2.75 m (`CEIL_Y`), diagonal black/cream checkerboard floor. Right wall (`rightWall` group, `onRight(z)`): window corner from Sijo's photo — window + cream curtain with maroon ogee rose medallions on a black grommet rod, shirts on the same rod, keyboard leaning under the curtain, fluted white pedestal with peace lily, terracotta spider plant and white aloe pot. Visible when looking right in the room view. |
 | (v2.9) | Desk laptop = MacBook Air display (SCREEN 5.8 × 3.77, 2560×1664 aspect, thin bezels, chin); the notch is drawn on the screen canvas from the shared `NOTCH` proportions (7.4 % wide, menu-bar tall), identical to the desktop `.notch`. Motion: real spring curves via CSS `linear()` (`--spring`, `--smooth`), camera fly-ins swing on an arc with log-distance dolly, full-screen enter/exit is a FLIP zoom (`morphWindow`), macOS-style dock launch bounce and minimise-into-dock, frame-rate-independent hover. |
 | (v2.8) | Case studies re-exported at 2× (Figma resolution) as WebP with 1×/2× srcset; the area around the Mac display is a clean dark surround (no 3D laptop lid showing above it). |
