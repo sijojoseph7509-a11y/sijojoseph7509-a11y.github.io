@@ -84,10 +84,10 @@ for (const mobile of [false, true]) {
   await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 }); await sleep(600);
-    const home = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me/.test(l)));   // close-up: ball + wall lettering may be out of frame
+    const home = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me|the (sun|night) in/.test(l)));   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
     await p.click("#zoomBtn"); await sleep(1400);
-    const room = await p.evaluate(() => Desk.offscreen());
+    const room = await p.evaluate(() => Desk.offscreen().filter((l) => !/the (sun|night) in/.test(l)));   // the window is on the side wall: drag to look at it
     expect(room.length === 0, "off-screen in the room view: " + room.join(", "));
     await p.click("#zoomBtn"); await sleep(1300);
     expect(!(await p.evaluate(() => Desk.state().room)), "zoom button did not come back to the desk"); await p.ctx.close();
@@ -115,6 +115,16 @@ await check("Zooming in (scroll) from anywhere heads for the laptop", async () =
   const off = Math.hypot(s.at.x / s.w - 0.5, s.at.y / s.h - 0.5);
   expect(off < 0.15, "laptop is " + (off * 100).toFixed(0) + "% away from the centre after zooming in"); await p.ctx.close();
   return "laptop " + (off * 100).toFixed(0) + "% from centre";
+});
+
+await check("Window: day ↔ night switch changes the room's light and back", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(500);
+  const a = await p.evaluate(() => Desk.state().night);
+  await p.evaluate(() => Desk.toggleDay()); await sleep(2200);
+  const b = await p.evaluate(() => Desk.state());
+  expect(b.night === !a && Math.abs(b.dayMix - (b.night ? 1 : 0)) < 0.01, "did not switch: " + JSON.stringify({ a, night: b.night, mix: b.dayMix }));
+  await p.evaluate(() => Desk.toggleDay()); await sleep(2200);
+  expect(await p.evaluate(() => Desk.state().night) === a, "did not switch back"); clean(p); await p.ctx.close();
 });
 
 await check("Laptop pointer fades out while the view is dragged, comes back when still", async () => {
