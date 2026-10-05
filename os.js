@@ -158,6 +158,18 @@
   // A case study opens like a full-screen Mac app: the window fills the screen (no wallpaper, sidebar or dock)
   // and one top bar handles navigation. Esc / the back gesture return to the Work list.
   let caseSlug = null;
+  // Full-screen zoom, the macOS way: measure the window, switch layout, then animate from the old frame to the new one (FLIP)
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function morphWindow(change) {
+    if (reducedMotion || win.hidden || !win.animate) return change();
+    const a = win.getBoundingClientRect(); change(); const b = win.getBoundingClientRect();
+    if (!b.width || !b.height) return;
+    const base = getComputedStyle(win).transform, t = base === "none" ? "" : base + " ";
+    win.animate([
+      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height}) ${t}`.trim(), transformOrigin: "0 0", borderRadius: "26px" },
+      { transform: t.trim() || "none", transformOrigin: "0 0", borderRadius: getComputedStyle(win).borderRadius }
+    ], { duration: 560, easing: getComputedStyle(document.documentElement).getPropertyValue("--smooth").trim() || "cubic-bezier(.32,.72,0,1)" });
+  }
   // case-study images: 1× and 2× (Figma resolution) — the browser picks the sharp one for the screen
   const caseImg = (slug, f, x = 1) => esc(`work/${slug}/${x === 2 ? f.replace(/\.(\w+)$/, "@2x.$1") : f}?v=${BUILD}`);
   const SHARE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
@@ -167,9 +179,10 @@
     if (k < 0) return show("work");
     const p = list[k], prev = list[(k - 1 + list.length) % list.length], next = list[(k + 1) % list.length];
     try { const st = history.state || {}; if (st.sjCase) history.replaceState({ sjDesktop: 1, sjCase: slug }, ""); else history.pushState({ sjDesktop: 1, sjCase: slug }, ""); } catch (_) {}
+    const entering = !caseSlug;
     caseSlug = slug; current = "work";
-    win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement();
-    screen.classList.add("case-fs"); os.classList.add("case-fs");
+    const goFull = () => { win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement(); screen.classList.add("case-fs"); os.classList.add("case-fs"); };
+    if (entering) morphWindow(goFull); else goFull();
     $("#winTitle").textContent = p.title;
     body.classList.add("case-mode");
     body.innerHTML = `<header class="fs-bar">
@@ -193,7 +206,7 @@
   function exitCase(fromHistory) {
     if (!caseSlug) return;
     caseSlug = null;
-    screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
+    morphWindow(() => { screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs"); });
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
   function show(key, fromHistory) {
@@ -375,7 +388,8 @@
   tick(); setInterval(tick, 15000);
 
   // Apple-style zoom: the desktop scales out of (and back into) the laptop screen's rectangle
-  const ZOOM_MS = 620, ZOOM_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+  // the Mac grows out of the laptop screen on a real spring curve (styles.css --smooth), like a macOS window zoom
+  const ZOOM_MS = 700, ZOOM_EASE = getComputedStyle(document.documentElement).getPropertyValue("--smooth").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let zoomRect = null, closing = false, settled = false;
   const toRect = (r) => {
@@ -431,7 +445,7 @@
     };
     if (!zoomRect) return finish();
     closing = true; settled = false;
-    screen.style.transition = `transform ${ZOOM_MS - 80}ms cubic-bezier(0.4, 0, 0.6, 1)`;
+    screen.style.transition = `transform ${ZOOM_MS - 80}ms cubic-bezier(0.4, 0, 0.2, 1)`;   // back into the laptop: ease in, soft landing
     os.style.transition = `background-color ${ZOOM_MS - 80}ms ease`;
     screen.style.transform = toRect(zoomRect);
     os.style.backgroundColor = "rgba(0,0,0,0)";
