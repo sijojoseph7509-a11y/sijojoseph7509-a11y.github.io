@@ -966,7 +966,7 @@ scene.add(cup);
 
 /* ───────────────────────── Window corner on the right wall (from Sijo's photo) ─────────────────────────
    A curtained window and a clothes rail on one black rod, a keyboard leaning under the curtain, and plants. */
-const WIN_Z0 = 13, WIN_Z1 = 37, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
+const WIN_Z0 = 3, WIN_Z1 = 27, ROD_Y = CEIL_Y - 5, ROD_OUT = 4.6;   // window span (world z), rod height, rod distance from the wall
 const corner = new THREE.Group(); rightWall.add(corner);
 // window frame + daylight glass behind the curtain
 const winW = WIN_Z1 - WIN_Z0, winC = onRight((WIN_Z0 + WIN_Z1) / 2);
@@ -987,20 +987,27 @@ const curtainTex = canvasTex(512, 832, (g, w, h) => {
         if (sx === 1) g.moveTo(cx, top + mh * (1 - k) / 2); } };
     g.fillStyle = "#7a1c22"; shape(1); g.fill();
     g.strokeStyle = "#d9b77a"; g.lineWidth = 3; g.setLineDash([3, 6]); shape(0.88); g.stroke(); g.setLineDash([]);
-    // rose bouquet
-    g.fillStyle = "#6b4a2a"; for (const [dx, dy, r] of [[-0.18, 0.12, -0.6], [0.18, 0.1, 0.6], [-0.1, 0.24, -0.3], [0.12, 0.25, 0.3]]) { g.save(); g.translate(cx + dx * mw, cy + dy * mh); g.rotate(r); g.beginPath(); g.ellipse(0, 0, mw * 0.09, mw * 0.035, 0, 0, 7); g.fill(); g.restore(); }
-    for (const [dx, dy, s] of [[0, -0.02, 1], [-0.15, 0.13, 0.7], [0.15, 0.13, 0.7]]) {
-      const rx = cx + dx * mw, ry = cy + dy * mh, r = mw * 0.13 * s;
-      g.fillStyle = "#f1e8d6"; g.beginPath(); g.arc(rx, ry, r, 0, 7); g.fill();
-      g.strokeStyle = "#c9b48e"; g.lineWidth = 1.5; for (let k = 1; k <= 3; k++) { g.beginPath(); g.arc(rx, ry, r * k / 4, k, k + 4.2); g.stroke(); }
-    }
+    // one big rose with leaves and a bud, like the print in the photo
+    const leaf = (x, y, rot, len) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = "#8a6239"; g.beginPath(); g.moveTo(0, 0);
+      g.quadraticCurveTo(len * 0.5, -len * 0.32, len, 0); g.quadraticCurveTo(len * 0.5, len * 0.32, 0, 0); g.fill();
+      g.strokeStyle = "#5e3f22"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(len * 0.9, 0); g.stroke(); g.restore(); };
+    const R = mw * 0.17, rx = cx, ry = cy - mh * 0.05;
+    leaf(rx - R * 0.6, ry + R * 0.9, Math.PI * 0.82, R * 1.5); leaf(rx + R * 0.6, ry + R * 0.9, Math.PI * 0.18, R * 1.5);
+    leaf(rx - R * 0.8, ry - R * 0.2, Math.PI * 1.05, R * 1.2); leaf(rx + R * 0.8, ry - R * 0.2, -Math.PI * 0.05, R * 1.2);
+    g.strokeStyle = "#7a5634"; g.lineWidth = 2; g.beginPath(); g.moveTo(rx, ry + R); g.quadraticCurveTo(rx + R * 0.2, ry + R * 2, rx, ry + R * 2.6); g.stroke();
+    g.fillStyle = "#efe6d2"; g.beginPath(); g.ellipse(rx, ry + R * 2.7, R * 0.32, R * 0.42, 0, 0, 7); g.fill();   // bud
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; g.fillStyle = k % 2 ? "#f3ebd9" : "#e6d9bd";
+      g.beginPath(); g.ellipse(rx + Math.cos(a) * R * 0.45, ry + Math.sin(a) * R * 0.45, R * 0.55, R * 0.4, a, 0, 7); g.fill(); }
+    g.fillStyle = "#f6efe0"; g.beginPath(); g.arc(rx, ry, R * 0.55, 0, 7); g.fill();
+    g.strokeStyle = "#b89d74"; g.lineWidth = 1.6;
+    for (let k = 1; k <= 4; k++) { g.beginPath(); g.arc(rx, ry, R * 0.13 * k, k * 1.3, k * 1.3 + 4); g.stroke(); }   // petal swirl
   };
-  medallion(w / 2, h / 2, w * 0.86, h * 0.86);
-  for (const [x, y] of [[0, 0], [w, 0], [0, h], [w, h]]) medallion(x, y, w * 0.86, h * 0.86);   // staggered neighbours
+  medallion(w / 2, h / 2, w * 0.74, h * 0.9);
+  for (const [x, y] of [[0, 0], [w, 0], [0, h], [w, h]]) medallion(x, y, w * 0.74, h * 0.9);   // staggered neighbours
 });
 curtainTex.tex.wrapS = curtainTex.tex.wrapT = THREE.RepeatWrapping;
 const CUR_H = ROD_Y - (DADO_Y + 2.5), CUR_W = winW + 2;
-curtainTex.tex.repeat.set(CUR_W / 4.4, CUR_H / 7.1);
+curtainTex.tex.repeat.set(CUR_W / 5.6, CUR_H / 9.1);   // ≈5 medallions across, as in the photo
 const curGeo = new THREE.PlaneGeometry(CUR_W, CUR_H, 120, 10);
 { const p = curGeo.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), down = (CUR_H / 2 - y) / CUR_H;
@@ -1011,7 +1018,7 @@ const curtain = new THREE.Mesh(curGeo, new THREE.MeshStandardMaterial({ map: cur
 curtain.position.set(winC + 0.6, ROD_Y - CUR_H / 2 - 0.3, ROD_OUT); curtain.receiveShadow = true;
 corner.add(curtain);
 // one black rod for the curtain and the clothes, with grommets and end caps
-const RAIL_Z0 = 1.5, railL = WIN_Z1 + 1 - RAIL_Z0;
+const RAIL_Z0 = -2.6, railL = WIN_Z1 + 1 - RAIL_Z0;
 const rod = mesh(new THREE.CylinderGeometry(0.16, 0.16, railL, 12), mat(0x161616, { metalness: 0.6, roughness: 0.35 }));
 rod.rotation.z = Math.PI / 2; rod.position.set(onRight(RAIL_Z0 + railL / 2), ROD_Y, ROD_OUT); corner.add(rod);
 for (const z of [RAIL_Z0, WIN_Z1 + 1]) { const cap = mesh(new THREE.SphereGeometry(0.32, 12, 8), mat(0xe9e3d6)); cap.position.set(onRight(z), ROD_Y, ROD_OUT); corner.add(cap); }
@@ -1054,13 +1061,13 @@ const kbTex = canvasTex(256, 760, (g, w, h) => {
 const keyboard = rbox(6.4, 19, 1.4, 0.4, mat(0x1d2a52, { roughness: 0.45, clearcoat: 0.3 }), 3);
 const kbFace = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 18.8), new THREE.MeshStandardMaterial({ map: kbTex.tex, roughness: 0.4 }));
 kbFace.position.z = 0.72; keyboard.add(kbFace);
-keyboard.position.set(onRight(19), FLOOR_Y + 9.5, 1.6); keyboard.rotation.x = -0.07;
+keyboard.position.set(onRight(10.5), FLOOR_Y + 9.5, 1.6); keyboard.rotation.x = -0.07;
 corner.add(keyboard);
 // fluted white pedestal with a peace lily, and two floor pots
 const pedGeo = new THREE.CylinderGeometry(2.2, 2.3, 9, 64, 1);
 { const p = pedGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), r = Math.hypot(x, z); if (r > 1) { const k = 1 + 0.035 * Math.cos(a * 28); p.setX(i, x * k); p.setZ(i, z * k); } } pedGeo.computeVertexNormals(); }
 const pedestal = mesh(pedGeo, mat(0xf3f1ec, { roughness: 0.75 }));
-pedestal.position.set(onRight(33), FLOOR_Y + 4.5, 3); corner.add(pedestal);
+pedestal.position.set(onRight(23.5), FLOOR_Y + 4.5, 3); corner.add(pedestal);
 const lilyMat = mat(0x2f5a2c, { roughness: 0.5 }), potWhite = mat(0xf5f5f2, { roughness: 0.4, clearcoat: 0.4 });
 const lily = new THREE.Group();
 const lPot = mesh(new THREE.CylinderGeometry(1.3, 1.0, 1.9, 24), potWhite); lPot.position.y = 0.95; lily.add(lPot);
@@ -1075,11 +1082,11 @@ const spiky = (n, len, col, spread) => { const grp = new THREE.Group(), m = mat(
 const terra = new THREE.Group();
 const tPot = mesh(new THREE.CylinderGeometry(1.5, 1.1, 2.6, 24), mat(0xb3613f, { roughness: 0.8 })); tPot.position.y = 1.3;
 const spider = spiky(16, 4.2, 0x6f9a3e, 0.75); spider.position.y = 2.5; terra.add(tPot, spider);
-terra.position.set(onRight(26.5), FLOOR_Y, 4.8); corner.add(terra);
+terra.position.set(onRight(17), FLOOR_Y, 4.8); corner.add(terra);
 const aloePot = new THREE.Group();
 const aPot = mesh(new THREE.CylinderGeometry(1.25, 1.0, 2.4, 24), potWhite); aPot.position.y = 1.2;
 const aloe = spiky(10, 5.2, 0x5f8f55, 0.45); aloe.position.y = 2.3; aloePot.add(aPot, aloe);
-aloePot.position.set(onRight(29.5), FLOOR_Y, 6.6); corner.add(aloePot);
+aloePot.position.set(onRight(20), FLOOR_Y, 6.6); corner.add(aloePot);
 corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });   // far from the lamp — skip shadow cost
 
 
