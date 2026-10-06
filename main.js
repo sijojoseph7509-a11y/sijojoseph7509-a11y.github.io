@@ -33,14 +33,13 @@ function fetchAsset(url) {   // one download per file; a failed download is forg
   }
   return fetched.get(url);
 }
-// every model file, in one place: prefetched here, used by loadCat / loadBall / loadHeadphones below
+// every model file, in one place: prefetched here, used by loadCat / loadBall below
 // Release number (main.js is loaded as main.js?v=N): appended to every asset URL so a new release never shows
 // stale cached images/models (files keep their names when replaced).
 const BUILD = new URL(import.meta.url).searchParams.get("v") || "dev";
 const asset = (u) => `${u}?v=${BUILD}`;
 const MODEL = {
   cat: asset("models/cat/cat.glb"), catDiffuse: asset("models/cat/cat_diffuse.jpg"), catBump: asset("models/cat/cat_bump.jpg"),
-  headset: asset("models/headphones/headphones.glb"),
   ball: asset("models/football/football.glb"), ballColor: asset("models/football/BaseColor.jpg"), ballNormal: asset("models/football/Normal.jpg"), ballRough: asset("models/football/Roughness.jpg")
 };
 Object.values(MODEL).forEach((u) => fetchAsset(u).catch(() => {}));
@@ -186,12 +185,12 @@ const ROOM_SEE = V([
 ]);
 const DESK_SEE = V([
   [-9.0, 0, 6.2], [9.4, 0, 6.2], [-9.0, 0, -1.0], [9.4, 0, -3.0],                   // desk corners (front + back right), connect tiles
-  [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [-2.3, 4.6, -3.7]   // bottle, plant, laptop lid, cat, headset
+  [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4]   // bottle, plant, laptop lid, cat
 ]);
 const HOME_SEE = V([   // what the opening shot frames (desk ends and the poster's top are allowed to crop, like a photo)
   [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7],                 // bottle, plant
   [-3.1, 0, 2.6], [3.1, 0, 2.6], [0, 4.4, -1.6],        // laptop
-  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [-2.3, 4.6, -3.7],    // cat, headset
+  [8.3, 5.2, 0.4], [8.3, 0, 2.8],     // cat
   [-6.5, 0, 6.3], [2.0, 0, 6.3],                         // front edge of the mat (Work › Skills › … labels)
   [0.4, 13.6, -0.8]                                      // the lamp's bulb
 ]);
@@ -543,15 +542,15 @@ new THREE.TextureLoader().load(asset("assets/wall.jpg"), (img) => {
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   for (const { m, len } of plasterMats) {
     const tex = t.clone(); tex.needsUpdate = true; tex.repeat.set(len / PLASTER_W, (CEIL_Y - FLOOR_Y) / PLASTER_H);
-    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(0xd2cbc0); m.needsUpdate = true;
+    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(0x9c7a60); m.needsUpdate = true;
   }
 });
-const TRIM = mat(0x8a7f70, { roughness: 0.75 });
-const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x4a443c, { roughness: 0.9 }));
+const TRIM = mat(0x5a4334, { roughness: 0.75 });
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x33261d, { roughness: 0.9 }));
 ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
 function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
   const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
-  const plaster = new THREE.MeshStandardMaterial({ color: 0x8c8274, roughness: 0.9 });   // taupe until the photo arrives
+  const plaster = new THREE.MeshStandardMaterial({ color: 0x6b5242, roughness: 0.9 });   // brown until the photo arrives
   plasterMats.push({ m: plaster, len });
   const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), plaster);
   panels.position.set(0, (FLOOR_Y + CEIL_Y) / 2, 0.02); panels.receiveShadow = true;
@@ -928,8 +927,6 @@ bottle.position.set(-8.5, 0, -2.9);
 scene.add(bottle);
 
 
-// 3. Headphones on their stand (the downloaded model, loaded below) — click toggles sound
-const HEADSET_POS = new THREE.Vector3(-2.3, 0, -3.7);   // behind the laptop, left (where the soundbar stood)
 
 // 4. Hobby book — a sketchbook with an elastic band, a pencil, and a book underneath
 const books = new THREE.Group();
@@ -1199,8 +1196,8 @@ interactive(windowHit, "Let the night in ☾", () => { Sound.click(); setNight(d
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Name block — hung on the wall like studio lettering, right of the poster
 const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#2a2420" },
-  { text: S.title, size: 112, weight: 600, color: "#2f2823", spacing: -0.01 }
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#f6efe6" },
+  { text: S.title, size: 112, weight: 500, color: "#e2d7ca", spacing: -0.01 }
 ], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
 nameBlock.rotation.x = 0;
 nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
@@ -1210,8 +1207,8 @@ interactive(nameBlock, "About me", () => boot("about"));
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 600, color: "#3a312a", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 600, color: "#3a312a", spacing: 0 }
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#cdbfb0", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#cdbfb0", spacing: 0 }
 ], { width: 9.6, gap: 1.4 });
 rolesBlock.rotation.x = 0;
 rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
@@ -1610,7 +1607,7 @@ addEventListener("resize", () => {
   if (started) renderer.render(scene, camera);   // setSize clears the canvas; repaint even if the loop is paused behind the desktop
 });
 
-/* ───────────────────────── Downloaded models (cat, football, headset) ─────────────────────────
+/* ───────────────────────── Downloaded models (cat, football) ─────────────────────────
    All three are small meshopt-compressed GLBs (see HANDOVER §14). Their downloads were started at
    the top of this file (fetchAsset); here they're parsed and placed.                            */
 const gltfLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
@@ -1748,46 +1745,12 @@ async function loadBall() {
   interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
 }
 
-async function loadHeadphones() {
-  const gltf = await loadGLB(MODEL.headset);
-  const model = gltf.scene;
-  model.traverse((m) => {
-    if (!m.isMesh) return;
-    const old = m.material, c = old.color ? old.color.clone() : new THREE.Color(0x222222);
-    const clear = old.transparent || old.opacity < 1;
-    const l = c.getHSL({}).l;
-    let mtl;
-    if (clear) mtl = { color: 0xffffff, roughness: 0.08, transparent: true, opacity: 0.2 };
-    else if (c.g > c.r + 0.2 && c.g > c.b + 0.2) mtl = { color: 0x48484a, roughness: 0.4, metalness: 0.3 };   // brand-green accents → graphite
-    else if (l > 0.5) mtl = { color: 0x2c2c2e, roughness: 0.75, sheen: 0.4, sheenColor: new THREE.Color(0x555555) }; // untextured leather / foam → graphite leather
-    else if (l > 0.08) mtl = { color: 0x8e8e93, roughness: 0.3, metalness: 0.85 };   // chrome sliders → brushed metal
-    else mtl = { color: 0x161618, roughness: 0.45, metalness: 0.1, clearcoat: 0.4 };  // black plastic
-    m.material = new THREE.MeshPhysicalMaterial(mtl);
-  });
-  const holder = new THREE.Group();
-  const inner = new THREE.Group();
-  inner.add(model);
-  holder.add(inner);
-  shadowsOn(holder);
-  // standing upright, as modelled: headband on top, ear cups left and right (cups run along z, so turn 90°)
-  inner.rotation.y = Math.PI / 2;
-  let box = new THREE.Box3().setFromObject(inner);
-  const size = box.getSize(new THREE.Vector3());
-  inner.scale.setScalar(4.2 / size.y);                                    // ≈ 21 cm tall, real size
-  box = new THREE.Box3().setFromObject(inner);
-  const c = box.getCenter(new THREE.Vector3());
-  inner.position.set(-c.x, -box.min.y, -c.z);
-  holder.position.copy(HEADSET_POS);
-  holder.rotation.y = -0.25;   // turned slightly towards the viewer
-  reveal(holder);
-  interactive(holder, "Sound on / off", () => $("#soundBtn").click());
-}
 
 deskBuilt = true;
 setProgress(50 + modelFrac * 45, "loading models…");
 // Each model retries once (flaky networks), then is simply left out — never a broken stand-in.
 const attempt = (load) => load().catch((err) => { console.warn("Model failed, retrying:", err); return load(); });
-const models = Promise.allSettled([attempt(loadCat), attempt(loadBall), attempt(loadHeadphones)])
+const models = Promise.allSettled([attempt(loadCat), attempt(loadBall)])
   .then((r) => r.forEach((x) => x.status === "rejected" && console.warn("Model could not be loaded:", x.reason)));
 // Don't hold the page hostage on a slow connection: after a few seconds the desk opens anyway
 // and any model still downloading appears as soon as it arrives.
@@ -1803,7 +1766,7 @@ setProgress(100, "ready");
 started = true;
 requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
-window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball, headset: hoverables.some((o) => o.userData.hover.label === "Sound on / off"),
+window.Desk = { state: () => ({ started, cat: !!cat, ball: !!ball,
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
