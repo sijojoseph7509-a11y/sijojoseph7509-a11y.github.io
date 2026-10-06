@@ -268,6 +268,15 @@ function setZoomLimits() {
 }
 setZoomLimits();
 controls.update();
+// the room is snug, so looking around never swings the camera through a side wall: it slides in closer instead
+const _off = new THREE.Vector3();
+function keepInsideRoom() {
+  const lim = ROOM_HALF - 2.5, x = camera.position.x - TABLE.x;
+  if (Math.abs(x) <= lim) return;
+  _off.subVectors(camera.position, controls.target);
+  const s = (Math.sign(x) * lim + TABLE.x - controls.target.x) / _off.x;
+  if (s > 0 && s < 1) camera.position.copy(controls.target).addScaledVector(_off, s);
+}
 
 // Lights — a dark room lit by cool moonlight, with the pendant lamp always on
 const hemi = new THREE.HemisphereLight(0xffffff, 0x2a2a2e, 0.45);
@@ -473,6 +482,7 @@ new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.jpg" : "asset
 
 /* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
+const ROOM_HALF = 26.4;   // half the room's width (≈2.6 m wide: a snug bedroom, the side walls close to the desk)
 const WALL_BROWN_EARLY = 0x45302a;
 const wallTex = canvasTex(512, 512, (g, w, h) => {
   g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h);   // neutral plaster; the charcoal wall colour is a material tint
@@ -484,10 +494,10 @@ const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshSta
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
-for (const side of [-1, 1]) {   // side walls: far enough out that they frame the room instead of boxing in the desk
+for (const side of [-1, 1]) {   // side walls (plain backing behind the panelling)
   const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), wall.material);
   sideWall.rotation.y = -side * Math.PI / 2;
-  sideWall.position.set(TABLE.x + side * 44, 60, WALL_Z + 200);   // a roomy space (≈4.4 m wide), not a box around the desk
+  sideWall.position.set(TABLE.x + side * ROOM_HALF, 60, WALL_Z + 200);
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
@@ -530,10 +540,10 @@ function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z 
   scene.add(grp);
   return grp;
 }
-trimWall(88.4, TABLE.x, WALL_Z, 0);
-const leftWall = trimWall(400, TABLE.x - 44, WALL_Z + 200, Math.PI / 2);
+trimWall(ROOM_HALF * 2 + 0.4, TABLE.x, WALL_Z, 0);
+const leftWall = trimWall(400, TABLE.x - ROOM_HALF, WALL_Z + 200, Math.PI / 2);
 const onLeft = (z) => (WALL_Z + 200) - z;     // world z → local x on the left wall
-const rightWall = trimWall(400, TABLE.x + 44, WALL_Z + 200, -Math.PI / 2);   // window, curtain and the corner things live here
+const rightWall = trimWall(400, TABLE.x + ROOM_HALF, WALL_Z + 200, -Math.PI / 2);   // window, curtain and the corner things live here
 const onRight = (z) => z - (WALL_Z + 200);   // world z → local x on the right wall
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
@@ -1101,9 +1111,9 @@ corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow =
 /* ───────────────────────── Day ↔ night through the window ─────────────────────────
    Sunlight streams in through the gap between the curtains (a soft light shaft + a warm patch on the floor, and the
    main light comes from the window side). Click the window to switch; it starts at the visitor's local time of day. */
-const WX = TABLE.x + 44 - 0.6;                                         // just inside the right wall
+const WX = TABLE.x + ROOM_HALF - 0.6;                                         // just inside the right wall
 const GAP_Z0 = (WIN_Z0 + WIN_Z1) / 2 - CUR_W / 2 + PANEL_W, GAP_Z1 = (WIN_Z0 + WIN_Z1) / 2 + CUR_W / 2 - PANEL_W;
-const SUN_DIR = new THREE.Vector3(-1, -1.15, -0.25).normalize();
+const SUN_DIR = new THREE.Vector3(-1, -2.2, -0.3).normalize();   // steep enough to land between the window and the desk
 const toFloor = (y, z) => { const t = (y - (FLOOR_Y + 0.04)) / -SUN_DIR.y; return new THREE.Vector3(WX + SUN_DIR.x * t, FLOOR_Y + 0.04, z + SUN_DIR.z * t); };
 const WQ = [[WIN_Y1, GAP_Z0], [WIN_Y1, GAP_Z1], [WIN_Y0, GAP_Z1], [WIN_Y0, GAP_Z0]].map(([y, z]) => new THREE.Vector3(WX, y, z));
 const FQ = WQ.map((v) => toFloor(v.y, v.z));
@@ -1523,6 +1533,7 @@ function loop(now) {
   stepDay(now);
   if (tween) tween(now);
   controls.update();
+  keepInsideRoom();
 
   // hover lift / scale
   for (const o of hoverables) {
