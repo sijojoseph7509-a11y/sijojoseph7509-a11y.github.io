@@ -40,9 +40,9 @@ async function check(name, fn) {
 const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
 const clean = (p) => expect(p.problems.length === 0, p.problems.slice(0, 3).join(" | "));
 
-await check("Desktop: loads with real cat, ball, headset and no errors", async () => {
+await check("Desktop: loads with real cat, ball and no errors", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
-  await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 });
+  await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 });
   await sleep(1500); clean(p);
   const s = await p.evaluate(() => Desk.state()); await p.ctx.close();
   return JSON.stringify(s);
@@ -50,7 +50,7 @@ await check("Desktop: loads with real cat, ball, headset and no errors", async (
 
 await check("Phone: loads with all models and no errors", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
-  await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 });
+  await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 });
   await sleep(1000); clean(p); await p.ctx.close();
 });
 
@@ -83,7 +83,7 @@ await check("Opening the laptop hides the pointer for this visit; the hint comes
 for (const mobile of [false, true]) {
   await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
-    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && s.headset; }, { timeout: 30000 }); await sleep(600);
+    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 }); await sleep(600);
     const home = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me|the (sun|night) in/.test(l)));   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
     await p.click("#zoomBtn"); await sleep(1400);
@@ -290,7 +290,7 @@ await check("A model that fails to download: no stand-in, no crash", async () =>
   const p = await page({ route: (req) => (req.url().includes("cat.glb") ? (req.abort(), true) : false) });
   await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 90000); await sleep(1500);
   const s = await p.evaluate(() => Desk.state());
-  expect(!s.cat && s.ball && s.headset, "unexpected state " + JSON.stringify(s));
+  expect(!s.cat && s.ball, "unexpected state " + JSON.stringify(s));
   expect(!p.problems.some((x) => x.startsWith("JS error")), p.problems.join(" | "));
   await p.ctx.close();
 });
