@@ -186,12 +186,12 @@ const ROOM_SEE = V([
 ]);
 const DESK_SEE = V([
   [-9.0, 0, 6.2], [9.4, 0, 6.2], [-9.0, 0, -1.0], [9.4, 0, -3.0],                   // desk corners (front + back right), connect tiles
-  [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [6.3, 4.6, -2.0]   // bottle, plant, laptop lid, cat, headset
+  [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7], [0, 4.4, -1.6], [8.3, 5.2, 0.4], [-2.3, 4.6, -3.7]   // bottle, plant, laptop lid, cat, headset
 ]);
 const HOME_SEE = V([   // what the opening shot frames (desk ends and the poster's top are allowed to crop, like a photo)
   [-8.5, 3.3, -2.9], [-3.9, 3.4, -2.7],                 // bottle, plant
   [-3.1, 0, 2.6], [3.1, 0, 2.6], [0, 4.4, -1.6],        // laptop
-  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [6.3, 4.6, -2.0],     // cat, headset
+  [8.3, 5.2, 0.4], [8.3, 0, 2.8], [-2.3, 4.6, -3.7],    // cat, headset
   [-6.5, 0, 6.3], [2.0, 0, 6.3],                         // front edge of the mat (Work › Skills › … labels)
   [0.4, 13.6, -0.8]                                      // the lamp's bulb
 ]);
@@ -501,42 +501,64 @@ for (const side of [-1, 1]) {   // side walls (plain backing behind the panellin
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-// Tone-on-tone panelled walls in warm chocolate brown (Sijo's reference): tall upper panels, a dado rail at ≈90 cm,
-// lower panels, skirting and crown moulding — mouldings the same colour as the wall, read only through light and shadow.
-const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling
-const BAY = 16;   // one panel per 80 cm
-const WALL_BROWN = 0x45302a;
-const panelTex = canvasTex(512, 1760, (g, w, h) => {
-  const u = w / BAY;   // px per unit (canvas top = ceiling, bottom = floor)
-  const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, "#3e2a20"); lg.addColorStop(1, "#4a3226");
-  g.fillStyle = lg; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 230 : 0},${Math.random() > 0.5 ? 210 : 0},0.018)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }   // matte paint
-  const box = (y0, y1) => {
-    const x0 = 1.7 * u, x1 = w - 1.7 * u;
-    const frame = (inset, light, dark, lw) => {
-      g.lineWidth = lw;
-      g.strokeStyle = light; g.beginPath(); g.moveTo(x0 + inset, y1 - inset); g.lineTo(x0 + inset, y0 + inset); g.lineTo(x1 - inset, y0 + inset); g.stroke();
-      g.strokeStyle = dark; g.beginPath(); g.moveTo(x1 - inset, y0 + inset); g.lineTo(x1 - inset, y1 - inset); g.lineTo(x0 + inset, y1 - inset); g.stroke();
-    };
-    frame(0, "#684934", "#1f140d", 6); frame(8, "#26190f", "#5a3f2d", 3); frame(14, "#563b2a", "#25180f", 4);   // a raised moulding profile
-  };
-  box(4.5 * u, (55 - 18 - 2.6) * u);            // tall upper panel
-  box((55 - 18 + 2.4) * u, (55 - 3.2) * u);     // lower panel
+// Textured plaster walls from Sijo's photo (assets/wall.jpg, a trowelled "skip trowel" finish in warm taupe).
+// One photo tile ≈ 40 cm wide. The photo is made seamless on load (offset-and-blend, so no mirror patterns) and
+// softened a touch so the poster and lettering stay the heroes; it doubles as a bump map for real relief.
+const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling (DADO_Y = window-sill height)
+const PLASTER_W = 8, PLASTER_H = PLASTER_W * 1336 / 752;
+const plasterMats = [];
+function flatten(img) {   // remove the photo's uneven lighting (bright corner, vignette): pixel − local average + overall average
+  const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0);
+  const lo = document.createElement("canvas"); lo.width = 6; lo.height = 10;
+  const lg = lo.getContext("2d"); lg.imageSmoothingQuality = "high"; lg.drawImage(img, 0, 0, 6, 10);
+  const blur = document.createElement("canvas"); blur.width = W; blur.height = H;
+  const bg = blur.getContext("2d", { willReadFrequently: true }); bg.imageSmoothingQuality = "high"; bg.drawImage(lo, 0, 0, W, H);
+  const px = g.getImageData(0, 0, W, H), b = bg.getImageData(0, 0, W, H).data, d = px.data, mean = [0, 0, 0];
+  for (let i = 0; i < b.length; i += 4) { mean[0] += b[i]; mean[1] += b[i + 1]; mean[2] += b[i + 2]; }
+  const n = b.length / 4; mean[0] /= n; mean[1] /= n; mean[2] /= n;
+  for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) d[i + k] = d[i + k] - b[i + k] + mean[k];
+  g.putImageData(px, 0, 0);
+  return c;
+}
+function seamless(src) {
+  const img = flatten(src);
+  const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  g.filter = "contrast(0.62) brightness(0.95)";
+  for (const [x, y] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) g.drawImage(img, W / 2 + x * W, H / 2 + y * H);   // shifted by half: edges now continuous
+  const a = document.createElement("canvas"); a.width = W; a.height = H;
+  const ag = a.getContext("2d"); ag.filter = g.filter; ag.drawImage(img, 0, 0); ag.filter = "none";
+  ag.globalCompositeOperation = "destination-in";   // keep the original only away from its own edges
+  for (const lg of [ag.createLinearGradient(0, 0, W, 0), ag.createLinearGradient(0, 0, 0, H)]) {
+    lg.addColorStop(0, "rgba(0,0,0,0)"); lg.addColorStop(0.22, "#000"); lg.addColorStop(0.78, "#000"); lg.addColorStop(1, "rgba(0,0,0,0)");
+    ag.fillStyle = lg; ag.fillRect(0, 0, W, H);
+  }
+  g.filter = "none"; g.drawImage(a, 0, 0);
+  return c;
+}
+new THREE.TextureLoader().load(asset("assets/wall.jpg"), (img) => {
+  const t = new THREE.CanvasTexture(seamless(img.image));
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  for (const { m, len } of plasterMats) {
+    const tex = t.clone(); tex.needsUpdate = true; tex.repeat.set(len / PLASTER_W, (CEIL_Y - FLOOR_Y) / PLASTER_H);
+    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(0xd2cbc0); m.needsUpdate = true;
+  }
 });
-panelTex.tex.wrapS = THREE.RepeatWrapping;
-const TRIM = mat(0x4a3124, { roughness: 0.8 });
-const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x2a1d15, { roughness: 0.9 }));
+const TRIM = mat(0x8a7f70, { roughness: 0.75 });
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x4a443c, { roughness: 0.9 }));
 ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
 function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
   const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
-  const tex = panelTex.tex.clone(); tex.needsUpdate = true; tex.repeat.set(len / BAY, 1);
-  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.88 }));
+  const plaster = new THREE.MeshStandardMaterial({ color: 0x8c8274, roughness: 0.9 });   // taupe until the photo arrives
+  plasterMats.push({ m: plaster, len });
+  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), plaster);
   panels.position.set(0, (FLOOR_Y + CEIL_Y) / 2, 0.02); panels.receiveShadow = true;
-  const dado = rbox(len, 0.7, 0.45, 0.12, TRIM, 2); dado.position.set(0, DADO_Y, 0.22);
   const skirt = rbox(len, 1.4, 0.35, 0.08, TRIM, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
   const crown = rbox(len, 2.2, 1.1, 0.25, TRIM, 2); crown.position.set(0, CEIL_Y - 1.1, 0.55);
   const crownLip = rbox(len, 0.5, 1.6, 0.1, TRIM, 1); crownLip.position.set(0, CEIL_Y - 2.4, 0.8);
-  grp.add(panels, dado, skirt, crown, crownLip);
+  grp.add(panels, skirt, crown, crownLip);
   scene.add(grp);
   return grp;
 }
@@ -827,7 +849,7 @@ S.projects.forEach((p, i) => {
   const lab = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), new THREE.MeshStandardMaterial({ map: label.tex, transparent: true, roughness: 0.9 }));
   lab.rotation.x = -Math.PI / 2; lab.position.set(0, 0.07, 0.15);
   f.add(back, tab, paper, front, lab);
-  // free spots on the desk (clear of the mat labels, sketchbook, phone, soundbar and cat); extra projects stack on top
+  // free spots on the desk (clear of the mat labels, sketchbook, phone and cat); extra projects stack on top
   const spots = [[-2.4, 4.8, 0.3], [0.9, 5.5, -0.18], [5.4, 5.7, 0.15], [-7.9, 1.5, -0.12], [8.1, 5.3, -0.2]];
   const [fx, fz, fr] = spots[i % spots.length], layer = Math.floor(i / spots.length);
   f.position.set(fx + layer * 0.15, layer * 0.13, fz - layer * 0.1);
@@ -867,7 +889,7 @@ phone.rotation.y = 0.5;
 scene.add(phone);
 interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); });
 
-// 2d. Things from Sijo's real desk: plant in a mango-yellow pot, green water bottle, black soundbar
+// 2d. Things from Sijo's real desk: plant in a mango-yellow pot, green water bottle
 const plant = new THREE.Group();
 const pot2 = mesh(new THREE.CylinderGeometry(0.75, 0.6, 1.2, 32), mat(0xffb21a, { roughness: 0.45, clearcoat: 0.4 }));   // mango yellow
 pot2.position.y = 0.6;
@@ -905,18 +927,9 @@ bottle.add(bBody, bShoulder, bCap);
 bottle.position.set(-8.5, 0, -2.9);
 scene.add(bottle);
 
-const soundbar = new THREE.Group();
-const sbBody = rbox(5.2, 0.9, 1.0, 0.42, mat(0x18181a, { roughness: 0.6 }), 6);
-sbBody.position.y = 0.45;
-const sbGrille = rbox(4.6, 0.62, 0.02, 0.08, mat(0x101012, { roughness: 0.95 }), 2);
-sbGrille.position.set(0, 0.47, 0.5);
-soundbar.add(sbBody, sbGrille);
-soundbar.position.set(-0.1, 0, -3.0);
-scene.add(soundbar);
-interactive(soundbar, "Music on / off ♪", () => $("#soundBtn").click());
 
 // 3. Headphones on their stand (the downloaded model, loaded below) — click toggles sound
-const HEADSET_POS = new THREE.Vector3(6.3, 0, -2.0);   // back-right: between the pen stand and the cat
+const HEADSET_POS = new THREE.Vector3(-2.3, 0, -3.7);   // behind the laptop, left (where the soundbar stood)
 
 // 4. Hobby book — a sketchbook with an elastic band, a pencil, and a book underneath
 const books = new THREE.Group();
@@ -989,21 +1002,30 @@ const frameMat = mat(0xe9e3d6, { roughness: 0.6 });
 for (const [w, h, x, y] of [[winW + 1.2, 0.7, winC, WIN_Y1], [winW + 1.2, 0.9, winC, WIN_Y0], [0.7, winH, winC - winW / 2, winY], [0.7, winH, winC + winW / 2, winY],
   [0.35, winH, winC, winY], [winW, 0.35, winC, WIN_Y0 + winH * 0.62]]) { const b = rbox(w, h, 0.6, 0.06, frameMat, 1); b.position.set(x, y, 0.3); corner.add(b); }   // frame + mullions
 // the view outside: a day sky and a night sky, cross-faded
-const skyTex = (night) => canvasTex(512, 512, (g, w, h) => {
+const skyTex = (night) => canvasTex(1024, 1024, (g, w, h) => {
   const lg = g.createLinearGradient(0, 0, 0, h);
-  if (night) { lg.addColorStop(0, "#050a1c"); lg.addColorStop(1, "#1b2a4d"); } else { lg.addColorStop(0, "#7fb6ea"); lg.addColorStop(0.7, "#cfe5f6"); lg.addColorStop(1, "#f6f0dc"); }
+  if (night) { lg.addColorStop(0, "#050a1c"); lg.addColorStop(1, "#1b2a4d"); } else { lg.addColorStop(0, "#2a78d4"); lg.addColorStop(0.55, "#5aa2e6"); lg.addColorStop(1, "#a9d3f5"); }
   g.fillStyle = lg; g.fillRect(0, 0, w, h);
   if (night) {
-    for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; g.fillRect(Math.random() * w, Math.random() * h * 0.75, 1.6, 1.6); }
-    const mg = g.createRadialGradient(w * 0.68, h * 0.24, 0, w * 0.68, h * 0.24, 70); mg.addColorStop(0, "rgba(220,230,255,.55)"); mg.addColorStop(1, "rgba(220,230,255,0)");
-    g.fillStyle = mg; g.fillRect(0, 0, w, h); g.fillStyle = "#f4f2e6"; g.beginPath(); g.arc(w * 0.68, h * 0.24, 22, 0, 7); g.fill();
-    g.fillStyle = "#0b1022"; for (let x = 0; x < w; x += 34) g.fillRect(x, h - 60 - Math.random() * 70, 30, 200);   // city skyline with a few lit windows
-    g.fillStyle = "#ffd58a"; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, h - 20 - Math.random() * 100, 3, 4);
+    for (let i = 0; i < 320; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; g.fillRect(Math.random() * w, Math.random() * h * 0.75, 2.4, 2.4); }
+    const mg = g.createRadialGradient(w * 0.68, h * 0.24, 0, w * 0.68, h * 0.24, 140); mg.addColorStop(0, "rgba(220,230,255,.55)"); mg.addColorStop(1, "rgba(220,230,255,0)");
+    g.fillStyle = mg; g.fillRect(0, 0, w, h); g.fillStyle = "#f4f2e6"; g.beginPath(); g.arc(w * 0.68, h * 0.24, 44, 0, 7); g.fill();
+    g.fillStyle = "#0b1022"; for (let x = 0; x < w; x += 68) g.fillRect(x, h - 120 - Math.random() * 140, 60, 400);   // city skyline with a few lit windows
+    g.fillStyle = "#ffd58a"; for (let i = 0; i < 80; i++) g.fillRect(Math.random() * w, h - 40 - Math.random() * 200, 6, 8);
   } else {
-    const sg = g.createRadialGradient(w * 0.7, h * 0.18, 0, w * 0.7, h * 0.18, 150); sg.addColorStop(0, "rgba(255,250,225,1)"); sg.addColorStop(1, "rgba(255,250,225,0)");
+    const sg = g.createRadialGradient(w * 0.82, h * 0.1, 0, w * 0.82, h * 0.1, 260); sg.addColorStop(0, "rgba(255,252,235,.95)"); sg.addColorStop(0.25, "rgba(255,248,220,.45)"); sg.addColorStop(1, "rgba(255,248,220,0)");
     g.fillStyle = sg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "rgba(255,255,255,.75)"; for (const [x, y, r] of [[0.2, 0.3, 40], [0.28, 0.27, 30], [0.12, 0.33, 26], [0.55, 0.45, 34], [0.62, 0.43, 24]]) { g.beginPath(); g.arc(x * w, y * h, r, 0, 7); g.fill(); }
-    g.fillStyle = "#a7b6ad"; for (let x = 0; x < w; x += 34) g.fillRect(x, h - 50 - Math.random() * 60, 30, 200);   // hazy buildings
+    const cloud = (cx, cy, s) => {   // a cumulus: soft puffs, lit from above, a little grey underneath
+      const puffs = [[0, 0, 1], [-0.9, 0.25, 0.7], [0.95, 0.2, 0.75], [-0.4, -0.45, 0.75], [0.45, -0.4, 0.8], [1.6, 0.4, 0.5], [-1.55, 0.45, 0.45]];
+      for (const [dx, dy, r] of puffs) {
+        const x = cx + dx * s, y = cy + dy * s, R = r * s;
+        const cg = g.createRadialGradient(x - R * 0.2, y - R * 0.35, R * 0.1, x, y, R);
+        cg.addColorStop(0, "rgba(255,255,255,1)"); cg.addColorStop(0.7, "rgba(246,249,253,.95)"); cg.addColorStop(1, "rgba(214,226,240,0)");
+        g.fillStyle = cg; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill();
+      }
+    };
+    cloud(w * 0.22, h * 0.24, 70); cloud(w * 0.62, h * 0.42, 52); cloud(w * 0.12, h * 0.55, 40); cloud(w * 0.85, h * 0.6, 34); cloud(w * 0.45, h * 0.14, 30);
+    g.fillStyle = "rgba(160,190,215,.85)"; for (let x = 0; x < w; x += 68) g.fillRect(x, h - 100 - Math.random() * 120, 60, 400);   // distant buildings in blue haze
   }
 }).tex;
 const glassGeo = new THREE.PlaneGeometry(winW - 0.6, winH - 0.6);
@@ -1134,7 +1156,7 @@ const patchMat = new THREE.MeshBasicMaterial({ map: patchTex, color: 0xffd9a0, t
 const sunPatch = new THREE.Mesh(patchGeo, patchMat); sunPatch.renderOrder = 4; scene.add(sunPatch);
 // the look of each time of day
 const LOOK = {
-  day:   { sun: 2.1, sunC: 0xfff0d6, hemi: 0.62, hemiG: 0x4a3a33, rim: 0.3, lamp: 28, glow: 0.55, exp: 1.02, shaft: 0.55, shaftC: 0xffffff, patch: 0.5, patchC: 0xffd9a0 },
+  day:   { sun: 1.5, sunC: 0xfff0d6, hemi: 0.62, hemiG: 0x4a3a33, rim: 0.3, lamp: 28, glow: 0.55, exp: 1.02, shaft: 0.14, shaftC: 0xfff4e0, patch: 0.2, patchC: 0xffe2b8 },
   night: { sun: 0.32, sunC: 0x8aa2ff, hemi: 0.16, hemiG: 0x17141c, rim: 0.12, lamp: 62, glow: 1, exp: 1.0, shaft: 0.07, shaftC: 0x8fa8ff, patch: 0.14, patchC: 0x9db3ff }
 };
 sun.position.copy(SUN_DIR).multiplyScalar(-45);                           // the key light now comes from the window
@@ -1177,8 +1199,8 @@ interactive(windowHit, "Let the night in ☾", () => { Sound.click(); setNight(d
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Name block — hung on the wall like studio lettering, right of the poster
 const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#f5f5f7" },
-  { text: S.title, size: 112, weight: 500, color: "#d1d1d6", spacing: -0.01 }
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#2a2420" },
+  { text: S.title, size: 112, weight: 600, color: "#2f2823", spacing: -0.01 }
 ], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
 nameBlock.rotation.x = 0;
 nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
@@ -1188,8 +1210,8 @@ interactive(nameBlock, "About me", () => boot("about"));
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#aeaeb2", spacing: 0 }
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 600, color: "#3a312a", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 600, color: "#3a312a", spacing: 0 }
 ], { width: 9.6, gap: 1.4 });
 rolesBlock.rotation.x = 0;
 rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
