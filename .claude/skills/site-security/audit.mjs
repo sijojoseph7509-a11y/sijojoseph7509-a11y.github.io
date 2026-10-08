@@ -27,7 +27,7 @@ else {
 // 2. No inline scripts other than the import map; no third-party script hosts
 const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter((m) => !/importmap/.test(m[1]));
 inline.length ? bad("no inline scripts", inline.length + " found — move them to a .js file") : ok("no inline scripts (besides the import map)");
-const ext = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1]).host).filter((h) => !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
+const ext = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1]).host);
 ext.length ? bad("only first-party code + Google Fonts", "external: " + [...new Set(ext)].join(", ")) : ok("only first-party code + Google Fonts");
 // 3. Vendored three.js matches the recorded hashes (detects tampering / accidental edits)
 const MAN = ".claude/skills/site-security/vendor-hashes.json";
@@ -65,7 +65,7 @@ if (BASE) {
   if (await p.$("#introGo")) await p.click("#introGo").catch(() => {});
   await new Promise((r) => setTimeout(r, 2500));
   viol.length ? bad("site runs with no policy violations", viol.join(" | ")) : ok("site runs with no policy violations");
-  const site = new URL(BASE).host, extra = [...hosts].filter((h) => h !== site && !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
+  const site = new URL(BASE).host, extra = [...hosts].filter((h) => h !== site);
   extra.length ? bad("only talks to its own server + Google Fonts", extra.join(", ")) : ok("only talks to its own server + Google Fonts", [...hosts].join(", "));
   const blocked = await p.evaluate(async () => { window.__x = 0; const s = document.createElement("script"); s.textContent = "window.__x=1"; document.head.appendChild(s);
     const e = document.createElement("script"); e.src = "https://example.com/x.js"; document.head.appendChild(e); await new Promise((r) => setTimeout(r, 600)); return window.__x === 0; });

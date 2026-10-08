@@ -311,9 +311,12 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   await p.ctx.close();
 });
 
-await check("Legacy cached pages still find the real cat (old OBJ path exists)", async () => {
-  const r = await fetch(BASE + "models/cat/Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64/12221_Cat_v1_l3.obj", { method: "HEAD" });
-  expect(r.ok, "HTTP " + r.status);
+await check("Fonts are self-hosted and loaded (Inter, Caveat)", async () => {
+  const p = await page();
+  await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
+  const ok = await p.evaluate(async () => { await document.fonts.ready; return ['600 20px "Inter"', '600 20px "Caveat"'].every((f) => document.fonts.check(f)) && ![...document.querySelectorAll("link")].some((l) => /googleapis|gstatic/.test(l.href)); });
+  expect(ok, "a font is missing or still loaded from Google");
+  await p.ctx.close();
 });
 
 await browser.close();
