@@ -544,6 +544,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v3.7) | v67: football → Poly Haven CC0 model (`color/normal/arm.jpg`, AO+roughness from ARM); desk mat → original lightning artwork (no Naruto). Free3D cat still pending replacement (CC-BY 'Orange Tabby Cat' by Chenchanchong on Sketchfab, needs credit line). |
 | (v3.6) | Live on **https://sijo.work** (GoDaddy DNS → GitHub Pages, `CNAME` file, HTTPS enforced; github.io and www redirect). Fonts self-hosted (`fonts/`), CSP `font-src 'self'`; raw cat/football source files removed; QA legacy-cat check replaced by a self-hosted-font check. Repo must stay named `sijojoseph7509-a11y.github.io`. |
 | (v3.5) | Headphones removed (model folder deleted, `loadHeadphones` gone; QA no longer waits for a headset; sound stays on the top-right button). Plaster tinted darker brown (0x9c7a60), trim/ceiling darkened; wall lettering back to light cream. |
 | (v3.0) | Room restyled from Sijo's reference: oxblood red walls (#5e1510) over black panelled wainscot (`trimWall()`: panel texture, dado rail at 90 cm, skirting, crown moulding), dark ceiling at 2.75 m (`CEIL_Y`), diagonal black/cream checkerboard floor. Right wall (`rightWall` group, `onRight(z)`): window corner from Sijo's photo — window + cream curtain with maroon ogee rose medallions on a black grommet rod, shirts on the same rod, keyboard leaning under the curtain, fluted white pedestal with peace lily, terracotta spider plant and white aloe pot. Visible when looking right in the room view. |
@@ -585,7 +586,8 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 
 ## 25. Legal, credits and IP notes
 
-- **Desk mat artwork (v2.3):** Sijo's own mat, but the print is a third-party anime illustration (Sasuke, *Naruto*); reproduced at Sijo's request.
+- **Desk mat artwork:** since v67 an original generated artwork (navy storm, blue lightning, red embers; no characters or symbols). The earlier photo of Sijo's real mat showed a third-party anime character and was removed for copyright reasons.
+- **Football (v67):** Poly Haven "Football" by Amal Kumar, **CC0** (polyhaven.com/a/football) — inflated variant only, textures 512/256 px.
 
 - **Original work** (by Sijo / produced for this project): all procedural geometry, textures, wallpapers, icons, desk mat design, zebra pattern, music and sounds.
 - **Sijo's own artwork**: the typographic poster ("To begin an era") — reproduced with his permission as the owner.
