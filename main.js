@@ -40,7 +40,7 @@ const BUILD = new URL(import.meta.url).searchParams.get("v") || "dev";
 const asset = (u) => `${u}?v=${BUILD}`;
 const MODEL = {
   cat: asset("models/cat/cat.glb"), catDiffuse: asset("models/cat/cat_diffuse.jpg"), catBump: asset("models/cat/cat_bump.jpg"),
-  ball: asset("models/football/football.glb"), ballColor: asset("models/football/BaseColor.jpg"), ballNormal: asset("models/football/Normal.jpg"), ballRough: asset("models/football/Roughness.jpg")
+  ball: asset("models/football/football.glb"), ballColor: asset("models/football/color.jpg"), ballNormal: asset("models/football/normal.jpg"), ballARM: asset("models/football/arm.jpg")
 };
 Object.values(MODEL).forEach((u) => fetchAsset(u).catch(() => {}));
 
@@ -451,7 +451,7 @@ const rightDrape = drape(TABLE.d + 0.3, 2.4, 3);
 rightDrape.rotation.y = Math.PI / 2; rightDrape.position.set(X1 + 0.16, -1.2 + 0.01, TABLE.z);
 scene.add(frontDrape, leftDrape, rightDrape);
 
-// Desk mat — Sijo's real mat (assets/deskmat.jpg, photographed and cropped to 3:1). The procedural blue-violet
+// Desk mat — original storm/lightning artwork made for this site (assets/deskmat.jpg, 3:1). The procedural blue-violet
 // design below is only a placeholder while the photo loads.
 const deskMatTex = canvasTex(2048, 680, (g, w, h) => {
   const lg = g.createLinearGradient(0, 0, w, h);
@@ -1725,9 +1725,10 @@ let ball = null, ballVX = 0;
 const BALL_R = 1.5; // ≈15 cm across — reads in proportion with the desk
 async function loadBall() {
   const [gltf, base, normal, rough] = await Promise.all([
-    loadGLB(MODEL.ball), loadTex(MODEL.ballColor, true), loadTex(MODEL.ballNormal), loadTex(MODEL.ballRough)
+    loadGLB(MODEL.ball), loadTex(MODEL.ballColor, true), loadTex(MODEL.ballNormal), loadTex(MODEL.ballARM)
   ]);
-  const leather = new THREE.MeshStandardMaterial({ map: base, normalMap: normal, roughnessMap: rough, roughness: 1, metalness: 0 });
+  // Poly Haven "Football" by Amal Kumar, CC0. arm.jpg packs ambient occlusion (R) and roughness (G)
+  const leather = new THREE.MeshStandardMaterial({ map: base, normalMap: normal, roughnessMap: rough, aoMap: rough, roughness: 1, metalness: 0 });
   gltf.scene.traverse((m) => { if (m.isMesh) m.material = leather; });
   const inner = new THREE.Group();
   inner.add(gltf.scene);
