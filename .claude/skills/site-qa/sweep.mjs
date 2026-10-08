@@ -12,7 +12,9 @@ fs.mkdirSync(OUT, { recursive: true });
 const DEVICES = [
   ["iPhone SE", 375, 667, 2, true], ["iPhone 15", 393, 852, 3, true], ["iPhone 15 Pro Max", 430, 932, 3, true],
   ["Small Android", 360, 740, 3, true], ["iPhone landscape", 852, 393, 3, true], ["iPad", 820, 1180, 2, true],
-  ["Very narrow window", 294, 602, 2, false], ["Narrow browser window", 600, 1000, 2, false], ["Small laptop", 1280, 720, 1, false], ["MacBook", 1470, 956, 2, false], ["Desktop", 1920, 1080, 1, false]
+  ["Very narrow window", 294, 602, 2, false], ["Narrow browser window", 600, 1000, 2, false], ["iPad landscape", 1180, 820, 2, true], ["iPad Pro portrait", 1024, 1366, 2, true],
+  ["Small laptop", 1280, 720, 1, false], ["Windows laptop", 1366, 768, 1, false], ["MacBook", 1470, 956, 2, false], ["MacBook Pro 16", 1728, 1117, 2, false],
+  ["Desktop", 1920, 1080, 1, false], ["QHD monitor", 2560, 1440, 1, false], ["Ultrawide monitor", 3440, 1440, 1, false], ["4K monitor", 3840, 2160, 1, false]
 ];
 // fixed UI that must be fully on screen and must not overlap each other
 const CHECKS = {
@@ -25,7 +27,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function inspect(p, dev, view) {
   const res = await p.evaluate((sels) => {
     const vw = innerWidth, vh = innerHeight, out = [], rects = [];
-    const visible = (e) => { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity < 0.05) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+    const visible = (e) => { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === "none" || cs.visibility === "hidden") return false; for (let x = e; x; x = x.parentElement) if (+getComputedStyle(x).opacity < 0.05) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
     for (const s of sels) {
       const e = document.querySelector(s); if (!visible(e)) continue;
       const r = e.getBoundingClientRect();
@@ -75,6 +77,18 @@ for (const [name, w, h, dpr, mobile] of DEVICES) {
     if (wall) issues.push(`${name} · mac: ${wall}`);
     await p.evaluate(() => { document.getElementById("win").hidden = true; }); await sleep(300);
     await p.screenshot({ path: `${OUT}/${slug}-4-wallpaper.png` });
+    for (const cs of await p.evaluate(() => window.SITE.projects.filter((x) => x.case).map((x) => x.case.slug))) {
+      await p.goto(BASE + "?open=case:" + cs + "&sweep=" + Date.now());
+      await p.waitForFunction(() => { const im = document.querySelector(".case img"); return im && im.complete && im.naturalWidth > 0; }, { timeout: 60000 }).catch(() => issues.push(`${name} · ${cs}: case study did not open`));
+      await sleep(900);
+      await p.screenshot({ path: `${OUT}/${slug}-5-case-${cs}.png` });
+      issues.push(...(await inspect(p, name, "mac")).map((m) => m.replace("· mac:", `· case ${cs}:`)));
+      const bad = await p.evaluate(() => { const c = document.querySelector(".case"), r = c.getBoundingClientRect(), out = [];
+        if (r.width > 1921) out.push("case column wider than 1920 px"); if (r.width < innerWidth - 2 && Math.abs(r.left - (innerWidth - r.right)) > 2) out.push("case column not centred");
+        const im = c.querySelector("img"); const px = /@2x/.test(im.currentSrc) ? 2880 : 1440; if (px < r.width * Math.min(devicePixelRatio, 2) * 0.95) out.push(`blurry: ${px} px file shown ${Math.round(r.width)} px wide at ${devicePixelRatio}×`);
+        return out; });
+      issues.push(...bad.map((m) => `${name} · case ${cs}: ${m}`));
+    }
   } catch (e) { issues.push(`${name}: ${e.message.split("\n")[0]}`); }
   for (const e of errs) issues.push(`${name} · error: ${e}`);
   await ctx.close();

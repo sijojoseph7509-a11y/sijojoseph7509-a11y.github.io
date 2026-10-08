@@ -60,7 +60,7 @@
       title: "Work", key: "2",
       html: () => `
         <h1>Selected work</h1>
-        <p class="sub">${S.projects.length} case studies across product, design systems and information design.</p>
+        <p class="sub">${S.projects.length} case studies across product design, information design and branding.</p>
         <div class="cards">${S.projects.map((p) => {
           if (p.case) return `<button class="card" data-case="${esc(p.case.slug)}" aria-label="Open the ${esc(p.title)} case study">
             <div class="cover" style="background:${esc(p.color)} image-set(url('${caseImg(p.case.slug, p.case.cover)}') 1x, url('${caseImg(p.case.slug, p.case.cover, 2)}') 2x) center / cover"></div>
@@ -197,7 +197,7 @@
       </header>
       <div class="case">
       <p class="case-hint">Pinch to zoom in on the details.</p>
-      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
+      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, (min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
       <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
         <button class="btn alt" data-exit-case>All work</button></div>
     </div>`;
