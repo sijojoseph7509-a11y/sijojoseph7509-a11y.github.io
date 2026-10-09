@@ -654,7 +654,7 @@ const LAP_W = 6.0, LAP_D = 4.25, BASE_T = 0.2, LID_T = 0.11, LID_H = 4.15;
 
 const LAP_SCALE = 31.26 / 30;   // → 6.25 × 4.43 units
 const laptop = new THREE.Group();
-laptop.position.set(-0.6, 0, -0.25);
+laptop.position.set(-1.0, 0, -0.25);
 laptop.rotation.y = -0.08;
 laptop.scale.setScalar(LAP_SCALE);
 scene.add(laptop);
@@ -863,7 +863,8 @@ S.projects.forEach((p, i) => {
   projectFiles.add(f);
   interactive(f, `${p.title} case study`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); });
 });
-projectFiles.position.set(0, 0.02, 0);
+projectFiles.scale.setScalar(0.72);   // ≈22 × 17 cm project folders
+projectFiles.position.set(1.4, 0.02, 1.3);
 scene.add(projectFiles);
 
 // 2c. Smartphone face-up on the desk — real iPhone 15 size: 147.6 × 71.6 × 7.8 mm ≈ 2.95 × 1.43 × 0.16 units
@@ -896,41 +897,52 @@ interactive(phone, "New message — say hello", () => { Sound.click(); boot("con
 
 // 2d. Things from Sijo's real desk: plant in a mango-yellow pot, green water bottle
 const plant = new THREE.Group();
-const pot2 = mesh(new THREE.CylinderGeometry(1.1, 0.85, 2.0, 32), mat(0xffb21a, { roughness: 0.45, clearcoat: 0.4 }));   // mango yellow, ≈11 cm
+const pot2 = mesh(new THREE.CylinderGeometry(0.95, 0.75, 2.0, 32), mat(0xffb21a, { roughness: 0.45, clearcoat: 0.4 }));   // mango yellow, ≈11 cm
 pot2.position.y = 1.0;
-const soil2 = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.05, 24), mat(0x3b2a20, { roughness: 1 }));
+const soil2 = mesh(new THREE.CylinderGeometry(0.89, 0.89, 0.05, 24), mat(0x3b2a20, { roughness: 1 }));
 soil2.position.y = 1.9;
 plant.add(pot2, soil2);
-const leafGeo = new THREE.SphereGeometry(0.5, 16, 10);
-leafGeo.scale(1, 0.18, 0.62);
-const leafMat = mat(0x4f8a4a, { roughness: 0.55 }), stemMat = mat(0x3d6b38, { roughness: 0.7 });
-for (let i = 0; i < 9; i++) {      // a small rubber-plant style cluster
-  const a = (i / 9) * Math.PI * 2 + (i % 2) * 0.3, h = 3.0 + (i % 3) * 0.8, r = 0.5 + (i % 3) * 0.22;
-  const stem = mesh(new THREE.CylinderGeometry(0.04, 0.05, h - 1.9, 6), stemMat);
-  stem.position.set(Math.cos(a) * r * 0.4, 1.9 + (h - 1.9) / 2, Math.sin(a) * r * 0.4);
-  stem.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25);
-  const leaf = mesh(leafGeo, leafMat);
-  leaf.position.set(Math.cos(a) * (r + 0.5), h, Math.sin(a) * (r + 0.5)); leaf.scale.setScalar(1.6);
-  leaf.rotation.set(0.35 * Math.sin(a), -a, 0.5);
-  plant.add(stem, leaf);
+const leafGeo = (() => {   // pointed oval leaf with a curved midrib and a slight V fold, ≈1 unit long
+  const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(0.34, 0.12, 0.36, 0.72, 0, 1); sh.bezierCurveTo(-0.36, 0.72, -0.34, 0.12, 0, 0);
+  const g = new THREE.ShapeGeometry(sh, 14), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setXYZ(i, x, y, Math.abs(x) * 0.28 - 0.18 * y * y); }
+  g.computeVertexNormals(); return g;
+})();
+const leafMat = new THREE.MeshPhysicalMaterial({ color: 0x2f6b34, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.3, side: THREE.DoubleSide }), stemMat = mat(0x5b6b3a, { roughness: 0.7 });
+const leafNew = new THREE.MeshPhysicalMaterial({ color: 0x5a9a48, roughness: 0.4, clearcoat: 0.4, side: THREE.DoubleSide });
+for (let k = 0; k < 3; k++) {   // three stems, leaves alternating up each stem, newest (lighter, smaller) at the top
+  const stemH = 2.6 + k * 0.7, lean = 0.12 + k * 0.05, a0 = k * 2.1;
+  const stem = mesh(new THREE.CylinderGeometry(0.045, 0.06, stemH, 6), stemMat);
+  stem.position.set(Math.cos(a0) * 0.25, 1.9 + stemH / 2, Math.sin(a0) * 0.25); stem.rotation.set(Math.sin(a0) * lean, 0, -Math.cos(a0) * lean);
+  plant.add(stem);
+  const n = 4 + k;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 1) / (n + 0.5), a = a0 + i * 2.4, top = i === n - 1;
+    const leaf = mesh(leafGeo, top ? leafNew : leafMat);
+    const sc = (top ? 0.8 : 1.15 + 0.35 * Math.sin(i * 1.7)) * (1.1 - t * 0.25);
+    leaf.scale.set(sc * 1.25, sc * 1.6, sc);
+    leaf.position.set(Math.cos(a0) * (0.25 + lean * stemH * t) , 1.9 + stemH * t, Math.sin(a0) * (0.25 + lean * stemH * t));
+    leaf.rotation.set(-(top ? 0.35 : 0.9 + 0.25 * Math.sin(i)), a, 0, "YXZ");
+    plant.add(leaf);
+  }
 }
-plant.position.set(-4.6, 0, -2.4);
+plant.position.set(-4.9, 0, -2.85); plant.scale.setScalar(0.9);
 scene.add(plant);
 interactive(plant, "My desk plant 🌱", () => { Sound.click(); wiggle(plant); });
 
 const bottle = new THREE.Group();
 // plain transparency instead of `transmission`: transmission re-renders the whole scene every frame, which made laptops crawl
 const bottleMat = new THREE.MeshPhysicalMaterial({ color: 0x3e9a62, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.1, transparent: true, opacity: 0.72, depthWrite: false });
-const bBody = mesh(new THREE.CylinderGeometry(0.37, 0.37, 4.0, 28), bottleMat);   // ≈7.4 cm × 25 cm with the cap
+const bBody = mesh(new THREE.CylinderGeometry(0.52, 0.52, 4.0, 32), bottleMat);   // ≈10.4 cm × 26 cm with the cap (1 L)
 bBody.position.y = 2.0;
-for (let i = 0; i < 8; i++) { const ring = mesh(new THREE.TorusGeometry(0.38, 0.025, 6, 28), bottleMat); ring.rotation.x = Math.PI / 2; ring.position.y = 0.35 + i * 0.2; bottle.add(ring); }
-const bShoulder = mesh(new THREE.CylinderGeometry(0.24, 0.37, 0.4, 28), bottleMat);
+for (let i = 0; i < 8; i++) { const ring = mesh(new THREE.TorusGeometry(0.53, 0.028, 6, 32), bottleMat); ring.rotation.x = Math.PI / 2; ring.position.y = 0.35 + i * 0.2; bottle.add(ring); }
+const bShoulder = mesh(new THREE.CylinderGeometry(0.34, 0.52, 0.45, 32), bottleMat);
 bShoulder.position.y = 4.2;
-const bCap = mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.55, 24), mat(0x2f7a4c, { roughness: 0.4 }));
+const bCap = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.55, 24), mat(0x2f7a4c, { roughness: 0.4 }));
 bCap.position.y = 4.67;
 const bLoop = mesh(new THREE.TorusGeometry(0.2, 0.05, 6, 16), mat(0x2f7a4c, { roughness: 0.4 })); bLoop.position.set(0, 5.0, 0); bottle.add(bLoop);
 bottle.add(bBody, bShoulder, bCap);
-bottle.position.set(-8.6, 0, -2.6);
+bottle.position.set(-8.6, 0, -0.35);
 scene.add(bottle);
 
 
@@ -948,7 +960,7 @@ const hobbyCover = canvasTex(512, 384, (g, w, h) => {
   g.fillStyle = "#6f8f7a"; g.beginPath(); g.moveTo(40, h * 0.7); g.lineTo(170, h * 0.3); g.lineTo(300, h * 0.7); g.fill();
   g.fillStyle = "#3f5f7a"; g.beginPath(); g.moveTo(190, h * 0.7); g.lineTo(320, h * 0.38); g.lineTo(470, h * 0.7); g.fill();
   g.strokeStyle = "#1d1d1f"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(80, h * 0.72); g.bezierCurveTo(200, h * 0.78, 260, h * 0.64, 430, h * 0.74); g.stroke();
-  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.fillText("Weekends", 40, h * 0.86); g.font = `400 26px ${UI}`; g.fillText("games · football · bike rides", 40, h * 0.95);
+  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.font = `700 36px ${UI}`; g.fillText("Personal explorations", 40, h * 0.86); g.font = `400 24px ${UI}`; g.fillText("sketches · side projects · ideas", 40, h * 0.95);
 });
 const hobby = new THREE.Group();
 const hobbyBoard = rbox(1.75, 0.08, 1.3, 0.03, new THREE.MeshStandardMaterial({ color: 0xe9e2d2, roughness: 0.85 }));
@@ -968,11 +980,11 @@ sketchPencil.position.set(-0.2, 0.1, 0.25);
 hobby.add(hobbyBoard, hobbyPages, hobbyFace, elastic, sketchPencil);
 hobby.position.y = 0.48; hobby.rotation.y = -0.12;
 books.add(under, underPages, hobby);
-books.scale.setScalar(2.35);
-books.position.set(-6.3, 0.01, 0.9);
+books.scale.setScalar(1.75);
+books.position.set(-5.7, 0.01, 1.6);
 books.rotation.y = 0.25;
 scene.add(books);
-interactive(books, "Weekends: games, football, bike rides", () => { Sound.click(); boot("about"); });
+interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); });
 
 // 5. Pencil cup — behind the computer, left
 const cup = new THREE.Group();
@@ -999,19 +1011,19 @@ scene.add(cup);
 //    Click it to turn the music on or off.
 const speaker = new THREE.Group();
 const spkBlack = mat(0x1a1a1b, { roughness: 0.55 });
-const spkBody = rbox(8.0, 1.25, 1.35, 0.32, spkBlack, 4); spkBody.position.y = 0.95; speaker.add(spkBody);
+const spkBody = rbox(6.8, 1.25, 1.35, 0.32, spkBlack, 4); spkBody.position.y = 0.95; speaker.add(spkBody);
 const grilleTex = canvasTex(1024, 160, (g, w, h) => {
   g.fillStyle = "#151516"; g.fillRect(0, 0, w, h);
   for (let y = 4; y < h; y += 7) for (let x = (y / 7) % 2 ? 4 : 7.5; x < w; x += 7) { g.fillStyle = "#050505"; g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill(); }
   g.fillStyle = "rgba(255,255,255,.05)"; g.fillRect(0, 0, w, 18);
 });
-const grille = new THREE.Mesh(new THREE.PlaneGeometry(7.55, 1.0), new THREE.MeshStandardMaterial({ map: grilleTex.tex, roughness: 0.75 }));
+const grille = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.0), new THREE.MeshStandardMaterial({ map: grilleTex.tex, roughness: 0.75 }));
 grille.position.set(0, 0.95, 0.68); speaker.add(grille);
 const badge = rbox(0.5, 0.12, 0.01, 0.02, mat(0x9a9a9e, { metalness: 0.8, roughness: 0.3 }), 1); badge.position.set(0, 0.97, 0.69); speaker.add(badge);   // (a plain badge, no brand)
 for (let k = 0; k < 4; k++) { const b = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 16), mat(0x2a2a2c, { roughness: 0.4 })); b.position.set(-0.6 + k * 0.4, 1.58, 0); speaker.add(b); }
-for (const sx of [-1, 1]) { const foot = rbox(1.4, 0.32, 1.1, 0.15, spkBlack, 2); foot.position.set(sx * 3.1, 0.16, 0); speaker.add(foot); }
+for (const sx of [-1, 1]) { const foot = rbox(1.3, 0.32, 1.1, 0.15, spkBlack, 2); foot.position.set(sx * 2.6, 0.16, 0); speaker.add(foot); }
 speaker.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-speaker.position.set(5.5, 0, -2.75); speaker.rotation.y = -0.03;
+speaker.position.set(6.15, 0, -2.75); speaker.rotation.y = 0;
 scene.add(speaker);
 interactive(speaker, "Music on / off ♪", () => { if (!Sound.toggle()) setTimeout(() => Sound.click(), 60); });
 
@@ -1034,16 +1046,18 @@ for (const sx of [-1, 1]) {
 const torso = rbox(1.15, 1.25, 0.8, 0.3, suit, 4); torso.position.y = 2.25; astro.add(torso);
 const chest = rbox(0.6, 0.45, 0.06, 0.06, suitShade, 2); chest.position.set(0, 2.35, 0.42); astro.add(chest);
 const pack = rbox(0.95, 1.0, 0.45, 0.12, suit, 3); pack.position.set(0, 2.3, -0.58); astro.add(pack);
-const helmet = mesh(new THREE.SphereGeometry(1.08, 40, 28), suit); helmet.position.y = 3.75; helmet.scale.set(1, 0.95, 0.98); astro.add(helmet);
-const visor = mesh(new THREE.SphereGeometry(0.86, 40, 28, -Math.PI * 0.42, Math.PI * 0.84, Math.PI * 0.2, Math.PI * 0.55), new THREE.MeshPhysicalMaterial({ color: 0x0a0a0d, roughness: 0.06, clearcoat: 1, metalness: 0.2 }));
-visor.position.set(0, 3.72, 0.32); astro.add(visor);
-const lens = mesh(new THREE.CircleGeometry(0.16, 20), new THREE.MeshBasicMaterial({ color: 0x9ec9ff })); lens.position.set(0.12, 3.68, 1.17); astro.add(lens);
-for (const sx of [-1, 1]) { const ear = rbox(0.45, 0.62, 0.62, 0.1, suit, 2); ear.position.set(sx * 1.05, 4.15, -0.05); ear.rotation.z = sx * 0.25; astro.add(ear);
-  const vent = rbox(0.05, 0.3, 0.35, 0.02, suitShade, 1); vent.position.set(sx * 1.29, 4.1, -0.05); astro.add(vent); }
+const astroHead = new THREE.Group(); astroHead.position.set(0, 2.85, 0); astro.add(astroHead);   // pivot at the neck
+const helmet = mesh(new THREE.SphereGeometry(1.08, 40, 28), suit); helmet.position.y = 0.9; helmet.scale.set(1, 0.95, 0.98); astroHead.add(helmet);
+const visor = mesh(new THREE.SphereGeometry(1, 40, 28), new THREE.MeshPhysicalMaterial({ color: 0x08080b, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05, metalness: 0.25 }));
+visor.scale.set(0.8, 0.68, 0.5); visor.position.set(0, 0.88, 0.62); astroHead.add(visor);   // a full oval face-plate, bulging out of the helmet
+const rimV = mesh(new THREE.TorusGeometry(1, 0.05, 8, 48), suitShade); rimV.scale.set(0.8, 0.68, 1); rimV.position.set(0, 0.88, 0.66); astroHead.add(rimV);
+const lens = mesh(new THREE.CircleGeometry(0.17, 24), new THREE.MeshBasicMaterial({ color: 0x9ec9ff })); lens.position.set(0.1, 0.84, 1.13); astroHead.add(lens);
+for (const sx of [-1, 1]) { const ear = rbox(0.45, 0.62, 0.62, 0.1, suit, 2); ear.position.set(sx * 1.05, 1.3, -0.05); ear.rotation.z = sx * 0.25; astroHead.add(ear);
+  const vent = rbox(0.05, 0.3, 0.35, 0.02, suitShade, 1); vent.position.set(sx * 1.29, 1.25, -0.05); astroHead.add(vent); }
 const cablePts = [new THREE.Vector3(0, 2.4, -0.82), new THREE.Vector3(0.1, 1.6, -1.3), new THREE.Vector3(0.6, 0.08, -1.7), new THREE.Vector3(2.4, 0.06, -1.9), new THREE.Vector3(3.6, 0.06, -1.2)];
 const cable = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cablePts), 40, 0.06, 6), mat(0xeeeae4, { roughness: 0.8 })); astro.add(cable);
 astro.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-astro.position.set(-6.7, 0, -2.3); astro.rotation.y = 0.35;
+astro.position.set(-7.4, 0, -2.2); astro.rotation.y = 0.3;
 scene.add(astro);
 // the projection: soft nebula clouds + stars, cast onto the ceiling and the upper back wall
 const nebulaTex = canvasTex(1024, 1024, (g, w, h) => {
@@ -1059,7 +1073,11 @@ const projMat = new THREE.MeshBasicMaterial({ map: nebulaTex, transparent: true,
 const projCeil = new THREE.Mesh(new THREE.PlaneGeometry(52, 52), projMat); projCeil.rotation.x = Math.PI / 2; projCeil.position.set(-4, CEIL_Y - 0.06, 8); projCeil.renderOrder = 3; scene.add(projCeil);
 const projWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_HALF * 2, 30), projMat); projWall.position.set(TABLE.x, CEIL_Y - 13, WALL_Z + 0.08); projWall.renderOrder = 3; scene.add(projWall);
 projWall.material = projMat.clone(); projWall.material.map = nebulaTex.clone(); projWall.material.map.needsUpdate = true; projWall.material.map.repeat.set(1.6, 0.9); projWall.material.map.offset.set(-0.3, 0.05);
-let astroOn = true;
+let astroOn = true, astroTilt = 0;
+function stepAstro(dt) {   // while it projects, the head tips back to aim at the ceiling (like the real one)
+  const want = astroOn && dayMix > 0.5 ? -0.62 : 0;
+  astroTilt += (want - astroTilt) * Math.min(1, dt * 2.5); astroHead.rotation.x = astroTilt;
+}
 interactive(astro, "Galaxy light ✦", () => { Sound.click(); astroOn = !astroOn; applyDay(dayMix); });
 
 /* ───────────────────────── Window corner on the right wall (from Sijo's photo) ─────────────────────────
@@ -1287,59 +1305,20 @@ aloePot.position.set(onRight(WALL_Z + 3.4), FLOOR_Y, 7.4); corner.add(aloePot);
 corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });   // far from the lamp — skip shadow cost
 
 /* ───────────────────────── Left wall: pop-art prints + camera and cap on a hook ───────────────────────── */
-// Ten pop-art prints in a 5 × 2 grid (like Sijo's wall), but ORIGINAL artwork: bold colour fields, halftone dots,
-// thick-outlined drawings of his own world and short lines in his voice — no characters from anyone else's work.
-const POP = [
-  ["#ff4fa3", "#ffd84d", "STAY", "CURIOUS!", "cat"], ["#2b1b4a", "#c39bff", "SKETCH IT", "FIRST!", "pencil"], ["#ffd23a", "#ff6b3a", "MAKE IT", "SIMPLE!", "bulb"],
-  ["#13284d", "#66e0ff", "ASK", "WHY!", "plane"], ["#7cd67c", "#1b4d2b", "KEEP", "PLAYING!", "ball"],
-  ["#5b6cff", "#ffe14d", "FIND THE", "STORY!", "camera"], ["#2fb5c9", "#ffef5a", "SHIP", "IT!", "ferry"], ["#e8352e", "#ffd6a0", "BE", "BRAVE!", "bolt"],
-  ["#ffe14d", "#ff3d7f", "START", "NOW!", "pen"], ["#b03bd1", "#ffd84d", "NEVER SKIP", "THE PROCESS!", "compass"]];
-function popPrint([bg, accent, l1, l2, icon], seed) {
-  return canvasTex(400, 500, (g, w, h) => {
-    g.fillStyle = bg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "rgba(0,0,0,.13)";   // halftone
-    for (let y = 6; y < h; y += 11) for (let x = (y / 11) % 2 ? 6 : 11.5; x < w; x += 11) { const r = 1 + 2.6 * (y / h); g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
-    const rays = g.createRadialGradient(w / 2, 170, 10, w / 2, 170, 230); rays.addColorStop(0, accent); rays.addColorStop(1, "rgba(0,0,0,0)");
-    g.fillStyle = rays; g.globalAlpha = 0.55; g.fillRect(0, 0, w, h); g.globalAlpha = 1;
-    g.save(); g.translate(w / 2, 175); g.lineWidth = 9; g.strokeStyle = "#111"; g.lineJoin = "round"; g.lineCap = "round"; g.fillStyle = accent;
-    const path = (f) => { g.beginPath(); f(); g.fill(); g.stroke(); };
-    if (icon === "cat") { path(() => { g.moveTo(-95, 60); g.lineTo(-100, -70); g.lineTo(-45, -35); g.quadraticCurveTo(0, -55, 45, -35); g.lineTo(100, -70); g.lineTo(95, 60); g.quadraticCurveTo(0, 115, -95, 60); });
-      g.fillStyle = "#111"; for (const sx of [-1, 1]) { g.beginPath(); g.ellipse(sx * 38, 10, 11, 18, 0, 0, 7); g.fill(); } g.beginPath(); g.moveTo(-10, 40); g.lineTo(10, 40); g.lineTo(0, 52); g.fill();
-      g.lineWidth = 5; for (const sx of [-1, 1]) for (const dy of [0, 16]) { g.beginPath(); g.moveTo(sx * 30, 52 + dy); g.lineTo(sx * 110, 40 + dy * 1.4); g.stroke(); } }
-    if (icon === "pencil") { g.rotate(-0.6); path(() => g.rect(-30, -120, 60, 190)); g.fillStyle = "#f5d3a0"; path(() => { g.moveTo(-30, 70); g.lineTo(30, 70); g.lineTo(0, 130); g.closePath(); }); g.fillStyle = "#ff8fb1"; path(() => g.rect(-30, -150, 60, 30)); }
-    if (icon === "bulb") { path(() => { g.arc(0, -20, 80, Math.PI * 0.8, Math.PI * 2.2); g.lineTo(32, 80); g.lineTo(-32, 80); g.closePath(); }); g.fillStyle = "#ddd"; path(() => g.rect(-34, 82, 68, 36));
-      g.lineWidth = 7; for (let k = 0; k < 7; k++) { const a = -Math.PI + k * Math.PI / 6; g.beginPath(); g.moveTo(Math.cos(a) * 105, -20 + Math.sin(a) * 105); g.lineTo(Math.cos(a) * 140, -20 + Math.sin(a) * 140); g.stroke(); } }
-    if (icon === "plane") { g.rotate(-0.3); path(() => { g.moveTo(-130, 10); g.lineTo(130, -60); g.lineTo(-20, 50); g.closePath(); }); g.fillStyle = "#fff"; path(() => { g.moveTo(-20, 50); g.lineTo(130, -60); g.lineTo(10, 100); g.closePath(); }); }
-    if (icon === "ball") { path(() => g.arc(0, 0, 105, 0, 7)); g.fillStyle = "#111"; path(() => { for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + k * Math.PI * 2 / 5; g.lineTo(Math.cos(a) * 38, Math.sin(a) * 38); } g.closePath(); }); }
-    if (icon === "camera") { path(() => g.roundRect(-120, -60, 240, 140, 18)); g.fillStyle = "#ddd"; path(() => g.rect(-120, -60, 240, 40)); g.fillStyle = "#222"; path(() => g.arc(10, 30, 52, 0, 7)); g.fillStyle = accent; path(() => g.arc(10, 30, 26, 0, 7)); }
-    if (icon === "ferry") { path(() => { g.moveTo(-140, 20); g.lineTo(140, 20); g.lineTo(105, 85); g.lineTo(-110, 85); g.closePath(); }); g.fillStyle = "#fff"; path(() => g.rect(-80, -40, 150, 60)); g.fillStyle = accent; path(() => g.rect(-45, -85, 70, 45));
-      g.lineWidth = 6; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(-150 + k * 40, 110); g.quadraticCurveTo(-130 + k * 40, 98, -110 + k * 40, 110); g.stroke(); } }
-    if (icon === "bolt") path(() => { g.moveTo(20, -130); g.lineTo(-70, 20); g.lineTo(-5, 20); g.lineTo(-30, 130); g.lineTo(75, -30); g.lineTo(10, -30); g.closePath(); });
-    if (icon === "pen") { path(() => { g.moveTo(0, -120); g.lineTo(70, 20); g.lineTo(0, 110); g.lineTo(-70, 20); g.closePath(); }); g.fillStyle = "#111"; g.beginPath(); g.arc(0, 30, 14, 0, 7); g.fill();
-      g.lineWidth = 6; g.beginPath(); g.moveTo(-150, 60); g.bezierCurveTo(-120, -80, 120, -80, 150, 60); g.stroke(); for (const x of [-150, 150]) { g.fillStyle = "#fff"; g.fillRect(x - 10, 50, 20, 20); g.strokeRect(x - 10, 50, 20, 20); } }
-    if (icon === "compass") { path(() => g.arc(0, 0, 100, 0, 7)); g.fillStyle = "#e8352e"; path(() => { g.moveTo(0, -95); g.lineTo(22, 0); g.lineTo(-22, 0); g.closePath(); }); g.fillStyle = "#fff"; path(() => { g.moveTo(0, 95); g.lineTo(22, 0); g.lineTo(-22, 0); g.closePath(); }); }
-    g.restore();
-    const word = (t, y, size) => { g.font = `900 ${size}px ${UI}`; g.textAlign = "center"; g.lineJoin = "round"; g.lineWidth = size * 0.16; g.strokeStyle = "#111"; g.strokeText(t, w / 2, y); g.fillStyle = "#fff"; g.fillText(t, w / 2, y); };
-    const fit = (t, max) => Math.min(max, Math.floor(max * 9 / Math.max(7, t.length)));
-    word(l1, 372, fit(l1, 54)); word(l2, 440, fit(l2, 64));
-    g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
-  }).tex;
-}
+// Sijo's One Piece prints: his own photo of the ten prints on his wall, the wall keyed out (assets/wall-prints.webp).
+// Note: third-party character art, shown at Sijo's request.
 const popArt = new THREE.Group();
-const PW = 4.2, PH2 = 5.25, PGAP = 0.12;   // each print ≈21 × 26 cm
-POP.forEach((d, i) => {
-  const col = i % 5, row = Math.floor(i / 5);
-  const geo = new THREE.PlaneGeometry(PW, PH2, 6, 6), pp = geo.attributes.position;
-  for (let k = 0; k < pp.count; k++) { const x = pp.getX(k), y = pp.getY(k); pp.setZ(k, 0.05 * Math.pow(Math.abs(x) / (PW / 2), 3) + 0.03 * Math.max(0, -y / (PH2 / 2)) ** 3); }   // paper lifts a little at the edges
+const PRINTS_W = 16, PRINTS_H = PRINTS_W * 1160 / 2048;   // ≈80 × 45 cm, ten ≈15 × 21 cm prints
+{ const geo = new THREE.PlaneGeometry(PRINTS_W, PRINTS_H, 24, 12), pp = geo.attributes.position;
+  for (let k = 0; k < pp.count; k++) { const x = pp.getX(k), y = pp.getY(k); const cx = ((x / PRINTS_W + 0.5) * 5) % 1, cy = ((y / PRINTS_H + 0.5) * 2) % 1;
+    pp.setZ(k, 0.05 * (Math.pow(Math.abs(cx - 0.5) * 2, 4) + Math.pow(Math.abs(cy - 0.5) * 2, 6))); }   // each print lifts a little at its edges
   geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: popPrint(d, i), roughness: 0.55 }));
-  m.position.set((col - 2) * (PW + PGAP) + Math.sin(i * 7.1) * 0.06, (0.5 - row) * (PH2 + PGAP) + Math.sin(i * 3.3) * 0.05, 0.05);
-  m.rotation.z = Math.sin(i * 5.3) * 0.012;
-  m.receiveShadow = true; popArt.add(m);
-});
-popArt.position.set(onLeft(14), FLOOR_Y + 34, 0.02);
+  const mat_ = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, transparent: true, alphaTest: 0.5, roughness: 0.6 });
+  const prints = new THREE.Mesh(geo, mat_); prints.receiveShadow = true; prints.position.z = 0.05; popArt.add(prints);
+  new THREE.TextureLoader().load(asset("assets/wall-prints.webp"), (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); mat_.map = t; mat_.color.set(0xffffff); mat_.needsUpdate = true; }); }
+popArt.position.set(onLeft(13), FLOOR_Y + 34, 0.02);
 leftWall.add(popArt);
-interactive(popArt, "Things I tell myself", () => { Sound.click(); boot("about"); });
+interactive(popArt, "One Piece prints on my wall", () => { Sound.click(); wiggle(popArt); });
 
 // Camera and red corduroy cap on one stick-on hook, at the right end of the left wall (near the back corner)
 const hookGrp = new THREE.Group();
@@ -1347,15 +1326,29 @@ const steel = mat(0x6f747a, { metalness: 0.85, roughness: 0.3 });
 const hookPlate = rbox(0.42, 1.4, 0.08, 0.15, steel, 2); hookGrp.add(hookPlate);
 const hookArm = mesh(new THREE.TorusGeometry(0.28, 0.07, 8, 16, Math.PI), steel); hookArm.rotation.set(Math.PI / 2, 0, Math.PI); hookArm.position.set(0, -0.55, 0.3); hookGrp.add(hookArm);
 // cap: corduroy crown (half dome), button on top, brim hanging below
-const cordTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#8a1e22"; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 8) { const lg = g.createLinearGradient(x, 0, x + 8, 0); lg.addColorStop(0, "#6e1519"); lg.addColorStop(0.5, "#a3282d"); lg.addColorStop(1, "#6e1519"); g.fillStyle = lg; g.fillRect(x, 0, 8, h); } }).tex;
+const cordTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#6a161c"; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 6) { const lg = g.createLinearGradient(x, 0, x + 6, 0); lg.addColorStop(0, "#4e0f14"); lg.addColorStop(0.5, "#86212a"); lg.addColorStop(1, "#4e0f14"); g.fillStyle = lg; g.fillRect(x, 0, 8, h); } }).tex;
 cordTex.wrapS = cordTex.wrapT = THREE.RepeatWrapping; cordTex.repeat.set(3, 2);
-const capMat = new THREE.MeshPhysicalMaterial({ map: cordTex, roughness: 0.95, sheen: 0.6, sheenColor: new THREE.Color(0xff9a9a), sheenRoughness: 0.6 });
+const capMat = new THREE.MeshPhysicalMaterial({ map: cordTex, roughness: 0.97, sheen: 0.35, sheenColor: new THREE.Color(0xb5555a), sheenRoughness: 0.8 });
 const cap = new THREE.Group();
-const crown = mesh(new THREE.SphereGeometry(2.0, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), capMat); crown.scale.set(1, 0.62, 1.12); cap.add(crown);
-const buttonTop = mesh(new THREE.SphereGeometry(0.18, 12, 8), capMat); buttonTop.position.y = 1.22; cap.add(buttonTop);
-const brimGeo = new THREE.CylinderGeometry(1.9, 1.9, 0.12, 32, 1, false, -Math.PI * 0.5, Math.PI); brimGeo.scale(1, 1, 0.85);
-const brim = mesh(brimGeo, capMat); brim.position.set(0, 0.02, 1.6); brim.rotation.x = 0.08; cap.add(brim);
-cap.rotation.set(Math.PI / 2 - 0.3, 0.15, 0.12); cap.position.set(0, -1.6, 0.35); hookGrp.add(cap);   // crown towards the room, brim hanging down
+const CR = 1.85;   // crown ≈19 cm across, ≈11 cm deep
+const crownGeo = new THREE.SphereGeometry(CR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+{ const p = crownGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = 1 + 0.06 * Math.max(0, z / CR), slouch = 1 - 0.12 * Math.max(0, -z / CR) * (y / CR); p.setXYZ(i, x * k, y * 0.55 * slouch, z * 1.12 * k); } crownGeo.computeVertexNormals(); }
+const crown = mesh(crownGeo, capMat); cap.add(crown);
+const seamMat = mat(0x581218, { roughness: 0.95 });
+for (let k = 0; k < 6; k++) {   // panel seams running to the button
+  const a = k * Math.PI / 3, pts = [];
+  for (let t = 0; t <= 1.001; t += 0.1) { const ph = t * Math.PI / 2, r = CR * 1.003; pts.push(new THREE.Vector3(Math.cos(a) * Math.cos(ph) * r * (1 + 0.06 * Math.max(0, Math.sin(a))), Math.sin(ph) * r * 0.62, Math.sin(a) * Math.cos(ph) * r * 1.12)); }
+  cap.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.025, 4), seamMat));
+  const eye = mesh(new THREE.TorusGeometry(0.07, 0.02, 6, 12), seamMat); const ph = 0.9; eye.position.set(Math.cos(a + 0.5) * Math.cos(ph) * CR, Math.sin(ph) * CR * 0.62, Math.sin(a + 0.5) * Math.cos(ph) * CR * 1.12); eye.lookAt(eye.position.clone().multiplyScalar(2)); cap.add(eye);
+}
+const buttonTop = mesh(new THREE.SphereGeometry(0.17, 12, 8), capMat); buttonTop.scale.y = 0.5; buttonTop.position.y = CR * 0.62; cap.add(buttonTop);
+const brimShape = new THREE.Shape(); brimShape.moveTo(-CR * 0.9, 0); brimShape.quadraticCurveTo(-CR * 0.85, CR * 1.0, 0, CR * 1.08); brimShape.quadraticCurveTo(CR * 0.85, CR * 1.0, CR * 0.9, 0); brimShape.lineTo(-CR * 0.9, 0);
+const brimGeo = new THREE.ExtrudeGeometry(brimShape, { depth: 0.09, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.04, bevelSegments: 2, curveSegments: 24 });
+{ const p = brimGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setZ(i, p.getZ(i) - 0.32 * (x / CR) ** 2); } brimGeo.computeVertexNormals(); }   // brim curved down at the sides
+const brim = mesh(brimGeo, capMat); brim.rotation.x = Math.PI / 2 - 0.12; brim.position.set(0, 0.08, CR * 1.0); cap.add(brim);
+const strap = rbox(1.1, 0.35, 0.06, 0.05, capMat, 1); strap.position.set(0, 0.35, -CR * 1.1); cap.add(strap);   // back strap (what hangs on the hook)
+// hung by the back strap: crown facing the room, brim pointing down and a little to the side, like in the photo
+cap.rotation.set(Math.PI / 2 + 0.05, 0, 0.45); cap.position.set(0.2, -1.6, 0.95); hookGrp.add(cap);   // hung by the strap, crown to the room, brim down-left (as in Sijo's photo)
 // camera: silver top plate, black leatherette body, lens with a silver barrel, hanging on its black strap
 const camBody = new THREE.Group();
 const leather = mat(0x141414, { roughness: 0.85 }), chrome = mat(0xc9ccd0, { metalness: 0.9, roughness: 0.22 });
@@ -1418,14 +1411,14 @@ function contact(x, y, z, w, d, opacity, rot = 0) {
   m.rotation.set(-Math.PI / 2, 0, rot); m.position.set(x, y, z); m.renderOrder = 1; scene.add(m); return m;
 }
 const DESK_Y = 0.015;
-contact(-0.6, DESK_Y, -0.25, 7.6, 5.6, 0.42, 0.08);      // laptop
-contact(5.5, DESK_Y, -2.75, 9.0, 2.5, 0.5, 0.03);        // speaker
-contact(-6.7, DESK_Y, -2.3, 3.2, 3.0, 0.45);             // galaxy light
-contact(-8.6, DESK_Y, -2.6, 1.4, 1.4, 0.45);             // bottle
-contact(-4.6, DESK_Y, -2.4, 3.0, 3.0, 0.4);              // plant
+contact(-1.0, DESK_Y, -0.25, 7.6, 5.6, 0.42, 0.08);      // laptop
+contact(6.15, DESK_Y, -2.75, 7.8, 2.5, 0.5);             // speaker
+contact(-7.4, DESK_Y, -2.2, 3.2, 3.0, 0.45);             // galaxy light
+contact(-8.6, DESK_Y, -0.35, 1.8, 1.8, 0.45);           // bottle
+contact(-4.8, DESK_Y, -2.8, 2.6, 2.6, 0.4);              // plant
 contact(-8.4, DESK_Y, 5.2, 1.4, 1.4, 0.45);              // pencil cup
-contact(-6.3, DESK_Y, 0.9, 5.6, 4.2, 0.35, -0.25);       // sketchbook
-contact(4.6, DESK_Y, 4.5, 7.2, 5.6, 0.28, 0.1);          // folders
+contact(-5.7, DESK_Y, 1.6, 4.2, 3.2, 0.35, -0.25);       // sketchbook
+contact(4.7, DESK_Y, 4.6, 5.4, 4.2, 0.28, 0.1);          // folders
 contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);          // Shea
 contact(TABLE.x, FLOOR_Y + 0.03, TABLE.z, TABLE.w + 3, TABLE.d + 3, 0.5);   // the desk on the floor
 contact(TABLE.x + ROOM_HALF - 3.4, FLOOR_Y + 0.03, WALL_Z + 3.2, 6.5, 6.5, 0.5);   // pedestal
@@ -1441,7 +1434,7 @@ const switchTex = canvasTex(512, 256, (g, w, h) => {
   g.fillStyle = "#333"; for (const [x, y] of [[372, 105], [418, 105], [395, 150]]) { g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }
 });
 const switchPlate = rbox(4.2, 2.1, 0.18, 0.08, new THREE.MeshStandardMaterial({ map: switchTex.tex, roughness: 0.45 }), 2);
-switchPlate.position.set(TABLE.x - 17, FLOOR_Y + 25, WALL_Z + 0.12); switchPlate.castShadow = true; scene.add(switchPlate);
+switchPlate.position.set(TABLE.x + 19, FLOOR_Y + 25, WALL_Z + 0.12); switchPlate.castShadow = true; scene.add(switchPlate);
 
 /* ───────────────────────── Day ↔ night through the window ─────────────────────────
    Sunlight streams in through the gap between the curtains (a soft light shaft + a warm patch on the floor, and the
@@ -1857,6 +1850,7 @@ function adaptQuality(dt) {
 
 const clock = new THREE.Clock();
 let lastScreen = 0, lastNow = 0;
+let debugCam = null;   // test hook: a fixed camera for screenshots (Desk.debugView)
 function loop(now) {
   requestAnimationFrame(loop);
   // the Mac desktop covers the scene: skip rendering it (saves battery; the last frame stays on screen)
@@ -1869,9 +1863,9 @@ function loop(now) {
   adaptQuality(dt);
   if (fading.length) stepFades(now);
   stepDay(now);
+  stepAstro(1 / 60);
   if (tween) tween(now);
-  controls.update();
-  keepInsideRoom();
+  if (!debugCam) { controls.update(); keepInsideRoom(); }
 
   // hover lift / scale
   for (const o of hoverables) {
@@ -2041,7 +2035,7 @@ const CAT_FACING = -1.15; // side-on in front of the speaker, looking towards th
 
 // Ball on the marble floor — click to kick it
 let ball = null, ballVX = 0;
-const BALL_R = 2.2; // size-5 football: 22 cm across
+const BALL_R = 1.7; // ≈17 cm across (a size-3 kickabout ball)
 async function loadBall() {
   const [gltf, base, normal, rough] = await Promise.all([
     loadGLB(MODEL.ball), loadTex(MODEL.ballColor, true), loadTex(MODEL.ballNormal), loadTex(MODEL.ballARM)
@@ -2086,7 +2080,7 @@ setProgress(100, "ready");
 started = true;
 requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
-window.Desk = { debugView: (pos, target, zoomOut = false) => { controls.enabled = false; camera.position.set(...pos); controls.target.set(...target); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); controls.update(); controls.minDistance = 0; controls.maxDistance = 1e4; camera.position.set(...pos); camera.lookAt(...target); },
+window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["cup", cup], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
   state: () => ({ started, cat: !!cat, ball: !!ball,
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
