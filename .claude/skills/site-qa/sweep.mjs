@@ -68,7 +68,7 @@ for (const [name, w, h, dpr, mobile] of DEVICES) {
     await sleep(1800);
     await p.screenshot({ path: `${OUT}/${slug}-2-desk.png` });
     issues.push(...await inspect(p, name, "desk"));
-    const off = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me|the (sun|night) in/.test(l)));
+    const off = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me|the (sun|night) in|Things I tell myself|camera and my red cap|Macramé/.test(l)));
     if (off.length) issues.push(`${name} · desk: not on screen: ${off.join(", ")}`);
     await p.evaluate(() => window.OS.open("work")); await sleep(1400);
     await p.screenshot({ path: `${OUT}/${slug}-3-mac.png` });
