@@ -205,7 +205,7 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 | Left side panel | 0.6 thick, full height/depth, at x ≈ −8.8. |
 | Right cubby | Outer + inner panels (0.5 thick), shelf at y −5.2, bottom at y −13.9, back panel; open front. Contains a dark keyboard (canvas key grid) and a white charger cube. |
 | Back rail | 18 × 1.8 × 0.25 under the back edge. |
-| Zebra fleece throw | Top plane 19.3 × 10.3 at y 0.012; front drape 3.2 tall; side drapes 2.4 tall. **Original procedural zebra pattern** (tapering black bands on #eee8dd), soft folds and uneven hem. Fleece material: roughness 1, sheen 0.2. |
+| Zebra fleece throw | **Removed in v69** at Sijo's request; the desk top is bare dark laminate. |
 | Desk mat | 11.4 × 3.8 at (−3.1, 0.04, 4.6). **Original** deep navy → violet → blue gradient with light streaks, sparkles and a dashed stitched edge. (Sijo's real mat shows a copyrighted anime character — deliberately not reproduced.) |
 
 ### 8.3 Wall items
@@ -545,6 +545,7 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v3.9) | v69: walls tinted warm gingerbread (`WALL_TINT` 0xd08a52, Sijo's paint '324-3 Warm Gingerbread'; brand unknown, so matched by eye); zebra throw and its drapes removed. |
 | (v3.8) | v68: Work = Tidewell v3, Backwater Line v3, Ekmaati (new; Ledgerly removed), all re-exported at 2× with new alt text. Big-monitor scaling for the Mac display and case column; sweep extended to 18 devices incl. case studies. |
 | (v3.7) | v67: football → Poly Haven CC0 model (`color/normal/arm.jpg`, AO+roughness from ARM); desk mat → original lightning artwork (no Naruto). Free3D cat still pending replacement (CC-BY 'Orange Tabby Cat' by Chenchanchong on Sketchfab, needs credit line). |
 | (v3.6) | Live on **https://sijo.work** (GoDaddy DNS → GitHub Pages, `CNAME` file, HTTPS enforced; github.io and www redirect). Fonts self-hosted (`fonts/`), CSP `font-src 'self'`; raw cat/football source files removed; QA legacy-cat check replaced by a self-hosted-font check. Repo must stay named `sijojoseph7509-a11y.github.io`. |

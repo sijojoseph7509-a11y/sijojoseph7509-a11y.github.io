@@ -373,7 +373,7 @@ new THREE.TextureLoader().load(asset("assets/floor.jpg"), (t) => {
 
 /* ───────────────────────── Sijo's desk (from the photo) ─────────────────────────
    Dark laminate desk: solid side panel on the left, open cubby shelf on the right,
-   a zebra-print fleece throw over the top and a desk mat. Top surface at y = 0.   */
+   a desk mat on the bare top. Top surface at y = 0.   */
 const TABLE = { x: 0.2, z: 1.6, w: 19, d: 10, t: 0.5 };
 const DESK_H = 14.8;                                   // ≈ 74 cm
 const X0 = TABLE.x - TABLE.w / 2, X1 = TABLE.x + TABLE.w / 2, Z0 = TABLE.z - TABLE.d / 2, Z1 = TABLE.z + TABLE.d / 2;
@@ -404,52 +404,6 @@ const charger = rbox(0.8, 0.8, 0.8, 0.12, mat(0xf5f5f7, { roughness: 0.4 }), 3);
 charger.position.set(CXM + 2.4, shelfTop + 0.4, TABLE.z + 1.8);
 scene.add(kb2, charger);
 
-// Zebra-print fleece throw (original pattern) — top, front drape and side drapes
-function zebraTex(w, h, seed = 1) {
-  return canvasTex(w, h, (g) => {
-    g.fillStyle = "#eee8dd"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#0e0e0e";
-    const n = Math.round(h / 44);
-    for (let i = 0; i < n; i++) {                       // each stripe: a wavy band that swells and tapers
-      const y0 = (i / n) * (h + w * 0.35) - w * 0.35 + Math.sin(i * 3.1 + seed) * 10;
-      const top = [], bot = [];
-      for (let x = -60; x <= w + 60; x += 20) {
-        const y = y0 + x * 0.35 + Math.sin(x * 0.009 + i * 0.8 + seed) * 22 + Math.sin(x * 0.031 + i * 2.1) * 7;
-        const thick = Math.max(0, 9 + 15 * Math.sin(x * 0.006 + i * 1.9 + seed) + 6 * Math.sin(x * 0.021 + i));
-        top.push([x, y - thick]); bot.push([x, y + thick]);
-      }
-      g.beginPath(); g.moveTo(top[0][0], top[0][1]);
-      top.forEach(([x, y]) => g.lineTo(x, y));
-      bot.reverse().forEach(([x, y]) => g.lineTo(x, y));
-      g.closePath(); g.fill();
-    }
-  }).tex;
-}
-const fleece = (map) => new THREE.MeshPhysicalMaterial({ map, roughness: 1, sheen: 0.2, sheenRoughness: 0.9, sheenColor: new THREE.Color(0xffffff), side: THREE.DoubleSide });
-const throwTop = new THREE.Mesh(new THREE.PlaneGeometry(TABLE.w + 0.3, TABLE.d + 0.3), fleece(zebraTex(2048, 1080, 1)));
-throwTop.rotation.x = -Math.PI / 2; throwTop.position.set(TABLE.x, 0.012, TABLE.z);
-throwTop.receiveShadow = true;
-scene.add(throwTop);
-function drape(width, height, seed) {   // a hanging fleece edge with soft folds and an uneven hem
-  const geo = new THREE.PlaneGeometry(width, height, 80, 8);
-  const p = geo.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i), down = (height / 2 - y) / height;          // 0 at top, 1 at hem
-    p.setZ(i, (Math.sin(x * 1.6 + seed) * 0.09 + Math.sin(x * 0.55 + seed * 2) * 0.06) * down);
-    if (down > 0.98) p.setY(i, y - Math.abs(Math.sin(x * 0.9 + seed)) * 0.35);
-  }
-  geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, fleece(zebraTex(2048, Math.round(2048 * height / width), seed + 3)));
-  m.castShadow = m.receiveShadow = true;
-  return m;
-}
-const frontDrape = drape(TABLE.w + 0.3, 3.2, 1);
-frontDrape.position.set(TABLE.x, -1.6 + 0.01, Z1 + 0.16);
-const leftDrape = drape(TABLE.d + 0.3, 2.4, 2);
-leftDrape.rotation.y = -Math.PI / 2; leftDrape.position.set(X0 - 0.16, -1.2 + 0.01, TABLE.z);
-const rightDrape = drape(TABLE.d + 0.3, 2.4, 3);
-rightDrape.rotation.y = Math.PI / 2; rightDrape.position.set(X1 + 0.16, -1.2 + 0.01, TABLE.z);
-scene.add(frontDrape, leftDrape, rightDrape);
 
 // Desk mat — original storm/lightning artwork made for this site (assets/deskmat.jpg, 3:1). The procedural blue-violet
 // design below is only a placeholder while the photo loads.
@@ -505,6 +459,7 @@ for (const side of [-1, 1]) {   // side walls (plain backing behind the panellin
 // softened a touch so the poster and lettering stay the heroes; it doubles as a bump map for real relief.
 const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling (DADO_Y = window-sill height)
 const PLASTER_W = 8, PLASTER_H = PLASTER_W * 1336 / 752;
+const WALL_TINT = 0xd08a52;   // warm gingerbread (324-3), multiplied over the plaster photo
 const plasterMats = [];
 function flatten(img) {   // remove the photo's uneven lighting (bright corner, vignette): pixel − local average + overall average
   const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -542,7 +497,7 @@ new THREE.TextureLoader().load(asset("assets/wall.jpg"), (img) => {
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   for (const { m, len } of plasterMats) {
     const tex = t.clone(); tex.needsUpdate = true; tex.repeat.set(len / PLASTER_W, (CEIL_Y - FLOOR_Y) / PLASTER_H);
-    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(0x9c7a60); m.needsUpdate = true;
+    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(WALL_TINT); m.needsUpdate = true;
   }
 });
 const TRIM = mat(0x5a4334, { roughness: 0.75 });
@@ -824,7 +779,7 @@ function petCat() {
 }
 
 // 2b. Project files — a fanned stack of folders on the desk; each opens the Work window
-const folderColors = [0x1c1c1e, 0x111113, 0x2c2c2e, 0x18181a, 0x232325, 0x1a1a1c]; // black folders — stand out on the zebra throw
+const folderColors = [0x1c1c1e, 0x111113, 0x2c2c2e, 0x18181a, 0x232325, 0x1a1a1c]; // black folders
 const projectFiles = new THREE.Group();
 S.projects.forEach((p, i) => {
   const f = new THREE.Group();
@@ -1741,7 +1696,7 @@ async function loadBall() {
   spin.add(inner);
   ball = new THREE.Group();
   ball.add(spin);
-  ball.position.set(-4.5, floor.position.y + BALL_R, 6.2); // on the floor at the front of the desk (under the throw's hem), in view
+  ball.position.set(-4.5, floor.position.y + BALL_R, 6.2); // on the floor at the front of the desk (under the desk front), in view
   reveal(ball);
   interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
 }
