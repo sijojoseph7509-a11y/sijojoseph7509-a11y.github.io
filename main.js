@@ -355,20 +355,44 @@ function interactive(obj, label, onClick) {
 }
 
 /* ───────────────────────── Floor ───────────────────────── */
-// Flake epoxy floor from Sijo's photo (assets/floor.jpg ≈ 45 cm square = 9 units), mirror-tiled so seams don't show.
-// A plain grey stands in until the photo has loaded.
-const grid = canvasTex(64, 64, (g, w, h) => { g.fillStyle = "#b7b8b4"; g.fillRect(0, 0, w, h); });
-grid.tex.wrapS = grid.tex.wrapT = THREE.RepeatWrapping;
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: grid.tex, color: 0xa9aaa6, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.35 }));   // sealed epoxy, toned so the flakes read
+// Glazed ceramic floor tiles in Mulberry (#664139), 60 cm square (12 units), with recessed grout lines.
+// One texture holds 4 × 4 tiles; each tile varies a touch in tone and has a faint glaze mottle, like real ceramic.
+const TILE = 12, TILES_PER_TEX = 4;
+// The room's lights brighten and cool what you see, so base colours are pre-darkened until the rendered
+// colour on screen matches the swatch (measured in daylight): Mulberry #664139 floor, Oat #CDBEA5 walls.
+const FLOOR_TINT = 0x8a6357, WALL_PAINT = 0xa58c6b;
+function tileTextures() {
+  const S = 2048, T = S / TILES_PER_TEX, G = 8;   // px per tile; grout ≈ 9 mm
+  const col = document.createElement("canvas"), bump = document.createElement("canvas");
+  col.width = col.height = bump.width = bump.height = S;
+  const g = col.getContext("2d"), b = bump.getContext("2d");
+  g.fillStyle = "#a8988c"; g.fillRect(0, 0, S, S);           // grout: warm light grey, so every joint reads
+  b.fillStyle = "#000"; b.fillRect(0, 0, S, S);              // grout sits low
+  let seed = 11; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let ty = 0; ty < TILES_PER_TEX; ty++) for (let tx = 0; tx < TILES_PER_TEX; tx++) {
+    const x = tx * T + G / 2, y = ty * T + G / 2, w = T - G, k = 0.94 + rnd() * 0.1;
+    const c = [0x66, 0x41, 0x39].map((v) => Math.round(v * k));
+    const lg = g.createLinearGradient(x, y, x + w, y + w);   // gentle glaze sheen across the tile
+    lg.addColorStop(0, `rgb(${c.map((v) => v + 6)})`); lg.addColorStop(1, `rgb(${c.map((v) => v - 5)})`);
+    g.fillStyle = lg; g.fillRect(x, y, w, w);
+    for (let n = 0; n < 260; n++) {                          // glaze mottle
+      g.fillStyle = `rgba(${rnd() > 0.5 ? "255,235,225" : "40,15,10"},${0.015 + rnd() * 0.025})`;
+      g.beginPath(); g.arc(x + rnd() * w, y + rnd() * w, 6 + rnd() * 40, 0, 7); g.fill();
+    }
+    g.strokeStyle = "rgba(0,0,0,0.22)"; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, w - 2);       // soft bevel shadow
+    g.strokeStyle = "rgba(255,230,220,0.07)"; g.lineWidth = 1; g.strokeRect(x + 3, y + 3, w - 6, w - 6);
+    b.fillStyle = "#fff"; b.fillRect(x + 2, y + 2, w - 4, w - 4);   // tile face raised
+    b.fillStyle = "#bbb"; b.fillRect(x, y, w, 2); b.fillRect(x, y, 2, w); b.fillRect(x, y + w - 2, w, 2); b.fillRect(x + w - 2, y, 2, w);
+  }
+  const mk = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
+  return [mk(col, true), mk(bump, false)];
+}
+const [tileMap, tileBump] = tileTextures();
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshPhysicalMaterial({ map: tileMap, bumpMap: tileBump, bumpScale: 1.2, color: FLOOR_TINT, roughness: 0.42, clearcoat: 0.25, clearcoatRoughness: 0.25 }));   // glazed ceramic
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 floor.position.y = -14.8; // desk height ≈ 74 cm
 scene.add(floor);
-new THREE.TextureLoader().load(asset("assets/floor.jpg"), (t) => {
-  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
-  t.repeat.set(600 / 13, 600 / 13); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  floor.material.map = t; floor.material.needsUpdate = true;
-});
 
 
 /* ───────────────────────── Sijo's desk (from the photo) ─────────────────────────
@@ -436,14 +460,7 @@ new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.jpg" : "asset
 /* ───────────────────────── Wall + poster ───────────────────────── */
 const WALL_Z = TABLE.z - TABLE.d / 2 - 0.35;
 const ROOM_HALF = 26.4;   // half the room's width (≈2.6 m wide: a snug bedroom, the side walls close to the desk)
-const WALL_BROWN_EARLY = 0x45302a;
-const wallTex = canvasTex(512, 512, (g, w, h) => {
-  g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h);   // neutral plaster; the charcoal wall colour is a material tint
-  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},0.025)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
-});
-wallTex.tex.wrapS = wallTex.tex.wrapT = THREE.RepeatWrapping;
-wallTex.tex.repeat.set(28, 24);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ map: wallTex.tex, color: WALL_BROWN_EARLY, roughness: 0.92 }));   // chocolate brown (hidden behind the panels)
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 220), new THREE.MeshStandardMaterial({ color: WALL_PAINT, roughness: 0.94 }));   // Oat backing (hidden behind the painted panels)
 wall.position.set(TABLE.x, 60, WALL_Z);   // reaches well above and below anything the camera can see
 wall.receiveShadow = true;
 scene.add(wall);
@@ -454,62 +471,22 @@ for (const side of [-1, 1]) {   // side walls (plain backing behind the panellin
   sideWall.receiveShadow = true;
   scene.add(sideWall);
 }
-// Textured plaster walls from Sijo's photo (assets/wall.jpg, a trowelled "skip trowel" finish in warm taupe).
-// One photo tile ≈ 40 cm wide. The photo is made seamless on load (offset-and-blend, so no mirror patterns) and
-// softened a touch so the poster and lettering stay the heroes; it doubles as a bump map for real relief.
+// Painted walls: flat matte Oat (#CDBEA5), no texture. Skirting in Mulberry to match the floor tiles.
 const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling (DADO_Y = window-sill height)
-const PLASTER_W = 8, PLASTER_H = PLASTER_W * 1336 / 752;
-const WALL_TINT = 0xd08a52;   // warm gingerbread (324-3), multiplied over the plaster photo
-const plasterMats = [];
-function flatten(img) {   // remove the photo's uneven lighting (bright corner, vignette): pixel − local average + overall average
-  const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H;
-  const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0);
-  const lo = document.createElement("canvas"); lo.width = 6; lo.height = 10;
-  const lg = lo.getContext("2d"); lg.imageSmoothingQuality = "high"; lg.drawImage(img, 0, 0, 6, 10);
-  const blur = document.createElement("canvas"); blur.width = W; blur.height = H;
-  const bg = blur.getContext("2d", { willReadFrequently: true }); bg.imageSmoothingQuality = "high"; bg.drawImage(lo, 0, 0, W, H);
-  const px = g.getImageData(0, 0, W, H), b = bg.getImageData(0, 0, W, H).data, d = px.data, mean = [0, 0, 0];
-  for (let i = 0; i < b.length; i += 4) { mean[0] += b[i]; mean[1] += b[i + 1]; mean[2] += b[i + 2]; }
-  const n = b.length / 4; mean[0] /= n; mean[1] /= n; mean[2] /= n;
-  for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) d[i + k] = d[i + k] - b[i + k] + mean[k];
-  g.putImageData(px, 0, 0);
-  return c;
+const OAT = 0xcdbea5, MULBERRY = 0x664139;
+const wallPaint = new THREE.MeshStandardMaterial({ color: WALL_PAINT, roughness: 0.94 });
+{ // line the grout up with the back wall and centre a tile under the desk
+  const r = 600 / (TILE * TILES_PER_TEX), frac = (v) => v - Math.floor(v);
+  for (const t of [tileMap, tileBump]) { t.repeat.set(r, r); t.offset.set(frac(-((TABLE.x - TILE / 2 + 300) / 600) * r), frac(-((300 - WALL_Z) / 600) * r)); }
 }
-function seamless(src) {
-  const img = flatten(src);
-  const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H;
-  const g = c.getContext("2d");
-  g.filter = "contrast(0.62) brightness(0.95)";
-  for (const [x, y] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) g.drawImage(img, W / 2 + x * W, H / 2 + y * H);   // shifted by half: edges now continuous
-  const a = document.createElement("canvas"); a.width = W; a.height = H;
-  const ag = a.getContext("2d"); ag.filter = g.filter; ag.drawImage(img, 0, 0); ag.filter = "none";
-  ag.globalCompositeOperation = "destination-in";   // keep the original only away from its own edges
-  for (const lg of [ag.createLinearGradient(0, 0, W, 0), ag.createLinearGradient(0, 0, 0, H)]) {
-    lg.addColorStop(0, "rgba(0,0,0,0)"); lg.addColorStop(0.22, "#000"); lg.addColorStop(0.78, "#000"); lg.addColorStop(1, "rgba(0,0,0,0)");
-    ag.fillStyle = lg; ag.fillRect(0, 0, W, H);
-  }
-  g.filter = "none"; g.drawImage(a, 0, 0);
-  return c;
-}
-new THREE.TextureLoader().load(asset("assets/wall.jpg"), (img) => {
-  const t = new THREE.CanvasTexture(seamless(img.image));
-  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  for (const { m, len } of plasterMats) {
-    const tex = t.clone(); tex.needsUpdate = true; tex.repeat.set(len / PLASTER_W, (CEIL_Y - FLOOR_Y) / PLASTER_H);
-    m.map = tex; m.bumpMap = tex; m.bumpScale = 0.9; m.color.set(WALL_TINT); m.needsUpdate = true;
-  }
-});
-const TRIM = mat(0x5a4334, { roughness: 0.75 });
-const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0x33261d, { roughness: 0.9 }));
+const TRIM = mat(0xc2b296, { roughness: 0.8 }), SKIRT = mat(MULBERRY, { roughness: 0.45, clearcoat: 0.3 });
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0xe3d8c6, { roughness: 0.95 }));
 ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
 function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
   const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
-  const plaster = new THREE.MeshStandardMaterial({ color: 0x6b5242, roughness: 0.9 });   // brown until the photo arrives
-  plasterMats.push({ m: plaster, len });
-  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), plaster);
+  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), wallPaint);
   panels.position.set(0, (FLOOR_Y + CEIL_Y) / 2, 0.02); panels.receiveShadow = true;
-  const skirt = rbox(len, 1.4, 0.35, 0.08, TRIM, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
+  const skirt = rbox(len, 1.4, 0.35, 0.08, SKIRT, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
   const crown = rbox(len, 2.2, 1.1, 0.25, TRIM, 2); crown.position.set(0, CEIL_Y - 1.1, 0.55);
   const crownLip = rbox(len, 0.5, 1.6, 0.1, TRIM, 1); crownLip.position.set(0, CEIL_Y - 2.4, 0.8);
   grp.add(panels, skirt, crown, crownLip);
@@ -1151,8 +1128,8 @@ interactive(windowHit, "Let the night in ☾", () => { Sound.click(); setNight(d
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Name block — hung on the wall like studio lettering, right of the poster
 const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#f6efe6" },
-  { text: S.title, size: 112, weight: 500, color: "#e2d7ca", spacing: -0.01 }
+  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#5a382f" },
+  { text: S.title, size: 112, weight: 500, color: "#6f4a40", spacing: -0.01 }
 ], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
 nameBlock.rotation.x = 0;
 nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
@@ -1162,8 +1139,8 @@ interactive(nameBlock, "About me", () => boot("about"));
 // Roles strip — under the name
 const half = Math.ceil(S.roles.length / 2);
 const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#cdbfb0", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#cdbfb0", spacing: 0 }
+  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#7d5a50", spacing: 0 },
+  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#7d5a50", spacing: 0 }
 ], { width: 9.6, gap: 1.4 });
 rolesBlock.rotation.x = 0;
 rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
