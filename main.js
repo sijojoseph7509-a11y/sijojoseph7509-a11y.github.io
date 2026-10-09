@@ -360,7 +360,7 @@ function interactive(obj, label, onClick) {
 const TILE = 12, TILES_PER_TEX = 4;
 // The room's lights brighten and cool what you see, so base colours are pre-darkened until the rendered
 // colour on screen matches the swatch (measured in daylight): Mulberry #664139 floor, Oat #CDBEA5 walls.
-const FLOOR_TINT = 0x8a6357, WALL_PAINT = 0xa58c6b;
+const FLOOR_TINT = 0x8a6357, WALL_PAINT = 0xab9271;
 function tileTextures() {
   const S = 2048, T = S / TILES_PER_TEX, G = 8;   // px per tile; grout ≈ 9 mm
   const col = document.createElement("canvas"), bump = document.createElement("canvas");
@@ -474,7 +474,61 @@ for (const side of [-1, 1]) {   // side walls (plain backing behind the panellin
 // Painted walls: flat matte Oat (#CDBEA5), no texture. Skirting in Mulberry to match the floor tiles.
 const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m ceiling (DADO_Y = window-sill height)
 const OAT = 0xcdbea5, MULBERRY = 0x664139;
-const wallPaint = new THREE.MeshStandardMaterial({ color: WALL_PAINT, roughness: 0.94 });
+// A real painted wall, not a flat colour: roller stipple (orange-peel emulsion) as relief, broad soft unevenness in
+// the plaster and paint, faint roller laps, and ambient shadow where the walls meet the floor, ceiling and corners.
+function tileNoise(size, period, rnd) {   // smooth value noise that wraps at the edges (period cells across)
+  const grid = Array.from({ length: period * period }, rnd), out = new Float32Array(size * size);
+  const at = (x, y) => grid[((y % period + period) % period) * period + ((x % period + period) % period)];
+  const sm = (t) => t * t * (3 - 2 * t);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const fx = (x / size) * period, fy = (y / size) * period, ix = Math.floor(fx), iy = Math.floor(fy), tx = sm(fx - ix), ty = sm(fy - iy);
+    const a = at(ix, iy) + (at(ix + 1, iy) - at(ix, iy)) * tx, b = at(ix, iy + 1) + (at(ix + 1, iy + 1) - at(ix, iy + 1)) * tx;
+    out[y * size + x] = a + (b - a) * ty;
+  }
+  return out;
+}
+function paintTextures() {
+  let seed = 23; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const mk = (c, srgb, rep) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.userData.unit = rep; return t; };
+  // colour: broad, gentle tonal drift (≈ ±3%), covering 2.4 m before it repeats
+  const CS = 512, col = document.createElement("canvas"); col.width = col.height = CS;
+  const cg = col.getContext("2d"), cd = cg.createImageData(CS, CS);
+  const n1 = tileNoise(CS, 3, rnd), n2 = tileNoise(CS, 7, rnd), n3 = tileNoise(CS, 17, rnd);
+  for (let i = 0; i < CS * CS; i++) {
+    const x = i % CS, v = (n1[i] - 0.5) * 0.07 + (n2[i] - 0.5) * 0.04 + (n3[i] - 0.5) * 0.016 + Math.sin((x / CS) * Math.PI * 2 * 9) * 0.004;   // + roller laps
+    const k = 244 * (1 + v);
+    cd.data[i * 4] = k + 1.5; cd.data[i * 4 + 1] = k; cd.data[i * 4 + 2] = k - 1.5 * (n2[i] - 0.5); cd.data[i * 4 + 3] = 255;
+  }
+  cg.putImageData(cd, 0, 0);
+  // relief: orange-peel stipple from the roller over a slightly wavy plaster, 80 cm per repeat
+  const BS = 1024, bmp = document.createElement("canvas"); bmp.width = bmp.height = BS;
+  const bg = bmp.getContext("2d"), bd = bg.createImageData(BS, BS);
+  const w1 = tileNoise(BS, 5, rnd), w2 = tileNoise(BS, 64, rnd), w3 = tileNoise(BS, 160, rnd);
+  for (let i = 0; i < BS * BS; i++) { const v = 128 + (w1[i] - 0.5) * 40 + (w2[i] - 0.5) * 70 + (w3[i] - 0.5) * 60; bd.data[i * 4] = bd.data[i * 4 + 1] = bd.data[i * 4 + 2] = v; bd.data[i * 4 + 3] = 255; }
+  bg.putImageData(bd, 0, 0);
+  for (let i = 0; i < 2600; i++) {   // the odd larger pit or ridge in the plaster, wrapped so the tile stays seamless
+    const x = rnd() * BS, y = rnd() * BS, r = 1.5 + rnd() * 4, light = rnd() > 0.5;
+    for (const [dx, dy] of [[0, 0], [-BS, 0], [BS, 0], [0, -BS], [0, BS]]) {
+      const gr = bg.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r);
+      gr.addColorStop(0, light ? "rgba(255,255,255,.35)" : "rgba(0,0,0,.35)"); gr.addColorStop(1, "rgba(128,128,128,0)");
+      bg.fillStyle = gr; bg.beginPath(); bg.arc(x + dx, y + dy, r, 0, 7); bg.fill();
+    }
+  }
+  return { map: mk(col, true, 48), bump: mk(bmp, false, 16) };
+}
+const PAINT = paintTextures();
+const wallPaintFor = (len) => {   // each wall gets its own repeat so the paint scale is the same everywhere
+  const map = PAINT.map.clone(), bump = PAINT.bump.clone(), H = CEIL_Y - FLOOR_Y;
+  map.repeat.set(len / 48, H / 48); bump.repeat.set(len / 16, H / 16); map.needsUpdate = bump.needsUpdate = true;
+  return new THREE.MeshStandardMaterial({ color: WALL_PAINT, map, bumpMap: bump, bumpScale: 0.7, roughness: 0.88 });
+};
+// soft ambient shadow strips (a gradient from the junction outwards), laid just in front of the paint
+const aoTex = (dir) => canvasTex(4, 256, (g, w, h) => { const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, "#fff"); lg.addColorStop(0.35, "#777"); lg.addColorStop(1, "#000"); g.fillStyle = lg; g.fillRect(0, 0, w, h); }).tex;
+const AO_TEX = aoTex();
+function aoStrip(w, h, strength) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: 0x2b1a12, alphaMap: AO_TEX, transparent: true, opacity: strength, depthWrite: false }));
+  m.renderOrder = 1; return m;
+}
 { // line the grout up with the back wall and centre a tile under the desk
   const r = 600 / (TILE * TILES_PER_TEX), frac = (v) => v - Math.floor(v);
   for (const t of [tileMap, tileBump]) { t.repeat.set(r, r); t.offset.set(frac(-((TABLE.x - TILE / 2 + 300) / 600) * r), frac(-((300 - WALL_Z) / 600) * r)); }
@@ -482,10 +536,16 @@ const wallPaint = new THREE.MeshStandardMaterial({ color: WALL_PAINT, roughness:
 const TRIM = mat(0xc2b296, { roughness: 0.8 }), SKIRT = mat(MULBERRY, { roughness: 0.45, clearcoat: 0.3 });
 const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(400, 500), mat(0xe3d8c6, { roughness: 0.95 }));
 ceiling.rotation.x = Math.PI / 2; ceiling.position.set(TABLE.x, CEIL_Y, WALL_Z + 200); scene.add(ceiling);
-function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z points into the room
+function trimWall(len, x, z, rotY, corners = []) {   // local x runs along the wall, local +z points into the room; corners: ends (-1/+1) that meet another wall
   const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = rotY;
-  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), wallPaint);
+  const panels = new THREE.Mesh(new THREE.PlaneGeometry(len, CEIL_Y - FLOOR_Y), wallPaintFor(len));
   panels.position.set(0, (FLOOR_Y + CEIL_Y) / 2, 0.02); panels.receiveShadow = true;
+  const H = CEIL_Y - FLOOR_Y;
+  const low = aoStrip(len, 9, 0.32); low.position.set(0, FLOOR_Y + 1.4 + 4.5, 0.04); low.rotation.z = Math.PI; grp.add(low);   // above the skirting
+  const high = aoStrip(len, 7, 0.28); high.position.set(0, CEIL_Y - 2.6 - 3.5, 0.04); grp.add(high);                        // under the cornice
+  for (const end of corners) {   // vertical shadow in each inside corner
+    const c = aoStrip(H, 10, 0.22); c.rotation.z = end > 0 ? -Math.PI / 2 : Math.PI / 2; c.position.set(end * (len / 2 - 5), (FLOOR_Y + CEIL_Y) / 2, 0.045); grp.add(c);
+  }
   const skirt = rbox(len, 1.4, 0.35, 0.08, SKIRT, 2); skirt.position.set(0, FLOOR_Y + 0.7, 0.18);
   const crown = rbox(len, 2.2, 1.1, 0.25, TRIM, 2); crown.position.set(0, CEIL_Y - 1.1, 0.55);
   const crownLip = rbox(len, 0.5, 1.6, 0.1, TRIM, 1); crownLip.position.set(0, CEIL_Y - 2.4, 0.8);
@@ -493,10 +553,10 @@ function trimWall(len, x, z, rotY) {   // local x runs along the wall, local +z 
   scene.add(grp);
   return grp;
 }
-trimWall(ROOM_HALF * 2 + 0.4, TABLE.x, WALL_Z, 0);
-const leftWall = trimWall(400, TABLE.x - ROOM_HALF, WALL_Z + 200, Math.PI / 2);
+trimWall(ROOM_HALF * 2 + 0.4, TABLE.x, WALL_Z, 0, [-1, 1]);
+const leftWall = trimWall(400, TABLE.x - ROOM_HALF, WALL_Z + 200, Math.PI / 2, [1]);
 const onLeft = (z) => (WALL_Z + 200) - z;     // world z → local x on the left wall
-const rightWall = trimWall(400, TABLE.x + ROOM_HALF, WALL_Z + 200, -Math.PI / 2);   // window, curtain and the corner things live here
+const rightWall = trimWall(400, TABLE.x + ROOM_HALF, WALL_Z + 200, -Math.PI / 2, [-1]);   // window, curtain and the corner things live here
 const onRight = (z) => z - (WALL_Z + 200);   // world z → local x on the right wall
 
 // Sijo's own typographic poster ("To create a solution for something…"), taped to the wall, no frame
