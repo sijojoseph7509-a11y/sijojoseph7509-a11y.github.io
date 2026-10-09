@@ -84,10 +84,11 @@ for (const mobile of [false, true]) {
   await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 }); await sleep(600);
-    const home = await p.evaluate(() => Desk.offscreen().filter((l) => !/Kick|About me|the (sun|night) in/.test(l)));   // close-up: ball + wall lettering may be out of frame
+    const SIDE = /the (sun|night) in|Things I tell myself|camera and my red cap|Macramé/;   // side walls: drag to look at them
+    const home = await p.evaluate((side) => Desk.offscreen().filter((l) => !/Kick|About me/.test(l) && !new RegExp(side).test(l)), SIDE.source);   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
     await p.click("#zoomBtn"); await sleep(1400);
-    const room = await p.evaluate(() => Desk.offscreen().filter((l) => !/the (sun|night) in/.test(l)));   // the window is on the side wall: drag to look at it
+    const room = await p.evaluate((side) => Desk.offscreen().filter((l) => !new RegExp(side).test(l)), SIDE.source);
     expect(room.length === 0, "off-screen in the room view: " + room.join(", "));
     await p.click("#zoomBtn"); await sleep(1300);
     expect(!(await p.evaluate(() => Desk.state().room)), "zoom button did not come back to the desk"); await p.ctx.close();
