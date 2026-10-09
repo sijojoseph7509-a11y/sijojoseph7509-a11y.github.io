@@ -16,19 +16,19 @@ dimensions, then check it next to the laptop.
 | MacBook Pro 14 (Space Black) | 31.3 × 22.1 cm | 6.25 × 4.43 | (−0.6, −0.25) |
 | Shea (cat) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | (6.4, 0), side-on, tail over the edge |
 | Soundbar (click = music) | 40 × 7 × 7 cm | 8 × 1.25 × 1.35 | (5.5, −2.75), behind Shea |
-| Astronaut galaxy light (click = projection) | ≈26 cm | 5.2 tall | (−6.7, −2.3) by the bottle |
-| Water bottle | 7.4 × 25 cm | r 0.37, h ≈5 | (−8.6, −2.6) |
+| Astronaut galaxy light (click = projection; head tilts up when on) | ≈26 cm | 5.2 tall | (−7.4, −2.2) by the bottle |
+| Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.6, −0.35) front of the astro |
 | Plant pot (mango yellow) | 11 cm | r 1.1, h 2 | (−4.6, −2.4) |
 | Pencil cup + pencils | 8 × 10 cm, pencils 17 cm | r 0.42, h 2; 3.5 | (−8.4, 5.2) front-left |
-| A5 sketchbook | 21 × 14.8 cm | scale 2.35 | (−6.3, 0.9) |
-| A4 project folders + index tabs | 31 × 24 cm | 6.2 × 4.7 | stack at (4.6, 4.55), tab per project |
+| "Personal explorations" sketchbook | ≈16 × 11 cm | scale 1.75 | (−5.7, 1.6) |
+| Project folders + index tabs | ≈22 × 17 cm | group scale 0.72 | front-right stack, tab per project |
 | iPhone | 147.6 × 71.6 mm | 2.95 × 1.43 | on the mat (−4.3, 4.5) |
-| Football (size 5) | 22 cm | `BALL_R` 2.2 | floor |
+| Football | 17 cm | `BALL_R` 1.7 | floor |
 | 61-key keyboard | 94 × 32 × 9 cm | 19 × 6.6 × 1.8 | leaning ≈9° on the left wall |
-| Pop-art prints (10, original art) | ≈21 × 26 cm each | 4.2 × 5.25 | left wall, 5 × 2 grid |
+| Sijo's One Piece prints (his photo, `assets/wall-prints.webp`) | ≈80 × 45 cm grid | 16 wide | left wall |
 | Camera + red cap on a hook | camera 12 × 7.5 cm | 2.4 × 1.5 | left wall, near the back corner |
 | Macramé shelf, succulents, toy bus | 40 cm wide | 6.2 | right wall, back corner (far right) |
-| Modular switch board | 15 × 8 cm | 4.2 × 2.1 | back wall, left |
+| Modular switch board | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the name |
 
 ## Art direction
 - Walls: matte Oat #CDBEA5 painted plaster (`paintTextures`: stipple bump + soft tonal drift + faint marks) with soft
@@ -38,7 +38,7 @@ dimensions, then check it next to the laptop.
 - Every object that rests on a surface gets a `contact(...)` shadow.
 - Window: NID Bengaluru across the road (brick + white bands, sign, rain tree, gulmohar, palm, auto-rickshaw), drawn in
   `skyTex(night)`; soft glass blur. No real logos anywhere; brand products (speaker, camera) are drawn without marks.
-- No third-party characters or artwork (copyright): make an original piece in the same mood instead.
+- Third-party artwork only when Sijo explicitly asks (the One Piece prints are his request); otherwise make original pieces.
 - Night = the pendant lamp does the work: `LOOK.night` + `scene.environmentIntensity` 0.32. Curtains glow by day.
 
 ## Check
