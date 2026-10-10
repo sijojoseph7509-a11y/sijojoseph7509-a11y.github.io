@@ -11,9 +11,10 @@
   <title>Sijo Joseph · Multidisciplinary Designer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231d1d1f'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23f5f5f7' stroke-width='3'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Helvetica,Arial,sans-serif' font-weight='700' font-size='24' fill='%23f5f5f7'%3ESJ%3C/text%3E%3C/svg%3E">
   <meta name="description" content="Sijo Joseph, a multidisciplinary designer from Kerala, based in Bangalore: product, brand, experience and 3D design.">
-  <script src="update.js?v=83"></script>
-  <link href="fonts/fonts.css?v=83" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=83">
+  <script src="update.js?v=84"></script>
+  <script src="gate.js?v=84"></script>
+  <link href="fonts/fonts.css?v=84" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=84">
   <script type="importmap">
   {
     "imports": {
@@ -27,10 +28,24 @@
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/controls/OrbitControls.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js">
-  <link rel="modulepreload" href="main.js?v=83">
-  <link rel="modulepreload" href="cat.js?v=83">
+  <link rel="modulepreload" href="main.js?v=84">
+  <link rel="modulepreload" href="cat.js?v=84">
 </head>
 <body>
+  <!-- Password gate (gate.js): covers everything until the password is entered once on this device -->
+  <div class="gate" id="gate" hidden>
+    <form class="gate-inner" autocomplete="off">
+      <span class="loader-name" aria-hidden="true">SJ</span>
+      <h1 class="gate-title">This portfolio is private</h1>
+      <p class="gate-sub">Enter the password to see my work.</p>
+      <label class="gate-field"><span class="sr">Password</span>
+        <input type="password" name="pw" placeholder="Password" required autocapitalize="off" spellcheck="false" enterkeyhint="go"></label>
+      <button class="intro-go gate-go" type="submit">Unlock</button>
+      <p class="gate-msg" role="alert" aria-live="assertive"></p>
+      <a class="gate-ask" href="mailto:sijojoseph7509@gmail.com?subject=Portfolio%20password">Need the password? Email me</a>
+    </form>
+  </div>
+
   <!-- 3D desk -->
   <div id="stage" class="stage" aria-label="Interactive 3D desk. Click the laptop to open the portfolio."></div>
   <div class="vignette" aria-hidden="true"></div>
@@ -141,9 +156,9 @@
 
   <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
 
-  <script src="content.js?v=83"></script>
-  <script src="os.js?v=83"></script>
-  <script src="music.js?v=83"></script>
-  <script type="module" src="main.js?v=83"></script>
+  <script src="content.js?v=84"></script>
+  <script src="os.js?v=84"></script>
+  <script src="music.js?v=84"></script>
+  <script type="module" src="main.js?v=84"></script>
 </body>
 </html>

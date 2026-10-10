@@ -5,6 +5,8 @@
 import fs from "fs"; import crypto from "crypto"; import path from "path"; import { createRequire } from "module";
 const ROOT = process.cwd(), FIX = process.argv.includes("--fix");
 const BASE = (process.argv.slice(2).find((a) => /^https?:/.test(a)) || "").replace(/\/?$/, "/");
+// password gate (gate.js): tests start unlocked, as a visitor who already entered the password. Keep in sync with gate.js HASH.
+const GATE_HASH = "1242c393c539cf38364f807ab0a916199da4fb071ee17fe9349ddfe853e39f89";
 const results = []; const ok = (n, note = "") => results.push(["PASS", n, note]); const bad = (n, note) => results.push(["FAIL", n, note]);
 const sha = (s) => crypto.createHash("sha256").update(s).digest("base64");
 const read = (f) => fs.readFileSync(path.join(ROOT, f), "utf8");
@@ -57,7 +59,7 @@ if (BASE) {
   const require = createRequire(import.meta.url);
   const puppeteer = require(require.resolve("puppeteer-core", { paths: [process.env.QA_DEPS || ROOT, ROOT] }));
   const b = await puppeteer.launch({ executablePath: process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: "new", args: ["--use-angle=metal"] });
-  const p = await b.newPage(); const hosts = new Set(); const viol = [];
+  const p = await b.newPage(); const hosts = new Set(); const viol = []; await p.evaluateOnNewDocument((h) => { try { localStorage.setItem("gate", h); } catch (_) {} }, GATE_HASH);
   p.on("request", (r) => { const u = new URL(r.url()); if (/^https?:$/.test(u.protocol)) hosts.add(u.host); });
   await p.exposeFunction("__viol", (v) => viol.push(v));
   await p.evaluateOnNewDocument(() => document.addEventListener("securitypolicyviolation", (e) => window.__viol(e.violatedDirective + " " + e.blockedURI)));

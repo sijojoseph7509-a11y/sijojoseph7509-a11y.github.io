@@ -518,3 +518,24 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 @media (min-width: 761px) and (max-width: 900px) { .mb-left [data-menu="view"], .mb-left [data-menu="go"] { display: none; } }
 /* the "Designer" widget only shows on a clear desktop — there's never room beside an open window */
 .os-screen:has(#win:not([hidden])) .widget { display: none; }
+
+/* Password gate (gate.js) — same black + SJ ring as the loader, above everything */
+.gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: safe center; padding: 24px; overflow-y: auto; background: #000; transition: opacity .6s var(--ease); }
+.gate[hidden] { display: none; }
+.unlocked .gate { opacity: 0; pointer-events: none; }
+.locked body { overflow: hidden; }
+.gate-inner { display: grid; justify-items: center; gap: 18px; width: min(320px, 100%); text-align: center; animation: quoteIn .6s var(--ease) both; }
+.gate-inner .loader-name { width: 60px; height: 60px; font-size: 23px; border-width: 2.5px; margin-bottom: 8px; }
+.gate-title { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: #f5f5f7; }
+.gate-sub { margin: -8px 0 6px; font-size: 15px; color: #a1a1a6; }
+.gate-field { width: 100%; }
+.gate-field input { box-sizing: border-box; width: 100%; padding: 13px 18px; border: 1px solid #3a3a3c; border-radius: 999px; background: #1c1c1e; color: #f5f5f7;
+  font: 500 17px/1.2 var(--font); text-align: center; outline: none; transition: border-color .2s; }
+.gate-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10, 132, 255, .3); }
+.gate-go { margin-top: 0; }
+.gate-msg { min-height: 1.3em; margin: -4px 0 0; font-size: 14px; color: #ff6961; }
+.gate-ask { font-size: 13px; color: #a1a1a6; text-decoration: underline; text-underline-offset: 3px; }
+.gate.shake .gate-inner { animation: gateShake .4s var(--ease); }
+@keyframes gateShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .gate, .gate-inner { transition: none; animation: none; } }
