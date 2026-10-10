@@ -5,26 +5,26 @@ description: Automated bug check for Sijo's 3D portfolio site. Use after any cha
 
 # Site QA
 
-Runs ~25 real-browser checks against the site with headless Google Chrome and prints ✅/❌ per check.
+Runs 35 real-browser checks against the site with headless Google Chrome and prints ✅/❌ per check.
 
 ## Run it (also run the site-security skill before pushing)
 
 1. Serve the repo locally (from the repo root): `python3 -m http.server 4321`
 2. Install the one dependency into a scratch folder once: `npm i --prefix <scratch-dir> puppeteer-core@23`
 3. Run: `QA_DEPS=<scratch-dir> node .claude/skills/site-qa/qa.mjs http://localhost:4321/`
-   - Against the live site: pass `https://sijojoseph7509-a11y.github.io/` instead.
+   - Against the live site: pass `https://sijo.work/` instead.
    - Exit code 1 = at least one check failed. Fix every ❌ before pushing.
 
 ## Bug sweep (layout on many devices)
 `QA_DEPS=<scratch-dir> node .claude/skills/site-qa/sweep.mjs http://localhost:4321/ <out-dir>`
-Opens the site on 11 sizes (iPhone SE/15/15 Pro Max, small Android, phone landscape, iPad, very narrow + narrow browser
-windows, small laptop, MacBook, desktop) and flags: controls off-screen or overlapping, cut-off text, sideways scrolling,
+Opens the site on 18 sizes (phones, tablets, laptops up to 4K/ultrawide) and every case study and flags: controls off-screen or overlapping, cut-off text, sideways scrolling,
 missing models, a missing/broken Mac wallpaper, errors. It saves screenshots (welcome, desk, Mac, wallpaper) for every
 device — **look at them**: the automated checks can't judge whether something looks right (e.g. a face cropped out).
 
 ## What it checks
-- Desktop + phone load: real cat, football and headset present (`window.Desk.state()`), zero console errors / failed requests
+- Desktop + phone load: real cat and football present (`window.Desk.state()`), zero console errors / failed requests
 - Every `?open=` deep link opens the right window
+- Shea walks in, jumps onto the desk, wanders and settles (`Desk.state().catBusy`; position checks wait for it)
 - Enter boots the laptop, rendering pauses behind the Mac desktop, Esc returns to the desk
 - Every menu opens; ⌘K Spotlight → "blend" → Skills; ⌘5 → Contact; placeholder project cards are not links
 - Window body scrolls on a phone; resizing while the desktop is open repaints the room

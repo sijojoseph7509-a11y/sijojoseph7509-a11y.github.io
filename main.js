@@ -1228,7 +1228,7 @@ kbFace.position.z = 0.91; keyboard.add(kbFace);
 keyboard.position.set(onLeft(9), FLOOR_Y + 9.35, 2.45); keyboard.rotation.x = -0.16;   // leaning ≈9° on the opposite (left) wall
 keyboard.traverse((o) => { if (o.isMesh) o.castShadow = false; });
 leftWall.add(keyboard);
-// fluted white pedestal with a peace lily, and two floor pots
+// fluted white pedestal with a peace lily
 const pedGeo = new THREE.CylinderGeometry(2.2, 2.3, 9, 64, 1);
 { const p = pedGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), r = Math.hypot(x, z); if (r > 1) { const k = 1 + 0.035 * Math.cos(a * 28); p.setX(i, x * k); p.setZ(i, z * k); } } pedGeo.computeVertexNormals(); }
 const pedestal = mesh(pedGeo, mat(0xf3f1ec, { roughness: 0.75 }));
@@ -1292,7 +1292,7 @@ contact(-8.4, DESK_Y, 5.2, 1.8, 1.8, 0.45);             // bottle
 contact(-4.95, DESK_Y, -1.95, 2.4, 2.4, 0.4);             // plant
 contact(-6.9, DESK_Y, 2.1, 3.2, 2.4, 0.35, -0.25);       // sketchbook
 contact(4.85, DESK_Y, 4.6, 4.4, 3.4, 0.28, 0.1);         // folders
-contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);          // Shea
+const catShadow = contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);   // Shea (follows her around: stepCat)
 contact(TABLE.x, FLOOR_Y + 0.03, TABLE.z, TABLE.w + 3, TABLE.d + 3, 0.5);   // the desk on the floor
 contact(TABLE.x + ROOM_HALF - 3.4, FLOOR_Y + 0.03, WALL_Z + 3.2, 6.5, 6.5, 0.5);   // pedestal
 contact(TABLE.x - ROOM_HALF + 3.4, FLOOR_Y + 0.03, 9, 4.5, 21, 0.4);              // keyboard foot against the left wall
@@ -1378,74 +1378,96 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 
 
 /* ───────────────────────── Wall lettering ───────────────────────── */
-// Profile card on the wall, right of the poster: a printed UI card in the "frosted photo" style — full-bleed photo
-// (assets/profile.jpg), a progressive blur + dark glass at the bottom, white name with a verified seal, a short line
-// about Sijo, two stats and a white pill button. Mounted on a thin white acrylic panel with a soft shadow on the wall.
-const CARD = { w: 6.27, h: 10.34, px: 1000 };
+// Profile card: a floating UI card in the "frosted photo" style, hovering a few cm off the back wall right of the poster:
+// full-bleed photo (assets/profile.jpg), progressive blur + dark glass at the bottom, white name with a verified seal,
+// a short line about Sijo, two stats and a white pill button. Rounded corners, lit from within like a screen, a thin
+// glass rim, a soft drop shadow on the wall behind it, and a slow drift so it reads as UI, not a print.
+const CARD = { w: 6.27, h: 10.34, px: 1400, lift: 1.2 };   // lift = distance off the wall (≈6 cm)
 const cardCanvas = document.createElement("canvas"); cardCanvas.width = CARD.px; cardCanvas.height = Math.round(CARD.px * CARD.h / CARD.w);
 const cardTex = new THREE.CanvasTexture(cardCanvas); cardTex.colorSpace = THREE.SRGBColorSpace; cardTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+function sharpen(img) {   // unsharp mask: the source photo is soft, this brings back edge detail (hair, eyes) without halos
+  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+  const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0);
+  const src = g.getImageData(0, 0, c.width, c.height);
+  g.filter = "blur(1.6px)"; g.drawImage(img, 0, 0); g.filter = "none";
+  const bl = g.getImageData(0, 0, c.width, c.height), a = src.data, b = bl.data;
+  for (let i = 0; i < a.length; i += 4) for (let k = 0; k < 3; k++) { const d = a[i + k] - b[i + k]; a[i + k] = Math.max(0, Math.min(255, a[i + k] + d * 0.9)); }
+  g.putImageData(src, 0, 0); return c;
+}
 function drawCard(photo) {
-  const g = cardCanvas.getContext("2d"), W = cardCanvas.width, H = cardCanvas.height, rim = 16, R = 70;
+  const g = cardCanvas.getContext("2d"), W = cardCanvas.width, H = cardCanvas.height, u = W / 1000, R = 96 * u;
   g.clearRect(0, 0, W, H);
-  g.fillStyle = "#f4f4f2"; g.beginPath(); g.roundRect(0, 0, W, H, R + rim); g.fill();   // white rim
-  const x0 = rim, y0 = rim, iw = W - rim * 2, ih = H - rim * 2;
+  const x0 = 0, y0 = 0, iw = W, ih = H;
   g.save(); g.beginPath(); g.roundRect(x0, y0, iw, ih, R); g.clip();
   g.fillStyle = "#1f2124"; g.fillRect(x0, y0, iw, ih);
-  const drawPhoto = (blur) => { if (!photo) return; const s = Math.max(iw / photo.width, (ih * 0.86) / photo.height), pw = photo.width * s, ph = photo.height * s;
-    g.filter = blur ? `blur(${blur}px)` : "none"; g.drawImage(photo, x0 + (iw - pw) / 2, y0 - ih * 0.02, pw, ph); g.filter = "none";
+  const place = () => { const s = Math.max(iw / photo.width, (ih * 0.86) / photo.height), pw = photo.width * s, ph = photo.height * s; return [x0 + (iw - pw) / 2, y0 - ih * 0.02, pw, ph]; };
+  const drawPhoto = (ctx, blur) => { if (!photo) return; const [px, py, pw, ph] = place();
+    ctx.filter = blur ? `blur(${blur}px)` : "none"; ctx.drawImage(photo, px, py, pw, ph);
     // below the photo, extend its bottom row so the card is filled (the blur hides the seam)
-    g.filter = `blur(${Math.max(blur, 24)}px)`; g.drawImage(photo, 0, photo.height - 4, photo.width, 4, x0 + (iw - pw) / 2, y0 - ih * 0.02 + ph - 2, pw, ih); g.filter = "none"; };
-  drawPhoto(0);
-  // progressive blur: a blurred copy faded in from 52% down
+    ctx.filter = `blur(${Math.max(blur, 24 * u)}px)`; ctx.drawImage(photo, 0, photo.height - 4, photo.width, 4, px, py + ph - 2, pw, ih); ctx.filter = "none"; };
+  drawPhoto(g, 0);
+  // progressive blur: a blurred copy faded in from 50% down
   const bc = document.createElement("canvas"); bc.width = W; bc.height = H; const bg = bc.getContext("2d");
-  { const save = g; const tmp = bg; tmp.save(); tmp.beginPath(); tmp.roundRect(x0, y0, iw, ih, R); tmp.clip();
-    if (photo) { const s2 = Math.max(iw / photo.width, (ih * 0.86) / photo.height), pw = photo.width * s2, ph = photo.height * s2; tmp.filter = "blur(26px)"; tmp.drawImage(photo, x0 + (iw - pw) / 2, y0 - ih * 0.02, pw, ph); tmp.drawImage(photo, 0, photo.height - 4, photo.width, 4, x0 + (iw - pw) / 2, y0 - ih * 0.02 + ph - 2, pw, ih); tmp.filter = "none"; }
-    tmp.globalCompositeOperation = "destination-in"; const m = tmp.createLinearGradient(0, H * 0.5, 0, H * 0.72); m.addColorStop(0, "rgba(0,0,0,0)"); m.addColorStop(1, "rgba(0,0,0,1)"); tmp.fillStyle = m; tmp.fillRect(0, 0, W, H); tmp.restore(); }
+  drawPhoto(bg, 26 * u);
+  bg.globalCompositeOperation = "destination-in"; const m = bg.createLinearGradient(0, H * 0.5, 0, H * 0.72); m.addColorStop(0, "rgba(0,0,0,0)"); m.addColorStop(1, "rgba(0,0,0,1)"); bg.fillStyle = m; bg.fillRect(0, 0, W, H);
   g.drawImage(bc, 0, 0);
-  const shade = g.createLinearGradient(0, H * 0.5, 0, H); shade.addColorStop(0, "rgba(20,20,22,0)"); shade.addColorStop(0.45, "rgba(30,31,34,.42)"); shade.addColorStop(1, "rgba(38,39,42,.7)");
+  const shade = g.createLinearGradient(0, H * 0.5, 0, H); shade.addColorStop(0, "rgba(20,20,22,0)"); shade.addColorStop(0.45, "rgba(30,31,34,.42)"); shade.addColorStop(1, "rgba(38,39,42,.72)");
   g.fillStyle = shade; g.fillRect(x0, y0, iw, ih);
-  // glass edge highlight
-  g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 3; g.beginPath(); g.roundRect(x0 + 1.5, y0 + 1.5, iw - 3, ih - 3, R - 1); g.stroke();
+  // glass rim: a bright hairline catching the light at the top, fading down the sides
+  const rim = g.createLinearGradient(0, 0, 0, H); rim.addColorStop(0, "rgba(255,255,255,.75)"); rim.addColorStop(0.35, "rgba(255,255,255,.22)"); rim.addColorStop(1, "rgba(255,255,255,.32)");
+  g.strokeStyle = rim; g.lineWidth = 5 * u; g.beginPath(); g.roundRect(x0 + 2.5 * u, y0 + 2.5 * u, iw - 5 * u, ih - 5 * u, R - 2 * u); g.stroke();
   // text
-  const L = x0 + 56, F = '-apple-system, "SF Pro Display", "Inter", system-ui, sans-serif';
-  g.fillStyle = "#fff"; g.textBaseline = "alphabetic"; g.font = `600 78px ${F}`; if ("letterSpacing" in g) g.letterSpacing = "-1px";
+  const L = x0 + 64 * u, F = '-apple-system, "SF Pro Display", "Inter", system-ui, sans-serif';
+  g.fillStyle = "#fff"; g.textBaseline = "alphabetic"; g.font = `600 ${78 * u}px ${F}`; if ("letterSpacing" in g) g.letterSpacing = `${-1 * u}px`;
   const nameY = H * 0.705; g.fillText(S.name, L, nameY); const nw = g.measureText(S.name).width;
   // verified seal (white scalloped badge, dark check)
-  { const cx = L + nw + 50, cy = nameY - 27, r = 30; g.fillStyle = "#fff"; g.beginPath();
+  { const cx = L + nw + 50 * u, cy = nameY - 27 * u, r = 30 * u; g.fillStyle = "#fff"; g.beginPath();
     for (let k = 0; k <= 48; k++) { const a = k / 48 * Math.PI * 2, rr = r * (k % 2 ? 0.86 : 1); g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.fill();
-    g.strokeStyle = "#1d1d1f"; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(cx - 11, cy + 1); g.lineTo(cx - 3, cy + 9); g.lineTo(cx + 12, cy - 8); g.stroke(); }
+    g.strokeStyle = "#1d1d1f"; g.lineWidth = 6 * u; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(cx - 11 * u, cy + 1 * u); g.lineTo(cx - 3 * u, cy + 9 * u); g.lineTo(cx + 12 * u, cy - 8 * u); g.stroke(); }
   if ("letterSpacing" in g) g.letterSpacing = "0px";
-  g.fillStyle = "rgba(255,255,255,.92)"; g.font = `400 44px ${F}`;
-  ["A multidisciplinary designer:", "product, brand, experience, 3D."].forEach((t, i) => g.fillText(t, L, nameY + 78 + i * 58));
-  // stats: case studies + disciplines, with outline icons
-  const sy = H * 0.915; g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 3.5; g.lineCap = "round";
-  g.beginPath(); g.arc(L + 14, sy - 26, 9, 0, 7); g.stroke(); g.beginPath(); g.arc(L + 14, sy + 6, 17, Math.PI * 1.05, Math.PI * 1.95); g.stroke();   // person
-  g.fillStyle = "#fff"; g.font = `600 44px ${F}`; g.fillText(String(S.roles.length), L + 46, sy);
-  const s2 = L + 44 + g.measureText(String(S.roles.length)).width + 50;
-  g.strokeRect(s2 + 6, sy - 34, 22, 22); g.beginPath(); g.moveTo(s2, sy - 20); g.lineTo(s2, sy - 4); g.lineTo(s2 + 16, sy - 4); g.stroke();   // stacked squares
-  g.fillText(String(S.projects.length), s2 + 42, sy);
+  g.fillStyle = "rgba(255,255,255,.92)"; g.font = `400 ${44 * u}px ${F}`;
+  ["A multidisciplinary designer:", "product, brand, experience, 3D."].forEach((t, i) => g.fillText(t, L, nameY + (78 + i * 58) * u));
+  // stats: disciplines + case studies, with outline icons
+  const sy = H * 0.915; g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 3.5 * u; g.lineCap = "round";
+  g.beginPath(); g.arc(L + 14 * u, sy - 26 * u, 9 * u, 0, 7); g.stroke(); g.beginPath(); g.arc(L + 14 * u, sy + 6 * u, 17 * u, Math.PI * 1.05, Math.PI * 1.95); g.stroke();   // person
+  g.fillStyle = "#fff"; g.font = `600 ${44 * u}px ${F}`; g.fillText(String(S.roles.length), L + 46 * u, sy);
+  const s2 = L + 44 * u + g.measureText(String(S.roles.length)).width + 50 * u;
+  g.strokeRect(s2 + 6 * u, sy - 34 * u, 22 * u, 22 * u); g.beginPath(); g.moveTo(s2, sy - 20 * u); g.lineTo(s2, sy - 4 * u); g.lineTo(s2 + 16 * u, sy - 4 * u); g.stroke();   // stacked squares
+  g.fillText(String(S.projects.length), s2 + 42 * u, sy);
   // white pill button
-  const bw = 300, bh = 116, bx = x0 + iw - 40 - bw, by = sy - 70;
-  g.save(); g.shadowColor = "rgba(0,0,0,.28)"; g.shadowBlur = 24; g.shadowOffsetY = 6;
+  const bw = 300 * u, bh = 116 * u, bx = x0 + iw - 48 * u - bw, by = sy - 70 * u;
+  g.save(); g.shadowColor = "rgba(0,0,0,.28)"; g.shadowBlur = 24 * u; g.shadowOffsetY = 6 * u;
   const pill = g.createLinearGradient(0, by, 0, by + bh); pill.addColorStop(0, "#ffffff"); pill.addColorStop(1, "#ececec"); g.fillStyle = pill; g.beginPath(); g.roundRect(bx, by, bw, bh, bh / 2); g.fill(); g.restore();
-  g.fillStyle = "#1d1d1f"; g.font = `500 44px ${F}`; g.textAlign = "center"; g.fillText("Say hi", bx + bw / 2 - 22, by + bh / 2 + 13);
-  g.strokeStyle = "#1d1d1f"; g.lineWidth = 3.5; const px = bx + bw / 2 + 62, py = by + bh / 2; g.beginPath(); g.moveTo(px - 13, py); g.lineTo(px + 13, py); g.moveTo(px, py - 13); g.lineTo(px, py + 13); g.stroke();
+  g.fillStyle = "#1d1d1f"; g.font = `500 ${44 * u}px ${F}`; g.textAlign = "center"; g.fillText("Say hi", bx + bw / 2 - 22 * u, by + bh / 2 + 13 * u);
+  g.strokeStyle = "#1d1d1f"; g.lineWidth = 3.5 * u; const px = bx + bw / 2 + 62 * u, py = by + bh / 2; g.beginPath(); g.moveTo(px - 13 * u, py); g.lineTo(px + 13 * u, py); g.moveTo(px, py - 13 * u); g.lineTo(px, py + 13 * u); g.stroke();
   g.textAlign = "left";
   g.restore();
   cardTex.needsUpdate = true;
 }
 drawCard(null);
-new THREE.ImageLoader().load(asset("assets/profile.jpg"), (img) => drawCard(img));
-const profileCard = new THREE.Group();
-{ const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshPhysicalMaterial({ map: cardTex, transparent: true, alphaTest: 0.5, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.2 }));
-  face.position.z = 0.09; face.castShadow = true; face.receiveShadow = true; profileCard.add(face);
-  const panel = rbox(CARD.w - 0.06, CARD.h - 0.06, 0.08, 0.38, mat(0xf2f2f0, { roughness: 0.4, clearcoat: 0.5 }), 3); panel.position.z = 0.04; profileCard.add(panel);
-  const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 1.4, CARD.h + 1.4), new THREE.MeshBasicMaterial({ map: contactTexWall(), color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false }));
-  sh.position.set(0.12, -0.3, 0.005); profileCard.add(sh); }
-profileCard.position.set(7.4, 11.05, WALL_Z + 0.03);
+new THREE.ImageLoader().load(asset("assets/profile.jpg"), (img) => drawCard(sharpen(img)));
+const profileCard = new THREE.Group(), cardFloat = new THREE.Group();
+{ // the card glows a little like a screen, so it stays crisp and readable at night instead of looking like printed paper
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshPhysicalMaterial({ map: cardTex, emissiveMap: cardTex, emissive: 0xffffff, emissiveIntensity: 0.42,
+    transparent: true, roughness: 0.45, clearcoat: 0.45, clearcoatRoughness: 0.25 }));
+  face.receiveShadow = false; cardFloat.add(face);
+  // soft drop shadow on the wall, offset down and right of the card (the lamp is up and to the left)
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 2.2, CARD.h + 2.2), new THREE.MeshBasicMaterial({ map: cardShadowTex(), color: 0x000000, transparent: true, opacity: 0.6, depthWrite: false }));
+  sh.position.set(0.45, -0.7, -CARD.lift + 0.01); cardFloat.add(sh); profileCard.userData.shadow = sh; }
+cardFloat.position.z = CARD.lift;
+profileCard.add(cardFloat);
+profileCard.position.set(7.4, 11.05, WALL_Z + 0.02);
 scene.add(profileCard);
 interactive(profileCard, "About me", () => boot("about"));
-function contactTexWall() { return canvasTex(128, 128, (g, w, h) => { g.filter = "blur(10px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(22, 22, w - 44, h - 44, 14); g.fill(); }).tex; }
+function stepCard(t) {   // a slow drift, as if it hangs in the air (the shadow stays on the wall and softens as the card moves out)
+  if (reduced) return;
+  const bob = Math.sin(t * 0.8) * 0.07, out = Math.sin(t * 0.55 + 1) * 0.12;
+  cardFloat.position.y = bob; cardFloat.position.z = CARD.lift + out;
+  cardFloat.rotation.y = Math.sin(t * 0.45) * 0.025; cardFloat.rotation.x = Math.sin(t * 0.6 + 2) * 0.012;
+  const sh = profileCard.userData.shadow; sh.position.y = -0.7 - bob; sh.position.z = -CARD.lift - out + 0.01;
+  sh.scale.setScalar(1 + out * 0.05); sh.material.opacity = 0.6 - out * 0.4;
+}
+function cardShadowTex() { return canvasTex(256, 384, (g, w, h) => { g.filter = "blur(18px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(44, 44, w - 88, h - 88, 26); g.fill(); }).tex; }
 
 window.OS.setDark(false);   // the desktop uses the light glass look
 
@@ -1785,6 +1807,8 @@ function loop(now) {
   if (fading.length) stepFades(now);
   stepDay(now);
   stepAstro(1 / 60);
+  stepCard(t);
+  stepCat(now, dt);
   if (tween) tween(now);
   if (!debugCam) { controls.update(); keepInsideRoom(); }
 
@@ -1935,7 +1959,16 @@ async function loadCat() {
       const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
       if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { tail.push(i); wt.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
     }
-    catRig = { pos, posed: Float32Array.from(pos.array), tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone() };
+    //  · legs (everything below the belly, front pair near the head, back pair at the hips) → walk + jump poses
+    const legs = [], lw = [], lg = [];
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), front = y > -16 && y < -2, back = y > 6 && y < 21;
+      const piv = front ? LEG_PIVOT[0] : LEG_PIVOT[2];
+      if (!(front || back) || z >= piv.z) continue;
+      legs.push(i); lw.push(Math.pow(Math.min(1, (piv.z - z) / (piv.z - 2)), 1.2)); lg.push((front ? 0 : 2) + (x < 0 ? 0 : 1));
+    }
+    catRig = { pos, posed: Float32Array.from(pos.array), tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone(),
+      legs: Int32Array.from(legs), lw: Float32Array.from(lw), lg: Uint8Array.from(lg) };
   });
   obj.rotation.x = -Math.PI / 2;            // model is Z-up
   const holder = new THREE.Group();
@@ -1947,12 +1980,104 @@ async function loadCat() {
   box.setFromObject(holder);
   const c = box.getCenter(new THREE.Vector3());
   obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
-  holder.position.set(6.4, 0, 0.0);
-  holder.rotation.y = CAT_FACING;
+  // body = pitch + crouch pivot at mid-body height, between the holder (position/heading) and the mesh
+  catBody = new THREE.Group(); catBody.position.y = CAT_HEIGHT * 0.45; obj.position.y -= CAT_HEIGHT * 0.45;
+  holder.remove(obj); catBody.add(obj); holder.add(catBody);
+  catLegLen = 13 * s;   // shoulder height above the paws, in world units (for crouching)
+  if (CAT_INTRO) { holder.position.copy(CAT_SPOT.enter); holder.rotation.y = -Math.PI / 2; }   // waits on the floor, walks in after "Enter"
+  else { holder.position.copy(CAT_SPOT.desk); holder.rotation.y = CAT_FACING; catState = "desk"; }
   reveal(holder);
   cat = interactive(holder, "Shea says: pet me?", petCat);
 }
 const CAT_FACING = -1.15; // side-on in front of the speaker, looking towards the laptop (tail over the desk edge)
+
+/* Shea moves around: on arrival she strolls in across the floor, crouches and jumps up onto the desk (74 cm, an easy
+   jump for a real cat), lands right of the folders and walks to her spot by the laptop. Every minute or so she hops
+   down, wanders a little and jumps back up. The model has no skeleton, so legs are posed by bending their vertices
+   (catRig.legs, pivots at the shoulders and hips) and the body pitches/crouches on catBody. Reduced motion: she stays put. */
+const LEG_PIVOT = [{ y: -9, z: 13 }, { y: -9, z: 13 }, { y: 14, z: 14.5 }, { y: 14, z: 14.5 }];   // model space (cm): FL, FR, BL, BR
+const CAT_INTRO = !reduced && !new URLSearchParams(location.search).get("open");
+const CAT_SPOT = {
+  desk: new THREE.Vector3(6.4, 0, 0),                    // her usual place, side-on to the laptop
+  enter: new THREE.Vector3(19, FLOOR_Y, 14),             // where she strolls in from (floor, right of the desk)
+  launch: new THREE.Vector3(8.6, FLOOR_Y, 12.4),         // floor spot in front of the desk's right end
+  land: new THREE.Vector3(8.4, 0, 3.4)                   // free desk top right of the folders
+};
+let catBody = null, catLegLen = 2, catState = "floor", catPlan = [], catStep = null, catNextWander = 0, catCue = 0, catPhase = 0;
+const catPose = { a: [0, 0, 0, 0], fold: [0, 0, 0, 0], pitch: 0, drop: 0, dirty: false };
+const lerpAng = (a, b, k) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * k; };
+const ease = (k) => k * k * (3 - 2 * k);
+function setPose(a, fold, pitch = 0, drop = 0) { for (let i = 0; i < 4; i++) { catPose.a[i] = a[i]; catPose.fold[i] = fold[i]; } catPose.pitch = pitch; catPose.drop = drop; catPose.dirty = true; }
+const STAND = () => setPose([0, 0, 0, 0], [0, 0, 0, 0]);
+function gait(amp, lift) {   // diagonal pairs swing together (front-left with back-right)
+  const p = [catPhase, catPhase + Math.PI, catPhase + Math.PI, catPhase];
+  setPose(p.map((q) => amp * Math.sin(q)), p.map((q) => lift * Math.max(0, -Math.cos(q))), 0, 0.04 * Math.abs(Math.sin(catPhase * 2)));
+}
+function applyLegs(r) {
+  const P = r.pos.array, Q = r.posed, { a, fold } = catPose;
+  for (let k = 0; k < r.legs.length; k++) {
+    const i = r.legs[k] * 3, g = r.lg[k], w = r.lw[k], piv = LEG_PIVOT[g];
+    const ang = a[g] * w, c = Math.cos(ang), sn = Math.sin(ang);
+    const dy = Q[i + 1] - piv.y, dz = Q[i + 2] - piv.z;
+    let y = piv.y + dy * c - dz * sn, z = piv.z + dy * sn + dz * c;
+    z = piv.z + (z - piv.z) * (1 - fold[g] * w);   // fold = draw the paw up toward the body
+    P[i + 1] = y; P[i + 2] = z;
+  }
+  r.pos.needsUpdate = true;
+}
+// steps: each is a factory, so it starts from wherever she is when it begins
+const walkTo = (to, speed = 4.5) => () => {
+  const from = cat.position.clone(), d = to.clone().sub(from), dist = Math.hypot(d.x, d.z), head = Math.atan2(d.x, d.z), h0 = cat.rotation.y;
+  return { dur: Math.max(0.3, dist / speed), run(k, dt, T) {
+    cat.position.lerpVectors(from, to, k); cat.rotation.y = lerpAng(h0, head, Math.min(1, (k * T) / 0.4));
+    catPhase += dt * speed * 1.9; gait(0.42, 0.28); } };
+};
+const turnTo = (head, dur = 0.6) => () => { const h0 = cat.rotation.y;
+  return { dur, run(k, dt) { cat.rotation.y = lerpAng(h0, head, ease(k)); catPhase += dt * 6; gait(0.16, 0.2); } }; };
+const pause = (dur, pose = STAND) => () => ({ dur, run() { pose(); } });
+const crouch = (dur = 0.45) => () => ({ dur, run(k) { const e = ease(k); setPose([-0.15 * e, -0.15 * e, -0.35 * e, -0.35 * e], [0.35 * e, 0.35 * e, 0.45 * e, 0.45 * e], -0.12 * e, catLegLen * 0.3 * e); } });
+function jumpTo(to, dur, up) { return () => {
+  const from = cat.position.clone(), rise = up ? 1.3 : 1.0;
+  return { dur, run(k) {
+    // up: rise fast first, travel forward later (up and over the edge); down: forward first, then fall
+    const ky = up ? 1 - Math.pow(1 - k, 2.2) : Math.pow(k, 1.8), kz = up ? Math.pow(k, 1.7) : 1 - Math.pow(1 - k, 1.6);
+    cat.position.set(from.x + (to.x - from.x) * kz, from.y + (to.y - from.y) * ky + rise * Math.sin(Math.PI * k), from.z + (to.z - from.z) * kz);
+    // body: stretched out, nose up on the way up and down on the way down; back legs push off, front legs reach for the landing
+    const push = Math.max(0, 1 - k * 3), reach = Math.max(0, (k - 0.45) / 0.55);
+    const pitch = up ? -0.75 * Math.sin(Math.PI * Math.min(1, k * 1.15)) : 0.5 * Math.sin(Math.PI * k);
+    setPose([-0.55 * reach - 0.3 * (1 - reach), -0.55 * reach - 0.3 * (1 - reach), 0.9 * push + 0.2, 0.9 * push + 0.2],
+      [0.15 * (1 - reach), 0.15 * (1 - reach), 0.3 * (1 - push), 0.3 * (1 - push)], pitch, catLegLen * 0.3 * Math.max(0, 1 - k * 4));
+  } };
+}; }
+const landing = (dur = 0.35) => () => ({ dur, run(k) { const e = Math.sin(Math.PI * k); setPose([-0.2 * e, -0.2 * e, -0.2 * e, -0.2 * e], [0.3 * e, 0.3 * e, 0.35 * e, 0.35 * e], 0, catLegLen * 0.25 * e); } });
+const setState = (st) => () => ({ dur: 0, run() { catState = st; if (st === "desk") catNextWander = performance.now() + 45000 + Math.random() * 30000; } });
+const UP = () => [walkTo(CAT_SPOT.launch), turnTo(Math.PI, 0.5), crouch(), jumpTo(CAT_SPOT.land, 0.62, true), landing(),
+  walkTo(CAT_SPOT.desk, 3), turnTo(CAT_FACING, 0.7), pause(0.2), setState("desk")];
+function catIntro() { catState = "moving"; catPlan = [pause(0.6), ...UP()]; }
+function catWander() {
+  catState = "moving";
+  const spot = new THREE.Vector3(11 + Math.random() * 8, FLOOR_Y, 9 + Math.random() * 6);
+  catPlan = [walkTo(new THREE.Vector3(8.4, 0, 2.6), 3), turnTo(0, 0.5), crouch(0.3), jumpTo(new THREE.Vector3(8.6, FLOOR_Y, 11.6), 0.55, false), landing(),
+    walkTo(spot), pause(3 + Math.random() * 4), ...UP()];
+}
+function stepCat(now, dt) {
+  if (!cat || !catRig || !catBody) return;
+  if (catCue && catState === "floor" && CAT_INTRO) catIntro();
+  if (catState === "desk" && !reduced && now > catNextWander && hovered !== cat && now > catPetUntil + 4000 && !booting) catWander();
+  if (catState === "moving") {
+    const sec = Math.min(0.05, dt / 1000);
+    if (!catStep && catPlan.length) { catStep = catPlan.shift()(); catStep.t = 0; }
+    if (catStep) {
+      catStep.t += sec; const k = catStep.dur ? Math.min(1, catStep.t / catStep.dur) : 1;
+      catStep.run(k, sec, catStep.dur);
+      if (k >= 1) catStep = null;
+    }
+  }
+  if (catPose.dirty) { applyLegs(catRig); catBody.rotation.x = catPose.pitch; catBody.position.y = CAT_HEIGHT * 0.45 - catPose.drop; catPose.dirty = false; }
+  // the contact shadow follows her, on the desk or the floor, fading as she leaves the surface
+  const p = cat.position, onDesk = p.x > X0 && p.x < X1 && p.z > Z0 && p.z < Z1 && p.y > -1, surf = onDesk ? DESK_Y : FLOOR_Y + 0.03;
+  catShadow.position.set(p.x, surf, p.z); catShadow.rotation.z = -cat.rotation.y; catShadow.material.opacity = 0.3 * Math.max(0, 1 - (p.y - surf) / 6);
+}
 
 // Ball on the marble floor — click to kick it
 let ball = null, ballVX = 0;
@@ -2003,11 +2128,11 @@ requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
-  state: () => ({ started, cat: !!cat, ball: !!ball,
+  state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!cat && catState !== "desk",
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
-  toggleDay: () => setNight(dayTarget === 0),
+  toggleDay: () => setNight(dayTarget === 0), catWander: () => catState === "desk" && catWander(),
   // clickable things whose centre is outside the current view (should be none at home and when leaned in)
   // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
@@ -2023,6 +2148,7 @@ function enter(withSound) {
   entered = true;
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
+  catCue = performance.now();
   document.activeElement?.blur?.();
   coachShow();
 }

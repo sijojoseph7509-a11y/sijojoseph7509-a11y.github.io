@@ -64,7 +64,7 @@ for (const [name, w, h, dpr, mobile] of DEVICES) {
     await p.screenshot({ path: `${OUT}/${slug}-1-welcome.png` });
     issues.push(...(await p.evaluate(() => { const b = document.getElementById("introQuiet").getBoundingClientRect(); return b.bottom > innerHeight ? ["welcome card runs off the bottom"] : []; })).map((m) => `${name} · welcome: ${m}`));
     await p.click("#introGo");
-    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 }).catch(() => issues.push(`${name}: a 3D model didn't appear`));
+    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && !s.catBusy; }, { timeout: 30000 }).catch(() => issues.push(`${name}: a 3D model didn't appear (or Shea never settled on the desk)`));
     await sleep(1800);
     await p.screenshot({ path: `${OUT}/${slug}-2-desk.png` });
     issues.push(...await inspect(p, name, "desk"));
