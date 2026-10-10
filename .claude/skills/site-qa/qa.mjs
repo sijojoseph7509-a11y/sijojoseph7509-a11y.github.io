@@ -84,7 +84,7 @@ for (const mobile of [false, true]) {
   await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 }); await sleep(600);
-    const SIDE = /the (sun|night) in|One Piece prints|camera and my red cap|Macramé/;   // side walls: drag to look at them
+    const SIDE = /the (sun|night) in|One Piece prints/;   // side walls: drag to look at them
     const home = await p.evaluate((side) => Desk.offscreen().filter((l) => !/Kick|About me/.test(l) && !new RegExp(side).test(l)), SIDE.source);   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
     await p.click("#zoomBtn"); await sleep(1400);

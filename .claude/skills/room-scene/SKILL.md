@@ -20,14 +20,12 @@ dimensions, then check it next to the laptop.
 | Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.6, −0.35) front of the astro |
 | Plant pot (mango yellow) | 11 cm | r 1.1, h 2 | (−4.6, −2.4) |
 | Pencil cup + pencils | 8 × 10 cm, pencils 17 cm | r 0.42, h 2; 3.5 | (−8.4, 5.2) front-left |
-| "Personal explorations" sketchbook | ≈16 × 11 cm | scale 1.75 | (−5.7, 1.6) |
-| Project folders + index tabs | ≈22 × 17 cm | group scale 0.72 | front-right stack, tab per project |
+| "Personal explorations" sketchbook | ≈12 × 8 cm | scale 1.3 | (−6.9, 2.1), clear of the MacBook |
+| "My Projects" folders + index tabs | ≈18 × 13.5 cm | group scale 0.576 | front-right stack, tab per project |
 | iPhone | 147.6 × 71.6 mm | 2.95 × 1.43 | on the mat (−4.3, 4.5) |
 | Football | 17 cm | `BALL_R` 1.7 | floor |
 | 61-key keyboard | 94 × 32 × 9 cm | 19 × 6.6 × 1.8 | leaning ≈9° on the left wall |
 | Sijo's One Piece prints (his photo, `assets/wall-prints.webp`) | ≈80 × 45 cm grid | 16 wide | left wall |
-| Camera + red cap on a hook | camera 12 × 7.5 cm | 2.4 × 1.5 | left wall, near the back corner |
-| Macramé shelf, succulents, toy bus | 40 cm wide | 6.2 | right wall, back corner (far right) |
 | Modular switch board | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the name |
 
 ## Art direction
@@ -36,10 +34,10 @@ dimensions, then check it next to the laptop.
   `WALL_PAINT` / `FLOOR_TINT` are pre-darkened so the **rendered** daylight colour matches the swatch — after any
   lighting change re-measure with `pixel.mjs` (wall at 330,350 and 1000,200; floor at 600,820 in the room view).
 - Every object that rests on a surface gets a `contact(...)` shadow.
-- Window: NID Bengaluru across the road (brick + white bands, sign, rain tree, gulmohar, palm, auto-rickshaw), drawn in
-  `skyTex(night)`; soft glass blur. No real logos anywhere; brand products (speaker, camera) are drawn without marks.
+- Window: the NID Bengaluru campus gate across the road (from Sijo's photos: granite gate walls, white sign, steel gate,
+  tree-lined drive, white building behind), drawn in `skyTex(night)`; keep the sign/gate in the centre (the curtains hide the sides). No real logos anywhere; brand products (speaker, camera) are drawn without marks.
 - Third-party artwork only when Sijo explicitly asks (the One Piece prints are his request); otherwise make original pieces.
-- Night = the pendant lamp does the work: `LOOK.night` + `scene.environmentIntensity` 0.32. Curtains glow by day.
+- Every visit starts at NIGHT (Sijo's choice); the curtains switch to morning. Night = the pendant lamp does the work: `LOOK.night` + `scene.environmentIntensity` 0.32. Curtains glow by day.
 
 ## Check
 ```bash
