@@ -365,8 +365,11 @@ const dummy = new THREE.Object3D();
 
 /* ───────────────────────── Interactivity registry ───────────────────────── */
 const hoverables = []; // { obj, label, onClick }
-function interactive(obj, label, onClick) {
-  obj.userData.hover = { label, onClick, base: obj.scale.clone(), lift: 0 };
+// Hover feedback: the tooltip and pointer cursor, plus — for small things lying on the desk (folders, phone, sketchbook) —
+// a lift of a few mm, as if about to be picked up. Nothing scales any more: scaling pushed the laptop screen out of its
+// lid, the curtains into the wall and props into the desk.
+function interactive(obj, label, onClick, raise = 0) {
+  obj.userData.hover = { label, onClick, baseY: obj.position.y, raise, lift: 0 };
   hoverables.push(obj);
   return obj;
 }
@@ -878,7 +881,8 @@ S.projects.forEach((p, i) => {
   f.position.set(4.6 + Math.sin(i * 2.1) * 0.25, layer * 0.13, 4.55 - layer * 0.05);
   f.rotation.y = -0.1 + Math.sin(i * 1.7) * 0.06;
   projectFiles.add(f);
-  interactive(f, `My Projects · ${p.title}`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); });
+  interactive(f, `My Projects · ${p.title}`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); }, 0.12);
+  if (p.case) f.userData.caseSlug = p.case.slug;   // hovering it starts downloading that case study
 });
 projectFiles.scale.setScalar(0.576);   // ≈18 × 13.5 cm "My Projects" folders
 projectFiles.position.set(2.2, 0.02, 2.0);
@@ -910,7 +914,7 @@ phone.add(phoneBody, phoneGlass, phoneScreen);
 phone.position.set(-4.3, 0.06, 4.5);
 phone.rotation.y = -0.5;
 scene.add(phone);
-interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); });
+interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); }, 0.1);
 
 // 2d. Things from Sijo's real desk: plant in a mango-yellow pot, green water bottle
 const plant = new THREE.Group();
@@ -1001,7 +1005,7 @@ books.scale.setScalar(1.3);
 books.position.set(-6.9, 0.01, 2.1);
 books.rotation.y = 0.25;
 scene.add(books);
-interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); });
+interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); }, 0.1);
 
 
 // 6. Soundbar behind Shea (Sijo's black bar speaker, ≈40 × 7 × 7 cm): mesh front, four buttons on top, curved feet.
@@ -1692,6 +1696,7 @@ renderer.domElement.addEventListener("pointermove", (e) => {
   if (o !== hovered) {
     hovered = o;
     if (o) Sound.hover();
+    if (o && o.userData.caseSlug) window.OS.warmCase?.(o.userData.caseSlug);
   }
   if (o) {
     tip.textContent = o.userData.hover.label;
@@ -1836,8 +1841,7 @@ function loop(now) {
     const target = o === hovered && !booting ? 1 : 0;
     h.lift += (target - h.lift) * (1 - Math.pow(0.82, f));   // same feel at 60 or 120 fps
     if (o === cat) continue;   // Shea reacts with her head and tail instead (scaling her would stretch her IK-pinned legs)
-    const s = 1 + h.lift * 0.05;
-    o.scale.set(h.base.x * s, h.base.y * s, h.base.z * s);
+    if (h.raise) o.position.y = h.baseY + h.lift * h.raise;
   }
   btnCap.material.emissiveIntensity = 0.25 + (Math.sin(t * 3) * 0.5 + 0.5) * 0.6;
 
@@ -2022,7 +2026,7 @@ requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
-  state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy,
+  state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),

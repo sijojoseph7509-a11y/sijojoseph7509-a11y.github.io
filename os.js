@@ -213,12 +213,35 @@
       </header>
       <div class="case">
       <p class="case-hint">Pinch to zoom in on the details.</p>
-      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, (min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? "" : 'loading="lazy"'} decoding="async">`).join("")}
+      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, (min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("")}
       <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
         <button class="btn alt" data-exit-case>All work</button></div>
     </div>`;
     body.scrollTop = 0;
+    // images fade in as they arrive (no pop), over the project's own colour instead of a grey block
+    const imgs = [...body.querySelectorAll(".case img")];
+    $(".case").style.setProperty("--case-bg", p.color || "#1c1c1e");
+    imgs.forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });
+    // then fetch the rest in order, two at a time, so fast scrolling never lands on blank sections
+    let next_ = 2, active = 0;
+    const pump = () => {
+      while (active < 2 && next_ < imgs.length && caseSlug === slug) {
+        const im = imgs[next_++]; if (im.complete) continue;
+        active++; im.loading = "eager";
+        const done = () => { active--; pump(); }; im.addEventListener("load", done, { once: true }); im.addEventListener("error", done, { once: true });
+      }
+    };
+    setTimeout(pump, 700);
   }
+  // hovering a project (Work card, Spotlight result, desk folder) starts downloading its first sections
+  const warmed = new Set();
+  function warmCase(slug) {
+    if (warmed.has(slug)) return; warmed.add(slug);
+    const pr = S.projects.find((x) => x.case && x.case.slug === slug); if (!pr) return;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    pr.case.sections.slice(0, 2).forEach(([f]) => { const im = new Image(); im.src = caseImg(slug, f, dpr > 1.2 ? 2 : 1).replace(/&amp;/g, "&"); });
+  }
+  os.addEventListener("pointerover", (e) => { const c = e.target.closest("[data-case]"); if (c) warmCase(c.dataset.case); });
   function exitCase(fromHistory) {
     if (!caseSlug) return;
     caseSlug = null;
@@ -486,5 +509,5 @@
   // true while the desktop fully covers the 3D scene (the zoom-out/zoom-in animations still need it rendered)
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
-  window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isCovering, toast };
+  window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isCovering, toast, warmCase };
 })();
