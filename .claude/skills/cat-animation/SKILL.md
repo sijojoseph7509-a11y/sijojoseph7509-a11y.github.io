@@ -28,6 +28,9 @@ description: Rig, animate and check Shea the cat (models/cat/shea.glb + cat.js) 
   10 s after Enter, then every 14–26 s. Walking/jumping code still exists in cat.js but is unused. Hover never scales her.
 - Rig weights: bone heat → topological smoothing → **spatial smoothing** (1.4 cm radius, so the unconnected chest-fur flap and the
   leg tubes set into the body move with the skin) → skull/ears rigid → loose parts take k-nearest skin weights.
+- Neck check: `blender -b -P .claude/skills/cat-animation/necktest.py -- /tmp/cat_rigged.glb /tmp/neck` turns her head and renders
+  the neck from three sides; there must be no stair-steps or plates (the neck region gets a 3 cm spatial blend for that).
+- Hover: attention holds 2.5 s after the pointer leaves her (otherwise the gaze flickers at her outline).
 - The jagged outline on her chest in grey renders is a sculpted fur tuft in the source model (the texture hides it), not a tear.
 
 ## Re-rig (after changing joints or the mesh)

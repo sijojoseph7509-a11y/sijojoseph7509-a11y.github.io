@@ -191,15 +191,15 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
       if (fkQ) { chain.forEach((b, i) => b.quaternion.slerp(fkQ[i], 1 - L.w)); B[L.up].updateMatrixWorld(true); }
     }
     // head: look at a point, shared across the neck and head, clamped to what a cat can turn
-    st.lookCur.x = damp(st.lookCur.x, st.look.x, 3.2, dt); st.lookCur.y = damp(st.lookCur.y, st.look.y, 3.2, dt); st.lookCur.z = damp(st.lookCur.z, st.look.z, 3.2, dt);
+    st.lookCur.x = damp(st.lookCur.x, st.look.x, 2.4, dt); st.lookCur.y = damp(st.lookCur.y, st.look.y, 2.4, dt); st.lookCur.z = damp(st.lookCur.z, st.look.z, 2.4, dt);
     const hp = wpos(B.head), d = holder.worldToLocal(st.lookCur.clone()).sub(holder.worldToLocal(hp.clone())).normalize();
     const restD = holder.worldToLocal(tipOf(B.head)).sub(holder.worldToLocal(wpos(B.head))).normalize();   // where the head points in the base pose
     let yaw = Math.atan2(d.x, d.z) - Math.atan2(restD.x, restD.z), pit = Math.atan2(d.y, Math.hypot(d.x, d.z)) - Math.atan2(restD.y, Math.hypot(restD.x, restD.z));
     yaw = wrap(yaw); if (Math.abs(yaw) > 1.5) { yaw = 0; pit = 0; }   // behind her: just look ahead
-    yaw = clamp(yaw, -1.2, 1.2) * st.lookW; pit = clamp(pit, -0.8, 0.6) * st.lookW;
-    st.yaw = damp(st.yaw, yaw, 5, dt); st.pit = damp(st.pit, pit, 5, dt); yaw = st.yaw; pit = st.pit;
+    yaw = clamp(yaw, -0.95, 0.95) * st.lookW; pit = clamp(pit, -0.5, 0.45) * st.lookW;   // a comfortable range for a cat's neck
+    st.yaw = damp(st.yaw, yaw, 3.5, dt); st.pit = damp(st.pit, pit, 3.5, dt); yaw = st.yaw; pit = st.pit;
     const hq = holder.getWorldQuaternion(new Q());
-    for (const [b, k] of [[B.neck, 0.3], [B.neck2, 0.3], [B.head, 0.4]]) {
+    for (const [b, k] of [[B.neck, 0.36], [B.neck2, 0.34], [B.head, 0.3]]) {   // spread along the neck, so no one joint bends hard
       rotateWorld(b, aa(up, yaw * k));
       rotateWorld(b, aa(new V3(1, 0, 0).applyAxisAngle(Y, yaw).applyQuaternion(hq), -pit * k));
     }
@@ -329,7 +329,9 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     act, idleLook: null, onMeow: null,
     pet(sec = 2.6) { st.pet = sec; },
     update(dt, { hover = false } = {}) {
-      dt = Math.min(dt, 1 / 30); st.t += dt; st.hover = hover; if (st.pet > 0) st.pet -= dt;
+      dt = Math.min(dt, 1 / 30); st.t += dt; if (st.pet > 0) st.pet -= dt;
+      // attention holds for a moment after the pointer leaves her (hover flickers at her outline, which made the head twitch)
+      if (hover) st.attUntil = st.t + 2.5; st.hover = st.t < (st.attUntil || 0);
       // speeds change with limited acceleration (no instant starts, stops or turns)
       st.speed += clamp(st.speedT - st.speed, -14 * dt, 10 * dt);
       st.omega += clamp(st.omegaT - st.omega, -5 * dt, 5 * dt);
@@ -341,7 +343,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
       } else {
         st.tailMode = "idle"; st.speedT = st.omegaT = 0;
         if (Math.abs(st.omega) > 1e-3 || st.speed > 1e-3) yawBy(st.omega * dt);
-        if (cat.idleLook) st.look.copy(cat.idleLook(st.t, hover || st.pet > 0));
+        if (cat.idleLook) st.look.copy(cat.idleLook(st.t, st.hover || st.pet > 0));
       }
       if (!st.air) stepGait(dt);
       solve(dt);
