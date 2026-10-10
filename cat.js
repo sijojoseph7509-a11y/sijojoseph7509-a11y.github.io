@@ -95,6 +95,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
   const legLen = local(B.thighL).y;   // hip height
   const PIVOT = new V3(0, legLen * 0.95, 0);   // body pitches about the middle of the trunk
   const HIP = local(B.thighL).setX(0);   // sitting pivots about the hip joints
+  const TAILB = new Map([0, 1, 2, 3, 4, 5].map((i) => [B["tail" + i], i]));
   const prevQ = new Map(), LEGB = new Set(LEGS.flatMap((L) => [L.up, L.mid, L.end, L.paw]).map((n) => B[n]));
   const headRestDir = holder.worldToLocal(tipOf(B.head)).sub(local(B.head)).normalize();
 
@@ -225,8 +226,10 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     // temporal smoothing: every joint eases toward its new pose, so nothing can pop between frames
     const kb = 1 - Math.exp(-dt * 22), kl = 1 - Math.exp(-dt * 45);
     for (const b of bones) {
-      const p = prevQ.get(b);
-      if (p) b.quaternion.copy(p.slerp(b.quaternion, LEGB.has(b) ? kl : kb));
+      const p = prevQ.get(b), ti = TAILB.get(b);
+      // the tail trails the body: softer easing toward the tip, so it follows through smoothly instead of whipping
+      const k = LEGB.has(b) ? kl : ti !== undefined ? 1 - Math.exp(-dt * (9 - ti * 1.1)) : kb;
+      if (p) b.quaternion.copy(p.slerp(b.quaternion, k));
       prevQ.set(b, b.quaternion.clone());
     }
     model.updateMatrixWorld(true);
