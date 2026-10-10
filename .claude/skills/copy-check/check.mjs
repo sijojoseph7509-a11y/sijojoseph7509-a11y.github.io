@@ -23,7 +23,8 @@ for (const f of files) {
     if (/^\s*(\/\/|\/\*|\*|<!--)/.test(line)) return;                     // code comments are for developers
     const strings = (f.endsWith(".js") ? (line.match(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g) || []).filter((x) => /[a-z]/i.test(x))
       : [line.replace(/<!--.*?-->/g, "").replace(/<[^>]+>/g, "")]).join(" | ");
-    for (const [why, re] of RULES) if (re.test(strings)) { n++; console.log(`${f}:${i + 1}  ${why}\n    ${strings.trim().slice(0, 140)}`); }
+    const single = /^\s*[A-Za-z]+\s*$/.test(strings);   // a one-word UI label ("Unlock" on the password gate) isn't prose
+    for (const [why, re] of RULES) if (re.test(strings) && !(single && why === "AI-style word")) { n++; console.log(`${f}:${i + 1}  ${why}\n    ${strings.trim().slice(0, 140)}`); }
   });
 }
 console.log(n ? `\n${n} issue(s) to fix` : "✅ copy is clean");
