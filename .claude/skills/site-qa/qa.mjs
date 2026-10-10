@@ -288,7 +288,7 @@ await check("Resizing while the desktop is open keeps the room visible behind it
 });
 
 await check("A model that fails to download: no stand-in, no crash", async () => {
-  const p = await page({ route: (req) => (req.url().includes("cat.glb") ? (req.abort(), true) : false) });
+  const p = await page({ route: (req) => (req.url().includes("shea.glb") ? (req.abort(), true) : false) });
   await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 90000); await sleep(1500);
   const s = await p.evaluate(() => Desk.state());
   expect(!s.cat && s.ball, "unexpected state " + JSON.stringify(s));
@@ -312,16 +312,20 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   await p.ctx.close();
 });
 
-await check("Shea walks in, jumps onto the desk and settles by the laptop", async () => {
+await check("Shea starts on the desk, hops down, wanders the floor and jumps back to her spot", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
-  await p.waitForFunction(() => !Desk.state().catBusy, { timeout: 20000 });
-  const box = await p.evaluate(() => Desk.boxes().cat);
-  expect(box[4] > 4 && box[4] < 7.5 && box[1] > -3.5, "not standing on the desk: " + JSON.stringify(box));
-  await p.evaluate(() => Desk.catWander()); await sleep(1500);
-  expect(await p.evaluate(() => Desk.state().catBusy), "did not hop down to wander");
-  await p.waitForFunction(() => !Desk.state().catBusy, { timeout: 30000 });
+  const r = await p.evaluate(() => {   // fast-forward her wander in fixed 0.1 s steps (Desk.catStep), tracking where she goes
+    const h = Desk.cat.holder, start = h.position.clone(), onDesk = Math.abs(h.position.y) < 0.01; let minY = 0, t = 0;
+    Desk.catWander();
+    while (Desk.catStep(0.1) && t < 90) { t += 0.1; minY = Math.min(minY, h.position.y); }
+    return { onDesk, minY, t, back: h.position.distanceTo(start), busy: Desk.state().catBusy };
+  });
+  expect(r.onDesk, "she did not start on the desk");
+  expect(r.minY < -14, "never reached the floor: " + JSON.stringify(r));
+  expect(!r.busy && r.back < 0.6, "did not come back to her spot: " + JSON.stringify(r));
   clean(p); await p.ctx.close();
+  return `round trip ${r.t.toFixed(1)} s, back within ${r.back.toFixed(2)}`;
 });
 
 await check("Fonts are self-hosted and loaded (Inter, Caveat)", async () => {

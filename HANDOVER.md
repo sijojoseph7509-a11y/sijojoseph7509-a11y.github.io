@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.1 — 10 October 2026** (site build **v77**) |
+| **Version** | **5.2 — 10 October 2026** (site build **v78**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
@@ -11,7 +11,7 @@
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
 | **Status** | Live, all automated checks green (site-qa 35/35, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=77` everywhere in `index.html` **and** `{"build": "77"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=78` everywhere in `index.html` **and** `{"build": "78"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -128,9 +128,10 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 ├── main.js              ≈147 KB   the whole 3D room (≈2,050 lines): renderer, camera, room, props, window view, card, loop
 ├── os.js                 ≈30 KB   Mac desktop: windows, sidebar, dock, menus, Spotlight, shortcuts, case viewer
 ├── music.js               ≈6 KB   generative lo-fi track
+├── cat.js                ≈16 KB   Shea's animation engine (IK gait, jumps, look-at, spring tail), loaded by main.js
 ├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
 ├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
-├── version.json                   { "build": "77" }
+├── version.json                   { "build": "78" }
 ├── CNAME                          sijo.work
 ├── mobile-preview.html            phone-frame preview (3 sizes)
 ├── HANDOVER.md                    this document
@@ -142,7 +143,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 │   ├── deskmat.jpg / deskmat-phone.jpg   original lightning artwork, 3:1 (3072 / 2048 px)
 ├── fonts/                         Inter + Caveat WOFF2, fonts.css, OFL licences
 ├── models/
-│   ├── cat/ cat.glb, cat_diffuse.jpg, cat_bump.jpg      Free3D cat (licence unverified, §15), recoloured ginger at runtime
+│   ├── cat/ shea.glb (rigged, 32 bones, v78), cat.glb (old static mesh, kept for cached pages), cat_diffuse.jpg, cat_bump.jpg — Free3D cat (licence unverified, §15), recoloured ginger at runtime
 │   └── football/ football.glb, color.jpg, normal.jpg, arm.jpg   Poly Haven "Football" (CC0)
 ├── work/
 │   ├── tidewell/ 01–39 (.webp 1440 w + @2x.webp 2880 w)
@@ -194,7 +195,7 @@ ancestor → tooltip + pointer cursor + hover lift. A `pointerup` within a few p
 | `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()`, `isCovering()`, `toast()` |
 | `window.Music` | music.js | `start(audioCtx)`, `stop()`, `playing` |
 | `window.Sound` | main.js | `hover()`, `click()`, `boot()`, `purr()`, `toggle()`, `setMuted()`, `muted`, `state` |
-| `window.Desk` | main.js | test hooks: `state()`, `boxes()`, `offscreen()`, `screenPos()`, `toggleDay()`, `astro()`, `catWander()` (send Shea on a wander now), `debugView([x,y,z],[tx,ty,tz])` (fixed camera for screenshots); `state().catBusy` = Shea is walking/jumping |
+| `window.Desk` | main.js | test hooks: `state()`, `boxes()`, `offscreen()`, `screenPos()`, `toggleDay()`, `astro()`, `catWander()` (send Shea on a wander now), `catStep(sec)` (advance her in fixed steps, for frame-exact captures), `cat` (her controller), `debugView([x,y,z],[tx,ty,tz])` (fixed camera for screenshots); `state().catBusy` = Shea is walking/jumping |
 
 ---
 
@@ -226,7 +227,7 @@ and the photo assets in §5.
 |---|---|---|---|
 | Desk | 95 × 50 × 74 cm | dark laminate #221e1c; left side panel; right cubby with shelf, keyboard and white charger cube; back rail | — |
 | **MacBook Pro 14" M5**, Space Black #2e2d30 | 31.3 × 22.1 cm | (−1.0, 0, −0.25), rot −0.08, lid ≈105°. Keys (instanced), speaker grilles, trackpad, hinge, SJ monogram + stickers on the lid back, sticky note "make it simple, then make it fun ✶" (76 mm). Screen: live 1600 × 1024 canvas (wallpaper + "Hi, I'm Sijo" window + dock + notch). | Screen / power key → About; keys / trackpad → types hello |
-| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | Home spot (6.4, 0, 0), facing −1.15 (side-on, looking at the laptop). **Moves (v77):** after Enter she walks in across the floor from the right, crouches, jumps onto the desk right of the folders and walks to her spot; every 45–75 s she hops down, wanders the floor and jumps back (`stepCat`, `CAT_SPOT`, step factories `walkTo/turnTo/crouch/jumpTo/landing`). No skeleton: legs are bent per-vertex around shoulder/hip pivots (`LEG_PIVOT`, `applyLegs`), body pitch/crouch on `catBody`; the contact shadow follows her. Reduced motion or a `?open=` link: she starts on the desk (no intro). Fur recoloured ginger; tail swishes | Hover "pet me?", click = purr + hearts |
+| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | Starts on the desk at her spot (6.4, 0, 0), facing −1.15. **Rigged and animated (v78):** `models/cat/shea.glb` has a 32-bone skeleton skinned in Blender; `cat.js` animates her procedurally from cat biomechanics: lateral-sequence walk with paws planted by two-bone IK, ballistic jumps with real gravity (look, crouch, push, tuck/reach, land front-first), head look-at (laptop, visitor, window, ball), spring tail, breathing. 10 s after Enter she walks to the desk edge, hops down, goes to the window, sniffs the football, jumps back up and returns to her spot (≈30 s); again every 45–80 s (`catWanderPlan`, `CAT_SPOT`, `groundAt`). Walking never crosses a ledge. Reduced motion: she stays put. Details: cat-animation skill. | Hover "pet me?", click = purr + hearts (tail upright, looks at you) |
 | Soundbar | 34 × 6 × 7 cm | (6.15, 0, −2.75) behind Shea; mesh front, 4 top buttons, curved feet, no brand | Click = music on/off |
 | **Astronaut galaxy light** | ≈26 cm | (−7.4, 0, −2.2), rot 0.3; moon-rock base, suit, backpack, cable, full oval visor; head (`astroHead`) **tilts ≈35° up** while projecting (`stepAstro`) | Click = projection on/off. At night projects a nebula + stars on ceiling and back wall (`projCeil`, `projWall`). |
 | Rubber plant | pot ≈10 cm | (−4.95, 0, −1.95) ×0.9; mango-yellow pot #ffb21a; three stems leaning into the room, pointed glossy leaves, lighter new leaves on top | Click = wiggle |
@@ -471,11 +472,12 @@ be installed at `/Applications/Google Chrome.app`. Serve the repo locally first 
 
 | Skill | What it's for | Run |
 |---|---|---|
-| **site-qa** | 35 real-browser checks (incl. Shea walks in, jumps up, wanders and settles): desktop + phone load (cat, ball, no errors), every desk item on screen, welcome/Enter/music, every `?open=` deep link, boot + Esc, menus, Spotlight, ⌘ shortcuts, scrolling, resize, model-failure path, stale-cache path, self-update, fonts self-hosted, case studies open + images load + no notes, window day↔night, zoom behaviour | `QA_DEPS=… node .claude/skills/site-qa/qa.mjs http://localhost:4321/` (or `https://sijo.work/`) |
+| **site-qa** | 35 real-browser checks (incl. Shea's round trip: starts on the desk, reaches the floor, comes back to her spot): desktop + phone load (cat, ball, no errors), every desk item on screen, welcome/Enter/music, every `?open=` deep link, boot + Esc, menus, Spotlight, ⌘ shortcuts, scrolling, resize, model-failure path, stale-cache path, self-update, fonts self-hosted, case studies open + images load + no notes, window day↔night, zoom behaviour | `QA_DEPS=… node .claude/skills/site-qa/qa.mjs http://localhost:4321/` (or `https://sijo.work/`) |
 | site-qa · sweep | layout bugs on 18 devices (off-screen / overlapping controls, cut text, sideways scroll, missing models/wallpaper, blurry case images) + screenshots of every screen | `QA_DEPS=… node .claude/skills/site-qa/sweep.mjs <url> <out-dir>` |
 | **site-security** | 15 checks: CSP present + hash valid, no inline scripts, vendor file hashes, no third-party hosts, safe links, no secrets, HTTPS redirect (live) | `QA_DEPS=… node .claude/skills/site-security/audit.mjs <url>` (`--fix` re-records hashes after an intended import-map/three.js change) |
 | **copy-check** | finds notes-to-self, placeholders, AI-style words, em dashes, emoji/stray symbols in content.js / os.js / index.html (and Figma text) | `node .claude/skills/copy-check/check.mjs` |
 | **room-scene** | real-size table of every room object, art-direction rules, scripts: `render.mjs` (screenshots of home/room/any debug camera, day or night + `Desk.boxes()`), `pixel.mjs` (rendered colour vs swatch) | `QA_DEPS=… node .claude/skills/room-scene/render.mjs <url> /tmp/r night home room "win:5,19,20,30,18,20"` |
+| **cat-animation** | rig Shea in Blender (`rig.py`, joint table `J`, eye/ear weight fixes), repack with gltfpack, change her behaviour in `cat.js`, and capture frame-exact sequences (`catstep.mjs`, `catlog.mjs`) | see `.claude/skills/cat-animation/SKILL.md` |
 | **object-capture** | turn 40–80 photos into a 3D model on the Mac (Apple RealityKit PhotogrammetrySession); 8 one-sided photos fail | `swiftc -O .claude/skills/object-capture/scan.swift -o scan && ./scan <photos-dir> out.usdz` |
 
 Personal / app skills Sijo has installed (in `~/.claude`, not the repo) and that were used or are relevant:
@@ -502,7 +504,7 @@ Plugin API rules — used for every export), `anthropic-skills:*` (browser, docs
 | Adobe for creativity, creative-claw, Canva, Notion, Slack, Linear, Atlassian, HubSpot… (plugins/connectors in the app) | — | **not authorised / not used** (need sign-in via claude.ai connector settings or `/mcp`) |
 | Image generation connectors (Abracadabrax, ManyMotions) | — | not used |
 
-Machine: Apple M5 Mac, macOS 27, Xcode (swift), Google Chrome (for headless checks), Brave (Sijo's browser), Node 26, `uv`.
+Machine: Apple M5 Mac, macOS 27, Xcode (swift), Google Chrome (for headless checks), Brave (Sijo's browser), Node 26, `uv`, **Blender 5.2** (Homebrew cask, for rigging the cat).
 
 ---
 
@@ -575,6 +577,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v5.2) | v78: **Shea is rigged and animated like a real cat**: a 32-bone skeleton skinned in Blender (`models/cat/shea.glb`), animated by `cat.js` (IK-planted paws in a lateral-sequence walk, ballistic jumps with real gravity, head look-at, spring tail, breathing). She starts on the desk; 10 s after Enter she hops down, visits the window and the football, jumps back up and returns; again every 45–80 s. New cat-animation skill; QA round-trip check. |
 | (v5.1) | v77: profile card is now a **floating UI card** (rounded, no white rim/acrylic mount, lit from within, 6 cm off the wall with a soft offset shadow, slow drift, 1400 px canvas, photo sharpened). **Shea moves**: walks in across the floor after Enter, crouches and jumps onto the desk, walks to her spot; every 45–75 s hops down, wanders and jumps back (per-vertex leg rig + body pitch/crouch; shadow follows). QA 35 checks (new cat check; position checks wait for `catBusy` false). |
 | (v4.6) | v76: pencil stand removed, bottle moved to its spot (front-left); charging cable now only runs from the charger down the wall and lies loose on the floor with a free plug end (MagSafe connector removed); profile card +10% (6.27 × 10.34) and moved left to x 7.4; `assets/profile.jpg` re-made: Sijo cut out with Apple Vision subject lifting (on-device) and placed on a light grey studio backdrop like the reference (1200 px). |
 | (v4.5) | v75: wall name/roles lettering replaced by a **profile card** (frosted-photo UI card: `assets/profile.jpg`, progressive blur + dark glass, white name + verified seal, two-line about, stats = disciplines + case studies, white "Say hi +" pill; drawn in `drawCard`, mounted on a white acrylic panel with a wall shadow; click = About). Two floor plants (terracotta + aloe) removed. Charger now upright in the socket with the cable dropping straight down, lying loose on the floor, rising behind the desk to the MacBook. |

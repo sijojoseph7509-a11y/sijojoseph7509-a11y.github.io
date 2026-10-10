@@ -39,7 +39,7 @@ function fetchAsset(url) {   // one download per file; a failed download is forg
 const BUILD = new URL(import.meta.url).searchParams.get("v") || "dev";
 const asset = (u) => `${u}?v=${BUILD}`;
 const MODEL = {
-  cat: asset("models/cat/cat.glb"), catDiffuse: asset("models/cat/cat_diffuse.jpg"), catBump: asset("models/cat/cat_bump.jpg"),
+  shea: asset("models/cat/shea.glb"), catDiffuse: asset("models/cat/cat_diffuse.jpg"), catBump: asset("models/cat/cat_bump.jpg"),
   ball: asset("models/football/football.glb"), ballColor: asset("models/football/color.jpg"), ballNormal: asset("models/football/normal.jpg"), ballARM: asset("models/football/arm.jpg")
 };
 Object.values(MODEL).forEach((u) => fetchAsset(u).catch(() => {}));
@@ -812,6 +812,7 @@ const hearts = [];
 let cat = null, catPetUntil = 0;
 function petCat() {
   catPetUntil = performance.now() + 2600;
+  shea?.pet(2.6);
   Sound.purr();
   for (let i = 0; i < 5; i++) {
     const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthWrite: false }));
@@ -1822,15 +1823,6 @@ function loop(now) {
   }
   btnCap.material.emissiveIntensity = 0.25 + (Math.sin(t * 3) * 0.5 + 0.5) * 0.6;
 
-  {
-    // cat: gentle tail sway, quicker on hover, big happy swish while petted (reduced motion: only when petted)
-    const petting = now < catPetUntil;
-    if (catRig && (!reduced || petting)) {
-      const catHover = hovered === cat && !booting;
-      const amp = petting ? 0.75 : catHover ? 0.4 : 0.14, speed = petting ? 9 : catHover ? 6 : 1.8;
-      swishTail(catRig, amp, speed, petting ? 5 : 1.5, t);
-    }
-  }
   for (let i = hearts.length - 1; i >= 0; i--) {
     const h = hearts[i], d = h.userData;
     if ((d.delay -= f / 60) > 0) { h.material.opacity = 0; continue; }
@@ -1916,167 +1908,69 @@ function recolor(img, dark, mid, light) {
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 }
-let catRig = null;
-const TAIL_BASE = new THREE.Vector3(0, 19.5, 22), TAIL_LEN = 19.5;
-function swishTail(r, amp, speed, lift, t) {
-  const { posed, tail, wt, tailBase: b } = r, P = r.pos.array;
-  for (let k = 0; k < tail.length; k++) {
-    const i = tail[k] * 3, wk = wt[k], wc = Math.pow(wk, 1.4);
-    const ang = amp * wc * Math.sin(t * speed - wk * 2.2), c = Math.cos(ang), s = Math.sin(ang);
-    const dx = posed[i] - b.x, dy = posed[i + 1] - b.y;
-    P[i] = b.x + dx * c - dy * s; P[i + 1] = b.y + dx * s + dy * c;
-    P[i + 2] = posed[i + 2] + lift * wc * (0.5 + 0.5 * Math.sin(t * speed * 0.5 - wk * 1.5));
-  }
-  r.pos.needsUpdate = true;
-}
 const CAT_HEIGHT = 5.8; // ≈29 cm to the top of the head — a real adult female cat next to the 14" MacBook Pro
+const CAT_FACING = -1.15; // her spot: side-on in front of the speaker, looking towards the laptop
+/* Shea moves like a cat: cat.js drives a rigged model (models/cat/shea.glb, 32 bones, skinned in Blender) with IK paws
+   planted on the ground, a lateral-sequence walk, ballistic jumps (real gravity), head look-at and a spring tail.
+   She starts on the desk; 10 s after "Enter" she hops down, wanders (the window, the football), jumps back up and
+   returns to her spot, then does it again every minute or so. Reduced motion: she stays on the desk. */
+const CAT_SPOT = {
+  desk: new THREE.Vector3(6.4, 0, 0),                       // her spot by the laptop
+  edge: new THREE.Vector3(8.3, 0, Z1 - 3.6),                // front edge, right of the folders: where she hops down
+  floorLand: new THREE.Vector3(8.4, FLOOR_Y, 11.4),         // where that hop lands
+  launch: new THREE.Vector3(8.5, FLOOR_Y, 12.6),            // floor spot she jumps up from
+  land: new THREE.Vector3(8.4, 0, 3.0)                      // free desk top right of the folders
+};
+const groundAt = (x, z) => (x > X0 + 0.2 && x < X1 - 0.2 && z > Z0 + 0.2 && z < Z1 - 0.2 ? 0 : FLOOR_Y);
+let shea = null, catNextWander = Infinity, catCue = 0, catGaze = null, catGazeUntil = 0;
 async function loadCat() {
-  const [gltf, diffuse, bump] = await Promise.all([
-    loadGLB(MODEL.cat),
-    loadTex(MODEL.catDiffuse),
-    loadTex(MODEL.catBump)
-  ]);
-  const obj = gltf.scene;
+  const [gltf, diffuse, bump] = await Promise.all([loadGLB(MODEL.shea), loadTex(MODEL.catDiffuse), loadTex(MODEL.catBump)]);
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
   diffuse.dispose();
-  // The model has no skeleton, so we pose it by bending its vertices (model space: cm, Z-up, head at −y, tail at +y).
-  //  · tail (thin strip behind the rump) → swishes
-  obj.traverse((m) => {
-    if (!m.isMesh) return;
-    m.material = fur;
-    m.frustumCulled = false;
-    // the GLB stores quantised positions (small download); unpack them to plain floats in model space (cm)
-    // so the tail rig can bend them: float = stored value × the node's dequantisation transform
-    const src = m.geometry.attributes.position, v = new THREE.Vector3(), arr = new Float32Array(src.count * 3);
-    m.updateMatrix();
-    for (let i = 0; i < src.count; i++) { v.fromBufferAttribute(src, i).applyMatrix4(m.matrix).toArray(arr, i * 3); }
-    const pos = new THREE.BufferAttribute(arr, 3);
-    m.geometry.setAttribute("position", pos);
-    m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.set(1, 1, 1);
-    m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere();
-    const tail = [], wt = [];
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-      if (y > TAIL_BASE.y && Math.abs(x) < 1.8 && z > 17) { tail.push(i); wt.push(Math.min(1, (y - TAIL_BASE.y) / TAIL_LEN)); }
-    }
-    //  · legs (everything below the belly, front pair near the head, back pair at the hips) → walk + jump poses
-    const legs = [], lw = [], lg = [];
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), front = y > -16 && y < -2, back = y > 6 && y < 21;
-      const piv = front ? LEG_PIVOT[0] : LEG_PIVOT[2];
-      if (!(front || back) || z >= piv.z) continue;
-      legs.push(i); lw.push(Math.pow(Math.min(1, (piv.z - z) / (piv.z - 2)), 1.2)); lg.push((front ? 0 : 2) + (x < 0 ? 0 : 1));
-    }
-    catRig = { pos, posed: Float32Array.from(pos.array), tail: Int32Array.from(tail), wt: Float32Array.from(wt), tailBase: TAIL_BASE.clone(),
-      legs: Int32Array.from(legs), lw: Float32Array.from(lw), lg: Uint8Array.from(lg) };
-  });
-  obj.rotation.x = -Math.PI / 2;            // model is Z-up
-  const holder = new THREE.Group();
-  holder.add(obj);
-  shadowsOn(holder);
-  let box = new THREE.Box3().setFromObject(holder);
-  const s = CAT_HEIGHT / box.getSize(new THREE.Vector3()).y;
-  obj.scale.setScalar(s);
-  box.setFromObject(holder);
-  const c = box.getCenter(new THREE.Vector3());
-  obj.position.set(-c.x, -box.min.y, -c.z);  // centre the cat on its holder, feet on the desk
-  // body = pitch + crouch pivot at mid-body height, between the holder (position/heading) and the mesh
-  catBody = new THREE.Group(); catBody.position.y = CAT_HEIGHT * 0.45; obj.position.y -= CAT_HEIGHT * 0.45;
-  holder.remove(obj); catBody.add(obj); holder.add(catBody);
-  catLegLen = 13 * s;   // shoulder height above the paws, in world units (for crouching)
-  if (CAT_INTRO) { holder.position.copy(CAT_SPOT.enter); holder.rotation.y = -Math.PI / 2; }   // waits on the floor, walks in after "Enter"
-  else { holder.position.copy(CAT_SPOT.desk); holder.rotation.y = CAT_FACING; catState = "desk"; }
-  reveal(holder);
-  cat = interactive(holder, "Shea says: pet me?", petCat);
+  gltf.scene.traverse((m) => { if (m.isMesh) m.material = fur; });
+  const { createCat } = await import(`./cat.js?v=${BUILD}`);
+  shea = createCat({ gltf, height: CAT_HEIGHT, groundAt });
+  shea.place(CAT_SPOT.desk, CAT_FACING);
+  shea.idleLook = catIdleLook;
+  shea.update(1 / 60);
+  reveal(shea.holder);
+  cat = interactive(shea.holder, "Shea says: pet me?", petCat);
 }
-const CAT_FACING = -1.15; // side-on in front of the speaker, looking towards the laptop (tail over the desk edge)
-
-/* Shea moves around: on arrival she strolls in across the floor, crouches and jumps up onto the desk (74 cm, an easy
-   jump for a real cat), lands right of the folders and walks to her spot by the laptop. Every minute or so she hops
-   down, wanders a little and jumps back up. The model has no skeleton, so legs are posed by bending their vertices
-   (catRig.legs, pivots at the shoulders and hips) and the body pitches/crouches on catBody. Reduced motion: she stays put. */
-const LEG_PIVOT = [{ y: -9, z: 13 }, { y: -9, z: 13 }, { y: 14, z: 14.5 }, { y: 14, z: 14.5 }];   // model space (cm): FL, FR, BL, BR
-const CAT_INTRO = !reduced && !new URLSearchParams(location.search).get("open");
-const CAT_SPOT = {
-  desk: new THREE.Vector3(6.4, 0, 0),                    // her usual place, side-on to the laptop
-  enter: new THREE.Vector3(19, FLOOR_Y, 14),             // where she strolls in from (floor, right of the desk)
-  launch: new THREE.Vector3(8.6, FLOOR_Y, 12.4),         // floor spot in front of the desk's right end
-  land: new THREE.Vector3(8.4, 0, 3.4)                   // free desk top right of the folders
-};
-let catBody = null, catLegLen = 2, catState = "floor", catPlan = [], catStep = null, catNextWander = 0, catCue = 0, catPhase = 0;
-const catPose = { a: [0, 0, 0, 0], fold: [0, 0, 0, 0], pitch: 0, drop: 0, dirty: false };
-const lerpAng = (a, b, k) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * k; };
-const ease = (k) => k * k * (3 - 2 * k);
-function setPose(a, fold, pitch = 0, drop = 0) { for (let i = 0; i < 4; i++) { catPose.a[i] = a[i]; catPose.fold[i] = fold[i]; } catPose.pitch = pitch; catPose.drop = drop; catPose.dirty = true; }
-const STAND = () => setPose([0, 0, 0, 0], [0, 0, 0, 0]);
-function gait(amp, lift) {   // diagonal pairs swing together (front-left with back-right)
-  const p = [catPhase, catPhase + Math.PI, catPhase + Math.PI, catPhase];
-  setPose(p.map((q) => amp * Math.sin(q)), p.map((q) => lift * Math.max(0, -Math.cos(q))), 0, 0.04 * Math.abs(Math.sin(catPhase * 2)));
-}
-function applyLegs(r) {
-  const P = r.pos.array, Q = r.posed, { a, fold } = catPose;
-  for (let k = 0; k < r.legs.length; k++) {
-    const i = r.legs[k] * 3, g = r.lg[k], w = r.lw[k], piv = LEG_PIVOT[g];
-    const ang = a[g] * w, c = Math.cos(ang), sn = Math.sin(ang);
-    const dy = Q[i + 1] - piv.y, dz = Q[i + 2] - piv.z;
-    let y = piv.y + dy * c - dz * sn, z = piv.z + dy * sn + dz * c;
-    z = piv.z + (z - piv.z) * (1 - fold[g] * w);   // fold = draw the paw up toward the body
-    P[i + 1] = y; P[i + 2] = z;
+// where she looks while resting: mostly the laptop, sometimes the visitor, now and then the phone or the window
+function catIdleLook(t, attention) {
+  if (attention) return camera.position;
+  const now = performance.now();
+  if (!catGaze || now > catGazeUntil) {
+    const r = Math.random(), sp = new THREE.Vector3(); screen.getWorldPosition(sp);
+    catGaze = r < 0.5 ? sp : r < 0.75 ? camera.position.clone() : r < 0.88 ? new THREE.Vector3(-4.3, 0, 4.5) : new THREE.Vector3(WX, 6, 18);
+    catGazeUntil = now + 2500 + Math.random() * 4000;
   }
-  r.pos.needsUpdate = true;
+  return catGaze;
 }
-// steps: each is a factory, so it starts from wherever she is when it begins
-const walkTo = (to, speed = 4.5) => () => {
-  const from = cat.position.clone(), d = to.clone().sub(from), dist = Math.hypot(d.x, d.z), head = Math.atan2(d.x, d.z), h0 = cat.rotation.y;
-  return { dur: Math.max(0.3, dist / speed), run(k, dt, T) {
-    cat.position.lerpVectors(from, to, k); cat.rotation.y = lerpAng(h0, head, Math.min(1, (k * T) / 0.4));
-    catPhase += dt * speed * 1.9; gait(0.42, 0.28); } };
-};
-const turnTo = (head, dur = 0.6) => () => { const h0 = cat.rotation.y;
-  return { dur, run(k, dt) { cat.rotation.y = lerpAng(h0, head, ease(k)); catPhase += dt * 6; gait(0.16, 0.2); } }; };
-const pause = (dur, pose = STAND) => () => ({ dur, run() { pose(); } });
-const crouch = (dur = 0.45) => () => ({ dur, run(k) { const e = ease(k); setPose([-0.15 * e, -0.15 * e, -0.35 * e, -0.35 * e], [0.35 * e, 0.35 * e, 0.45 * e, 0.45 * e], -0.12 * e, catLegLen * 0.3 * e); } });
-function jumpTo(to, dur, up) { return () => {
-  const from = cat.position.clone(), rise = up ? 1.3 : 1.0;
-  return { dur, run(k) {
-    // up: rise fast first, travel forward later (up and over the edge); down: forward first, then fall
-    const ky = up ? 1 - Math.pow(1 - k, 2.2) : Math.pow(k, 1.8), kz = up ? Math.pow(k, 1.7) : 1 - Math.pow(1 - k, 1.6);
-    cat.position.set(from.x + (to.x - from.x) * kz, from.y + (to.y - from.y) * ky + rise * Math.sin(Math.PI * k), from.z + (to.z - from.z) * kz);
-    // body: stretched out, nose up on the way up and down on the way down; back legs push off, front legs reach for the landing
-    const push = Math.max(0, 1 - k * 3), reach = Math.max(0, (k - 0.45) / 0.55);
-    const pitch = up ? -0.75 * Math.sin(Math.PI * Math.min(1, k * 1.15)) : 0.5 * Math.sin(Math.PI * k);
-    setPose([-0.55 * reach - 0.3 * (1 - reach), -0.55 * reach - 0.3 * (1 - reach), 0.9 * push + 0.2, 0.9 * push + 0.2],
-      [0.15 * (1 - reach), 0.15 * (1 - reach), 0.3 * (1 - push), 0.3 * (1 - push)], pitch, catLegLen * 0.3 * Math.max(0, 1 - k * 4));
-  } };
-}; }
-const landing = (dur = 0.35) => () => ({ dur, run(k) { const e = Math.sin(Math.PI * k); setPose([-0.2 * e, -0.2 * e, -0.2 * e, -0.2 * e], [0.3 * e, 0.3 * e, 0.35 * e, 0.35 * e], 0, catLegLen * 0.25 * e); } });
-const setState = (st) => () => ({ dur: 0, run() { catState = st; if (st === "desk") catNextWander = performance.now() + 45000 + Math.random() * 30000; } });
-const UP = () => [walkTo(CAT_SPOT.launch), turnTo(Math.PI, 0.5), crouch(), jumpTo(CAT_SPOT.land, 0.62, true), landing(),
-  walkTo(CAT_SPOT.desk, 3), turnTo(CAT_FACING, 0.7), pause(0.2), setState("desk")];
-function catIntro() { catState = "moving"; catPlan = [pause(0.6), ...UP()]; }
-function catWander() {
-  catState = "moving";
-  const spot = new THREE.Vector3(11 + Math.random() * 8, FLOOR_Y, 9 + Math.random() * 6);
-  catPlan = [walkTo(new THREE.Vector3(8.4, 0, 2.6), 3), turnTo(0, 0.5), crouch(0.3), jumpTo(new THREE.Vector3(8.6, FLOOR_Y, 11.6), 0.55, false), landing(),
-    walkTo(spot), pause(3 + Math.random() * 4), ...UP()];
+function catWanderPlan() {
+  const A = shea.act, P = (x, y, z) => new THREE.Vector3(x, y, z);
+  const steps = [() => A.arrive(CAT_SPOT.edge, 0, 3), () => A.turn(0), () => A.jump(CAT_SPOT.floorLand, false)];
+  const win = P(15 + Math.random() * 4, FLOOR_Y, 14 + Math.random() * 4);
+  steps.push(() => A.walk(win), () => A.turn(Math.PI / 2 - 0.25), () => A.wait(2.5 + Math.random() * 2, P(WX, 5, win.z + 3)));
+  if (ball) {   // go and sniff the football, wherever it rolled to
+    const b = ball.position.clone(), spot = P(b.x, FLOOR_Y, b.z + BALL_R + 4.9);
+    steps.push(() => A.arrive(spot, Math.PI), () => A.turn(Math.PI), () => A.sniff(b.clone().add(P(0, BALL_R * 0.6, 0)), 2.2));
+  }
+  steps.push(() => A.arrive(CAT_SPOT.launch, Math.PI), () => A.turn(Math.PI), () => A.jump(CAT_SPOT.land, true), () => A.arrive(CAT_SPOT.desk, CAT_FACING, 3), () => A.turn(CAT_FACING));
+  return steps;
 }
+function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 45000 + Math.random() * 35000; }); }
+let catManual = false;   // test hook: Desk.catStep() advances her in fixed steps for frame-exact captures
 function stepCat(now, dt) {
-  if (!cat || !catRig || !catBody) return;
-  if (catCue && catState === "floor" && CAT_INTRO) catIntro();
-  if (catState === "desk" && !reduced && now > catNextWander && hovered !== cat && now > catPetUntil + 4000 && !booting) catWander();
-  if (catState === "moving") {
-    const sec = Math.min(0.05, dt / 1000);
-    if (!catStep && catPlan.length) { catStep = catPlan.shift()(); catStep.t = 0; }
-    if (catStep) {
-      catStep.t += sec; const k = catStep.dur ? Math.min(1, catStep.t / catStep.dur) : 1;
-      catStep.run(k, sec, catStep.dur);
-      if (k >= 1) catStep = null;
-    }
-  }
-  if (catPose.dirty) { applyLegs(catRig); catBody.rotation.x = catPose.pitch; catBody.position.y = CAT_HEIGHT * 0.45 - catPose.drop; catPose.dirty = false; }
+  if (!shea || catManual) return;
+  if (!shea.busy && !reduced && now > catNextWander && hovered !== cat && now > catPetUntil + 3000 && !booting) catWander();
+  shea.update(dt / 1000, { hover: hovered === cat && !booting });
+  catShadowFollow();
+}
+function catShadowFollow() {
   // the contact shadow follows her, on the desk or the floor, fading as she leaves the surface
-  const p = cat.position, onDesk = p.x > X0 && p.x < X1 && p.z > Z0 && p.z < Z1 && p.y > -1, surf = onDesk ? DESK_Y : FLOOR_Y + 0.03;
-  catShadow.position.set(p.x, surf, p.z); catShadow.rotation.z = -cat.rotation.y; catShadow.material.opacity = 0.3 * Math.max(0, 1 - (p.y - surf) / 6);
+  const p = shea.holder.position, surf = (groundAt(p.x, p.z) === 0 && p.y > -1 ? DESK_Y : FLOOR_Y + 0.03);
+  catShadow.position.set(p.x, surf, p.z); catShadow.rotation.z = -shea.holder.rotation.y; catShadow.material.opacity = 0.3 * Math.max(0, 1 - (p.y - surf) / 6);
 }
 
 // Ball on the marble floor — click to kick it
@@ -2128,11 +2022,11 @@ requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
-  state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!cat && catState !== "desk",
+  state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy,
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
-  booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
+  booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
-  toggleDay: () => setNight(dayTarget === 0), catWander: () => catState === "desk" && catWander(),
+  toggleDay: () => setNight(dayTarget === 0), catWander: () => shea && !shea.busy && catWander(), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
   // clickable things whose centre is outside the current view (should be none at home and when leaned in)
   // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
@@ -2148,7 +2042,7 @@ function enter(withSound) {
   entered = true;
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
-  catCue = performance.now();
+  catCue = performance.now(); catNextWander = catCue + 10000;   // Shea goes for a walk 10 s after you come in
   document.activeElement?.blur?.();
   coachShow();
 }
