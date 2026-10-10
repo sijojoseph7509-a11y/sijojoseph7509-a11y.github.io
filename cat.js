@@ -77,7 +77,13 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
   const box0 = new THREE.Box3().setFromObject(model), s = height / (box0.max.y - box0.min.y);
   model.scale.setScalar(s);
   const B = {}; model.traverse((o) => { if (o.isBone) B[o.name] = o; if (o.isMesh) { o.frustumCulled = false; o.castShadow = o.receiveShadow = true; } });
-  const bones = Object.values(B), rest = new Map(bones.map((b) => [b, b.quaternion.clone()]));
+  const bones = Object.values(B), rest = new Map(bones.map((b) => [b, b.quaternion.clone()])), restP = new Map(bones.map((b) => [b, b.position.clone()]));
+  // the "sit" clip authored in Blender (sit.py): frame 0 = standing, last frame = sitting; we scrub it by st.sit
+  // (sampled directly every frame: three's AnimationMixer skips writing a bone whose value didn't change since the last
+  // frame, which fights the per-frame reset below and made held poses snap)
+  const sitClip = (gltf.animations || []).find((a) => a.name === "sit");
+  const sitTracks = sitClip ? sitClip.tracks.map((tr) => { const [node, prop] = tr.name.split("."); const o = model.getObjectByName(node); return o && (prop === "quaternion" || prop === "position") ? { o, prop, it: tr.createInterpolant() } : null; }).filter(Boolean) : [];
+  const sampleSit = (t) => { for (const s of sitTracks) { const v = s.it.evaluate(t); if (s.prop === "quaternion") s.o.quaternion.fromArray(v).normalize(); else s.o.position.fromArray(v); } };
   holder.updateMatrixWorld(true);
   const local = (b) => holder.worldToLocal(wpos(b));
   // rest measurements in the holder's frame
@@ -90,7 +96,6 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
   const PIVOT = new V3(0, legLen * 0.95, 0);   // body pitches about the middle of the trunk
   const HIP = local(B.thighL).setX(0);   // sitting pivots about the hip joints
   const prevQ = new Map(), LEGB = new Set(LEGS.flatMap((L) => [L.up, L.mid, L.end, L.paw]).map((n) => B[n]));
-  const SIT = { pitch: -0.85, drop: 1.75, hock: new V3(0, 0.1, -0.95), front: 1.1 };   // sitting: chest up, rump down, hind metatarsals flat on the ground
   const headRestDir = holder.worldToLocal(tipOf(B.head)).sub(local(B.head)).normalize();
 
   const MID = new V3(0, 0, (legs[1].home.z + legs[0].home.z) / 2);   // trunk middle, between fore and hind paws
@@ -105,7 +110,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     tail: Array.from({ length: 6 }, () => ({ l: 0, s: 0, vl: 0, vs: 0 })), tailMode: "idle",
     action: null, plan: [], busy: false, t: 0, pet: 0, air: 0, sit: 0, sitTarget: 0, meow: -1
   };
-  const restAll = () => { for (const b of bones) b.quaternion.copy(rest.get(b)); };
+  const restAll = () => { for (const b of bones) { b.quaternion.copy(rest.get(b)); b.position.copy(restP.get(b)); } };
   const groundY = (p) => groundAt(p.x, p.z);
   const homeWorld = (L, pos = holder.position, heading = holder.rotation.y) => {
     const h = L.home.clone().applyAxisAngle(Y, heading).add(pos), lv = levelAt(pos.x, pos.z);
@@ -147,12 +152,12 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     st.walkLow = damp(st.walkLow || 0, st.moving ? 0.16 + Math.min(0.12, st.speed * 0.03) : 0, 4, dt);   // cats walk a little lower than they stand
     const bob = (st.moving ? -0.06 * (0.5 - 0.5 * Math.cos(st.cycle * Math.PI * 4)) : 0) - st.walkLow;
     const sway = st.moving ? 0.035 * Math.sin(st.cycle * Math.PI * 2) : 0;
-    const sk = smooth(st.sit);
-    const about = (c, q) => new THREE.Matrix4().makeTranslation(c.x, c.y, c.z).multiply(new THREE.Matrix4().makeRotationFromQuaternion(q)).multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
-    const M = new THREE.Matrix4().makeTranslation(0, st.lift - st.drop + bob - SIT.drop * sk, 0)
-      .multiply(about(HIP, aa(X, SIT.pitch * sk)))
-      .multiply(about(PIVOT, new Q().setFromEuler(new THREE.Euler(st.pitch, 0, st.roll + sway, "YXZ"))));
-    M.decompose(body.position, body.quaternion, _v2);
+    const sk = st.sit;
+    const qb = new Q().setFromEuler(new THREE.Euler(st.pitch, 0, st.roll + sway, "YXZ"));
+    body.quaternion.copy(qb);
+    body.position.copy(PIVOT).sub(PIVOT.clone().applyQuaternion(qb)).add(new V3(0, st.lift - st.drop + bob, 0));
+    // base pose: the Blender clip (standing at 0, sitting at 1)
+    if (sitClip) sampleSit(sitClip.duration * clamp(st.sit, 0, 1));
     holder.updateMatrixWorld(true);
     const side = new V3(1, 0, 0).applyQuaternion(holder.getWorldQuaternion(new Q())), up = Y;
     // breathing and spine bend into turns
@@ -160,10 +165,10 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     rotateWorld(B.spine, aa(side, breath)); rotateWorld(B.chest, aa(side, -breath));
     const bend = clamp(st.omega * 0.12, -0.25, 0.25);
     rotateWorld(B.spine, aa(up, bend * 0.5)); rotateWorld(B.chest, aa(up, bend * 0.6));
-    if (sk) { rotateWorld(B.chest, aa(side, -0.12 * sk)); }
     if (st.arch) { rotateWorld(B.spine, aa(side, -st.arch)); rotateWorld(B.chest, aa(side, st.arch * 0.6)); }
     // legs: IK to planted/swinging paws, blended with flexed poses for jumps (w = 1 → IK, 0 → pose)
-    for (const L of legs) {
+    const legsIK = st.moving || st.air || legs.some((L) => L.w < 1); st.legsIK = legsIK;
+    for (const L of legsIK ? legs : []) {
       const chain = [B[L.up], B[L.mid], B[L.end], B[L.paw]];
       let fkQ = null;
       if (L.w < 1) {   // pose
@@ -172,9 +177,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
         chain.forEach((b) => b.quaternion.copy(rest.get(b))); B[L.up].updateMatrixWorld(true);
       }
       if (L.w > 0) {
-        const off = !L.front && sk ? L.wristOff.clone().lerp(SIT.hock, sk) : L.wristOff;
-        // sitting: the front paws step back under the chest (a small lifted step, not a slide)
-        const paw = L.front && sk ? L.pos.clone().add(new V3(0, 0.35 * Math.sin(Math.PI * sk), -SIT.front * sk).applyAxisAngle(Y, holder.rotation.y)) : L.pos;
+        const off = L.wristOff, paw = L.pos;
         const wrist = paw.clone().add(off.clone().applyAxisAngle(Y, holder.rotation.y));
         if (L.lift) wrist.addScaledVector(Y, -0.12 * L.lift);   // paw curls under as it swings
         { const pa = wpos(chain[0]), pb = wpos(chain[1]), pc = wpos(chain[2]); L.reach = wrist.distanceTo(pa) / (pa.distanceTo(pb) + pb.distanceTo(pc));
@@ -190,7 +193,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     // head: look at a point, shared across the neck and head, clamped to what a cat can turn
     st.lookCur.x = damp(st.lookCur.x, st.look.x, 3.2, dt); st.lookCur.y = damp(st.lookCur.y, st.look.y, 3.2, dt); st.lookCur.z = damp(st.lookCur.z, st.look.z, 3.2, dt);
     const hp = wpos(B.head), d = holder.worldToLocal(st.lookCur.clone()).sub(holder.worldToLocal(hp.clone())).normalize();
-    const restD = headRestDir.clone().applyQuaternion(body.quaternion);
+    const restD = holder.worldToLocal(tipOf(B.head)).sub(holder.worldToLocal(wpos(B.head))).normalize();   // where the head points in the base pose
     let yaw = Math.atan2(d.x, d.z) - Math.atan2(restD.x, restD.z), pit = Math.atan2(d.y, Math.hypot(d.x, d.z)) - Math.atan2(restD.y, Math.hypot(restD.x, restD.z));
     yaw = wrap(yaw); if (Math.abs(yaw) > 1.5) { yaw = 0; pit = 0; }   // behind her: just look ahead
     yaw = clamp(yaw, -1.2, 1.2) * st.lookW; pit = clamp(pit, -0.8, 0.6) * st.lookW;
@@ -209,7 +212,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
       let tl, ts;
       if (mode === "walk") { tl = i === 0 ? 0.85 : i < 3 ? -0.08 : -0.22; ts = 0.12 * Math.sin(st.cycle * Math.PI * 2 - u * 2); }
       else if (mode === "air") { tl = i === 0 ? 0.1 : -0.05; ts = 0; }
-      else if (mode === "sit") { tl = i === 0 ? 0.25 : i < 3 ? 0.12 : 0.05; ts = (i === 0 ? 0.35 : 0.42) + 0.05 * Math.sin(st.t * 1.1 - u * 2) * u + (st.hover ? 0.2 * Math.sin(st.t * 5 - u * 3) * u : 0); }
+      else if (mode === "sit") { tl = 0; ts = (u > 0.5 ? 0.25 * Math.max(0, Math.sin(st.t * 0.9)) : 0) * u + (st.hover ? 0.3 * Math.sin(st.t * 5 - u * 3) * u : 0); }   // the tip twitches
       else if (mode === "pet") { tl = i === 0 ? 1.25 : i < 4 ? -0.05 : -0.35; ts = 0.06 * Math.sin(st.t * 22 - u * 3) * u; }
       else { tl = i === 0 ? -0.12 : i < 3 ? -0.08 : 0.05 + 0.25 * Math.max(0, Math.sin(st.t * 0.9)) * (u > 0.6 ? 1 : 0);
         ts = (0.16 * Math.sin(st.t * 1.3 - u * 2.4) + (st.hover ? 0.35 * Math.sin(st.t * 6 - u * 3) : 0)) * (0.3 + u); }
@@ -217,7 +220,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
       const k = 60 - u * 32, c = 2 * Math.sqrt(k) * 0.55;   // tip lags more than the base
       T.vl += (k * (tl - T.l) - c * T.vl) * dt; T.l += T.vl * dt;
       T.vs += (k * (ts - T.s) - c * T.vs) * dt; T.s += T.vs * dt;
-      const tb = B["tail" + i]; rotateWorld(tb, aa(up, T.s)); rotateWorld(tb, aa(side, T.l));
+      const tw = 1 - 0.8 * sk, tb = B["tail" + i]; rotateWorld(tb, aa(up, T.s * tw)); rotateWorld(tb, aa(side, T.l * tw));
     }
     // temporal smoothing: every joint eases toward its new pose, so nothing can pop between frames
     const kb = 1 - Math.exp(-dt * 22), kl = 1 - Math.exp(-dt * 45);
@@ -317,7 +320,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
   function lerpPose(a, b, k) { k = clamp(k, 0, 1); return a.map((x, i) => mix(x, b[i], k)); }
 
   const cat = {
-    holder, bones: B, state: st,
+    holder, bones: B, state: st, clip: sitClip,
     get busy() { return st.busy; },
     place(pos, heading, sitting = false) { holder.position.copy(pos); holder.rotation.y = heading; st.sit = st.sitTarget = sitting ? 1 : 0; holder.updateMatrixWorld(true); plantAll(); prevQ.clear(); },
     meow() { if (st.meow < 0) { st.meow = 0; cat.onMeow && cat.onMeow(); } },
@@ -330,7 +333,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
       // speeds change with limited acceleration (no instant starts, stops or turns)
       st.speed += clamp(st.speedT - st.speed, -14 * dt, 10 * dt);
       st.omega += clamp(st.omegaT - st.omega, -5 * dt, 5 * dt);
-      st.sit = clamp(st.sit + Math.sign(st.sitTarget - st.sit) * dt / 1.0, 0, 1);   // sitting down / getting up takes about a second
+      st.sit = clamp(st.sit + Math.sign(st.sitTarget - st.sit) * dt / (sitClip ? sitClip.duration : 1.2), 0, 1);   // plays the clip at its own speed
       if (st.meow >= 0) { st.meow += dt; if (st.meow > 1.1) st.meow = -1; }
       if (st.busy) {
         if (!st.action && st.plan.length) { st.action = st.plan.shift()(); st.phase = ""; }

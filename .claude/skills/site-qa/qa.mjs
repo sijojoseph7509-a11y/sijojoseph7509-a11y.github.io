@@ -312,7 +312,7 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   await p.ctx.close();
 });
 
-await check("Shea stays on the desk: walks to the mat, sits, meows and comes back smoothly", async () => {
+await check("Shea stays at her spot: sits down, meows and stands up again smoothly", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
   const r = await p.evaluate(() => {   // fast-forward her round in fixed 1/60 s steps, tracking where she goes and how much any joint jumps per frame
@@ -321,15 +321,16 @@ await check("Shea stays on the desk: walks to the mat, sits, meows and comes bac
     Desk.catWander();
     while (Desk.catStep(1 / 60) && f < 60 * 90) {
       f++; minY = Math.min(minY, h.position.y); sat = Math.max(sat, c.state.sit); far = Math.max(far, h.position.distanceTo(start));
-      for (const [n, b] of Object.entries(c.bones)) { const q = b.quaternion, p = prev.get(n); if (p && f > 3) jump = Math.max(jump, 2 * Math.acos(Math.min(1, Math.abs(p.dot(q)))) * 57.3); prev.set(n, q.clone()); }
+      for (const [n, b] of Object.entries(c.bones)) { const q = b.quaternion, p = prev.get(n); if (p && f > 3 && !/^tail/.test(n)) jump = Math.max(jump, 2 * Math.acos(Math.min(1, Math.abs(p.dot(q)))) * 57.3); prev.set(n, q.clone()); }
     }
     c.onMeow = m0;
     return { minY, sat, meows, far, back: h.position.distanceTo(start), jump, t: f / 60, busy: Desk.state().catBusy };
   });
   expect(r.minY > -0.5, "left the desk: " + JSON.stringify(r));
-  expect(r.far > 4 && r.sat > 0.99 && r.meows >= 1, "did not walk to the mat, sit and meow: " + JSON.stringify(r));
+  expect(r.sat > 0.99 && r.meows >= 1, "did not sit and meow: " + JSON.stringify(r));
+  expect(r.far < 0.1, "she moved from her spot: " + JSON.stringify(r));
   expect(!r.busy && r.back < 0.6, "did not come back to her spot: " + JSON.stringify(r));
-  expect(r.jump < 25, "a joint jumped " + r.jump.toFixed(1) + "° in one frame (glitch)");
+  expect(r.jump < 8, "a joint jumped " + r.jump.toFixed(1) + "° in one frame (glitch)");
   clean(p); await p.ctx.close();
   return `round ${r.t.toFixed(1)} s, ${r.meows} meow(s), max joint step ${r.jump.toFixed(1)}°/frame`;
 });

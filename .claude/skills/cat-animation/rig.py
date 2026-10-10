@@ -55,6 +55,27 @@ bpy.ops.object.vertex_group_smooth(group_select_mode="ALL", factor=0.5, repeat=6
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 bpy.ops.object.mode_set(mode="OBJECT")
+# spatial smoothing: the body mesh has overlapping layers that aren't connected (a chest-fur flap, leg tubes set into
+# the body), so each vertex blends the weights of everything within ~1.4 cm, connected or not: layers then move as one
+from mathutils import kdtree as _kd
+_co = [v.co.copy() for v in ob.data.vertices]
+_t = _kd.KDTree(len(_co))
+for i, c in enumerate(_co): _t.insert(c, i)
+_t.balance()
+for _pass in range(2):
+    cur = [{g.group: g.weight for g in v.groups} for v in ob.data.vertices]
+    new = []
+    for i, c in enumerate(_co):
+        acc, tot = {}, 0.0
+        for _, j, dist in _t.find_range(c, 1.4):
+            w = 1.0 - dist / 1.4; tot += w
+            for gi, x in cur[j].items(): acc[gi] = acc.get(gi, 0) + x * w
+        new.append({gi: x / tot for gi, x in acc.items()})
+    for i, wd in enumerate(new):
+        top = sorted(wd.items(), key=lambda kv: -kv[1])[:4]; sm = sum(x for _, x in top) or 1
+        for g in ob.vertex_groups: g.remove([i])
+        for gi, x in top: ob.vertex_groups[gi].add([i], x / sm, "REPLACE")
+print("SPATIAL-SMOOTH done")
 empty = [v for v in ob.data.vertices if not v.groups or sum(g.weight for g in v.groups) < 1e-4]
 print("UNWEIGHTED", len(empty), "of", len(ob.data.vertices))
 # loose parts inside the head (eyeballs, teeth, inner mouth) and the skull itself move rigidly with the head bone,
@@ -90,10 +111,13 @@ kd.balance()
 wts = {i: [(g.group, g.weight) for g in ob.data.vertices[i].groups] for i in big}
 for isl in islands:
     if isl is big: continue
-    for i in isl:
-        _, j, _ = kd.find(co[i])
+    for i in isl:   # inverse-distance blend of the 8 nearest skin vertices, so the part's edge moves exactly with the skin
+        acc, tot = {}, 0.0
+        for _, j, dist in kd.find_n(co[i], 8):
+            wd = 1.0 / max(dist, 1e-3) ** 2; tot += wd
+            for gi, w in wts[j]: acc[gi] = acc.get(gi, 0) + w * wd
         for g in ob.vertex_groups: g.remove([i])
-        for gi, w in wts[j]: ob.vertex_groups[gi].add([i], w, "REPLACE")
+        for gi, w in acc.items(): ob.vertex_groups[gi].add([i], w / tot, "REPLACE")
         n += 1
 print("HEAD-RIGID", n, "islands", len(islands))
 if len(args) > 2:   # pose test: walk-ish pose, render side view
@@ -108,6 +132,27 @@ if len(args) > 2:   # pose test: walk-ish pose, render side view
     cam.location = (120, -90, 45); cam.rotation_euler = (math.radians(70), 0, math.radians(52)); cam.data.type = "PERSP"
     sc.render.filepath = args[2].replace(".png", "_3q.png"); bpy.ops.render.render(write_still=True)
     bpy.context.view_layer.objects.active = rig; bpy.ops.object.mode_set(mode="POSE"); bpy.ops.pose.select_all(action="SELECT"); bpy.ops.pose.transforms_clear(); bpy.ops.object.mode_set(mode="OBJECT")
+# ── the "sit" clip (see sit.py): poses read off cat anatomy, paws pinned by IK, baked to bone keys ──
+from sit import make_sit
+SIT = {
+  "drop": -14.0, "back": 1.0, "pitch": -30,                 # pelvis: down 14 cm (rump on the desk), back 1 cm, tipped 30° nose-up
+  "spine": -3, "chest": -4, "neck": 17, "neck2": 10, "head": 10,   # chest rises over the front legs; neck and head bring the gaze back level
+  "hock": (4.3, 9.6, 1.7), "hball": (4.3, 3.8, 1.5), "htoe": (4.3, 1.4, 1.0),   # hind legs folded, hock and metatarsal flat on the desk
+  "fin": 0.5,                                                # front paws a touch closer together
+  "tail": [(0.5, 12.5, 6.2), (1.6, 14.2, 3.3), (3.6, 14.0, 1.3), (6.4, 11.6, 1.1), (7.8, 8.0, 1.1), (8.0, 4.0, 1.1)],   # down and round her left side
+  "keys": [(1, 0.0), (8, 0.17), (15, 0.34), (22, 0.5), (29, 0.67), (36, 0.84), (43, 1.0)],   # 1.4 s at 30 fps
+}
+def sit_render(frame):
+    if len(args) < 4: return
+    sc = bpy.context.scene; sc.frame_set(frame); sc.render.engine = "BLENDER_WORKBENCH"; sc.render.resolution_x = 1000; sc.render.resolution_y = 800
+    cam = bpy.data.objects.get("scam") or bpy.data.objects.new("scam", bpy.data.cameras.new("scam"))
+    if cam.name not in sc.collection.objects: sc.collection.objects.link(cam)
+    sc.camera = cam; cam.data.type = "ORTHO"; cam.data.ortho_scale = 46
+    tgt = mathutils.Vector((0, -4, 13))
+    for name, d in [("side", (1, 0, 0)), ("front", (0, -1, 0.05)), ("q", (0.75, -0.6, 0.35)), ("back", (-0.6, 0.75, 0.35))]:
+        d = mathutils.Vector(d).normalized(); cam.location = tgt + d * 150
+        cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler(); sc.render.filepath = f"{args[3]}_{name}.png"; bpy.ops.render.render(write_still=True)
+make_sit(rig, SIT, sit_render)
 bpy.ops.object.select_all(action="SELECT")
-bpy.ops.export_scene.gltf(filepath=args[1], export_format="GLB", use_selection=True, export_skins=True, export_animations=False, export_materials="PLACEHOLDER", export_texcoords=True, export_yup=True)
+bpy.ops.export_scene.gltf(filepath=args[1], export_format="GLB", use_selection=True, export_skins=True, export_animations=True, export_animation_mode="ACTIONS", export_materials="PLACEHOLDER", export_texcoords=True, export_yup=True)
 print("EXPORTED", args[1])
