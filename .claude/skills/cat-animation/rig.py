@@ -75,6 +75,20 @@ for _pass in range(2):
         top = sorted(wd.items(), key=lambda kv: -kv[1])[:4]; sm = sum(x for _, x in top) or 1
         for g in ob.vertex_groups: g.remove([i])
         for gi, x in top: ob.vertex_groups[gi].add([i], x / sm, "REPLACE")
+# neck and chest: the fur layer there sits up to ~3 cm off the skin beneath it, so blend wider (3 cm) in that region only,
+# making both layers carry the same weights and turn together when she moves her head
+def _in_neck(c): return -28 < c.y < -9 and c.z > 11
+for _pass in range(3):
+    cur = [{g.group: g.weight for g in v.groups} for v in ob.data.vertices]
+    for i, c in enumerate(_co):
+        if not _in_neck(c): continue
+        acc, tot = {}, 0.0
+        for _, j, dist in _t.find_range(c, 3.0):
+            w = 1.0 - dist / 3.0; tot += w
+            for gi, x in cur[j].items(): acc[gi] = acc.get(gi, 0) + x * w
+        top = sorted(acc.items(), key=lambda kv: -kv[1])[:4]; sm = sum(x for _, x in top) or 1
+        for g in ob.vertex_groups: g.remove([i])
+        for gi, x in top: ob.vertex_groups[gi].add([i], x / sm, "REPLACE")
 print("SPATIAL-SMOOTH done")
 empty = [v for v in ob.data.vertices if not v.groups or sum(g.weight for g in v.groups) < 1e-4]
 print("UNWEIGHTED", len(empty), "of", len(ob.data.vertices))
@@ -101,7 +115,16 @@ def rigid_head(idx):
 big = max(islands, key=len); n = 0
 # skull (in front of the ear bases) and the ears are rigid to the head
 for i in big:
-    if co[i].y < -23 or (co[i].y < -15 and co[i].z > 31): rigid_head([i]); n += 1
+    c = co[i]
+    if c.y < -15 and c.z > 31: rigid_head([i]); n += 1; continue          # ears
+    k = min(1.0, max(0.0, (-21.0 - c.y) / 4.5))                             # 0 behind the skull … 1 at the face
+    if k <= 0: continue
+    if k >= 1: rigid_head([i]); n += 1; continue
+    old = {g.group: g.weight for g in ob.data.vertices[i].groups}
+    for g in ob.vertex_groups: g.remove([i])
+    mixd = {gi: w * (1 - k) for gi, w in old.items()}; mixd[headg.index] = mixd.get(headg.index, 0) + k
+    for gi, w in sorted(mixd.items(), key=lambda kv: -kv[1])[:4]: ob.vertex_groups[gi].add([i], w, "REPLACE")
+    n += 1
 # (no jaw: the mouth is sculpted closed with no inside, so opening it only stretches skin)
 # every loose part (eyes, inner ears, chest bib…) copies the weights of the nearest skin vertex, so it moves with it
 from mathutils import kdtree
