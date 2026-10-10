@@ -3,15 +3,15 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.7 — 10 October 2026** (site build **v83**) |
+| **Version** | **5.9 — 10 October 2026** (site build **v86**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
 | **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
-| **Status** | Live, all automated checks green (site-qa 35/35, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Status** | Live, **behind a temporary password gate (password: `Shea`, see §23.0)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=83` everywhere in `index.html` **and** `{"build": "83"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=86` everywhere in `index.html` **and** `{"build": "86"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -131,7 +131,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 ├── cat.js                ≈16 KB   Shea's animation engine (IK gait, jumps, look-at, spring tail), loaded by main.js
 ├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
 ├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
-├── version.json                   { "build": "83" }
+├── version.json                   { "build": "86" }
 ├── CNAME                          sijo.work
 ├── mobile-preview.html            phone-frame preview (3 sizes)
 ├── HANDOVER.md                    this document
@@ -518,6 +518,16 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 
 ## 23. Known issues, open items, next steps
 
+0. **Temporary password gate (since v84)**. While the site is being built, every visitor sees a black "This portfolio is private"
+   screen (SJ ring, password field, *Unlock*; no email link since v85). Password: **Shea** (trimmed, any case). Once entered it is
+   remembered on that device (`localStorage["gate"]`). It only hides the site: the files stay public on GitHub, so it is not real security.
+   - Parts: `gate.js` (salted SHA-256 `HASH`, no plain password), `<script src="gate.js?v=N">` in `<head>` after `update.js`, the
+     `<div class="gate" id="gate">` block at the top of `<body>`, the "Password gate" block at the end of `styles.css`, and `GATE_HASH`
+     in `site-qa/qa.mjs`, `site-qa/sweep.mjs`, `site-security/audit.mjs` (tests start unlocked) + the "Password gate" check in `qa.mjs`.
+   - **Change the password:** `python3 -c "import hashlib;print(hashlib.sha256(b'sijo.work:gate:v1:' + 'newpassword'.lower().encode()).hexdigest())"`
+     → paste into `HASH` in `gate.js` and every `GATE_HASH`. Change `v1` in `SALT` (and the command) to sign everyone out.
+   - **Remove it before sharing with hiring teams (Sijo's plan):** delete `gate.js`, its `<script>` line, the gate `<div>` and the CSS block;
+     delete the "Password gate" check from `qa.mjs` (the `GATE_HASH` lines can stay or go); bump the version; run the checks; push.
 1. **Shea (cat) model** is still the Free3D cat (licence unverified) and doesn't look like Shea. Options: (a) Sijo takes 40–80 photos
    (two full circles, soft light) → object-capture skill → real scan; (b) TRELLIS image-to-3D with the five Vision cut-outs (needs HF
    login); (c) the CC-BY Sketchfab "Orange Tabby Cat" by Chenchanchong (needs a credit line).
@@ -577,7 +587,9 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
-| (v5.8) | v85: **Simpler cat, fewer glitches**: Shea only moves her head/neck, tail and breathing (no sitting); hover no longer scales objects (it pushed the laptop screen out of the lid, the curtains into the wall, props into the desk): small desk props (folders, phone, sketchbook) lift a few mm instead; case studies fade each section in over the project colour, fetch the rest in order two at a time after the first view, and start downloading when you hover a project card or desk folder (`OS.warmCase`). `Desk.state().cam` added for tests. |
+| (v5.9) | v86: **Simpler cat, fewer glitches**: Shea only moves her head/neck, tail and breathing (no sitting); hover no longer scales objects (it pushed the laptop screen out of the lid, the curtains into the wall, props into the desk): small desk props (folders, phone, sketchbook) lift a few mm instead; case studies fade each section in over the project colour, fetch the rest in order two at a time after the first view, and start downloading when you hover a project card or desk folder (`OS.warmCase`). `Desk.state().cam` added for tests. |
+| (v5.8) | v85: removed the gate's "Need the password? Email me" link (it opened the Mail app). |
+| (v5.8) | v84: **temporary password gate** (`gate.js`, password *Shea*, remembered per device; see §23.0). Keys can't reach the desk while locked. QA/sweep/audit start unlocked; new QA check for the gate (36 checks). |
 | (v5.7) | v83: **Mac desktop feel**: dock magnification on a per-frame spring with a cosine fall-off measured from resting positions (icons grow from the bottom, neighbours glide, shadows deepen; off on touch/phones/reduced motion); Liquid Glass icons (top specular highlight, refraction glow at the bottom edge, gloss streak, glyph depth; gradients only, no rectangular inset shadows, which the squircle mask cut into white lines); frosted glass dock shelf; switching tabs no longer replays the window pop: the page settles in (fade, short rise, blur clearing, staggered) and the sidebar highlight glides between items; menus open with a soft scale. |
 | (v5.6) | v82: **Shea's sit re-posed from reference photos** (Wikimedia Commons "Sitting cats"): upright and compact (pelvis slides 6 cm forward and tips 50°, chest near vertical over straight front legs), hind leg folded flat against her with the heel under a round haunch and the paw just behind the front paws, tail lying in one smooth curve round her side, head brought back level over both neck joints; the tail trails the body with softer easing toward the tip (no whip). `renderclip.py` renders the clip's pose from five sides. |
 | (v5.5) | v81: **Shea's neck**: the chest/neck fur layer slid against the skin when she turned her head (stair-step seams); the rig now blends weights over 3 cm in the neck region so both layers move together, and the skull's rigid zone fades in over 4.5 cm instead of a hard edge (`necktest.py` renders a head turn to check). Hover attention holds 2.5 s (the pointer flickering at her outline made the head twitch); head turns slower and within a natural range, spread over neck, neck2 and head. |
