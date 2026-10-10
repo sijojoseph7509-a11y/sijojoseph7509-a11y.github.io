@@ -1264,14 +1264,6 @@ lily.position.set(pedestal.position.x, FLOOR_Y + 9, pedestal.position.z); corner
 const spiky = (n, len, col, spread) => { const grp = new THREE.Group(), m = mat(col, { roughness: 0.6 });
   for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + i, cone = mesh(new THREE.ConeGeometry(0.12, len * (0.7 + (i % 4) * 0.12), 5), m);
     cone.position.set(Math.cos(a) * 0.3, len * 0.35, Math.sin(a) * 0.3); cone.rotation.set(Math.sin(a) * spread, 0, -Math.cos(a) * spread); grp.add(cone); } return grp; };
-const terra = new THREE.Group();
-const tPot = mesh(new THREE.CylinderGeometry(1.5, 1.1, 2.6, 24), mat(0xb3613f, { roughness: 0.8 })); tPot.position.y = 1.3;
-const spider = spiky(16, 4.2, 0x6f9a3e, 0.75); spider.position.y = 2.5; terra.add(tPot, spider);
-terra.position.set(onRight(WALL_Z + 7.6), FLOOR_Y, 2.4); corner.add(terra);
-const aloePot = new THREE.Group();
-const aPot = mesh(new THREE.CylinderGeometry(1.25, 1.0, 2.4, 24), potWhite); aPot.position.y = 1.2;
-const aloe = spiky(10, 5.2, 0x5f8f55, 0.45); aloe.position.y = 2.3; aloePot.add(aPot, aloe);
-aloePot.position.set(onRight(WALL_Z + 3.4), FLOOR_Y, 7.4); corner.add(aloePot);
 corner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });   // far from the lamp — skip shadow cost
 
 /* ───────────────────────── Left wall: pop-art prints + camera and cap on a hook ───────────────────────── */
@@ -1292,14 +1284,18 @@ interactive(popArt, "One Piece prints on my wall", () => { Sound.click(); wiggle
 
 
 
-/* ───────────────────────── The MacBook's charging cable: off the desk's back edge, along the skirting, up to a charger in the socket ───────────────────────── */
+/* ───────────────────────── The MacBook's charging cable: charger straight in the socket, cable straight down, loose on the floor ───────────────────────── */
 {
-  const SW = TABLE.x + 19, SY = FLOOR_Y + 25, BZ = WALL_Z + 0.25;
-  const pts = [[2.15, 0.12, -0.9], [2.6, 0.06, -2.2], [3.4, 0.04, -3.1], [3.7, -0.4, -3.35], [3.8, -6, BZ + 0.05], [4.6, FLOOR_Y + 0.3, BZ + 0.3],
-    [9, FLOOR_Y + 0.12, BZ + 0.45], [SW - 0.6, FLOOR_Y + 0.15, BZ + 0.4], [SW - 0.55, FLOOR_Y + 1.6, BZ], [SW - 0.55, SY - 2.6, BZ - 0.1], [SW + 1.0, SY - 0.95, BZ + 0.2]].map((v) => new THREE.Vector3(...v));
-  const cableC = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.35), 160, 0.07, 6), mat(0xf2f1ee, { roughness: 0.55 }));
+  const SW = TABLE.x + 19, SY = FLOOR_Y + 25, PX = SW + 1.14, PY = SY - 0.05, WZ = WALL_Z + 0.2;   // socket centre on the switch board
+  const brick = rbox(1.0, 1.15, 0.7, 0.16, mat(0xf4f4f2, { roughness: 0.4 }), 3); brick.position.set(PX, PY, WALL_Z + 0.5); scene.add(brick);   // USB-C charger, upright in the socket
+  const boot_ = mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.35, 12), mat(0xf2f1ee, { roughness: 0.5 })); boot_.position.set(PX, PY - 0.75, WALL_Z + 0.5); scene.add(boot_);   // strain relief
+  const F = FLOOR_Y + 0.07, cz = WALL_Z + 0.5;
+  const pts = [[PX, PY - 0.9, cz], [PX, PY - 4, cz + 0.05], [PX, F + 2.2, cz + 0.1], [PX - 0.15, F + 0.4, cz + 0.4], [PX - 1.2, F, cz + 1.1],   // straight down the wall, a soft bend onto the floor
+    [PX - 4, F, cz + 1.9], [PX - 7.5, F, cz + 1.3], [11.2, F, cz + 2.0], [9.0, F, cz + 1.0], [7.8, F + 0.3, WZ + 0.1],                     // a loose curve along the floor to the desk
+    [7.4, F + 3, WZ - 0.02], [7.1, -7, WZ - 0.02], [6.8, -1.4, WZ - 0.02], [6.2, -0.2, WZ + 0.05], [5.6, 0.06, -3.25], [3.6, 0.05, -3.0], [2.6, 0.08, -2.1], [2.15, 0.12, -0.9]]  // up the back of the desk, over the edge to the MacBook
+    .map((v) => new THREE.Vector3(...v));
+  const cableC = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "centripetal"), 220, 0.07, 6), mat(0xf2f1ee, { roughness: 0.55 }));
   scene.add(cableC);
-  const brick = rbox(0.95, 1.05, 0.62, 0.15, mat(0xf4f4f2, { roughness: 0.4 }), 2); brick.position.set(SW + 1.1, SY - 0.05, WALL_Z + 0.45); scene.add(brick);   // USB-C charger in the socket
   const magsafe = rbox(0.42, 0.1, 0.22, 0.05, mat(0x9a9ca0, { metalness: 0.8, roughness: 0.3 }), 2); magsafe.position.set(2.05, 0.12, -0.9); magsafe.rotation.y = -0.4; scene.add(magsafe);
 }
 
@@ -1321,8 +1317,6 @@ contact(4.85, DESK_Y, 4.6, 4.4, 3.4, 0.28, 0.1);         // folders
 contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);          // Shea
 contact(TABLE.x, FLOOR_Y + 0.03, TABLE.z, TABLE.w + 3, TABLE.d + 3, 0.5);   // the desk on the floor
 contact(TABLE.x + ROOM_HALF - 3.4, FLOOR_Y + 0.03, WALL_Z + 3.2, 6.5, 6.5, 0.5);   // pedestal
-contact(TABLE.x + ROOM_HALF - 2.4, FLOOR_Y + 0.03, WALL_Z + 7.6, 4.2, 4.2, 0.4);   // terracotta pot
-contact(TABLE.x + ROOM_HALF - 7.4, FLOOR_Y + 0.03, WALL_Z + 3.4, 3.6, 3.6, 0.4);   // aloe
 contact(TABLE.x - ROOM_HALF + 3.4, FLOOR_Y + 0.03, 9, 4.5, 21, 0.4);              // keyboard foot against the left wall
 
 /* ───────────────────────── Back wall: a modular switch board, like every Indian home ───────────────────────── */
@@ -1406,25 +1400,74 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 
 
 /* ───────────────────────── Wall lettering ───────────────────────── */
-// Name block — hung on the wall like studio lettering, right of the poster
-const nameBlock = floorText([
-  { text: S.name + ".", size: 210, weight: 700, spacing: -0.03, color: "#5a382f" },
-  { text: S.title, size: 112, weight: 500, color: "#6f4a40", spacing: -0.01 }
-], { width: 9.6, gap: 1.2 });   // sized to stay readable from the seated eye-level view
-nameBlock.rotation.x = 0;
-nameBlock.position.set(7.8, 9.6, WALL_Z + 0.03);
-scene.add(nameBlock);
-interactive(nameBlock, "About me", () => boot("about"));
-
-// Roles strip — under the name
-const half = Math.ceil(S.roles.length / 2);
-const rolesBlock = floorText([
-  { text: S.roles.slice(0, half).join("  ·  "), size: 92, weight: 500, color: "#7d5a50", spacing: 0 },
-  { text: S.roles.slice(half).join("  ·  "), size: 92, weight: 500, color: "#7d5a50", spacing: 0 }
-], { width: 9.6, gap: 1.4 });
-rolesBlock.rotation.x = 0;
-rolesBlock.position.set(7.8, 7.0, WALL_Z + 0.03);
-scene.add(rolesBlock);
+// Profile card on the wall, right of the poster: a printed UI card in the "frosted photo" style — full-bleed photo
+// (assets/profile.jpg), a progressive blur + dark glass at the bottom, white name with a verified seal, a short line
+// about Sijo, two stats and a white pill button. Mounted on a thin white acrylic panel with a soft shadow on the wall.
+const CARD = { w: 5.7, h: 9.4, px: 1000 };
+const cardCanvas = document.createElement("canvas"); cardCanvas.width = CARD.px; cardCanvas.height = Math.round(CARD.px * CARD.h / CARD.w);
+const cardTex = new THREE.CanvasTexture(cardCanvas); cardTex.colorSpace = THREE.SRGBColorSpace; cardTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+function drawCard(photo) {
+  const g = cardCanvas.getContext("2d"), W = cardCanvas.width, H = cardCanvas.height, rim = 16, R = 70;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = "#f4f4f2"; g.beginPath(); g.roundRect(0, 0, W, H, R + rim); g.fill();   // white rim
+  const x0 = rim, y0 = rim, iw = W - rim * 2, ih = H - rim * 2;
+  g.save(); g.beginPath(); g.roundRect(x0, y0, iw, ih, R); g.clip();
+  g.fillStyle = "#1f2124"; g.fillRect(x0, y0, iw, ih);
+  const drawPhoto = (blur) => { if (!photo) return; const s = Math.max(iw / photo.width, (ih * 0.86) / photo.height), pw = photo.width * s, ph = photo.height * s;
+    g.filter = blur ? `blur(${blur}px)` : "none"; g.drawImage(photo, x0 + (iw - pw) / 2, y0 - ih * 0.02, pw, ph); g.filter = "none";
+    // below the photo, extend its bottom row so the card is filled (the blur hides the seam)
+    g.filter = `blur(${Math.max(blur, 24)}px)`; g.drawImage(photo, 0, photo.height - 4, photo.width, 4, x0 + (iw - pw) / 2, y0 - ih * 0.02 + ph - 2, pw, ih); g.filter = "none"; };
+  drawPhoto(0);
+  // progressive blur: a blurred copy faded in from 52% down
+  const bc = document.createElement("canvas"); bc.width = W; bc.height = H; const bg = bc.getContext("2d");
+  { const save = g; const tmp = bg; tmp.save(); tmp.beginPath(); tmp.roundRect(x0, y0, iw, ih, R); tmp.clip();
+    if (photo) { const s2 = Math.max(iw / photo.width, (ih * 0.86) / photo.height), pw = photo.width * s2, ph = photo.height * s2; tmp.filter = "blur(26px)"; tmp.drawImage(photo, x0 + (iw - pw) / 2, y0 - ih * 0.02, pw, ph); tmp.drawImage(photo, 0, photo.height - 4, photo.width, 4, x0 + (iw - pw) / 2, y0 - ih * 0.02 + ph - 2, pw, ih); tmp.filter = "none"; }
+    tmp.globalCompositeOperation = "destination-in"; const m = tmp.createLinearGradient(0, H * 0.5, 0, H * 0.72); m.addColorStop(0, "rgba(0,0,0,0)"); m.addColorStop(1, "rgba(0,0,0,1)"); tmp.fillStyle = m; tmp.fillRect(0, 0, W, H); tmp.restore(); }
+  g.drawImage(bc, 0, 0);
+  const shade = g.createLinearGradient(0, H * 0.5, 0, H); shade.addColorStop(0, "rgba(20,20,22,0)"); shade.addColorStop(0.45, "rgba(30,31,34,.42)"); shade.addColorStop(1, "rgba(38,39,42,.7)");
+  g.fillStyle = shade; g.fillRect(x0, y0, iw, ih);
+  // glass edge highlight
+  g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 3; g.beginPath(); g.roundRect(x0 + 1.5, y0 + 1.5, iw - 3, ih - 3, R - 1); g.stroke();
+  // text
+  const L = x0 + 56, F = '-apple-system, "SF Pro Display", "Inter", system-ui, sans-serif';
+  g.fillStyle = "#fff"; g.textBaseline = "alphabetic"; g.font = `600 78px ${F}`; if ("letterSpacing" in g) g.letterSpacing = "-1px";
+  const nameY = H * 0.705; g.fillText(S.name, L, nameY); const nw = g.measureText(S.name).width;
+  // verified seal (white scalloped badge, dark check)
+  { const cx = L + nw + 50, cy = nameY - 27, r = 30; g.fillStyle = "#fff"; g.beginPath();
+    for (let k = 0; k <= 48; k++) { const a = k / 48 * Math.PI * 2, rr = r * (k % 2 ? 0.86 : 1); g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.fill();
+    g.strokeStyle = "#1d1d1f"; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(cx - 11, cy + 1); g.lineTo(cx - 3, cy + 9); g.lineTo(cx + 12, cy - 8); g.stroke(); }
+  if ("letterSpacing" in g) g.letterSpacing = "0px";
+  g.fillStyle = "rgba(255,255,255,.92)"; g.font = `400 44px ${F}`;
+  ["A multidisciplinary designer:", "product, brand, experience, 3D."].forEach((t, i) => g.fillText(t, L, nameY + 78 + i * 58));
+  // stats: case studies + disciplines, with outline icons
+  const sy = H * 0.915; g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 3.5; g.lineCap = "round";
+  g.beginPath(); g.arc(L + 14, sy - 26, 9, 0, 7); g.stroke(); g.beginPath(); g.arc(L + 14, sy + 6, 17, Math.PI * 1.05, Math.PI * 1.95); g.stroke();   // person
+  g.fillStyle = "#fff"; g.font = `600 44px ${F}`; g.fillText(String(S.roles.length), L + 46, sy);
+  const s2 = L + 44 + g.measureText(String(S.roles.length)).width + 50;
+  g.strokeRect(s2 + 6, sy - 34, 22, 22); g.beginPath(); g.moveTo(s2, sy - 20); g.lineTo(s2, sy - 4); g.lineTo(s2 + 16, sy - 4); g.stroke();   // stacked squares
+  g.fillText(String(S.projects.length), s2 + 42, sy);
+  // white pill button
+  const bw = 300, bh = 116, bx = x0 + iw - 40 - bw, by = sy - 70;
+  g.save(); g.shadowColor = "rgba(0,0,0,.28)"; g.shadowBlur = 24; g.shadowOffsetY = 6;
+  const pill = g.createLinearGradient(0, by, 0, by + bh); pill.addColorStop(0, "#ffffff"); pill.addColorStop(1, "#ececec"); g.fillStyle = pill; g.beginPath(); g.roundRect(bx, by, bw, bh, bh / 2); g.fill(); g.restore();
+  g.fillStyle = "#1d1d1f"; g.font = `500 44px ${F}`; g.textAlign = "center"; g.fillText("Say hi", bx + bw / 2 - 22, by + bh / 2 + 13);
+  g.strokeStyle = "#1d1d1f"; g.lineWidth = 3.5; const px = bx + bw / 2 + 62, py = by + bh / 2; g.beginPath(); g.moveTo(px - 13, py); g.lineTo(px + 13, py); g.moveTo(px, py - 13); g.lineTo(px, py + 13); g.stroke();
+  g.textAlign = "left";
+  g.restore();
+  cardTex.needsUpdate = true;
+}
+drawCard(null);
+new THREE.ImageLoader().load(asset("assets/profile.jpg"), (img) => drawCard(img));
+const profileCard = new THREE.Group();
+{ const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshPhysicalMaterial({ map: cardTex, transparent: true, alphaTest: 0.5, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.2 }));
+  face.position.z = 0.09; face.castShadow = true; face.receiveShadow = true; profileCard.add(face);
+  const panel = rbox(CARD.w - 0.06, CARD.h - 0.06, 0.08, 0.38, mat(0xf2f2f0, { roughness: 0.4, clearcoat: 0.5 }), 3); panel.position.z = 0.04; profileCard.add(panel);
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 1.4, CARD.h + 1.4), new THREE.MeshBasicMaterial({ map: contactTexWall(), color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false }));
+  sh.position.set(0.12, -0.3, 0.005); profileCard.add(sh); }
+profileCard.position.set(8.1, 10.6, WALL_Z + 0.03);
+scene.add(profileCard);
+interactive(profileCard, "About me", () => boot("about"));
+function contactTexWall() { return canvasTex(128, 128, (g, w, h) => { g.filter = "blur(10px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(22, 22, w - 44, h - 44, 14); g.fill(); }).tex; }
 
 window.OS.setDark(false);   // the desktop uses the light glass look
 
