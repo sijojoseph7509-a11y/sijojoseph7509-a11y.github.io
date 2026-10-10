@@ -14,7 +14,7 @@ dimensions, then check it next to the laptop.
 |---|---|---|---|
 | Desk | 95 × 50 × 74 cm | 19 × 10, top at y 0, floor y −14.8 | `TABLE` |
 | MacBook Pro 14 (Space Black) | 31.3 × 22.1 cm | 6.25 × 4.43 | (−0.6, −0.25) |
-| Shea (cat): rigged, walks and jumps desk ↔ floor (cat-animation skill) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | home (6.4, 0), side-on; hops down at (8.3, 3.0), jumps up from (8.5, 12.6) (`CAT_SPOT`) |
+| Shea (cat): rigged, walks on the desk, sits, meows (cat-animation skill) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | home (6.4, 0), side-on; sits on the mat at (0.7, 4.4) facing the room (`CAT_SPOT`) |
 | Soundbar (click = music) | 40 × 7 × 7 cm | 8 × 1.25 × 1.35 | (5.5, −2.75), behind Shea |
 | Astronaut galaxy light (click = projection; head tilts up when on) | ≈26 cm | 5.2 tall | (−7.4, −2.2) by the bottle |
 | Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.4, 5.2) front-left corner |

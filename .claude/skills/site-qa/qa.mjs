@@ -312,20 +312,26 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   await p.ctx.close();
 });
 
-await check("Shea starts on the desk, hops down, wanders the floor and jumps back to her spot", async () => {
+await check("Shea stays on the desk: walks to the mat, sits, meows and comes back smoothly", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
-  const r = await p.evaluate(() => {   // fast-forward her wander in fixed 0.1 s steps (Desk.catStep), tracking where she goes
-    const h = Desk.cat.holder, start = h.position.clone(), onDesk = Math.abs(h.position.y) < 0.01; let minY = 0, t = 0;
+  const r = await p.evaluate(() => {   // fast-forward her round in fixed 1/60 s steps, tracking where she goes and how much any joint jumps per frame
+    const c = Desk.cat, h = c.holder, start = h.position.clone(), prev = new Map(); let minY = 0, sat = 0, meows = 0, jump = 0, f = 0, far = 0;
+    const m0 = c.onMeow; c.onMeow = () => meows++;
     Desk.catWander();
-    while (Desk.catStep(0.1) && t < 90) { t += 0.1; minY = Math.min(minY, h.position.y); }
-    return { onDesk, minY, t, back: h.position.distanceTo(start), busy: Desk.state().catBusy };
+    while (Desk.catStep(1 / 60) && f < 60 * 90) {
+      f++; minY = Math.min(minY, h.position.y); sat = Math.max(sat, c.state.sit); far = Math.max(far, h.position.distanceTo(start));
+      for (const [n, b] of Object.entries(c.bones)) { const q = b.quaternion, p = prev.get(n); if (p && f > 3) jump = Math.max(jump, 2 * Math.acos(Math.min(1, Math.abs(p.dot(q)))) * 57.3); prev.set(n, q.clone()); }
+    }
+    c.onMeow = m0;
+    return { minY, sat, meows, far, back: h.position.distanceTo(start), jump, t: f / 60, busy: Desk.state().catBusy };
   });
-  expect(r.onDesk, "she did not start on the desk");
-  expect(r.minY < -14, "never reached the floor: " + JSON.stringify(r));
+  expect(r.minY > -0.5, "left the desk: " + JSON.stringify(r));
+  expect(r.far > 4 && r.sat > 0.99 && r.meows >= 1, "did not walk to the mat, sit and meow: " + JSON.stringify(r));
   expect(!r.busy && r.back < 0.6, "did not come back to her spot: " + JSON.stringify(r));
+  expect(r.jump < 25, "a joint jumped " + r.jump.toFixed(1) + "° in one frame (glitch)");
   clean(p); await p.ctx.close();
-  return `round trip ${r.t.toFixed(1)} s, back within ${r.back.toFixed(2)}`;
+  return `round ${r.t.toFixed(1)} s, ${r.meows} meow(s), max joint step ${r.jump.toFixed(1)}°/frame`;
 });
 
 await check("Fonts are self-hosted and loaded (Inter, Caveat)", async () => {
