@@ -26,7 +26,8 @@ dimensions, then check it next to the laptop.
 | Football | 17 cm | `BALL_R` 1.7 | floor |
 | 61-key keyboard | 94 × 32 × 9 cm | 19 × 6.6 × 1.8 | leaning ≈9° on the left wall |
 | Sijo's One Piece prints (his photo, `assets/wall-prints.webp`) | ≈80 × 45 cm grid | 16 wide | left wall |
-| Modular switch board | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the name |
+| Modular switch board + charger | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the profile card |
+| Profile card (UI card, `drawCard`) | ≈28 × 47 cm | 5.7 × 9.4 | back wall (8.1, 10.6), right of the poster |
 
 ## Art direction
 - Walls: matte Oat #CDBEA5 painted plaster (`paintTextures`: stipple bump + soft tonal drift + faint marks) with soft
