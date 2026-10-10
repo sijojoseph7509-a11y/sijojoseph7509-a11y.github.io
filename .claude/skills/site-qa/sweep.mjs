@@ -7,6 +7,8 @@ import fs from "fs";
 const require = createRequire(import.meta.url);
 const puppeteer = require(require.resolve("puppeteer-core", { paths: [process.env.QA_DEPS || process.cwd(), process.cwd()] }));
 const BASE = (process.argv[2] || "http://localhost:4321/").replace(/\/?$/, "/");
+// password gate (gate.js): tests start unlocked, as a visitor who already entered the password. Keep in sync with gate.js HASH.
+const GATE_HASH = "1242c393c539cf38364f807ab0a916199da4fb071ee17fe9349ddfe853e39f89";
 const OUT = process.argv[3] || "sweep-shots";
 fs.mkdirSync(OUT, { recursive: true });
 const DEVICES = [
@@ -53,7 +55,7 @@ async function inspect(p, dev, view) {
   return res.map((m) => `${dev} · ${view}: ${m}`);
 }
 for (const [name, w, h, dpr, mobile] of DEVICES) {
-  const ctx = await browser.createBrowserContext(); const p = await ctx.newPage();
+  const ctx = await browser.createBrowserContext(); const p = await ctx.newPage(); await p.evaluateOnNewDocument((h) => { try { localStorage.setItem("gate", h); } catch (_) {} }, GATE_HASH);
   await p.setViewport({ width: w, height: h, deviceScaleFactor: dpr, isMobile: mobile, hasTouch: mobile });
   const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   p.on("response", (r) => { if (r.status() >= 400) errs.push(r.status() + " " + r.url()); });

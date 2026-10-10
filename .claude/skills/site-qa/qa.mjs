@@ -6,14 +6,17 @@ import { execSync } from "child_process";
 const require = createRequire(import.meta.url);
 const puppeteer = require(require.resolve("puppeteer-core", { paths: [process.env.QA_DEPS || process.cwd(), process.cwd()] }));
 const BASE = (process.argv[2] || "http://localhost:4321/").replace(/\/?$/, "/");
+// password gate (gate.js): tests start unlocked, as a visitor who already entered the password. Keep in sync with gate.js HASH.
+const GATE_HASH = "1242c393c539cf38364f807ab0a916199da4fb071ee17fe9349ddfe853e39f89";
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: "new", args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"] });
 const results = [];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function page({ mobile = false, route } = {}) {
+async function page({ mobile = false, route, locked = false } = {}) {
   const ctx = await browser.createBrowserContext();
   const p = await ctx.newPage();
+  if (!locked) await p.evaluateOnNewDocument((h) => { try { localStorage.setItem("gate", h); } catch (_) {} }, GATE_HASH);
   await p.setViewport(mobile ? { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: 1440, height: 900 });
   p.problems = [];
   p.on("pageerror", (e) => p.problems.push("JS error: " + e.message));
@@ -46,6 +49,22 @@ await check("Desktop: loads with real cat, ball and no errors", async () => {
   await sleep(1500); clean(p);
   const s = await p.evaluate(() => Desk.state()); await p.ctx.close();
   return JSON.stringify(s);
+});
+
+await check("Password gate: blocks a new visitor, wrong password refused, right one unlocks and is remembered", async () => {
+  const p = await page({ locked: true }); await p.goto(BASE + "?qa=" + Date.now());
+  await p.waitForSelector("#gate:not([hidden]) input", { timeout: 10000 });
+  const covers = await p.evaluate(() => { const r = document.getElementById("gate").getBoundingClientRect(); return r.width >= innerWidth && r.height >= innerHeight; });
+  expect(covers, "gate does not cover the screen");
+  await p.keyboard.press("Escape"); await p.type("#gate input", "wrong"); await p.keyboard.press("Enter"); await sleep(400);
+  expect(await p.$eval(".gate-msg", (e) => e.textContent.length > 0), "no message for a wrong password");
+  expect(await p.evaluate(() => document.documentElement.classList.contains("locked")), "wrong password unlocked the site");
+  await p.$eval("#gate input", (e) => (e.value = "")); await p.type("#gate input", " SHEA "); await p.keyboard.press("Enter");
+  await p.waitForFunction(() => document.getElementById("gate").hidden, { timeout: 5000 });
+  await ready(p);
+  await p.goto(BASE + "?qa=" + Date.now());
+  expect(await p.evaluate(() => document.documentElement.classList.contains("unlocked") && document.getElementById("gate").hidden), "password not remembered after a reload");
+  clean(p); await p.ctx.close();
 });
 
 await check("Phone: loads with all models and no errors", async () => {
