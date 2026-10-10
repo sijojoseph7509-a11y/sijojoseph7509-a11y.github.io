@@ -17,9 +17,8 @@ dimensions, then check it next to the laptop.
 | Shea (cat) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | (6.4, 0), side-on, tail over the edge |
 | Soundbar (click = music) | 40 × 7 × 7 cm | 8 × 1.25 × 1.35 | (5.5, −2.75), behind Shea |
 | Astronaut galaxy light (click = projection; head tilts up when on) | ≈26 cm | 5.2 tall | (−7.4, −2.2) by the bottle |
-| Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.6, −0.35) front of the astro |
+| Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.4, 5.2) front-left corner |
 | Plant pot (mango yellow) | 11 cm | r 1.1, h 2 | (−4.6, −2.4) |
-| Pencil cup + pencils | 8 × 10 cm, pencils 17 cm | r 0.42, h 2; 3.5 | (−8.4, 5.2) front-left |
 | "Personal explorations" sketchbook | ≈12 × 8 cm | scale 1.3 | (−6.9, 2.1), clear of the MacBook |
 | "My Projects" folders + index tabs | ≈18 × 13.5 cm | group scale 0.576 | front-right stack, tab per project |
 | iPhone | 147.6 × 71.6 mm | 2.95 × 1.43 | on the mat (−4.3, 4.5) |
@@ -27,7 +26,7 @@ dimensions, then check it next to the laptop.
 | 61-key keyboard | 94 × 32 × 9 cm | 19 × 6.6 × 1.8 | leaning ≈9° on the left wall |
 | Sijo's One Piece prints (his photo, `assets/wall-prints.webp`) | ≈80 × 45 cm grid | 16 wide | left wall |
 | Modular switch board + charger | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the profile card |
-| Profile card (UI card, `drawCard`) | ≈28 × 47 cm | 5.7 × 9.4 | back wall (8.1, 10.6), right of the poster |
+| Profile card (UI card, `drawCard`) | ≈31 × 52 cm | 6.27 × 10.34 | back wall (7.4, 11.05), right of the poster |
 
 ## Art direction
 - Walls: matte Oat #CDBEA5 painted plaster (`paintTextures`: stipple bump + soft tonal drift + faint marks) with soft
