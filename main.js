@@ -941,7 +941,7 @@ const bCap = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.55, 24), mat(0x2f7a4c
 bCap.position.y = 4.67;
 const bLoop = mesh(new THREE.TorusGeometry(0.2, 0.05, 6, 16), mat(0x2f7a4c, { roughness: 0.4 })); bLoop.position.set(0, 5.0, 0); bottle.add(bLoop);
 bottle.add(bBody, bShoulder, bCap);
-bottle.position.set(-8.6, 0, -0.35);
+bottle.position.set(-8.4, 0, 5.2);   // front-left corner (where the pencil stand was)
 scene.add(bottle);
 
 
@@ -985,26 +985,6 @@ books.rotation.y = 0.25;
 scene.add(books);
 interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); });
 
-// 5. Pencil cup — behind the computer, left
-const cup = new THREE.Group();
-const cupBody = mesh(new THREE.CylinderGeometry(0.42, 0.38, 2.0, 28, 1, true), mat(0x161618, { roughness: 0.35, clearcoat: 0.6, side: THREE.DoubleSide }));   // ≈8 × 10 cm
-cupBody.position.y = 1.0;
-const cupBottom = mesh(new THREE.CircleGeometry(0.38, 24), mat(0x161618, { roughness: 0.4 }));
-cupBottom.rotation.x = -Math.PI / 2; cupBottom.position.y = 0.02;
-cup.add(cupBody, cupBottom);
-[[0xfbfbfd, 0.13, -0.12, 0.08, 0.08, 3.5], [0xd6d8db, -0.15, 0.1, -0.06, -0.09, 3.5], [0x0a84ff, 0.03, 0.0, -0.1, -0.03, 3.3], [0xffd60a, -0.06, -0.08, -0.12, 0.12, 3.5], [0x1c1c1e, 0.2, 0.14, 0.1, 0.02, 2.9]].forEach(([c, tilt, px, pz, lean, len]) => {
-  const p = new THREE.Group();
-  const stick = mesh(new THREE.CylinderGeometry(0.04, 0.04, len, 6), mat(c));   // pencils and pens, ≈17 cm
-  stick.position.y = len / 2;
-  const tip = mesh(new THREE.ConeGeometry(0.04, 0.3, 6), mat(0xf1d3a8));
-  tip.position.y = len + 0.15;
-  p.add(stick, tip);
-  p.position.set(px, 0.08, pz);          // bases stay well inside the cup
-  p.rotation.z = tilt; p.rotation.x = lean;
-  cup.add(p);
-});
-cup.position.set(-8.4, 0, 5.2);
-scene.add(cup);
 
 // 6. Soundbar behind Shea (Sijo's black bar speaker, ≈40 × 7 × 7 cm): mesh front, four buttons on top, curved feet.
 //    Click it to turn the music on or off.
@@ -1290,13 +1270,12 @@ interactive(popArt, "One Piece prints on my wall", () => { Sound.click(); wiggle
   const brick = rbox(1.0, 1.15, 0.7, 0.16, mat(0xf4f4f2, { roughness: 0.4 }), 3); brick.position.set(PX, PY, WALL_Z + 0.5); scene.add(brick);   // USB-C charger, upright in the socket
   const boot_ = mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.35, 12), mat(0xf2f1ee, { roughness: 0.5 })); boot_.position.set(PX, PY - 0.75, WALL_Z + 0.5); scene.add(boot_);   // strain relief
   const F = FLOOR_Y + 0.07, cz = WALL_Z + 0.5;
-  const pts = [[PX, PY - 0.9, cz], [PX, PY - 4, cz + 0.05], [PX, F + 2.2, cz + 0.1], [PX - 0.15, F + 0.4, cz + 0.4], [PX - 1.2, F, cz + 1.1],   // straight down the wall, a soft bend onto the floor
-    [PX - 4, F, cz + 1.9], [PX - 7.5, F, cz + 1.3], [11.2, F, cz + 2.0], [9.0, F, cz + 1.0], [7.8, F + 0.3, WZ + 0.1],                     // a loose curve along the floor to the desk
-    [7.4, F + 3, WZ - 0.02], [7.1, -7, WZ - 0.02], [6.8, -1.4, WZ - 0.02], [6.2, -0.2, WZ + 0.05], [5.6, 0.06, -3.25], [3.6, 0.05, -3.0], [2.6, 0.08, -2.1], [2.15, 0.12, -0.9]]  // up the back of the desk, over the edge to the MacBook
+  const pts = [[PX, PY - 0.9, cz], [PX, PY - 4, cz + 0.05], [PX, F + 2.2, cz + 0.1], [PX - 0.15, F + 0.4, cz + 0.4], [PX - 1.0, F, cz + 1.2],   // straight down the wall, a soft bend onto the floor
+    [PX - 3.2, F, cz + 2.6], [PX - 5.6, F, cz + 2.0], [PX - 6.8, F, cz + 3.6], [PX - 5.4, F, cz + 5.0], [PX - 3.4, F, cz + 4.4], [PX - 2.6, F, cz + 5.9]]   // loose coils, plug end free
     .map((v) => new THREE.Vector3(...v));
-  const cableC = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "centripetal"), 220, 0.07, 6), mat(0xf2f1ee, { roughness: 0.55 }));
+  const cableC = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "centripetal"), 180, 0.07, 6), mat(0xf2f1ee, { roughness: 0.55 }));
   scene.add(cableC);
-  const magsafe = rbox(0.42, 0.1, 0.22, 0.05, mat(0x9a9ca0, { metalness: 0.8, roughness: 0.3 }), 2); magsafe.position.set(2.05, 0.12, -0.9); magsafe.rotation.y = -0.4; scene.add(magsafe);
+  const plug = rbox(0.42, 0.2, 0.75, 0.08, mat(0xf2f1ee, { roughness: 0.5 }), 2); plug.position.set(PX - 2.45, F + 0.1, cz + 6.35); plug.rotation.y = 0.25; scene.add(plug);   // USB-C plug end lying on the floor
 }
 
 /* ───────────────────────── Contact shadows: the soft dark rim real objects leave where they touch a surface ───────────────────────── */
@@ -1309,9 +1288,8 @@ const DESK_Y = 0.015;
 contact(-1.0, DESK_Y, -0.25, 7.6, 5.6, 0.42, 0.08);      // laptop
 contact(6.15, DESK_Y, -2.75, 7.8, 2.5, 0.5);             // speaker
 contact(-7.4, DESK_Y, -2.2, 3.2, 3.0, 0.45);             // galaxy light
-contact(-8.6, DESK_Y, -0.35, 1.8, 1.8, 0.45);           // bottle
+contact(-8.4, DESK_Y, 5.2, 1.8, 1.8, 0.45);             // bottle
 contact(-4.95, DESK_Y, -1.95, 2.4, 2.4, 0.4);             // plant
-contact(-8.4, DESK_Y, 5.2, 1.4, 1.4, 0.45);              // pencil cup
 contact(-6.9, DESK_Y, 2.1, 3.2, 2.4, 0.35, -0.25);       // sketchbook
 contact(4.85, DESK_Y, 4.6, 4.4, 3.4, 0.28, 0.1);         // folders
 contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);          // Shea
@@ -1403,7 +1381,7 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 // Profile card on the wall, right of the poster: a printed UI card in the "frosted photo" style — full-bleed photo
 // (assets/profile.jpg), a progressive blur + dark glass at the bottom, white name with a verified seal, a short line
 // about Sijo, two stats and a white pill button. Mounted on a thin white acrylic panel with a soft shadow on the wall.
-const CARD = { w: 5.7, h: 9.4, px: 1000 };
+const CARD = { w: 6.27, h: 10.34, px: 1000 };
 const cardCanvas = document.createElement("canvas"); cardCanvas.width = CARD.px; cardCanvas.height = Math.round(CARD.px * CARD.h / CARD.w);
 const cardTex = new THREE.CanvasTexture(cardCanvas); cardTex.colorSpace = THREE.SRGBColorSpace; cardTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 function drawCard(photo) {
@@ -1464,7 +1442,7 @@ const profileCard = new THREE.Group();
   const panel = rbox(CARD.w - 0.06, CARD.h - 0.06, 0.08, 0.38, mat(0xf2f2f0, { roughness: 0.4, clearcoat: 0.5 }), 3); panel.position.z = 0.04; profileCard.add(panel);
   const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 1.4, CARD.h + 1.4), new THREE.MeshBasicMaterial({ map: contactTexWall(), color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false }));
   sh.position.set(0.12, -0.3, 0.005); profileCard.add(sh); }
-profileCard.position.set(8.1, 10.6, WALL_Z + 0.03);
+profileCard.position.set(7.4, 11.05, WALL_Z + 0.03);
 scene.add(profileCard);
 interactive(profileCard, "About me", () => boot("about"));
 function contactTexWall() { return canvasTex(128, 128, (g, w, h) => { g.filter = "blur(10px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(22, 22, w - 44, h - 44, 14); g.fill(); }).tex; }
@@ -2024,7 +2002,7 @@ started = true;
 requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
-  boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["cup", cup], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
+  boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
   state: () => ({ started, cat: !!cat, ball: !!ball,
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting, tailX: catRig && catRig.tail.length ? catRig.pos.array[catRig.tail[catRig.tail.length - 1] * 3] : null,
