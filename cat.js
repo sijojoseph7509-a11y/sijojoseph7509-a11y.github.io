@@ -32,7 +32,10 @@ const wpos = (b) => b.getWorldPosition(new V3());
 // analytic two-bone IK (D. Holden's formulation): bones a → b, chain end = head of bone c, reach target t
 function ik2(a, b, c, t) {
   const pa = wpos(a), pb = wpos(b), pc = wpos(c);
-  const lab = pa.distanceTo(pb), lcb = pb.distanceTo(pc), lat = clamp(t.distanceTo(pa), 1e-4, (lab + lcb) * 0.999);
+  const lab = pa.distanceTo(pb), lcb = pb.distanceTo(pc), max = lab + lcb, soft = max * 0.88;
+  // soft IK: past 88 % of full reach the leg eases toward straight instead of snapping (the classic IK flicker)
+  let dt0 = t.distanceTo(pa); if (dt0 > soft) { dt0 = soft + (max * 0.995 - soft) * (1 - Math.exp(-(dt0 - soft) / (max * 0.995 - soft))); t = pa.clone().add(t.clone().sub(pa).setLength(dt0)); }
+  const lat = clamp(dt0, 1e-4, max * 0.999);
   const ac = pc.clone().sub(pa).normalize(), ab = pb.clone().sub(pa).normalize(), ba = pa.clone().sub(pb).normalize();
   const bc = pc.clone().sub(pb).normalize(), at = t.clone().sub(pa).normalize();
   const ac_ab0 = Math.acos(clamp(ac.dot(ab), -1, 1)), ba_bc0 = Math.acos(clamp(ba.dot(bc), -1, 1)), ac_at0 = Math.acos(clamp(ac.dot(at), -1, 1));
@@ -68,7 +71,7 @@ const POSE = {
   hindPush: [0.75, -0.55, 0.95, 0.5], hindTuck: [-0.9, 1.25, -1.0, -0.3], hindTrail: [0.45, -0.2, 0.6, 0.3]
 };
 
-export function createCat({ gltf, height, groundAt, camera }) {
+export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
   const holder = new THREE.Group(), body = new THREE.Group(), model = gltf.scene;
   holder.add(body); body.add(model);
   const box0 = new THREE.Box3().setFromObject(model), s = height / (box0.max.y - box0.min.y);
@@ -85,6 +88,9 @@ export function createCat({ gltf, height, groundAt, camera }) {
   });
   const legLen = local(B.thighL).y;   // hip height
   const PIVOT = new V3(0, legLen * 0.95, 0);   // body pitches about the middle of the trunk
+  const HIP = local(B.thighL).setX(0);   // sitting pivots about the hip joints
+  const prevQ = new Map(), LEGB = new Set(LEGS.flatMap((L) => [L.up, L.mid, L.end, L.paw]).map((n) => B[n]));
+  const SIT = { pitch: -0.85, drop: 1.75, hock: new V3(0, 0.1, -0.95), front: 1.1 };   // sitting: chest up, rump down, hind metatarsals flat on the ground
   const headRestDir = holder.worldToLocal(tipOf(B.head)).sub(local(B.head)).normalize();
 
   const MID = new V3(0, 0, (legs[1].home.z + legs[0].home.z) / 2);   // trunk middle, between fore and hind paws
@@ -94,15 +100,17 @@ export function createCat({ gltf, height, groundAt, camera }) {
     holder.position.add(before.sub(MID.clone().applyAxisAngle(Y, holder.rotation.y)));
   }
   const st = {
-    speed: 0, omega: 0, cycle: 0, settle: 0, moving: false,
+    speed: 0, omega: 0, speedT: 0, omegaT: 0, cycle: 0, yaw: 0, pit: 0, settle: 0, moving: false,
     drop: 0, lift: 0, pitch: 0, roll: 0, look: new V3(0, 2, 10), lookCur: new V3(0, 2, 10), lookW: 1,
     tail: Array.from({ length: 6 }, () => ({ l: 0, s: 0, vl: 0, vs: 0 })), tailMode: "idle",
-    action: null, plan: [], busy: false, t: 0, pet: 0, air: 0
+    action: null, plan: [], busy: false, t: 0, pet: 0, air: 0, sit: 0, sitTarget: 0, meow: -1
   };
   const restAll = () => { for (const b of bones) b.quaternion.copy(rest.get(b)); };
   const groundY = (p) => groundAt(p.x, p.z);
   const homeWorld = (L, pos = holder.position, heading = holder.rotation.y) => {
-    const h = L.home.clone().applyAxisAngle(Y, heading).add(pos); h.y = groundAt(h.x, h.z) + L.ballH; return h;
+    const h = L.home.clone().applyAxisAngle(Y, heading).add(pos), lv = levelAt(pos.x, pos.z);
+    let g = groundAt(h.x, h.z); if (Math.abs(g - lv) > 1) g = lv;   // a paw always lands on the surface she stands on, never past an edge
+    h.y = g + L.ballH; return h;
   };
   function plantAll() { for (const L of legs) { L.pos.copy(homeWorld(L)); L.swinging = false; L.planted = true; } }
 
@@ -112,21 +120,23 @@ export function createCat({ gltf, height, groundAt, camera }) {
     if (active) st.settle = 1; // keep stepping one full cycle after stopping, so every paw ends under the body
     if (!active && st.settle <= 0) { st.moving = false; return; }
     st.moving = true;
-    const freq = active ? clamp(0.75 + Math.abs(v) * 0.08 + Math.abs(w) * 0.25, 0.8, 1.6) : 1.3, duty = 0.62;
+    const freq = active ? clamp(0.95 + Math.abs(v) * 0.24 + Math.abs(w) * 0.35, 0.95, 1.9) : 1.4, duty = 0.62;   // quicker, shorter steps as she speeds up (a cat stride stays within its leg reach)
     const dc = dt * freq; st.cycle += dc; if (!active) st.settle -= dc;
     const fwd = new V3(Math.sin(holder.rotation.y), 0, Math.cos(holder.rotation.y));
     for (const L of legs) {
-      const ph = frac(st.cycle - L.phase), swingF = 1 - duty;
-      if (ph < swingF) {
-        if (!L.swinging) {   // lift off: aim where the body will be half a stance after this paw lands
-          const ahead = (swingF - ph) / freq + duty / freq / 2;
-          L.from.copy(L.pos); L.to.copy(homeWorld(L, holder.position.clone().addScaledVector(fwd, v * ahead), holder.rotation.y + w * ahead));
-          L.swinging = true; L.planted = false;
-        }
-        const k = ph / swingF, e = smooth(k);
-        L.pos.lerpVectors(L.from, L.to, e); L.pos.y += Math.sin(Math.PI * k) * (L.front ? 0.42 : 0.36) * clamp(0.5 + Math.abs(v) * 0.12, 0.5, 1);
+      const ph = frac(st.cycle - L.phase), swingF = 1 - duty, beat = Math.floor(st.cycle - L.phase);
+      // a step starts on the leg's beat of the gait, or straight away if the planted paw has been left too far behind (as a real cat re-steps)
+      if (!L.swinging && ((ph < swingF && beat !== L.beat) || (L.reach || 0) > 1.08)) {
+        const dur = Math.max(0.21, swingF / freq), ahead = dur + duty / freq / 2;
+        L.from.copy(L.pos); L.to.copy(homeWorld(L, holder.position.clone().addScaledVector(fwd, v * ahead), holder.rotation.y + w * ahead));
+        L.swinging = true; L.planted = false; L.st = 0; L.dur = dur; L.beat = beat;
+      }
+      if (L.swinging) {
+        L.st += dt; const k = clamp(L.st / L.dur, 0, 1), e = smooth(k);
+        L.pos.lerpVectors(L.from, L.to, e); L.pos.y += Math.sin(Math.PI * k) * (L.front ? 0.4 : 0.34) * clamp(0.6 + Math.abs(v) * 0.1, 0.6, 1);
         L.lift = Math.sin(Math.PI * k);
-      } else if (L.swinging) { L.pos.copy(L.to); L.swinging = false; L.planted = true; L.lift = 0; }
+        if (k >= 1) { L.pos.copy(L.to); L.swinging = false; L.planted = true; L.lift = 0; }
+      }
     }
   }
 
@@ -134,11 +144,15 @@ export function createCat({ gltf, height, groundAt, camera }) {
   function solve(dt) {
     restAll();
     // trunk: crouch/raise, pitch about the trunk's middle, a little roll; walk bob twice per stride
-    const bob = st.moving ? -0.07 * (0.5 - 0.5 * Math.cos(st.cycle * Math.PI * 4)) : 0;
+    st.walkLow = damp(st.walkLow || 0, st.moving ? 0.16 + Math.min(0.12, st.speed * 0.03) : 0, 4, dt);   // cats walk a little lower than they stand
+    const bob = (st.moving ? -0.06 * (0.5 - 0.5 * Math.cos(st.cycle * Math.PI * 4)) : 0) - st.walkLow;
     const sway = st.moving ? 0.035 * Math.sin(st.cycle * Math.PI * 2) : 0;
-    const qb = new Q().setFromEuler(new THREE.Euler(st.pitch, 0, st.roll + sway, "YXZ"));
-    body.quaternion.copy(qb);
-    body.position.copy(PIVOT).sub(PIVOT.clone().applyQuaternion(qb)).add(new V3(0, st.lift - st.drop + bob, 0));
+    const sk = smooth(st.sit);
+    const about = (c, q) => new THREE.Matrix4().makeTranslation(c.x, c.y, c.z).multiply(new THREE.Matrix4().makeRotationFromQuaternion(q)).multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
+    const M = new THREE.Matrix4().makeTranslation(0, st.lift - st.drop + bob - SIT.drop * sk, 0)
+      .multiply(about(HIP, aa(X, SIT.pitch * sk)))
+      .multiply(about(PIVOT, new Q().setFromEuler(new THREE.Euler(st.pitch, 0, st.roll + sway, "YXZ"))));
+    M.decompose(body.position, body.quaternion, _v2);
     holder.updateMatrixWorld(true);
     const side = new V3(1, 0, 0).applyQuaternion(holder.getWorldQuaternion(new Q())), up = Y;
     // breathing and spine bend into turns
@@ -146,6 +160,7 @@ export function createCat({ gltf, height, groundAt, camera }) {
     rotateWorld(B.spine, aa(side, breath)); rotateWorld(B.chest, aa(side, -breath));
     const bend = clamp(st.omega * 0.12, -0.25, 0.25);
     rotateWorld(B.spine, aa(up, bend * 0.5)); rotateWorld(B.chest, aa(up, bend * 0.6));
+    if (sk) { rotateWorld(B.chest, aa(side, -0.12 * sk)); }
     if (st.arch) { rotateWorld(B.spine, aa(side, -st.arch)); rotateWorld(B.chest, aa(side, st.arch * 0.6)); }
     // legs: IK to planted/swinging paws, blended with flexed poses for jumps (w = 1 → IK, 0 → pose)
     for (const L of legs) {
@@ -157,34 +172,44 @@ export function createCat({ gltf, height, groundAt, camera }) {
         chain.forEach((b) => b.quaternion.copy(rest.get(b))); B[L.up].updateMatrixWorld(true);
       }
       if (L.w > 0) {
-        const wrist = L.pos.clone().add(L.wristOff.clone().applyAxisAngle(Y, holder.rotation.y));
+        const off = !L.front && sk ? L.wristOff.clone().lerp(SIT.hock, sk) : L.wristOff;
+        // sitting: the front paws step back under the chest (a small lifted step, not a slide)
+        const paw = L.front && sk ? L.pos.clone().add(new V3(0, 0.35 * Math.sin(Math.PI * sk), -SIT.front * sk).applyAxisAngle(Y, holder.rotation.y)) : L.pos;
+        const wrist = paw.clone().add(off.clone().applyAxisAngle(Y, holder.rotation.y));
         if (L.lift) wrist.addScaledVector(Y, -0.12 * L.lift);   // paw curls under as it swings
+        { const pa = wpos(chain[0]), pb = wpos(chain[1]), pc = wpos(chain[2]); L.reach = wrist.distanceTo(pa) / (pa.distanceTo(pb) + pb.distanceTo(pc));
+          if (cat.debug) cat.debug[L.id] = { reach: +L.reach.toFixed(3), swing: L.swinging, lift: +(L.lift || 0).toFixed(2) }; }
         ik2(chain[0], chain[1], chain[2], wrist);
-        aimBone(chain[2], L.pos);
+        aimBone(chain[2], paw);
         // paw: flat on the ground in stance, toes curled while swinging
-        const toe = L.pos.clone().add(new V3(0, -L.ballH * 0.55, 0.7).applyAxisAngle(Y, holder.rotation.y)); if (L.lift) toe.y -= 0.45 * L.lift;
+        const toe = paw.clone().add(new V3(0, -L.ballH * 0.55, 0.7).applyAxisAngle(Y, holder.rotation.y)); if (L.lift) toe.y -= 0.45 * L.lift;
         aimBone(chain[3], toe);
       }
       if (fkQ) { chain.forEach((b, i) => b.quaternion.slerp(fkQ[i], 1 - L.w)); B[L.up].updateMatrixWorld(true); }
     }
     // head: look at a point, shared across the neck and head, clamped to what a cat can turn
-    st.lookCur.x = damp(st.lookCur.x, st.look.x, 9, dt); st.lookCur.y = damp(st.lookCur.y, st.look.y, 9, dt); st.lookCur.z = damp(st.lookCur.z, st.look.z, 9, dt);
+    st.lookCur.x = damp(st.lookCur.x, st.look.x, 3.2, dt); st.lookCur.y = damp(st.lookCur.y, st.look.y, 3.2, dt); st.lookCur.z = damp(st.lookCur.z, st.look.z, 3.2, dt);
     const hp = wpos(B.head), d = holder.worldToLocal(st.lookCur.clone()).sub(holder.worldToLocal(hp.clone())).normalize();
     const restD = headRestDir.clone().applyQuaternion(body.quaternion);
     let yaw = Math.atan2(d.x, d.z) - Math.atan2(restD.x, restD.z), pit = Math.atan2(d.y, Math.hypot(d.x, d.z)) - Math.atan2(restD.y, Math.hypot(restD.x, restD.z));
-    yaw = clamp(wrap(yaw), -1.3, 1.3) * st.lookW; pit = clamp(pit, -0.9, 0.7) * st.lookW;
+    yaw = wrap(yaw); if (Math.abs(yaw) > 1.5) { yaw = 0; pit = 0; }   // behind her: just look ahead
+    yaw = clamp(yaw, -1.2, 1.2) * st.lookW; pit = clamp(pit, -0.8, 0.6) * st.lookW;
+    st.yaw = damp(st.yaw, yaw, 5, dt); st.pit = damp(st.pit, pit, 5, dt); yaw = st.yaw; pit = st.pit;
     const hq = holder.getWorldQuaternion(new Q());
     for (const [b, k] of [[B.neck, 0.3], [B.neck2, 0.3], [B.head, 0.4]]) {
       rotateWorld(b, aa(up, yaw * k));
       rotateWorld(b, aa(new V3(1, 0, 0).applyAxisAngle(Y, yaw).applyQuaternion(hq), -pit * k));
     }
+    // meow: neck stretches and the chin lifts as she calls
+    if (st.meow >= 0) { const e = Math.sin(Math.PI * clamp(st.meow / 0.95, 0, 1)); rotateWorld(B.neck, aa(side, -0.1 * e)); rotateWorld(B.head, aa(side, -0.22 * e)); }
     // tail: damped springs toward a target curve (up while walking, low and lazy at rest, upright when petted)
-    const n = st.tail.length, mode = st.pet > 0 ? "pet" : st.tailMode;
+    const n = st.tail.length, mode = st.pet > 0 ? "pet" : st.sit > 0.5 && st.tailMode !== "walk" ? "sit" : st.tailMode;
     for (let i = 0; i < n; i++) {
       const T = st.tail[i], u = i / (n - 1);
       let tl, ts;
       if (mode === "walk") { tl = i === 0 ? 0.85 : i < 3 ? -0.08 : -0.22; ts = 0.12 * Math.sin(st.cycle * Math.PI * 2 - u * 2); }
       else if (mode === "air") { tl = i === 0 ? 0.1 : -0.05; ts = 0; }
+      else if (mode === "sit") { tl = i === 0 ? 0.25 : i < 3 ? 0.12 : 0.05; ts = (i === 0 ? 0.35 : 0.42) + 0.05 * Math.sin(st.t * 1.1 - u * 2) * u + (st.hover ? 0.2 * Math.sin(st.t * 5 - u * 3) * u : 0); }
       else if (mode === "pet") { tl = i === 0 ? 1.25 : i < 4 ? -0.05 : -0.35; ts = 0.06 * Math.sin(st.t * 22 - u * 3) * u; }
       else { tl = i === 0 ? -0.12 : i < 3 ? -0.08 : 0.05 + 0.25 * Math.max(0, Math.sin(st.t * 0.9)) * (u > 0.6 ? 1 : 0);
         ts = (0.16 * Math.sin(st.t * 1.3 - u * 2.4) + (st.hover ? 0.35 * Math.sin(st.t * 6 - u * 3) : 0)) * (0.3 + u); }
@@ -194,6 +219,14 @@ export function createCat({ gltf, height, groundAt, camera }) {
       T.vs += (k * (ts - T.s) - c * T.vs) * dt; T.s += T.vs * dt;
       const tb = B["tail" + i]; rotateWorld(tb, aa(up, T.s)); rotateWorld(tb, aa(side, T.l));
     }
+    // temporal smoothing: every joint eases toward its new pose, so nothing can pop between frames
+    const kb = 1 - Math.exp(-dt * 22), kl = 1 - Math.exp(-dt * 45);
+    for (const b of bones) {
+      const p = prevQ.get(b);
+      if (p) b.quaternion.copy(p.slerp(b.quaternion, LEGB.has(b) ? kl : kb));
+      prevQ.set(b, b.quaternion.clone());
+    }
+    model.updateMatrixWorld(true);
   }
 
   // ── actions ──
@@ -205,17 +238,17 @@ export function createCat({ gltf, height, groundAt, camera }) {
       return { run(dt) {
         const mid = holder.position.clone().add(MID.clone().applyAxisAngle(Y, holder.rotation.y));
         const d = goal.clone().sub(mid); d.y = 0; const dist = d.length();
-        if (dist < 0.2) { st.speed = 0; st.omega = 0; return true; }
+        if (dist < 0.2) { st.speedT = 0; st.omegaT = 0; return true; }
         const want = Math.atan2(d.x, d.z), err = wrap(want - holder.rotation.y);
-        st.omega = clamp(err * 3.2, -2.2, 2.2);
+        st.omegaT = clamp(err * 2.4, -1.15, 1.15);
         // speed: crawl while the target is off to the side, ease in on arrival, and keep the turning circle well inside the distance left
         const facing = clamp((Math.cos(err) - 0.35) / 0.65, 0, 1);
-        const vT = Math.min(maxV * facing * clamp(dist / 2.2, 0.3, 1), Math.abs(err) > 0.05 ? 2.2 * dist / (2 * Math.abs(Math.sin(err)) + 1e-3) : maxV);
-        st.speed = damp(st.speed, vT, 5, dt);
-        const g0 = groundAt(holder.position.x, holder.position.z);
+        const vT = Math.min(maxV * facing * clamp(dist / 2.2, 0.12, 1), Math.abs(err) > 0.05 ? 2.2 * dist / (2 * Math.abs(Math.sin(err)) + 1e-3) : maxV);
+        st.speedT = vT;
+        const g0 = levelAt(holder.position.x, holder.position.z);
         const prev = holder.position.clone(), prevH = holder.rotation.y;
         yawBy(st.omega * dt); holder.position.addScaledVector(fwdOf(holder.rotation.y), st.speed * dt);
-        if (groundAt(holder.position.x, holder.position.z) !== g0) { holder.position.copy(prev); holder.rotation.y = prevH; st.speed = 0; return true; }   // ledge: stop
+        if (levelAt(holder.position.x, holder.position.z) !== g0) { holder.position.copy(prev); holder.rotation.y = prevH; st.speed = st.speedT = 0; return true; }   // ledge: stop
         holder.position.y = g0;
         st.look.copy(to).add(new V3(0, 1.5, 0)); if (dist < 3) st.look.copy(holder.position).addScaledVector(fwdOf(holder.rotation.y), 8).add(new V3(0, 2, 0));
         st.tailMode = "walk";
@@ -224,13 +257,16 @@ export function createCat({ gltf, height, groundAt, camera }) {
     arrive(to, face, maxV) { return act.walk(to, maxV, face); },   // walk there, ready to turn to `face` on the spot
     turn(heading) {
       return { run(dt) {
-        const err = wrap(heading - holder.rotation.y); st.omega = clamp(err * 3.5, -1.8, 1.8); st.speed = 0;
+        const err = wrap(heading - holder.rotation.y); st.omegaT = clamp(err * 2.6, -1.4, 1.4); st.speedT = 0;
         yawBy(st.omega * dt); st.tailMode = "walk";
         st.look.copy(holder.position).addScaledVector(fwdOf(heading), 8).add(new V3(0, 2, 0));
-        if (Math.abs(err) < 0.03) { st.omega = 0; return true; }
+        if (Math.abs(err) < 0.03 && Math.abs(st.omega) < 0.25) { st.omegaT = 0; return true; }
       } };
     },
-    wait(dur, look) { let t = 0; return { run(dt) { t += dt; st.speed = st.omega = 0; st.tailMode = "idle"; if (look) st.look.copy(typeof look === "function" ? look() : look); return t >= dur; } }; },
+    sit(dur = 1.1) { return { run(dt) { st.speedT = st.omegaT = 0; st.sitTarget = 1; st.tailMode = "idle"; return st.sit > 0.99; } }; },
+    stand(dur = 0.8) { return { run(dt) { st.sitTarget = 0; return st.sit < 0.01; } }; },
+    meow(look) { let t = 0; return { run(dt) { if (t === 0) cat.meow(); t += dt; if (look) st.look.copy(typeof look === "function" ? look() : look); return t > 1.1; } }; },
+    wait(dur, look) { let t = 0; return { run(dt) { t += dt; st.speedT = st.omegaT = 0; st.tailMode = "idle"; if (look) st.look.copy(typeof look === "function" ? look() : look); return t >= dur; } }; },
     sniff(point, dur) { let t = 0; return { run(dt) { t += dt; st.tailMode = "idle"; st.look.copy(point).add(new V3(0, Math.sin(t * 9) * 0.15, 0)); st.drop = damp(st.drop, 0.35, 5, dt); st.pitch = damp(st.pitch, 0.12, 5, dt); if (t >= dur) { st.drop = 0; st.pitch = 0; return true; } } }; },
     jump(land, up) {   // ballistic jump from where she stands to `land` (a ground point), up onto or down off the desk
       let ph = "look", t = 0, P0, v0, T, flightT = 0;
@@ -283,17 +319,25 @@ export function createCat({ gltf, height, groundAt, camera }) {
   const cat = {
     holder, bones: B, state: st,
     get busy() { return st.busy; },
-    place(pos, heading) { holder.position.copy(pos); holder.rotation.y = heading; holder.updateMatrixWorld(true); plantAll(); },
+    place(pos, heading, sitting = false) { holder.position.copy(pos); holder.rotation.y = heading; st.sit = st.sitTarget = sitting ? 1 : 0; holder.updateMatrixWorld(true); plantAll(); prevQ.clear(); },
+    meow() { if (st.meow < 0) { st.meow = 0; cat.onMeow && cat.onMeow(); } },
+    get sitting() { return st.sit > 0.5; },
     go(steps, onDone) { st.plan = steps.slice(); st.action = null; st.busy = true; st.onDone = onDone; },
-    act, idleLook: null,
+    act, idleLook: null, onMeow: null,
     pet(sec = 2.6) { st.pet = sec; },
     update(dt, { hover = false } = {}) {
       dt = Math.min(dt, 1 / 30); st.t += dt; st.hover = hover; if (st.pet > 0) st.pet -= dt;
+      // speeds change with limited acceleration (no instant starts, stops or turns)
+      st.speed += clamp(st.speedT - st.speed, -14 * dt, 10 * dt);
+      st.omega += clamp(st.omegaT - st.omega, -5 * dt, 5 * dt);
+      st.sit = clamp(st.sit + Math.sign(st.sitTarget - st.sit) * dt / 1.0, 0, 1);   // sitting down / getting up takes about a second
+      if (st.meow >= 0) { st.meow += dt; if (st.meow > 1.1) st.meow = -1; }
       if (st.busy) {
         if (!st.action && st.plan.length) { st.action = st.plan.shift()(); st.phase = ""; }
-        if (st.action && st.action.run(dt)) { st.action = null; if (!st.plan.length) { st.busy = false; st.speed = st.omega = 0; st.onDone && st.onDone(); } }
+        if (st.action && st.action.run(dt)) { st.action = null; if (!st.plan.length) { st.busy = false; st.speedT = st.omegaT = 0; st.onDone && st.onDone(); } }
       } else {
-        st.tailMode = "idle"; st.speed = damp(st.speed, 0, 6, dt); st.omega = 0;
+        st.tailMode = "idle"; st.speedT = st.omegaT = 0;
+        if (Math.abs(st.omega) > 1e-3 || st.speed > 1e-3) yawBy(st.omega * dt);
         if (cat.idleLook) st.look.copy(cat.idleLook(st.t, hover || st.pet > 0));
       }
       if (!st.air) stepGait(dt);

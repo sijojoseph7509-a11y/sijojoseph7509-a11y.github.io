@@ -50,6 +50,11 @@ arm.bones["root"].use_deform = False
 # skin: bone heat; fall back to envelopes if it can't solve (separate leg shells)
 ob.select_set(True); rig.select_set(True); bpy.context.view_layer.objects.active = rig
 bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+bpy.context.view_layer.objects.active = ob; bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
+bpy.ops.object.vertex_group_smooth(group_select_mode="ALL", factor=0.5, repeat=6, expand=0.0)
+bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
+bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
+bpy.ops.object.mode_set(mode="OBJECT")
 empty = [v for v in ob.data.vertices if not v.groups or sum(g.weight for g in v.groups) < 1e-4]
 print("UNWEIGHTED", len(empty), "of", len(ob.data.vertices))
 # loose parts inside the head (eyeballs, teeth, inner mouth) and the skull itself move rigidly with the head bone,
@@ -76,6 +81,7 @@ big = max(islands, key=len); n = 0
 # skull (in front of the ear bases) and the ears are rigid to the head
 for i in big:
     if co[i].y < -23 or (co[i].y < -15 and co[i].z > 31): rigid_head([i]); n += 1
+# (no jaw: the mouth is sculpted closed with no inside, so opening it only stretches skin)
 # every loose part (eyes, inner ears, chest bib…) copies the weights of the nearest skin vertex, so it moves with it
 from mathutils import kdtree
 kd = kdtree.KDTree(len(big))

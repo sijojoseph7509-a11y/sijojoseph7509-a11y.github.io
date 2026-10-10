@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.2 — 10 October 2026** (site build **v78**) |
+| **Version** | **5.3 — 10 October 2026** (site build **v79**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
@@ -11,7 +11,7 @@
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
 | **Status** | Live, all automated checks green (site-qa 35/35, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=78` everywhere in `index.html` **and** `{"build": "78"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=79` everywhere in `index.html` **and** `{"build": "79"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -131,7 +131,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 ├── cat.js                ≈16 KB   Shea's animation engine (IK gait, jumps, look-at, spring tail), loaded by main.js
 ├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
 ├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
-├── version.json                   { "build": "78" }
+├── version.json                   { "build": "79" }
 ├── CNAME                          sijo.work
 ├── mobile-preview.html            phone-frame preview (3 sizes)
 ├── HANDOVER.md                    this document
@@ -227,7 +227,7 @@ and the photo assets in §5.
 |---|---|---|---|
 | Desk | 95 × 50 × 74 cm | dark laminate #221e1c; left side panel; right cubby with shelf, keyboard and white charger cube; back rail | — |
 | **MacBook Pro 14" M5**, Space Black #2e2d30 | 31.3 × 22.1 cm | (−1.0, 0, −0.25), rot −0.08, lid ≈105°. Keys (instanced), speaker grilles, trackpad, hinge, SJ monogram + stickers on the lid back, sticky note "make it simple, then make it fun ✶" (76 mm). Screen: live 1600 × 1024 canvas (wallpaper + "Hi, I'm Sijo" window + dock + notch). | Screen / power key → About; keys / trackpad → types hello |
-| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | Starts on the desk at her spot (6.4, 0, 0), facing −1.15. **Rigged and animated (v78):** `models/cat/shea.glb` has a 32-bone skeleton skinned in Blender; `cat.js` animates her procedurally from cat biomechanics: lateral-sequence walk with paws planted by two-bone IK, ballistic jumps with real gravity (look, crouch, push, tuck/reach, land front-first), head look-at (laptop, visitor, window, ball), spring tail, breathing. 10 s after Enter she walks to the desk edge, hops down, goes to the window, sniffs the football, jumps back up and returns to her spot (≈30 s); again every 45–80 s (`catWanderPlan`, `CAT_SPOT`, `groundAt`). Walking never crosses a ledge. Reduced motion: she stays put. Details: cat-animation skill. | Hover "pet me?", click = purr + hearts (tail upright, looks at you) |
+| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | Starts standing at her spot on the desk (6.4, 0, 0), facing −1.15. **Rigged and animated:** `models/cat/shea.glb` (32-bone skeleton, Blender bone-heat weights smoothed; skull, ears and eyes rigid to the head) driven by `cat.js`: lateral-sequence walk with IK-planted paws (soft IK, re-steps a paw that gets left behind, step rate rises with speed), acceleration-limited walking and turning, sitting (rump down, chest up, hind legs folded, tail wrapped), meow (neck stretch + chin lift + an original synthesised meow, `Sound.meow`), head look-at with smoothed angles, spring tail, breathing, and per-frame joint smoothing. **She stays on the desk (v79):** 10 s after Enter she walks round the laptop over the folders to the desk mat, sits facing the room and meows, then walks back and sits at her spot; again every 25–45 s (every third time she just sits and meows). Petting = purr + meow + hearts. Reduced motion: she stays put. Details: cat-animation skill. | Hover "pet me?" (no hover scaling for her), click = purr + meow + hearts |
 | Soundbar | 34 × 6 × 7 cm | (6.15, 0, −2.75) behind Shea; mesh front, 4 top buttons, curved feet, no brand | Click = music on/off |
 | **Astronaut galaxy light** | ≈26 cm | (−7.4, 0, −2.2), rot 0.3; moon-rock base, suit, backpack, cable, full oval visor; head (`astroHead`) **tilts ≈35° up** while projecting (`stepAstro`) | Click = projection on/off. At night projects a nebula + stars on ceiling and back wall (`projCeil`, `projWall`). |
 | Rubber plant | pot ≈10 cm | (−4.95, 0, −1.95) ×0.9; mango-yellow pot #ffb21a; three stems leaning into the room, pointed glossy leaves, lighter new leaves on top | Click = wiggle |
@@ -577,6 +577,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v5.3) | v79: **Shea smooth and desk-only**: no more floor trips; she walks to the desk mat, sits, meows and comes back. Glitches fixed at the source: paws could target the floor at the desk edge, turning speed jumped between actions, legs over-stretched and snapped (now soft IK + re-stepping + speed-matched stride), head flipped when looking behind, hover scaling stretched her pinned legs. Smoothed skin weights in Blender; joint smoothing every frame. Meow sound (synthesised) on pet and when she sits. QA check now measures per-frame joint jumps. |
 | (v5.2) | v78: **Shea is rigged and animated like a real cat**: a 32-bone skeleton skinned in Blender (`models/cat/shea.glb`), animated by `cat.js` (IK-planted paws in a lateral-sequence walk, ballistic jumps with real gravity, head look-at, spring tail, breathing). She starts on the desk; 10 s after Enter she hops down, visits the window and the football, jumps back up and returns; again every 45–80 s. New cat-animation skill; QA round-trip check. |
 | (v5.1) | v77: profile card is now a **floating UI card** (rounded, no white rim/acrylic mount, lit from within, 6 cm off the wall with a soft offset shadow, slow drift, 1400 px canvas, photo sharpened). **Shea moves**: walks in across the floor after Enter, crouches and jumps onto the desk, walks to her spot; every 45–75 s hops down, wanders and jumps back (per-vertex leg rig + body pitch/crouch; shadow follows). QA 35 checks (new cat check; position checks wait for `catBusy` false). |
 | (v4.6) | v76: pencil stand removed, bottle moved to its spot (front-left); charging cable now only runs from the charger down the wall and lies loose on the floor with a free plug end (MagSafe connector removed); profile card +10% (6.27 × 10.34) and moved left to x 7.4; `assets/profile.jpg` re-made: Sijo cut out with Apple Vision subject lifting (on-device) and placed on a light grey studio backdrop like the reference (1200 px). |

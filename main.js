@@ -109,6 +109,23 @@ const Sound = (() => {
       o.connect(f).connect(g).connect(ctx.destination);
       o.start(t); lfo.start(t); o.stop(t + 1.8); lfo.stop(t + 1.8);
     },
+    // an original, synthesised meow (no recording): a voiced buzz with pitch rising then falling ("mi-aow"), shaped
+    // by two vocal-tract formants that glide from an "ee" to an "ow", soft attack, a little vibrato
+    meow() {
+      if (muted || !running()) return;
+      const t = ctx.currentTime, d = 0.62 + Math.random() * 0.25, f0 = 520 + Math.random() * 120;
+      const o = ctx.createOscillator(), vib = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), out = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f0 * 0.82, t); o.frequency.linearRampToValueAtTime(f0 * 1.18, t + d * 0.3); o.frequency.exponentialRampToValueAtTime(f0 * 0.66, t + d);
+      vib.frequency.value = 6.5; vg.gain.value = 9; vib.connect(vg).connect(o.frequency);
+      const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(); f1.type = f2.type = "bandpass"; f1.Q.value = 6; f2.Q.value = 8;
+      f1.frequency.setValueAtTime(900, t); f1.frequency.linearRampToValueAtTime(1300, t + d * 0.35); f1.frequency.linearRampToValueAtTime(700, t + d);
+      f2.frequency.setValueAtTime(2600, t); f2.frequency.linearRampToValueAtTime(2000, t + d * 0.4); f2.frequency.linearRampToValueAtTime(1100, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.06); g.gain.setValueAtTime(0.16, t + d * 0.55); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      out.gain.value = 0.9;
+      o.connect(f1).connect(g); o.connect(f2).connect(g); g.connect(out).connect(ctx.destination);
+      o.start(t); vib.start(t); o.stop(t + d + 0.05); vib.stop(t + d + 0.05);
+    },
     setMuted(m) {
       muted = !!m;
       try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {}
@@ -812,7 +829,7 @@ const hearts = [];
 let cat = null, catPetUntil = 0;
 function petCat() {
   catPetUntil = performance.now() + 2600;
-  shea?.pet(2.6);
+  shea?.pet(2.6); shea?.meow();
   Sound.purr();
   for (let i = 0; i < 5; i++) {
     const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthWrite: false }));
@@ -1818,6 +1835,7 @@ function loop(now) {
     const h = o.userData.hover;
     const target = o === hovered && !booting ? 1 : 0;
     h.lift += (target - h.lift) * (1 - Math.pow(0.82, f));   // same feel at 60 or 120 fps
+    if (o === cat) continue;   // Shea reacts with her head and tail instead (scaling her would stretch her IK-pinned legs)
     const s = 1 + h.lift * 0.05;
     o.scale.set(h.base.x * s, h.base.y * s, h.base.z * s);
   }
@@ -1911,17 +1929,19 @@ function recolor(img, dark, mid, light) {
 const CAT_HEIGHT = 5.8; // ≈29 cm to the top of the head — a real adult female cat next to the 14" MacBook Pro
 const CAT_FACING = -1.15; // her spot: side-on in front of the speaker, looking towards the laptop
 /* Shea moves like a cat: cat.js drives a rigged model (models/cat/shea.glb, 32 bones, skinned in Blender) with IK paws
-   planted on the ground, a lateral-sequence walk, ballistic jumps (real gravity), head look-at and a spring tail.
-   She starts on the desk; 10 s after "Enter" she hops down, wanders (the window, the football), jumps back up and
-   returns to her spot, then does it again every minute or so. Reduced motion: she stays on the desk. */
+   planted on the surface, a lateral-sequence walk, sitting, head look-at, a spring tail and breathing. She stays on the
+   desk: 10 s after "Enter" she gets up, walks over to the desk mat, sits and meows, then strolls back to her spot by the
+   laptop and sits; she keeps doing little rounds like that. She meows when you pet her. Reduced motion: she stays put. */
 const CAT_SPOT = {
-  desk: new THREE.Vector3(6.4, 0, 0),                       // her spot by the laptop
-  edge: new THREE.Vector3(8.3, 0, Z1 - 3.6),                // front edge, right of the folders: where she hops down
-  floorLand: new THREE.Vector3(8.4, FLOOR_Y, 11.4),         // where that hop lands
-  launch: new THREE.Vector3(8.5, FLOOR_Y, 12.6),            // floor spot she jumps up from
-  land: new THREE.Vector3(8.4, 0, 3.0)                      // free desk top right of the folders
+  desk: new THREE.Vector3(6.4, 0, 0),           // her spot by the laptop (faces CAT_FACING)
+  via: new THREE.Vector3(4.2, 0, 3.6),          // in front of the laptop's corner, so she walks round it, over the folders
+  mat: new THREE.Vector3(0.7, 0, 4.4)           // on the desk mat, beside the phone; she sits here facing the room
 };
-const groundAt = (x, z) => (x > X0 + 0.2 && x < X1 - 0.2 && z > Z0 + 0.2 && z < Z1 - 0.2 ? 0 : FLOOR_Y);
+const MAT_FACING = -0.45;                        // toward the visitor
+const levelAt = (x, z) => (x > X0 + 0.2 && x < X1 - 0.2 && z > Z0 + 0.2 && z < Z1 - 0.2 ? 0 : FLOOR_Y);   // desk top or floor
+const inRect = (x, z, r) => x > r[0] && x < r[2] && z > r[1] && z < r[3];
+// what her paws stand on: the desk, plus the folders (≈1 cm) and the mat
+const groundAt = (x, z) => { const l = levelAt(x, z); if (l !== 0) return l; return inRect(x, z, [2.79, 3.04, 6.81, 6.46]) ? 0.2 : inRect(x, z, [MAT.x - MAT.w / 2, MAT.z - MAT.d / 2, MAT.x + MAT.w / 2, MAT.z + MAT.d / 2]) ? 0.04 : 0; };
 let shea = null, catNextWander = Infinity, catCue = 0, catGaze = null, catGazeUntil = 0;
 async function loadCat() {
   const [gltf, diffuse, bump] = await Promise.all([loadGLB(MODEL.shea), loadTex(MODEL.catDiffuse), loadTex(MODEL.catBump)]);
@@ -1929,9 +1949,9 @@ async function loadCat() {
   diffuse.dispose();
   gltf.scene.traverse((m) => { if (m.isMesh) m.material = fur; });
   const { createCat } = await import(`./cat.js?v=${BUILD}`);
-  shea = createCat({ gltf, height: CAT_HEIGHT, groundAt });
+  shea = createCat({ gltf, height: CAT_HEIGHT, groundAt, levelAt });
   shea.place(CAT_SPOT.desk, CAT_FACING);
-  shea.idleLook = catIdleLook;
+  shea.idleLook = catIdleLook; shea.onMeow = () => Sound.meow();
   shea.update(1 / 60);
   reveal(shea.holder);
   cat = interactive(shea.holder, "Shea says: pet me?", petCat);
@@ -1947,19 +1967,16 @@ function catIdleLook(t, attention) {
   }
   return catGaze;
 }
-function catWanderPlan() {
-  const A = shea.act, P = (x, y, z) => new THREE.Vector3(x, y, z);
-  const steps = [() => A.arrive(CAT_SPOT.edge, 0, 3), () => A.turn(0), () => A.jump(CAT_SPOT.floorLand, false)];
-  const win = P(15 + Math.random() * 4, FLOOR_Y, 14 + Math.random() * 4);
-  steps.push(() => A.walk(win), () => A.turn(Math.PI / 2 - 0.25), () => A.wait(2.5 + Math.random() * 2, P(WX, 5, win.z + 3)));
-  if (ball) {   // go and sniff the football, wherever it rolled to
-    const b = ball.position.clone(), spot = P(b.x, FLOOR_Y, b.z + BALL_R + 4.9);
-    steps.push(() => A.arrive(spot, Math.PI), () => A.turn(Math.PI), () => A.sniff(b.clone().add(P(0, BALL_R * 0.6, 0)), 2.2));
-  }
-  steps.push(() => A.arrive(CAT_SPOT.launch, Math.PI), () => A.turn(Math.PI), () => A.jump(CAT_SPOT.land, true), () => A.arrive(CAT_SPOT.desk, CAT_FACING, 3), () => A.turn(CAT_FACING));
-  return steps;
+let catRounds = 0;
+function catWanderPlan() {   // little rounds on the desk: to the mat and back, or a sit and a meow at her spot
+  const A = shea.act, atMat = () => camera.position;
+  const toMat = [() => A.stand(), () => A.walk(CAT_SPOT.via, 4), () => A.arrive(CAT_SPOT.mat, MAT_FACING, 4), () => A.turn(MAT_FACING),
+    () => A.sit(), () => A.meow(atMat), () => A.wait(6 + Math.random() * 5), () => A.meow(), () => A.wait(2 + Math.random() * 2)];
+  const back = [() => A.stand(), () => A.walk(CAT_SPOT.via, 4), () => A.arrive(CAT_SPOT.desk, CAT_FACING, 4), () => A.turn(CAT_FACING), () => A.sit()];
+  const stay = [() => A.sit(), () => A.wait(2 + Math.random() * 2), () => A.meow(atMat), () => A.wait(3)];
+  return catRounds++ % 3 === 2 ? stay : [...toMat, ...back];
 }
-function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 45000 + Math.random() * 35000; }); }
+function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 25000 + Math.random() * 20000; }); }
 let catManual = false;   // test hook: Desk.catStep() advances her in fixed steps for frame-exact captures
 function stepCat(now, dt) {
   if (!shea || catManual) return;
@@ -1969,7 +1986,7 @@ function stepCat(now, dt) {
 }
 function catShadowFollow() {
   // the contact shadow follows her, on the desk or the floor, fading as she leaves the surface
-  const p = shea.holder.position, surf = (groundAt(p.x, p.z) === 0 && p.y > -1 ? DESK_Y : FLOOR_Y + 0.03);
+  const p = shea.holder.position, surf = (levelAt(p.x, p.z) === 0 && p.y > -1 ? DESK_Y : FLOOR_Y + 0.03);
   catShadow.position.set(p.x, surf, p.z); catShadow.rotation.z = -shea.holder.rotation.y; catShadow.material.opacity = 0.3 * Math.max(0, 1 - (p.y - surf) / 6);
 }
 
