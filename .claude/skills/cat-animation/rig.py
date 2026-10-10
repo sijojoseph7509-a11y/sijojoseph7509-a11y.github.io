@@ -157,12 +157,12 @@ if len(args) > 2:   # pose test: walk-ish pose, render side view
     bpy.context.view_layer.objects.active = rig; bpy.ops.object.mode_set(mode="POSE"); bpy.ops.pose.select_all(action="SELECT"); bpy.ops.pose.transforms_clear(); bpy.ops.object.mode_set(mode="OBJECT")
 # ── the "sit" clip (see sit.py): poses read off cat anatomy, paws pinned by IK, baked to bone keys ──
 from sit import make_sit
-SIT = {
-  "drop": -14.0, "back": 1.0, "pitch": -30,                 # pelvis: down 14 cm (rump on the desk), back 1 cm, tipped 30° nose-up
-  "spine": -3, "chest": -4, "neck": 17, "neck2": 10, "head": 10,   # chest rises over the front legs; neck and head bring the gaze back level
-  "hock": (4.3, 9.6, 1.7), "hball": (4.3, 3.8, 1.5), "htoe": (4.3, 1.4, 1.0),   # hind legs folded, hock and metatarsal flat on the desk
-  "fin": 0.5,                                                # front paws a touch closer together
-  "tail": [(0.5, 12.5, 6.2), (1.6, 14.2, 3.3), (3.6, 14.0, 1.3), (6.4, 11.6, 1.1), (7.8, 8.0, 1.1), (8.0, 4.0, 1.1)],   # down and round her left side
+SIT = {   # from photos of sitting cats (Wikimedia Commons "Sitting cats"): upright, compact, haunch round, tail round the paws
+  "drop": -14.0, "back": -6.0, "pitch": -50,                # pelvis: down 14 cm onto the desk, slides 6 cm forward under her, tips 50° up
+  "spine": -3, "chest": -4, "neck": 19, "neck2": 24, "head": 25,   # chest near vertical over the front legs; neck and head bring the gaze back level
+  "hock": (4.2, 2.6, 1.6), "hball": (4.2, -3.2, 1.4), "htoe": (4.0, -5.6, 1.0),   # hind leg folded flat against her: heel under the haunch, paw close behind the front paws
+  "fin": 0.6,
+  "tail": [(0.8, 6.0, 4.7), (2.5, 8.4, 1.7), (5.4, 9.2, 1.1), (7.8, 7.4, 1.0), (8.4, 4.0, 1.0), (8.0, 0.0, 1.0)],   # down to the desk and round her left side in one smooth curve
   "keys": [(1, 0.0), (8, 0.17), (15, 0.34), (22, 0.5), (29, 0.67), (36, 0.84), (43, 1.0)],   # 1.4 s at 30 fps
 }
 def sit_render(frame):
