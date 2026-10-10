@@ -15,6 +15,12 @@ Runs 35 real-browser checks against the site with headless Google Chrome and pri
    - Against the live site: pass `https://sijo.work/` instead.
    - Exit code 1 = at least one check failed. Fix every ❌ before pushing.
 
+## Live health check (run before and after every publish)
+`bash .claude/skills/site-qa/health.sh` checks everything outside the code that can stop a recruiter from opening the
+site: DNS (4 IPv4 + 4 IPv6 GitHub Pages addresses on GoDaddy's nameserver and 4 public resolvers; IPv6 is required for
+Jio/Airtel-style IPv6-only networks), the www CNAME, HTTPS over IPv4 and IPv6, http→https and www→apex redirects,
+certificate days left, domain registration days left, the live build and key files. Exit 1 = something is wrong.
+
 ## Bug sweep (layout on many devices)
 `QA_DEPS=<scratch-dir> node .claude/skills/site-qa/sweep.mjs http://localhost:4321/ <out-dir>`
 Opens the site on 18 sizes (phones, tablets, laptops up to 4K/ultrawide) and every case study and flags: controls off-screen or overlapping, cut-off text, sideways scrolling,
