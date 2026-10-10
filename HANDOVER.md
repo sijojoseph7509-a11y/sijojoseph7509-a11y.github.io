@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.6 — 10 October 2026** (site build **v82**) |
+| **Version** | **5.7 — 10 October 2026** (site build **v83**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
@@ -11,7 +11,7 @@
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
 | **Status** | Live, all automated checks green (site-qa 35/35, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=82` everywhere in `index.html` **and** `{"build": "82"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=83` everywhere in `index.html` **and** `{"build": "83"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -131,7 +131,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 ├── cat.js                ≈16 KB   Shea's animation engine (IK gait, jumps, look-at, spring tail), loaded by main.js
 ├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
 ├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
-├── version.json                   { "build": "82" }
+├── version.json                   { "build": "83" }
 ├── CNAME                          sijo.work
 ├── mobile-preview.html            phone-frame preview (3 sizes)
 ├── HANDOVER.md                    this document
@@ -577,6 +577,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v5.7) | v83: **Mac desktop feel**: dock magnification on a per-frame spring with a cosine fall-off measured from resting positions (icons grow from the bottom, neighbours glide, shadows deepen; off on touch/phones/reduced motion); Liquid Glass icons (top specular highlight, refraction glow at the bottom edge, gloss streak, glyph depth; gradients only, no rectangular inset shadows, which the squircle mask cut into white lines); frosted glass dock shelf; switching tabs no longer replays the window pop: the page settles in (fade, short rise, blur clearing, staggered) and the sidebar highlight glides between items; menus open with a soft scale. |
 | (v5.6) | v82: **Shea's sit re-posed from reference photos** (Wikimedia Commons "Sitting cats"): upright and compact (pelvis slides 6 cm forward and tips 50°, chest near vertical over straight front legs), hind leg folded flat against her with the heel under a round haunch and the paw just behind the front paws, tail lying in one smooth curve round her side, head brought back level over both neck joints; the tail trails the body with softer easing toward the tip (no whip). `renderclip.py` renders the clip's pose from five sides. |
 | (v5.5) | v81: **Shea's neck**: the chest/neck fur layer slid against the skin when she turned her head (stair-step seams); the rig now blends weights over 3 cm in the neck region so both layers move together, and the skull's rigid zone fades in over 4.5 cm instead of a hard edge (`necktest.py` renders a head turn to check). Hover attention holds 2.5 s (the pointer flickering at her outline made the head twitch); head turns slower and within a natural range, spread over neck, neck2 and head. |
 | (v5.4) | v80: **Shea stays put and sits like a real cat**: walking removed; sitting is now a clip keyframed in Blender from cat anatomy (hindquarters first, hocks flat, straight front legs, tail wraps) instead of live IK. Leg glitch root causes fixed: per-frame IK flips (now no live IK), Blender constraint flips (poles calibrated per leg, key poses keyed as plain transforms), three's AnimationMixer skipping unchanged bones (clip sampled directly). Spatial weight smoothing in the rig. QA: no joint may move > 8°/frame except the tail. |

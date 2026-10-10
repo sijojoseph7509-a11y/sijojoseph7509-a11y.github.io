@@ -117,7 +117,7 @@
   const sound = () => window.Sound && window.Sound.click();
 
   // Sidebar
-  $("#sidebar").innerHTML = `<h4>Portfolio</h4>` +
+  $("#sidebar").innerHTML = `<span class="side-hl" aria-hidden="true"></span><h4>Portfolio</h4>` +
     Object.entries(apps).map(([k, a]) => `<button class="side-item" data-open="${k}">${line(k)}${esc(a.title)}</button>`).join("") +
     `<div class="side-profile"><span class="avatar">SJ</span><div><b>${esc(S.name)}</b><span>${esc(S.location)}</span></div></div>`;
 
@@ -134,19 +134,35 @@
   $("#dock").addEventListener("mouseleave", () => screen.classList.remove("dock-peek"));
   screen.addEventListener("mousemove", (e) => { if (screen.classList.contains("dock-peek") && e.clientY < screen.getBoundingClientRect().bottom - 120) screen.classList.remove("dock-peek"); });
 
-  // Dock magnification
-  const dock = $("#dock");
-  dock.addEventListener("mousemove", (e) => {
-    if (innerWidth < 760) return;
-    dock.querySelectorAll(".dock-item").forEach((it) => {
-      const r = it.getBoundingClientRect();
-      const d = Math.abs(e.clientX - (r.left + r.width / 2));
-      const s = 1 + Math.max(0, 1 - d / 140) * 0.55;
-      it.style.transform = `scale(${s})`;
-      it.style.margin = `0 ${(s - 1) * 14}px`;
+  // Dock magnification, the macOS way: icons grow from the bottom with a cosine fall-off around the pointer (measured from
+  // their resting positions, so nothing jitters), neighbours glide aside, and every icon eases on a spring each frame
+  const dock = $("#dock"), DOCK_W = 56, DOCK_ICON = 52, MAG = 0.62, REACH = 150;
+  let dockX = null, dockRaf = 0, dockLast = 0, dockRest = [];
+  const dockItems = () => [...dock.querySelectorAll(".dock-item")];
+  const canMagnify = () => innerWidth >= 760 && !matchMedia("(pointer: coarse)").matches && !reducedMotion;
+  function dockFrame(now) {
+    const dt = Math.min(0.05, (now - (dockLast || now)) / 1000) || 1 / 60; dockLast = now;
+    let busy = false;
+    dockItems().forEach((it, i) => {
+      const cx = dockRest[i];
+      const d = dockX === null || cx === undefined ? Infinity : Math.abs(dockX - cx);
+      const target = 1 + (d < REACH ? MAG * (Math.cos(Math.PI * d / REACH) + 1) / 2 : 0);
+      const cur = it._s || 1, next = cur + (target - cur) * (1 - Math.exp(-dt * 16));
+      it._s = Math.abs(next - target) < 0.002 ? target : next;
+      if (it._s !== target) busy = true;
+      if (it._s === 1) { it.style.width = ""; it.style.removeProperty("--s"); }   // at rest: back to the stylesheet (phone layouts size the dock themselves)
+      else { it.style.width = DOCK_W + DOCK_ICON * (it._s - 1) + "px"; it.style.setProperty("--s", it._s.toFixed(4)); }
     });
+    dockRaf = busy || dockX !== null ? requestAnimationFrame(dockFrame) : 0;
+    if (!dockRaf) dockLast = 0;
+  }
+  const dockKick = () => { if (!dockRaf) dockRaf = requestAnimationFrame(dockFrame); };
+  dock.addEventListener("mouseenter", () => {
+    if (!canMagnify()) return;
+    if (!dockItems().some((it) => (it._s || 1) > 1.001)) dockRest = dockItems().map((it) => { const r = it.getBoundingClientRect(); return r.left + r.width / 2; });
   });
-  dock.addEventListener("mouseleave", () => dock.querySelectorAll(".dock-item").forEach((it) => { it.style.transform = ""; it.style.margin = ""; }));
+  dock.addEventListener("mousemove", (e) => { if (!canMagnify()) return; dockX = e.clientX; dockKick(); });
+  dock.addEventListener("mouseleave", () => { dockX = null; dockKick(); });
 
   // Widget
   $("#widget").innerHTML = `<small>Designer</small><b>${esc(S.name)}</b><span>${esc(S.roles.join(" · "))}</span><div class="status"><i></i>Available for new work</div>`;
@@ -209,24 +225,38 @@
     morphWindow(() => { screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs"); });
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
+  let opening = false;
+  function placeHighlight(instant) {   // the sidebar selection glides between items, like Finder
+    const hl = $(".side-hl"), on = $(".side-item.active");
+    if (!hl || !on || innerWidth < 761) return;
+    if (instant) hl.style.transition = "none";
+    hl.style.transform = `translateY(${on.offsetTop}px)`; hl.style.height = on.offsetHeight + "px"; hl.style.opacity = "1";
+    if (instant) { void hl.offsetWidth; hl.style.transition = ""; }
+  }
   function show(key, fromHistory) {
     if (String(key).startsWith("case:")) return openCase(String(key).slice(5));
     exitCase(fromHistory);
     body.classList.remove("case-mode");
     const app = apps[key] || apps.about;
     current = key in apps ? key : "about";
+    const switching = !win.hidden && !os.hidden && body.childElementCount > 0 && !opening;
     $("#winTitle").textContent = app.title;
     body.innerHTML = app.html();
     body.scrollTop = 0;
     win.hidden = false;
     win.classList.remove("min");
-    resetWindowPlacement();
-    win.style.animation = "none"; void win.offsetWidth; win.style.animation = "";
+    if (switching) {   // switching tabs: the window stays put, the new page settles in (no window pop)
+      for (const el of [body, $("#winTitle")]) { el.classList.remove("swap-in"); void el.offsetWidth; el.classList.add("swap-in"); }
+    } else {
+      resetWindowPlacement();
+      win.style.animation = "none"; void win.offsetWidth; win.style.animation = "";
+    }
     document.querySelectorAll("[data-open]").forEach((b) => {
       const on = b.dataset.open === current;
       if (b.classList.contains("side-item")) { b.classList.toggle("active", on); if (on) b.scrollIntoView({ block: "nearest", inline: "nearest" }); }   // phones: the tab row scrolls
       if (b.classList.contains("dock-item")) b.classList.toggle("running", on);
     });
+    placeHighlight(opening);
   }
   const closeWindow = () => { win.hidden = true; document.querySelectorAll(".running").forEach((b) => b.classList.remove("running")); };
   const minimize = () => { if (win.hidden) return; win.classList.add("min"); setTimeout(() => { win.hidden = true; win.classList.remove("min"); }, 340); };
@@ -413,7 +443,7 @@
     os.hidden = false;
     win.classList.remove("max");
     closeMenu(); closeSpotlight();
-    show(key);
+    opening = true; show(key); opening = false;
     zoomRect = fromRect && !reduced ? fromRect : null;
     if (zoomRect) {
       os.style.animation = screen.style.animation = "none";
