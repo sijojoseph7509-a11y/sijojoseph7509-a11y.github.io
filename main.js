@@ -1928,21 +1928,14 @@ function recolor(img, dark, mid, light) {
 }
 const CAT_HEIGHT = 5.8; // ≈29 cm to the top of the head — a real adult female cat next to the 14" MacBook Pro
 const CAT_FACING = -1.15; // her spot: side-on in front of the speaker, looking towards the laptop
-/* Shea moves like a cat: cat.js drives a rigged model (models/cat/shea.glb, 32 bones, skinned in Blender) with IK paws
-   planted on the surface, a sit clip keyframed in Blender, head look-at, a spring tail and breathing. She stays at her
-   spot by the laptop: 10 s after "Enter" she sits down and meows, sits a while looking around, then stands up again,
-   and keeps doing that. She meows when you pet her. Reduced motion: she stays standing. */
-const CAT_SPOT = {
-  desk: new THREE.Vector3(6.4, 0, 0),           // her spot by the laptop (faces CAT_FACING)
-  via: new THREE.Vector3(4.2, 0, 3.6),          // in front of the laptop's corner, so she walks round it, over the folders
-  mat: new THREE.Vector3(0.7, 0, 4.4)           // on the desk mat, beside the phone; she sits here facing the room
-};
-const MAT_FACING = -0.45;                        // toward the visitor
+/* Shea, kept deliberately simple (Sijo, v84): a rigged model (models/cat/shea.glb) that stands still at her spot by the
+   laptop; only her head and neck (looking around, looking at you when you hover over her), her tail (a gentle sway) and
+   her breathing move. Petting her = purr + meow (chin lifts) + hearts. No walking, sitting or leg animation, so her
+   legs can never glitch. (cat.js still has the walk/sit/jump code; it is not used.) Reduced motion: only petting reacts. */
+const CAT_SPOT = { desk: new THREE.Vector3(6.4, 0, 0) };
 const levelAt = (x, z) => (x > X0 + 0.2 && x < X1 - 0.2 && z > Z0 + 0.2 && z < Z1 - 0.2 ? 0 : FLOOR_Y);   // desk top or floor
-const inRect = (x, z, r) => x > r[0] && x < r[2] && z > r[1] && z < r[3];
-// what her paws stand on: the desk, plus the folders (≈1 cm) and the mat
-const groundAt = (x, z) => { const l = levelAt(x, z); if (l !== 0) return l; return inRect(x, z, [2.79, 3.04, 6.81, 6.46]) ? 0.2 : inRect(x, z, [MAT.x - MAT.w / 2, MAT.z - MAT.d / 2, MAT.x + MAT.w / 2, MAT.z + MAT.d / 2]) ? 0.04 : 0; };
-let shea = null, catNextWander = Infinity, catCue = 0, catGaze = null, catGazeUntil = 0;
+const groundAt = levelAt;
+let shea = null, catGaze = null, catGazeUntil = 0;
 async function loadCat() {
   const [gltf, diffuse, bump] = await Promise.all([loadGLB(MODEL.shea), loadTex(MODEL.catDiffuse), loadTex(MODEL.catBump)]);
   const fur = new THREE.MeshStandardMaterial({ map: gingerize(diffuse.image), bumpMap: bump, bumpScale: 2, roughness: 0.9 });
@@ -1967,18 +1960,10 @@ function catIdleLook(t, attention) {
   }
   return catGaze;
 }
-let catRounds = 0;
-function catWanderPlan() {   // she stays at her spot: sits down, meows, sits a while looking around, then stands up again
-  const A = shea.act, atYou = () => camera.position;
-  const meowFirst = catRounds++ % 2 === 0;
-  return [() => A.sit(), ...(meowFirst ? [() => A.wait(0.6), () => A.meow(atYou)] : []), () => A.wait(8 + Math.random() * 7),
-    ...(meowFirst ? [] : [() => A.meow(atYou), () => A.wait(2)]), () => A.stand()];
-}
-function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 14000 + Math.random() * 12000; }); }
 let catManual = false;   // test hook: Desk.catStep() advances her in fixed steps for frame-exact captures
 function stepCat(now, dt) {
   if (!shea || catManual) return;
-  if (!shea.busy && !reduced && now > catNextWander && hovered !== cat && now > catPetUntil + 3000 && !booting) catWander();
+  if (reduced && now > catPetUntil) return;   // reduced motion: she only reacts when petted
   shea.update(dt / 1000, { hover: hovered === cat && !booting });
   catShadowFollow();
 }
@@ -2041,7 +2026,7 @@ window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix],
   covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
-  toggleDay: () => setNight(dayTarget === 0), catWander: () => shea && !shea.busy && catWander(), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
+  toggleDay: () => setNight(dayTarget === 0), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
   // clickable things whose centre is outside the current view (should be none at home and when leaned in)
   // where a clickable thing (by its label) is on screen, in CSS pixels — lets tests tap it wherever the camera puts it
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
@@ -2057,7 +2042,6 @@ function enter(withSound) {
   entered = true;
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
-  catCue = performance.now(); catNextWander = catCue + 10000;   // Shea goes for a walk 10 s after you come in
   document.activeElement?.blur?.();
   coachShow();
 }

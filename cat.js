@@ -197,7 +197,7 @@ export function createCat({ gltf, height, groundAt, levelAt = groundAt }) {
     const restD = holder.worldToLocal(tipOf(B.head)).sub(holder.worldToLocal(wpos(B.head))).normalize();   // where the head points in the base pose
     let yaw = Math.atan2(d.x, d.z) - Math.atan2(restD.x, restD.z), pit = Math.atan2(d.y, Math.hypot(d.x, d.z)) - Math.atan2(restD.y, Math.hypot(restD.x, restD.z));
     yaw = wrap(yaw); if (Math.abs(yaw) > 1.5) { yaw = 0; pit = 0; }   // behind her: just look ahead
-    yaw = clamp(yaw, -0.95, 0.95) * st.lookW; pit = clamp(pit, -0.5, 0.45) * st.lookW;   // a comfortable range for a cat's neck
+    yaw = clamp(yaw, -0.85, 0.85) * st.lookW; pit = clamp(pit, -0.4, 0.38) * st.lookW;   // a comfortable range for a cat's neck
     st.yaw = damp(st.yaw, yaw, 3.5, dt); st.pit = damp(st.pit, pit, 3.5, dt); yaw = st.yaw; pit = st.pit;
     const hq = holder.getWorldQuaternion(new Q());
     for (const [b, k] of [[B.neck, 0.36], [B.neck2, 0.34], [B.head, 0.3]]) {   // spread along the neck, so no one joint bends hard

@@ -312,27 +312,34 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   await p.ctx.close();
 });
 
-await check("Shea stays at her spot: sits down, meows and stands up again smoothly", async () => {
+await check("Shea stands still; only her head, tail and breathing move, smoothly", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
   await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
-  const r = await p.evaluate(() => {   // fast-forward her round in fixed 1/60 s steps, tracking where she goes and how much any joint jumps per frame
-    const c = Desk.cat, h = c.holder, start = h.position.clone(), prev = new Map(); let minY = 0, sat = 0, meows = 0, jump = 0, f = 0, far = 0;
-    const m0 = c.onMeow; c.onMeow = () => meows++;
-    Desk.catWander();
-    while (Desk.catStep(1 / 60) && f < 60 * 90) {
-      f++; minY = Math.min(minY, h.position.y); sat = Math.max(sat, c.state.sit); far = Math.max(far, h.position.distanceTo(start));
-      for (const [n, b] of Object.entries(c.bones)) { const q = b.quaternion, p = prev.get(n); if (p && f > 3 && !/^tail/.test(n)) jump = Math.max(jump, 2 * Math.acos(Math.min(1, Math.abs(p.dot(q)))) * 57.3); prev.set(n, q.clone()); }
+  const r = await p.evaluate(() => {   // 25 s in fixed 1/60 s steps (Desk.catStep), petting her once
+    const c = Desk.cat, h = c.holder, start = h.position.clone(), prev = new Map(), first = new Map();
+    const LEG = /^(thigh|shin|foot|toes|humerus|forearm|hand|fingers|scapula|hips|pelvisBack|root)/;
+    let legMax = 0, headStep = 0, tailStep = 0, headMove = 0, tailMove = 0;
+    Desk.catStep(0);
+    for (let f = 0; f < 60 * 25; f++) {
+      if (f === 300) { c.pet(2.6); c.meow(); }
+      Desk.catStep(1 / 60);
+      for (const [n, b] of Object.entries(c.bones)) {
+        const q = b.quaternion, ang = (a, b) => 2 * Math.acos(Math.min(1, Math.abs(a.dot(b)))) * 57.3;
+        if (!first.has(n)) first.set(n, q.clone());
+        const p = prev.get(n), step = p ? ang(p, q) : 0, from0 = ang(first.get(n), q);
+        if (LEG.test(n)) legMax = Math.max(legMax, from0);
+        else if (/^(neck|neck2|head)$/.test(n)) { headStep = Math.max(headStep, step); headMove = Math.max(headMove, from0); }
+        else if (/^tail/.test(n)) { tailStep = Math.max(tailStep, step); tailMove = Math.max(tailMove, from0); }
+        prev.set(n, q.clone());
+      }
     }
-    c.onMeow = m0;
-    return { minY, sat, meows, far, back: h.position.distanceTo(start), jump, t: f / 60, busy: Desk.state().catBusy };
+    return { legMax, headStep, tailStep, headMove, tailMove, moved: h.position.distanceTo(start) };
   });
-  expect(r.minY > -0.5, "left the desk: " + JSON.stringify(r));
-  expect(r.sat > 0.99 && r.meows >= 1, "did not sit and meow: " + JSON.stringify(r));
-  expect(r.far < 0.1, "she moved from her spot: " + JSON.stringify(r));
-  expect(!r.busy && r.back < 0.6, "did not come back to her spot: " + JSON.stringify(r));
-  expect(r.jump < 8, "a joint jumped " + r.jump.toFixed(1) + "° in one frame (glitch)");
+  expect(r.moved < 0.01 && r.legMax < 0.5, "her body or legs moved: " + JSON.stringify(r));
+  expect(r.headMove > 3 && r.tailMove > 3, "head or tail never moved: " + JSON.stringify(r));
+  expect(r.headStep < 4 && r.tailStep < 8, "a jerky step: " + JSON.stringify(r));
   clean(p); await p.ctx.close();
-  return `round ${r.t.toFixed(1)} s, ${r.meows} meow(s), max joint step ${r.jump.toFixed(1)}°/frame`;
+  return `head ≤ ${r.headStep.toFixed(1)}°/frame, tail ≤ ${r.tailStep.toFixed(1)}°/frame, legs still`;
 });
 
 await check("Fonts are self-hosted and loaded (Inter, Caveat)", async () => {
