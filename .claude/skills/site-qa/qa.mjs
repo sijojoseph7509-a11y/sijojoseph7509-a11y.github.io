@@ -83,7 +83,7 @@ await check("Opening the laptop hides the pointer for this visit; the hint comes
 for (const mobile of [false, true]) {
   await check(`${mobile ? "Phone" : "Desktop"}: desk close-up shows every desk item; the room view shows everything`, async () => {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
-    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball; }, { timeout: 30000 }); await sleep(600);
+    await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && !s.catBusy; }, { timeout: 30000 }); await sleep(600);   // Shea walks in and jumps onto the desk first
     const SIDE = /the (sun|night) in|One Piece prints/;   // side walls: drag to look at them
     const home = await p.evaluate((side) => Desk.offscreen().filter((l) => !/Kick|About me/.test(l) && !new RegExp(side).test(l)), SIDE.source);   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
@@ -157,7 +157,7 @@ await check("Reopening the tab later (back/forward cache) starts at the desk", a
 
 await check("Phone: a tap's label and lift clear by themselves", async () => {
   const p = await page({ mobile: true }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(800);
-  await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
+  await p.waitForFunction(() => Desk.state().cat && !Desk.state().catBusy, { timeout: 30000 });
   const at = await p.evaluate(() => Desk.screenPos("pet me"));
   await p.touchscreen.tap(Math.round(at.x), Math.round(at.y)); await sleep(300);
   const label = await p.$eval("#tooltip", (t) => t.classList.contains("show") ? t.textContent : "");
@@ -310,6 +310,18 @@ await check("Self-update: a newer version.json reloads once, never loops", async
   expect(p.url().includes("v=9999"), "did not move to the new version: " + p.url());
   expect(navs <= 2, navs + " navigations — reload loop");
   await p.ctx.close();
+});
+
+await check("Shea walks in, jumps onto the desk and settles by the laptop", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
+  await p.waitForFunction(() => Desk.state().cat, { timeout: 30000 });
+  await p.waitForFunction(() => !Desk.state().catBusy, { timeout: 20000 });
+  const box = await p.evaluate(() => Desk.boxes().cat);
+  expect(box[4] > 4 && box[4] < 7.5 && box[1] > -3.5, "not standing on the desk: " + JSON.stringify(box));
+  await p.evaluate(() => Desk.catWander()); await sleep(1500);
+  expect(await p.evaluate(() => Desk.state().catBusy), "did not hop down to wander");
+  await p.waitForFunction(() => !Desk.state().catBusy, { timeout: 30000 });
+  clean(p); await p.ctx.close();
 });
 
 await check("Fonts are self-hosted and loaded (Inter, Caveat)", async () => {

@@ -3,15 +3,15 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.0 — 10 October 2026** (site build **v76**) |
+| **Version** | **5.1 — 10 October 2026** (site build **v77**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
 | **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
-| **Status** | Live, all automated checks green (site-qa 34/34, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Status** | Live, all automated checks green (site-qa 35/35, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=76` everywhere in `index.html` **and** `{"build": "76"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=77` everywhere in `index.html` **and** `{"build": "77"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -130,7 +130,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 ├── music.js               ≈6 KB   generative lo-fi track
 ├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
 ├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
-├── version.json                   { "build": "76" }
+├── version.json                   { "build": "77" }
 ├── CNAME                          sijo.work
 ├── mobile-preview.html            phone-frame preview (3 sizes)
 ├── HANDOVER.md                    this document
@@ -194,7 +194,7 @@ ancestor → tooltip + pointer cursor + hover lift. A `pointerup` within a few p
 | `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()`, `isCovering()`, `toast()` |
 | `window.Music` | music.js | `start(audioCtx)`, `stop()`, `playing` |
 | `window.Sound` | main.js | `hover()`, `click()`, `boot()`, `purr()`, `toggle()`, `setMuted()`, `muted`, `state` |
-| `window.Desk` | main.js | test hooks: `state()`, `boxes()`, `offscreen()`, `screenPos()`, `toggleDay()`, `astro()`, `debugView([x,y,z],[tx,ty,tz])` (fixed camera for screenshots) |
+| `window.Desk` | main.js | test hooks: `state()`, `boxes()`, `offscreen()`, `screenPos()`, `toggleDay()`, `astro()`, `catWander()` (send Shea on a wander now), `debugView([x,y,z],[tx,ty,tz])` (fixed camera for screenshots); `state().catBusy` = Shea is walking/jumping |
 
 ---
 
@@ -226,7 +226,7 @@ and the photo assets in §5.
 |---|---|---|---|
 | Desk | 95 × 50 × 74 cm | dark laminate #221e1c; left side panel; right cubby with shelf, keyboard and white charger cube; back rail | — |
 | **MacBook Pro 14" M5**, Space Black #2e2d30 | 31.3 × 22.1 cm | (−1.0, 0, −0.25), rot −0.08, lid ≈105°. Keys (instanced), speaker grilles, trackpad, hinge, SJ monogram + stickers on the lid back, sticky note "make it simple, then make it fun ✶" (76 mm). Screen: live 1600 × 1024 canvas (wallpaper + "Hi, I'm Sijo" window + dock + notch). | Screen / power key → About; keys / trackpad → types hello |
-| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | (6.4, 0, 0), facing −1.15 (side-on, looking at the laptop, tail over the desk edge); fur recoloured ginger; tail rig swishes | Hover "pet me?", click = purr + hearts |
+| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | Home spot (6.4, 0, 0), facing −1.15 (side-on, looking at the laptop). **Moves (v77):** after Enter she walks in across the floor from the right, crouches, jumps onto the desk right of the folders and walks to her spot; every 45–75 s she hops down, wanders the floor and jumps back (`stepCat`, `CAT_SPOT`, step factories `walkTo/turnTo/crouch/jumpTo/landing`). No skeleton: legs are bent per-vertex around shoulder/hip pivots (`LEG_PIVOT`, `applyLegs`), body pitch/crouch on `catBody`; the contact shadow follows her. Reduced motion or a `?open=` link: she starts on the desk (no intro). Fur recoloured ginger; tail swishes | Hover "pet me?", click = purr + hearts |
 | Soundbar | 34 × 6 × 7 cm | (6.15, 0, −2.75) behind Shea; mesh front, 4 top buttons, curved feet, no brand | Click = music on/off |
 | **Astronaut galaxy light** | ≈26 cm | (−7.4, 0, −2.2), rot 0.3; moon-rock base, suit, backpack, cable, full oval visor; head (`astroHead`) **tilts ≈35° up** while projecting (`stepAstro`) | Click = projection on/off. At night projects a nebula + stars on ceiling and back wall (`projCeil`, `projWall`). |
 | Rubber plant | pot ≈10 cm | (−4.95, 0, −1.95) ×0.9; mango-yellow pot #ffb21a; three stems leaning into the room, pointed glossy leaves, lighter new leaves on top | Click = wiggle |
@@ -242,7 +242,7 @@ and the photo assets in §5.
 |---|---|---|
 | **Poster** (Sijo's own) | A1 (11.88 × 16.82) at (−7.8, 13.1, WALL_Z + 0.03); red scattered "SOMETHING" letters + black lines "TO CREATE A SOLUTION… TO BEGIN AN ERA"; tape corners, paper curl | none (decoration) |
 | **Pendant lamp** | woven wire cage (38 strands) at (0.4, 15.4, −0.8), warm bulb + glow sprite; `lampLight` #ffb468 (distance 34, decay 2), shadows 1024² on screens > 760 px | — |
-| **Profile card** | `drawCard()` on a 1000 × 1650 canvas: full-bleed `assets/profile.jpg`, progressive blur + dark glass at the bottom, white "Sijo Joseph" + verified seal, "A multidisciplinary designer: / product, brand, experience, 3D.", stats (person icon = roles count 4, stack icon = projects 3), white pill "Say hi +". Mounted on a white acrylic panel with a soft wall shadow. 6.27 × 10.34 (≈31 × 52 cm) at (7.4, 11.05, WALL_Z + 0.03). | Click → About |
+| **Profile card** | A **floating UI card** (v77): `drawCard()` on a 1400 × 2309 canvas, rounded corners (radius ≈10 %), no rim or mount; full-bleed `assets/profile.jpg` (unsharp-masked at load, `sharpen`), progressive blur + dark glass at the bottom, white "Sijo Joseph" + verified seal, two-line about, stats (roles 4, projects 3), white pill "Say hi +", glass hairline rim. Lit from within (emissive 0.42) so it reads like a screen at night; floats `CARD.lift` 1.2 (≈6 cm) off the wall with a soft offset drop shadow, and drifts slowly (`stepCard`, off with reduced motion). 6.27 × 10.34 (≈31 × 52 cm) at (7.4, 11.05). | Click → About |
 | Switch board + charger | 4.2 × 2.1 at (19.2, 10.2, WALL_Z + 0.12): four switches + a 3-pin socket (earth pin on top); upright white USB-C charger in the socket; cable straight down the wall, then lying in loose coils on the floor with the plug end free | — |
 | **One Piece prints** (left wall) | `assets/wall-prints.webp` on a 16 × 9.06 plane (≈80 × 45 cm) at local x `onLeft(13)`, y −14.8 + 34; each print's edges lift slightly | Click = wiggle |
 | Keyboard (left wall) | 61-key, ≈94 × 32 × 9 cm, real white/black keys (instanced), leaning ≈9° at `onLeft(9)` | — |
@@ -471,7 +471,7 @@ be installed at `/Applications/Google Chrome.app`. Serve the repo locally first 
 
 | Skill | What it's for | Run |
 |---|---|---|
-| **site-qa** | 34 real-browser checks: desktop + phone load (cat, ball, no errors), every desk item on screen, welcome/Enter/music, every `?open=` deep link, boot + Esc, menus, Spotlight, ⌘ shortcuts, scrolling, resize, model-failure path, stale-cache path, self-update, fonts self-hosted, case studies open + images load + no notes, window day↔night, zoom behaviour | `QA_DEPS=… node .claude/skills/site-qa/qa.mjs http://localhost:4321/` (or `https://sijo.work/`) |
+| **site-qa** | 35 real-browser checks (incl. Shea walks in, jumps up, wanders and settles): desktop + phone load (cat, ball, no errors), every desk item on screen, welcome/Enter/music, every `?open=` deep link, boot + Esc, menus, Spotlight, ⌘ shortcuts, scrolling, resize, model-failure path, stale-cache path, self-update, fonts self-hosted, case studies open + images load + no notes, window day↔night, zoom behaviour | `QA_DEPS=… node .claude/skills/site-qa/qa.mjs http://localhost:4321/` (or `https://sijo.work/`) |
 | site-qa · sweep | layout bugs on 18 devices (off-screen / overlapping controls, cut text, sideways scroll, missing models/wallpaper, blurry case images) + screenshots of every screen | `QA_DEPS=… node .claude/skills/site-qa/sweep.mjs <url> <out-dir>` |
 | **site-security** | 15 checks: CSP present + hash valid, no inline scripts, vendor file hashes, no third-party hosts, safe links, no secrets, HTTPS redirect (live) | `QA_DEPS=… node .claude/skills/site-security/audit.mjs <url>` (`--fix` re-records hashes after an intended import-map/three.js change) |
 | **copy-check** | finds notes-to-self, placeholders, AI-style words, em dashes, emoji/stray symbols in content.js / os.js / index.html (and Figma text) | `node .claude/skills/copy-check/check.mjs` |
@@ -520,7 +520,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
    (two full circles, soft light) → object-capture skill → real scan; (b) TRELLIS image-to-3D with the five Vision cut-outs (needs HF
    login); (c) the CC-BY Sketchfab "Orange Tabby Cat" by Chenchanchong (needs a credit line).
 2. **Content**: LinkedIn + Behance URLs, résumé PDF, work experience.
-3. **Profile photo** is upscaled from 400 px — send a ≥ 1500 px original for a sharp card.
+3. **Profile photo** is upscaled from 400 px (sharpened at load since v77) — a ≥ 1500 px original would make the card truly sharp.
 4. **Wikimedia Commons photos inside the Ekmaati case study** need their licence named (e.g. "CC BY-SA 4.0") in the Figma credits.
 5. **One Piece prints** are third-party art (Sijo's decision) — replace with original art if the portfolio is used commercially.
 6. Old Sasuke mat / Free3D files remain in **git history** (not on the site); purging needs a history rewrite (ask first).
@@ -575,6 +575,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v5.1) | v77: profile card is now a **floating UI card** (rounded, no white rim/acrylic mount, lit from within, 6 cm off the wall with a soft offset shadow, slow drift, 1400 px canvas, photo sharpened). **Shea moves**: walks in across the floor after Enter, crouches and jumps onto the desk, walks to her spot; every 45–75 s hops down, wanders and jumps back (per-vertex leg rig + body pitch/crouch; shadow follows). QA 35 checks (new cat check; position checks wait for `catBusy` false). |
 | (v4.6) | v76: pencil stand removed, bottle moved to its spot (front-left); charging cable now only runs from the charger down the wall and lies loose on the floor with a free plug end (MagSafe connector removed); profile card +10% (6.27 × 10.34) and moved left to x 7.4; `assets/profile.jpg` re-made: Sijo cut out with Apple Vision subject lifting (on-device) and placed on a light grey studio backdrop like the reference (1200 px). |
 | (v4.5) | v75: wall name/roles lettering replaced by a **profile card** (frosted-photo UI card: `assets/profile.jpg`, progressive blur + dark glass, white name + verified seal, two-line about, stats = disciplines + case studies, white "Say hi +" pill; drawn in `drawCard`, mounted on a white acrylic panel with a wall shadow; click = About). Two floor plants (terracotta + aloe) removed. Charger now upright in the socket with the cable dropping straight down, lying loose on the floor, rising behind the desk to the MacBook. |
 | (v4.4) | v74: **every visit starts at night** (`setNight(true, true)`); clicking the curtains switches to morning and back. Cap + camera hook and macramé shelf removed. Switch board socket fixed (earth pin on top). Sketchbook ×1.3 at the front-left, clear of the MacBook; folders labelled **My Projects**, 20% smaller (×0.576). Desk plant stems lean into the room (no longer through the wall). Window = **NID Bengaluru gate** from Sijo's photos (granite-block gate walls, white tri-lingual sign, steel gate, tree-lined drive with potted plants, white campus building with round balcony behind; street lamp; day + night). Realism: lamp shadows 1024 px, screen glow lights the desk at night, MacBook charging cable along the skirting up to a charger in the socket. |

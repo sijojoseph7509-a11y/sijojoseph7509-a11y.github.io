@@ -14,7 +14,7 @@ dimensions, then check it next to the laptop.
 |---|---|---|---|
 | Desk | 95 × 50 × 74 cm | 19 × 10, top at y 0, floor y −14.8 | `TABLE` |
 | MacBook Pro 14 (Space Black) | 31.3 × 22.1 cm | 6.25 × 4.43 | (−0.6, −0.25) |
-| Shea (cat) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | (6.4, 0), side-on, tail over the edge |
+| Shea (cat) — walks, jumps desk ↔ floor (`stepCat`) | ≈29 cm to head | `CAT_HEIGHT` 5.8 | home (6.4, 0), side-on; lands at (8.4, 3.4); floor path right of the desk (`CAT_SPOT`) |
 | Soundbar (click = music) | 40 × 7 × 7 cm | 8 × 1.25 × 1.35 | (5.5, −2.75), behind Shea |
 | Astronaut galaxy light (click = projection; head tilts up when on) | ≈26 cm | 5.2 tall | (−7.4, −2.2) by the bottle |
 | Water bottle (1 L) | 10.4 × 26 cm | r 0.52, h ≈5 | (−8.4, 5.2) front-left corner |
@@ -26,7 +26,7 @@ dimensions, then check it next to the laptop.
 | 61-key keyboard | 94 × 32 × 9 cm | 19 × 6.6 × 1.8 | leaning ≈9° on the left wall |
 | Sijo's One Piece prints (his photo, `assets/wall-prints.webp`) | ≈80 × 45 cm grid | 16 wide | left wall |
 | Modular switch board + charger | 15 × 8 cm | 4.2 × 2.1 | back wall, right of the profile card |
-| Profile card (UI card, `drawCard`) | ≈31 × 52 cm | 6.27 × 10.34 | back wall (7.4, 11.05), right of the poster |
+| Profile card (floating UI card, `drawCard` + `stepCard`) | ≈31 × 52 cm, 6 cm off the wall | 6.27 × 10.34 | back wall (7.4, 11.05), right of the poster |
 
 ## Art direction
 - Walls: matte Oat #CDBEA5 painted plaster (`paintTextures`: stipple bump + soft tonal drift + faint marks) with soft
