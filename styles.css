@@ -534,7 +534,6 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .gate-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10, 132, 255, .3); }
 .gate-go { margin-top: 0; }
 .gate-msg { min-height: 1.3em; margin: -4px 0 0; font-size: 14px; color: #ff6961; }
-.gate-ask { font-size: 13px; color: #a1a1a6; text-decoration: underline; text-underline-offset: 3px; }
 .gate.shake .gate-inner { animation: gateShake .4s var(--ease); }
 @keyframes gateShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

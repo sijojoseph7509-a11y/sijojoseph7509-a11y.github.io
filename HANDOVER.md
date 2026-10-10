@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
-| **Version** | **5.8 — 10 October 2026** (site build **v84**) |
+| **Version** | **5.8 — 10 October 2026** (site build **v85**) |
 | **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
 | **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
@@ -11,7 +11,7 @@
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
 | **Status** | Live, **behind a temporary password gate (password: `Shea`, see §23.0)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=84` everywhere in `index.html` **and** `{"build": "84"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=85` everywhere in `index.html` **and** `{"build": "85"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -519,7 +519,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 ## 23. Known issues, open items, next steps
 
 0. **Temporary password gate (since v84)**. While the site is being built, every visitor sees a black "This portfolio is private"
-   screen (SJ ring, password field, *Unlock*, "Need the password? Email me"). Password: **Shea** (trimmed, any case). Once entered it is
+   screen (SJ ring, password field, *Unlock*; no email link since v85). Password: **Shea** (trimmed, any case). Once entered it is
    remembered on that device (`localStorage["gate"]`). It only hides the site: the files stay public on GitHub, so it is not real security.
    - Parts: `gate.js` (salted SHA-256 `HASH`, no plain password), `<script src="gate.js?v=N">` in `<head>` after `update.js`, the
      `<div class="gate" id="gate">` block at the top of `<body>`, the "Password gate" block at the end of `styles.css`, and `GATE_HASH`
@@ -587,6 +587,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 | (v3.2) | Walls = tone-on-tone chocolate-brown panelling from Sijo's reference (`panelTex`, mouldings same colour as the wall). Curtains half open; clicking the window toggles day ↔ night (`setNight`, `LOOK.day/night`: sun, sky, light shaft + floor patch, lamp). Start state follows the visitor's local hour. Keyboard moved to the left wall; plants grouped in the back-right corner. QA check "Window: day ↔ night". |
 | (v3.3) | Room 40% narrower (`ROOM_HALF` 44 → 26.4). `keepInsideRoom()` slides the camera in rather than through a side wall when you look around. Sun steeper (`SUN_DIR`) so the beam lands beside the desk. |
 | (v3.4) | Walls = textured plaster from Sijo's photo (`assets/wall.jpg`), flattened + made seamless on load (`flatten`, `seamless`), used as map + bump; panel mouldings and dado rail removed, trim/ceiling retoned taupe. Wall lettering now dark. Sunlight subtler (`LOOK.day` shaft/patch). Day sky = deep blue with cumulus clouds (1024 px). Soundbar removed; headphones moved to its spot behind the laptop. |
+| (v5.8) | v85: removed the gate's "Need the password? Email me" link (it opened the Mail app). |
 | (v5.8) | v84: **temporary password gate** (`gate.js`, password *Shea*, remembered per device; see §23.0). Keys can't reach the desk while locked. QA/sweep/audit start unlocked; new QA check for the gate (36 checks). |
 | (v5.7) | v83: **Mac desktop feel**: dock magnification on a per-frame spring with a cosine fall-off measured from resting positions (icons grow from the bottom, neighbours glide, shadows deepen; off on touch/phones/reduced motion); Liquid Glass icons (top specular highlight, refraction glow at the bottom edge, gloss streak, glyph depth; gradients only, no rectangular inset shadows, which the squircle mask cut into white lines); frosted glass dock shelf; switching tabs no longer replays the window pop: the page settles in (fade, short rise, blur clearing, staggered) and the sidebar highlight glides between items; menus open with a soft scale. |
 | (v5.6) | v82: **Shea's sit re-posed from reference photos** (Wikimedia Commons "Sitting cats"): upright and compact (pelvis slides 6 cm forward and tips 50°, chest near vertical over straight front legs), hind leg folded flat against her with the heel under a round haunch and the paw just behind the front paws, tail lying in one smooth curve round her side, head brought back level over both neck joints; the tail trails the body with softer easing toward the tip (no whip). `renderclip.py` renders the clip's pose from five sides. |
