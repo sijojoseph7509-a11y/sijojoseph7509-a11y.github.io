@@ -638,7 +638,7 @@ const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, tra
 glowSprite.scale.setScalar(3.4); glowSprite.position.y = -1.5;
 const lampLight = new THREE.PointLight(0xffb468, 55, 34, 2);
 lampLight.position.y = -1.5;
-if (innerWidth > 760) { lampLight.castShadow = true; lampLight.shadow.mapSize.set(512, 512); lampLight.shadow.bias = -0.003; lampLight.shadow.radius = 3; }
+if (innerWidth > 760) { lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -0.002; lampLight.shadow.radius = 4; }
 lamp.add(cage, capTop, cord, bulb, glowSprite, lampLight);
 lamp.position.set(0.4, 15.4, -0.8);   // cage centred at about half the poster's height
 scene.add(lamp);
@@ -765,7 +765,7 @@ interactive(screen, "Open my portfolio", () => boot("about"));
 // (the camera notch is part of the screen image — drawn in drawScreen, identical to the Mac desktop's notch)
 
 // Screen glow onto the desk
-const glow = new THREE.PointLight(0xdcd6ff, 1.2, 6, 2);
+const glow = new THREE.PointLight(0xdcd6ff, 1.2, 9, 2);   // the screen lights the desk (much more noticeable at night)
 glow.position.set(0, 2.2, 1.8);
 scene.add(glow);
 
@@ -849,9 +849,8 @@ S.projects.forEach((p, i) => {
   // cover label (shows on the top folder)
   const label = canvasTex(1024, 512, (g, w, h) => {
     g.fillStyle = "#fbf8f2"; g.fillRect(40, 60, 760, 330);
-    g.fillStyle = "#1b1a17"; g.font = `700 92px ${UI}`; g.textBaseline = "top"; g.fillText(p.title.length > 16 ? p.title.slice(0, 15) + "…" : p.title, 80, 110);
-    g.font = `500 44px ${UI}`; g.fillStyle = "#6b665d"; g.fillText(p.tag.toUpperCase(), 80, 230);
-    g.font = `600 40px ${UI}`; g.fillStyle = "#1b1a1799"; g.fillText("Case study · " + String(i + 1).padStart(2, "0"), 80, 310);
+    g.fillStyle = "#1b1a17"; g.font = `800 104px ${UI}`; g.textBaseline = "top"; g.fillText("My Projects", 80, 110);
+    g.font = `500 44px ${UI}`; g.fillStyle = "#6b665d"; g.fillText(S.projects.map((x) => x.title).join(" · ").slice(0, 34), 80, 250);
   });
   const lab = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.7), new THREE.MeshStandardMaterial({ map: label.tex, transparent: true, roughness: 0.9 }));
   lab.rotation.x = -Math.PI / 2; lab.position.set(-0.9, 0.111, -0.4);
@@ -861,10 +860,10 @@ S.projects.forEach((p, i) => {
   f.position.set(4.6 + Math.sin(i * 2.1) * 0.25, layer * 0.13, 4.55 - layer * 0.05);
   f.rotation.y = -0.1 + Math.sin(i * 1.7) * 0.06;
   projectFiles.add(f);
-  interactive(f, `${p.title} case study`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); });
+  interactive(f, `My Projects · ${p.title}`, () => { Sound.click(); boot(p.case ? "case:" + p.case.slug : "work"); });
 });
-projectFiles.scale.setScalar(0.72);   // ≈22 × 17 cm project folders
-projectFiles.position.set(1.4, 0.02, 1.3);
+projectFiles.scale.setScalar(0.576);   // ≈18 × 13.5 cm "My Projects" folders
+projectFiles.position.set(2.2, 0.02, 2.0);
 scene.add(projectFiles);
 
 // 2c. Smartphone face-up on the desk — real iPhone 15 size: 147.6 × 71.6 × 7.8 mm ≈ 2.95 × 1.43 × 0.16 units
@@ -911,13 +910,13 @@ const leafGeo = (() => {   // pointed oval leaf with a curved midrib and a sligh
 const leafMat = new THREE.MeshPhysicalMaterial({ color: 0x2f6b34, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.3, side: THREE.DoubleSide }), stemMat = mat(0x5b6b3a, { roughness: 0.7 });
 const leafNew = new THREE.MeshPhysicalMaterial({ color: 0x5a9a48, roughness: 0.4, clearcoat: 0.4, side: THREE.DoubleSide });
 for (let k = 0; k < 3; k++) {   // three stems, leaves alternating up each stem, newest (lighter, smaller) at the top
-  const stemH = 2.6 + k * 0.7, lean = 0.12 + k * 0.05, a0 = k * 2.1;
+  const stemH = 2.6 + k * 0.7, lean = 0.12 + k * 0.05, a0 = [0.5, 1.6, 2.7][k];   // all lean towards the room
   const stem = mesh(new THREE.CylinderGeometry(0.045, 0.06, stemH, 6), stemMat);
   stem.position.set(Math.cos(a0) * 0.25, 1.9 + stemH / 2, Math.sin(a0) * 0.25); stem.rotation.set(Math.sin(a0) * lean, 0, -Math.cos(a0) * lean);
   plant.add(stem);
   const n = 4 + k;
   for (let i = 0; i < n; i++) {
-    const t = (i + 1) / (n + 0.5), a = a0 + i * 2.4, top = i === n - 1;
+    const t = (i + 1) / (n + 0.5), a = Math.PI / 2 - a0 + Math.PI + (i % 2 ? 0.9 : -0.9) + Math.sin(i * 2.3) * 0.35, top = i === n - 1;
     const leaf = mesh(leafGeo, top ? leafNew : leafMat);
     const sc = (top ? 0.8 : 1.15 + 0.35 * Math.sin(i * 1.7)) * (1.1 - t * 0.25);
     leaf.scale.set(sc * 1.25, sc * 1.6, sc);
@@ -926,7 +925,7 @@ for (let k = 0; k < 3; k++) {   // three stems, leaves alternating up each stem,
     plant.add(leaf);
   }
 }
-plant.position.set(-4.9, 0, -2.85); plant.scale.setScalar(0.9);
+plant.position.set(-4.95, 0, -1.95); plant.scale.setScalar(0.9);
 scene.add(plant);
 interactive(plant, "My desk plant 🌱", () => { Sound.click(); wiggle(plant); });
 
@@ -980,8 +979,8 @@ sketchPencil.position.set(-0.2, 0.1, 0.25);
 hobby.add(hobbyBoard, hobbyPages, hobbyFace, elastic, sketchPencil);
 hobby.position.y = 0.48; hobby.rotation.y = -0.12;
 books.add(under, underPages, hobby);
-books.scale.setScalar(1.75);
-books.position.set(-5.7, 0.01, 1.6);
+books.scale.setScalar(1.3);
+books.position.set(-6.9, 0.01, 2.1);
 books.rotation.y = 0.25;
 scene.add(books);
 interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); });
@@ -1091,107 +1090,78 @@ const WIN_Y0 = DADO_Y + 1, WIN_Y1 = ROD_Y - 1.5, winH = WIN_Y1 - WIN_Y0, winY = 
 const frameMat = mat(0xe9e3d6, { roughness: 0.6 });
 for (const [w, h, x, y] of [[winW + 1.2, 0.7, winC, WIN_Y1], [winW + 1.2, 0.9, winC, WIN_Y0], [0.7, winH, winC - winW / 2, winY], [0.7, winH, winC + winW / 2, winY],
   [0.35, winH, winC, winY], [winW, 0.35, winC, WIN_Y0 + winH * 0.62]]) { const b = rbox(w, h, 0.6, 0.06, frameMat, 1); b.position.set(x, y, 0.3); corner.add(b); }   // frame + mullions
-// the view outside: NID Bengaluru across the road on a Bengaluru morning (and the same street at night), cross-faded.
-// Drawn from scratch: a compact campus of exposed red brick with white concrete floor bands and long glass strips,
-// framed by a rain tree, a gulmohar in bloom and a coconut palm; the compound wall and the road in front.
+// the view outside: the NID Bengaluru campus gate across the road (from Sijo's photos): granite-block gate walls with
+// capped tops, the white sign board, the steel sliding gate, a tree-lined driveway with potted plants, and the white
+// campus building (round balconies, railings) glowing behind the trees. Night is the default; morning on a click.
 const skyTex = (night) => canvasTex(1024, 1384, (g, w, h) => {
   let sd = 42; const R = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
-  const HZ = h * 0.6;   // horizon line (roof tops sit around here)
-  // sky
-  const sky = g.createLinearGradient(0, 0, 0, HZ + 120);
-  if (night) { sky.addColorStop(0, "#060b1d"); sky.addColorStop(1, "#1f2c4c"); } else { sky.addColorStop(0, "#6fa8dc"); sky.addColorStop(0.55, "#a9cbe6"); sky.addColorStop(1, "#f3dcb8"); }
+  const HZ = h * 0.46, ROAD = h * 0.8, BASE = h * 0.74;   // tree-line, front of the road, foot of the gate walls
+  // sky (mostly hidden by the canopy)
+  const sky = g.createLinearGradient(0, 0, 0, HZ);
+  if (night) { sky.addColorStop(0, "#070b1a"); sky.addColorStop(1, "#1d2741"); } else { sky.addColorStop(0, "#9fc1df"); sky.addColorStop(1, "#d9e2dc"); }
   g.fillStyle = sky; g.fillRect(0, 0, w, h);
-  if (night) {
-    for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,255,255,${0.25 + R() * 0.6})`; g.fillRect(R() * w, R() * HZ * 0.8, 2, 2); }
-    const mg = g.createRadialGradient(w * 0.72, h * 0.12, 0, w * 0.72, h * 0.12, 120); mg.addColorStop(0, "rgba(220,230,255,.5)"); mg.addColorStop(1, "rgba(220,230,255,0)"); g.fillStyle = mg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#f2efe2"; g.beginPath(); g.arc(w * 0.72, h * 0.12, 34, 0, 7); g.fill();
-  } else {
-    const sun = g.createRadialGradient(w * 0.12, HZ - 150, 0, w * 0.12, HZ - 150, 420); sun.addColorStop(0, "rgba(255,240,205,.95)"); sun.addColorStop(0.3, "rgba(255,226,180,.45)"); sun.addColorStop(1, "rgba(255,226,180,0)");
-    g.fillStyle = sun; g.fillRect(0, 0, w, h);
-    for (const [cx, cy, s] of [[w * 0.62, h * 0.12, 1], [w * 0.28, h * 0.22, 0.7], [w * 0.85, h * 0.27, 0.6]]) for (let k = 0; k < 9; k++) {   // thin morning clouds
-      const x = cx + (k - 4) * 34 * s, y = cy + Math.sin(k) * 10 * s, r = (40 + (k % 3) * 18) * s, cg = g.createRadialGradient(x, y, 0, x, y, r);
-      cg.addColorStop(0, "rgba(255,250,242,.75)"); cg.addColorStop(1, "rgba(255,250,242,0)"); g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r * 2); }
-  }
-  // far city in haze
-  g.fillStyle = night ? "#17213a" : "rgba(170,180,195,.75)";
-  for (let x = 0; x < w; x += 26 + R() * 30) { const bh = 30 + R() * 90; g.fillRect(x, HZ + 60 - bh, 22 + R() * 26, bh + 40); }
-  if (night) { g.fillStyle = "#ffcf7a"; for (let i = 0; i < 70; i++) g.fillRect(R() * w, HZ - 20 + R() * 70, 3, 4); }
-  // ── the NID building: two brick blocks joined by a glass bridge, white floor bands, long window strips
-  const brick = night ? "#4a2a22" : "#a5573c", brickDark = night ? "#3a2019" : "#8a4630", band = night ? "#8d8f96" : "#ece6da";
-  const block = (x0, x1, top, floors, sign) => {
-    const fh = 92, bottom = top + floors * fh;
-    g.fillStyle = brick; g.fillRect(x0, top, x1 - x0, bottom - top);
-    g.fillStyle = "rgba(0,0,0,.08)"; for (let y = top; y < bottom; y += 6) g.fillRect(x0, y, x1 - x0, 1);   // brick coursing
-    for (let f = 0; f < floors; f++) {
-      const y = top + f * fh;
-      g.fillStyle = band; g.fillRect(x0 - 6, y, x1 - x0 + 12, 12);   // slab band
-      const wy = y + 26, wh = 34;
-      for (let x = x0 + 18; x < x1 - 40; x += 74) {
-        const lit = night && R() > 0.35;
-        const glass = g.createLinearGradient(0, wy, 0, wy + wh);
-        if (night) { glass.addColorStop(0, lit ? "#ffd38a" : "#1a2236"); glass.addColorStop(1, lit ? "#e9a85a" : "#121a2a"); }
-        else { glass.addColorStop(0, "#9cc3e0"); glass.addColorStop(1, "#3d5c78"); }
-        g.fillStyle = glass; g.fillRect(x, wy, 56, wh);
-        g.fillStyle = night ? "#2a2a30" : "#e6e0d4"; g.fillRect(x + 27, wy, 3, wh);   // mullion
-        if (!night) { g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(x, wy, 56, 5); }
-      }
-    }
-    g.fillStyle = band; g.fillRect(x0 - 10, top - 16, x1 - x0 + 20, 18);   // parapet
-    if (!night) { g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(x1 - 26, top, 26, bottom - top); }   // morning shade side
-    if (sign) {
-      g.fillStyle = band; g.fillRect(x0 + 40, bottom + 6, x1 - x0 - 80, 46);
-      g.fillStyle = night ? "#ffe6b8" : "#3a2a24"; g.font = `700 21px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText("NATIONAL INSTITUTE OF DESIGN", (x0 + x1) / 2, bottom + 22); g.font = `600 14px ${UI}`; g.fillText("BENGALURU", (x0 + x1) / 2, bottom + 42);
-    }
-    return bottom;
+  if (night) { for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(255,255,255,${0.2 + R() * 0.5})`; g.fillRect(R() * w, R() * HZ * 0.5, 2, 2); } }
+  // the white campus building far back, seen between the trees: round balcony, stacked railings, a stair
+  const white = night ? "#4a4f5c" : "#d9d6cf", whiteShade = night ? "#343843" : "#b6b3ab";
+  g.fillStyle = white; g.fillRect(560, HZ - 150, 360, 210);
+  g.fillStyle = whiteShade; for (let x = 570; x < 920; x += 60) g.fillRect(x, HZ - 150, 14, 210);   // columns
+  g.strokeStyle = night ? "#6d7380" : "#a9a7a0"; g.lineWidth = 2;
+  for (const y of [HZ - 100, HZ - 40]) { g.beginPath(); g.moveTo(560, y); g.lineTo(920, y); g.stroke(); for (let x = 560; x < 920; x += 10) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 18); g.stroke(); } }
+  g.fillStyle = white; g.beginPath(); g.ellipse(600, HZ - 60, 110, 38, 0, 0, Math.PI); g.fill();   // the round balcony
+  g.fillStyle = night ? "#c58a3a" : "#e9a64a"; g.fillRect(800, HZ - 175, 120, 22);   // the orange canopy
+  if (night) for (let k = 0; k < 14; k++) { const x = 570 + R() * 340, y = HZ - 140 + R() * 170; const lg = g.createRadialGradient(x, y, 0, x, y, 26); lg.addColorStop(0, "rgba(255,214,150,.9)"); lg.addColorStop(1, "rgba(255,214,150,0)"); g.fillStyle = lg; g.fillRect(x - 26, y - 26, 52, 52); }
+  // tree canopy over everything (rain trees and gulmohars), with hanging leaves
+  const leaf = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, r, r * 0.7, R() * 3, 0, 7); g.fill(); };
+  const dk = night ? ["#07100a", "#0b170e", "#112014"] : ["#2d4a27", "#3f6533", "#5f8a45"];
+  for (let i = 0; i < 1500; i++) { const x = R() * w, y = R() * (HZ + 60) * (0.4 + 0.6 * Math.abs(x / w - 0.62) * 1.6); if (x > 580 && x < 900 && y > HZ - 170) continue; leaf(x, y, 8 + R() * 22, dk[(R() * 3) | 0]); }
+  if (!night) for (let i = 0; i < 260; i++) leaf(R() * w, R() * HZ * 0.7, 6 + R() * 10, "rgba(200,230,150,.5)");   // sun through the leaves
+  for (const [x, wd] of [[200, 26], [380, 18], [940, 26]]) { g.fillStyle = night ? "#0d0a08" : "#4b3a2c"; g.fillRect(x - wd / 2, HZ - 120, wd, BASE - HZ + 120); g.lineWidth = wd * 0.4; g.strokeStyle = g.fillStyle; g.beginPath(); g.moveTo(x, HZ - 60); g.lineTo(x + (x > 500 ? 70 : -70), HZ - 220); g.stroke(); }
+  // driveway receding through the gate, lined with potted plants
+  const vx = 740, vy = HZ + 30;   // vanishing point
+  g.fillStyle = night ? "#2a2a2c" : "#a9a395"; g.beginPath(); g.moveTo(vx - 30, vy); g.lineTo(vx + 30, vy); g.lineTo(880, BASE); g.lineTo(600, BASE); g.fill();
+  for (let k = 0; k < 16; k++) { const t = k / 16, s = 0.2 + t * 1.1;
+    for (const side of [-1, 1]) { const x = vx + side * (40 + t * 120), y = vy + t * (BASE - vy - 20);
+      g.fillStyle = night ? "#3a2a22" : "#a35b3a"; g.fillRect(x - 9 * s, y - 14 * s, 18 * s, 14 * s);
+      g.fillStyle = night ? "#0f1d12" : "#4e7d3c"; g.beginPath(); g.ellipse(x, y - 22 * s, 16 * s, 13 * s, 0, 0, 7); g.fill(); } }
+  if (night) { const pg = g.createRadialGradient(vx, vy + 60, 0, vx, vy + 60, 230); pg.addColorStop(0, "rgba(255,200,130,.35)"); pg.addColorStop(1, "rgba(255,200,130,0)"); g.fillStyle = pg; g.fillRect(0, 0, w, h); }   // lamps along the drive
+  // granite-block gate walls with concrete caps (left, with the sign; right)
+  const wall = (x0, x1, top) => {
+    g.fillStyle = night ? "#3b3732" : "#8f8778"; g.fillRect(x0, top, x1 - x0, BASE - top);
+    for (let y = top + 10; y < BASE; y += 28) for (let x = x0 + ((y / 28) % 2 ? 0 : 22); x < x1; x += 44) {   // irregular stone blocks
+      const c = night ? 50 + R() * 16 : 120 + R() * 30; g.fillStyle = `rgb(${c + 6},${c + 2},${c - 6})`; g.fillRect(x + 2, y + 2, 40, 24);
+      g.fillStyle = `rgba(0,0,0,${night ? 0.35 : 0.25})`; g.fillRect(x + 2, y + 24, 40, 2); }
+    g.fillStyle = night ? "#55524c" : "#d8d4ca"; g.fillRect(x0 - 8, top - 16, x1 - x0 + 16, 18);   // cap
   };
-  const b1 = block(150, 620, HZ - 210, 3, true);
-  block(660, 960, HZ - 130, 2, false);
-  g.fillStyle = night ? "#2b3550" : "#7fa6c4"; g.fillRect(620, HZ - 100, 40, 70);   // glass bridge
-  g.fillStyle = brickDark; g.fillRect(560, HZ - 290, 80, 290); g.fillStyle = band; g.fillRect(552, HZ - 300, 96, 14);   // stair tower
-  g.fillStyle = night ? "#ffd38a" : "#2c3f55"; g.fillRect(588, HZ - 250, 24, 180);
-  // ground: campus lawn, compound wall with a gate, footpath and road
-  const groundTop = b1 + 56;
-  g.fillStyle = night ? "#142116" : "#6f8f4f"; g.fillRect(0, groundTop, w, 60);
-  g.fillStyle = night ? "#3a3a3e" : "#d9cdb8"; g.fillRect(0, groundTop + 60, w, 46);   // compound wall
-  g.fillStyle = night ? "#2a2a2e" : "#b9ab94"; for (let x = 0; x < w; x += 120) g.fillRect(x, groundTop + 50, 22, 56);   // pillars
-  g.fillStyle = night ? "#1d1d22" : "#4b4b4f"; g.fillRect(420, groundTop + 44, 150, 62);   // gate
-  g.strokeStyle = night ? "#55555c" : "#2b2b2e"; g.lineWidth = 4; for (let x = 428; x < 566; x += 16) { g.beginPath(); g.moveTo(x, groundTop + 48); g.lineTo(x, groundTop + 104); g.stroke(); }
-  g.fillStyle = night ? "#2b2b30" : "#a39a8c"; g.fillRect(0, groundTop + 106, w, 26);   // footpath
-  g.fillStyle = night ? "#15161a" : "#5c5d61"; g.fillRect(0, groundTop + 132, w, h - groundTop - 132);   // road
-  g.fillStyle = night ? "#3a3a40" : "#eeeeea"; for (let x = 20; x < w; x += 120) g.fillRect(x, groundTop + 210, 60, 8);   // lane marks
-  // street lamps
-  for (const x of [80, 760]) { g.fillStyle = night ? "#2a2a30" : "#3b3d42"; g.fillRect(x, groundTop - 120, 8, 252); g.fillRect(x, groundTop - 120, 46, 7);
-    if (night) { const lg = g.createRadialGradient(x + 44, groundTop - 112, 0, x + 44, groundTop - 112, 90); lg.addColorStop(0, "rgba(255,190,110,.9)"); lg.addColorStop(1, "rgba(255,190,110,0)"); g.fillStyle = lg; g.fillRect(x - 60, groundTop - 210, 210, 200); } }
-  // trees: a big rain tree (left), a gulmohar in bloom (right), a coconut palm behind the wall
-  const canopy = (cx, cy, rx, ry, dark, mid, lightC, blossoms) => {
-    for (let i = 0; i < 260; i++) { const a = R() * Math.PI * 2, rr = Math.sqrt(R()), x = cx + Math.cos(a) * rx * rr, y = cy + Math.sin(a) * ry * rr, r = 14 + R() * 26;
-      const lit = !night && (x - cx) < rx * 0.2 && (y - cy) < 0;   // morning sun from the left lights the upper-left of each crown
-      g.fillStyle = lit ? lightC : (R() > 0.5 ? mid : dark); g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
-    if (blossoms) for (let i = 0; i < 160; i++) { const a = R() * Math.PI * 2, rr = Math.sqrt(R()) * 0.95; g.fillStyle = night ? "#5a1f1a" : (R() > 0.5 ? "#e8462b" : "#f2702e"); g.beginPath(); g.arc(cx + Math.cos(a) * rx * rr, cy + Math.sin(a) * ry * rr, 5 + R() * 6, 0, 7); g.fill(); }
-  };
-  const trunk = (x, y0, y1, wd) => { g.fillStyle = night ? "#1a1512" : "#4a3628"; g.beginPath(); g.moveTo(x - wd, y1); g.quadraticCurveTo(x - wd * 0.4, (y0 + y1) / 2, x - wd * 0.3, y0); g.lineTo(x + wd * 0.3, y0); g.quadraticCurveTo(x + wd * 0.4, (y0 + y1) / 2, x + wd, y1); g.fill(); };
-  // coconut palm
-  g.strokeStyle = night ? "#1a1612" : "#6b5440"; g.lineWidth = 12; g.beginPath(); g.moveTo(880, groundTop + 60); g.quadraticCurveTo(900, HZ - 120, 860, HZ - 330); g.stroke();
-  g.strokeStyle = night ? "#0f1a12" : "#3f6b34"; g.lineWidth = 9; g.lineCap = "round";
-  for (let k = 0; k < 9; k++) { const a = -Math.PI * 0.95 + k * Math.PI * 0.24; g.beginPath(); g.moveTo(860, HZ - 330); g.quadraticCurveTo(860 + Math.cos(a) * 90, HZ - 330 + Math.sin(a) * 60 - 20, 860 + Math.cos(a) * 170, HZ - 330 + Math.sin(a) * 120 + 40); g.stroke(); }
-  trunk(150, HZ - 40, groundTop + 70, 30);
-  canopy(150, HZ - 170, 260, 170, night ? "#0b140d" : "#2f5a2c", night ? "#122017" : "#3f7236", "#7fa954", false);
-  trunk(930, HZ + 20, groundTop + 80, 20);
-  canopy(950, HZ - 40, 180, 120, night ? "#0b140d" : "#33602e", night ? "#132216" : "#4a7c3a", "#86b05a", true);
-  // an auto-rickshaw on the road (green body, yellow canopy, Bengaluru colours)
-  { const ax = 600, ay = groundTop + 178;
-    g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(ax + 60, ay + 62, 75, 10, 0, 0, 7); g.fill();
-    g.fillStyle = night ? "#1f3a26" : "#2f7a3e"; g.beginPath(); g.moveTo(ax, ay + 55); g.lineTo(ax + 8, ay + 18); g.quadraticCurveTo(ax + 20, ay, ax + 45, ay); g.lineTo(ax + 120, ay + 4); g.lineTo(ax + 128, ay + 55); g.closePath(); g.fill();
-    g.fillStyle = night ? "#5c5220" : "#f2c21b"; g.beginPath(); g.moveTo(ax + 6, ay + 4); g.quadraticCurveTo(ax + 60, ay - 34, ax + 124, ay + 2); g.lineTo(ax + 124, ay + 10); g.lineTo(ax + 6, ay + 12); g.fill();
-    g.fillStyle = night ? "#0c0c10" : "#1b1d22"; g.fillRect(ax + 40, ay + 12, 70, 26);
-    g.fillStyle = "#111"; for (const x of [ax + 22, ax + 108]) { g.beginPath(); g.arc(x, ay + 56, 12, 0, 7); g.fill(); }
-    if (night) { const hl = g.createRadialGradient(ax, ay + 40, 0, ax, ay + 40, 60); hl.addColorStop(0, "rgba(255,240,200,.9)"); hl.addColorStop(1, "rgba(255,240,200,0)"); g.fillStyle = hl; g.fillRect(ax - 60, ay - 20, 120, 120); } }
-  // looking through glass: a touch of softness and atmosphere, so it reads as a real view, not a flat picture
-  { const c2 = document.createElement("canvas"); c2.width = w; c2.height = h; const g2 = c2.getContext("2d"); g2.filter = "blur(1.4px)"; g2.drawImage(g.canvas, 0, 0); g.globalAlpha = 0.7; g.drawImage(c2, 0, 0); g.globalAlpha = 1; }
-  { const refl = g.createLinearGradient(0, 0, w, h); refl.addColorStop(0, "rgba(255,255,255,.07)"); refl.addColorStop(0.45, "rgba(255,255,255,0)"); refl.addColorStop(0.55, "rgba(255,255,255,.05)"); refl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = refl; g.fillRect(0, 0, w, h); }
-  // morning haze + a little warmth over everything
-  if (!night) { const hz = g.createLinearGradient(0, 0, 0, h); hz.addColorStop(0, "rgba(255,236,200,0)"); hz.addColorStop(0.5, "rgba(255,236,200,.12)"); hz.addColorStop(1, "rgba(255,236,200,0)"); g.fillStyle = hz; g.fillRect(0, 0, w, h); }
+  wall(0, 600, HZ + 10); wall(880, 1024, HZ + 10);
+  g.fillStyle = night ? "#4a4741" : "#e3e0d8"; g.fillRect(150, HZ - 70, 450, 80);   // the overhang above the sign
+  // sign board: white panel with a simple mark, the name in Hindi, English and Kannada
+  const sx = 330, sy = HZ + 70, sw = 230, sh = 250;
+  if (night) { const lg = g.createRadialGradient(sx + sw / 2, sy - 10, 0, sx + sw / 2, sy + 80, 260); lg.addColorStop(0, "rgba(255,240,215,.75)"); lg.addColorStop(1, "rgba(255,240,215,0)"); g.fillStyle = lg; g.fillRect(sx - 120, sy - 120, sw + 240, sh + 260); }
+  g.fillStyle = night ? "#d9d6cf" : "#f4f3ef"; g.fillRect(sx, sy, sw, sh);
+  g.fillStyle = "#8a8a8a"; g.beginPath(); g.arc(sx + sw / 2 - 18, sy + 40, 12, 0, 7); g.fill();
+  g.beginPath(); g.moveTo(sx + sw / 2 - 60, sy + 58); g.lineTo(sx + sw / 2 - 4, sy + 58); g.lineTo(sx + sw / 2 - 4, sy + 116); g.closePath(); g.fill();
+  g.beginPath(); g.arc(sx + sw / 2 + 22, sy + 87, 29, -Math.PI / 2, Math.PI / 2); g.lineTo(sx + sw / 2 + 8, sy + 116); g.lineTo(sx + sw / 2 + 8, sy + 58); g.fill();
+  g.fillStyle = "#3a3a3a"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.font = `600 20px ${UI}`; g.fillText("राष्ट्रीय डिज़ाइन संस्थान", sx + sw / 2, sy + 160);
+  g.font = `800 17px ${UI}`; g.fillText("NATIONAL INSTITUTE OF DESIGN", sx + sw / 2, sy + 186);
+  g.fillStyle = night ? "#c9c6bf" : "#e6e5e1"; g.fillRect(sx + 25, sy + 198, sw - 50, 26); g.fillStyle = "#3a3a3a"; g.font = `500 20px ${UI}`; g.fillText("Bengaluru Campus", sx + sw / 2, sy + 211);
+  g.font = `600 18px ${UI}`; g.fillText("ರಾಷ್ಟ್ರೀಯ ವಿನ್ಯಾಸ ಸಂಸ್ಥೆ", sx + sw / 2, sy + 238);
+  // steel sliding gate, half open
+  g.strokeStyle = night ? "#6b6b70" : "#a3a6aa"; g.lineWidth = 6;
+  g.strokeRect(600, HZ + 120, 70, BASE - HZ - 130); for (let y = HZ + 150; y < BASE - 10; y += 30) { g.beginPath(); g.moveTo(600, y); g.lineTo(670, y); g.stroke(); }
+  g.fillStyle = night ? "#55565b" : "#b9bcc0"; g.beginPath(); g.moveTo(600, HZ + 120); g.lineTo(670, HZ + 120); g.lineTo(670, HZ + 200); g.closePath(); g.fill();
+  // footpath + bollards, then the road under our window
+  g.fillStyle = night ? "#34342f" : "#9e998d"; g.fillRect(0, BASE, w, ROAD - BASE);
+  for (const x of [300, 560]) { g.fillStyle = night ? "#121212" : "#2b2b2b"; g.fillRect(x, BASE - 50, 16, 56); }
+  g.fillStyle = night ? "#17181b" : "#5a5a58"; g.fillRect(0, ROAD, w, h - ROAD);
+  g.fillStyle = night ? "#3e3e40" : "#e8e8e2"; for (let x = 30; x < w; x += 150) g.fillRect(x, ROAD + 120, 80, 8);
+  // street lamp on our side, throwing an orange pool at night
+  g.fillStyle = night ? "#1d1d20" : "#3b3d42"; g.fillRect(250, HZ - 80, 10, ROAD - HZ + 120); g.fillRect(250, HZ - 80, 70, 8);
+  if (night) { const lg = g.createRadialGradient(315, HZ - 70, 0, 315, HZ - 70, 120); lg.addColorStop(0, "rgba(255,180,100,.95)"); lg.addColorStop(1, "rgba(255,180,100,0)"); g.fillStyle = lg; g.fillRect(190, HZ - 190, 250, 250);
+    const pool = g.createRadialGradient(330, ROAD + 60, 0, 330, ROAD + 60, 260); pool.addColorStop(0, "rgba(255,170,90,.35)"); pool.addColorStop(1, "rgba(255,170,90,0)"); g.fillStyle = pool; g.fillRect(0, ROAD - 150, 700, 420); }
+  // glass: slight softness + reflection
+  { const c2 = document.createElement("canvas"); c2.width = w; c2.height = h; const g2 = c2.getContext("2d"); g2.filter = "blur(1.2px)"; g2.drawImage(g.canvas, 0, 0); g.globalAlpha = 0.65; g.drawImage(c2, 0, 0); g.globalAlpha = 1; }
+  { const refl = g.createLinearGradient(0, 0, w, h); refl.addColorStop(0, "rgba(255,255,255,.06)"); refl.addColorStop(0.45, "rgba(255,255,255,0)"); refl.addColorStop(0.55, "rgba(255,255,255,.04)"); refl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = refl; g.fillRect(0, 0, w, h); }
 }).tex;
 const glassGeo = new THREE.PlaneGeometry(winW - 0.6, winH - 0.6);
 const glassDay = new THREE.Mesh(glassGeo, new THREE.MeshBasicMaterial({ map: skyTex(false), toneMapped: false }));
@@ -1320,89 +1290,18 @@ popArt.position.set(onLeft(13), FLOOR_Y + 34, 0.02);
 leftWall.add(popArt);
 interactive(popArt, "One Piece prints on my wall", () => { Sound.click(); wiggle(popArt); });
 
-// Camera and red corduroy cap on one stick-on hook, at the right end of the left wall (near the back corner)
-const hookGrp = new THREE.Group();
-const steel = mat(0x6f747a, { metalness: 0.85, roughness: 0.3 });
-const hookPlate = rbox(0.42, 1.4, 0.08, 0.15, steel, 2); hookGrp.add(hookPlate);
-const hookArm = mesh(new THREE.TorusGeometry(0.28, 0.07, 8, 16, Math.PI), steel); hookArm.rotation.set(Math.PI / 2, 0, Math.PI); hookArm.position.set(0, -0.55, 0.3); hookGrp.add(hookArm);
-// cap: corduroy crown (half dome), button on top, brim hanging below
-const cordTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#6a161c"; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 6) { const lg = g.createLinearGradient(x, 0, x + 6, 0); lg.addColorStop(0, "#4e0f14"); lg.addColorStop(0.5, "#86212a"); lg.addColorStop(1, "#4e0f14"); g.fillStyle = lg; g.fillRect(x, 0, 8, h); } }).tex;
-cordTex.wrapS = cordTex.wrapT = THREE.RepeatWrapping; cordTex.repeat.set(3, 2);
-const capMat = new THREE.MeshPhysicalMaterial({ map: cordTex, roughness: 0.97, sheen: 0.35, sheenColor: new THREE.Color(0xb5555a), sheenRoughness: 0.8 });
-const cap = new THREE.Group();
-const CR = 1.85;   // crown ≈19 cm across, ≈11 cm deep
-const crownGeo = new THREE.SphereGeometry(CR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2);
-{ const p = crownGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = 1 + 0.06 * Math.max(0, z / CR), slouch = 1 - 0.12 * Math.max(0, -z / CR) * (y / CR); p.setXYZ(i, x * k, y * 0.55 * slouch, z * 1.12 * k); } crownGeo.computeVertexNormals(); }
-const crown = mesh(crownGeo, capMat); cap.add(crown);
-const seamMat = mat(0x581218, { roughness: 0.95 });
-for (let k = 0; k < 6; k++) {   // panel seams running to the button
-  const a = k * Math.PI / 3, pts = [];
-  for (let t = 0; t <= 1.001; t += 0.1) { const ph = t * Math.PI / 2, r = CR * 1.003; pts.push(new THREE.Vector3(Math.cos(a) * Math.cos(ph) * r * (1 + 0.06 * Math.max(0, Math.sin(a))), Math.sin(ph) * r * 0.62, Math.sin(a) * Math.cos(ph) * r * 1.12)); }
-  cap.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.025, 4), seamMat));
-  const eye = mesh(new THREE.TorusGeometry(0.07, 0.02, 6, 12), seamMat); const ph = 0.9; eye.position.set(Math.cos(a + 0.5) * Math.cos(ph) * CR, Math.sin(ph) * CR * 0.62, Math.sin(a + 0.5) * Math.cos(ph) * CR * 1.12); eye.lookAt(eye.position.clone().multiplyScalar(2)); cap.add(eye);
-}
-const buttonTop = mesh(new THREE.SphereGeometry(0.17, 12, 8), capMat); buttonTop.scale.y = 0.5; buttonTop.position.y = CR * 0.62; cap.add(buttonTop);
-const brimShape = new THREE.Shape(); brimShape.moveTo(-CR * 0.9, 0); brimShape.quadraticCurveTo(-CR * 0.85, CR * 1.0, 0, CR * 1.08); brimShape.quadraticCurveTo(CR * 0.85, CR * 1.0, CR * 0.9, 0); brimShape.lineTo(-CR * 0.9, 0);
-const brimGeo = new THREE.ExtrudeGeometry(brimShape, { depth: 0.09, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.04, bevelSegments: 2, curveSegments: 24 });
-{ const p = brimGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setZ(i, p.getZ(i) - 0.32 * (x / CR) ** 2); } brimGeo.computeVertexNormals(); }   // brim curved down at the sides
-const brim = mesh(brimGeo, capMat); brim.rotation.x = Math.PI / 2 - 0.12; brim.position.set(0, 0.08, CR * 1.0); cap.add(brim);
-const strap = rbox(1.1, 0.35, 0.06, 0.05, capMat, 1); strap.position.set(0, 0.35, -CR * 1.1); cap.add(strap);   // back strap (what hangs on the hook)
-// hung by the back strap: crown facing the room, brim pointing down and a little to the side, like in the photo
-cap.rotation.set(Math.PI / 2 + 0.05, 0, 0.45); cap.position.set(0.2, -1.6, 0.95); hookGrp.add(cap);   // hung by the strap, crown to the room, brim down-left (as in Sijo's photo)
-// camera: silver top plate, black leatherette body, lens with a silver barrel, hanging on its black strap
-const camBody = new THREE.Group();
-const leather = mat(0x141414, { roughness: 0.85 }), chrome = mat(0xc9ccd0, { metalness: 0.9, roughness: 0.22 });
-const cb = rbox(2.4, 1.05, 0.72, 0.1, leather, 3); camBody.add(cb);
-const ctop = rbox(2.42, 0.42, 0.74, 0.08, chrome, 2); ctop.position.y = 0.72; camBody.add(ctop);
-const cbot = rbox(2.42, 0.1, 0.74, 0.04, chrome, 1); cbot.position.y = -0.56; camBody.add(cbot);
-const win1 = rbox(0.42, 0.24, 0.02, 0.03, mat(0x1a1d22, { roughness: 0.1, metalness: 0.3 }), 1); win1.position.set(-0.75, 0.74, 0.38); camBody.add(win1);
-const win2 = win1.clone(); win2.position.x = 0.7; camBody.add(win2);
-const barrel = mesh(new THREE.CylinderGeometry(0.46, 0.5, 0.7, 28), chrome); barrel.rotation.x = Math.PI / 2; barrel.position.set(0.15, -0.05, 0.7); camBody.add(barrel);
-const grip = mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.14, 28), mat(0x222222, { roughness: 0.6 })); grip.rotation.x = Math.PI / 2; grip.position.set(0.15, -0.05, 0.85); camBody.add(grip);
-const glass = mesh(new THREE.CircleGeometry(0.34, 24), new THREE.MeshPhysicalMaterial({ color: 0x1a2533, roughness: 0.03, metalness: 0.4, clearcoat: 1 })); glass.position.set(0.15, -0.05, 1.06); camBody.add(glass);
-const knob = mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 16), chrome); knob.position.set(0.85, 1.0, 0); camBody.add(knob);
-camBody.position.set(0.1, -7.4, 0.62); camBody.rotation.set(0.05, 0.25, -0.06); hookGrp.add(camBody);
-for (const sx of [-1, 1]) { const st = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(sx * 0.08, -0.65, 0.3), new THREE.Vector3(sx * 0.5, -3.5, 0.45), new THREE.Vector3(sx * 1.15, -6.6, 0.6)]), 20, 0.05, 4), mat(0x101010, { roughness: 0.7 })); hookGrp.add(st); }
-hookGrp.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-hookGrp.position.set(onLeft(1.2), FLOOR_Y + 37, 0.1);
-leftWall.add(hookGrp);
-interactive(hookGrp, "Film camera and my red cap 📷", () => { Sound.click(); wiggle(hookGrp); });
 
-/* ───────────────────────── Right wall, far right: macramé shelf with succulents and a toy bus ───────────────────────── */
-const macrame = new THREE.Group();
-const ropeMat = mat(0xe4dccb, { roughness: 0.95 });
-const MW = 6.2, M_TOP = 0, M_SHELF = -10.5;
-const dowel = mesh(new THREE.CylinderGeometry(0.16, 0.16, MW + 1.4, 12), mat(0xc49a6c, { roughness: 0.7 })); dowel.rotation.z = Math.PI / 2; macrame.add(dowel);
-for (const sx of [-1, 1]) macrame.add(mesh(new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(sx * (MW / 2 + 0.3), 0, 0), new THREE.Vector3(0, 4.2, -0.15)), 4, 0.07, 5), ropeMat));
-const wallHook = rbox(0.35, 0.5, 0.25, 0.08, mat(0xf4f4f2), 2); wallHook.position.set(0, 4.3, -0.15); macrame.add(wallHook);
-const knotTex = canvasTex(512, 900, (g, w, h) => {
-  g.clearRect(0, 0, w, h);
-  const cord = (x0, y0, x1, y1, lw = 9) => { g.strokeStyle = "#e9e1cf"; g.lineWidth = lw; g.lineCap = "round"; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.strokeStyle = "rgba(120,100,70,.35)"; g.lineWidth = 2; g.beginPath(); g.moveTo(x0 + 2, y0); g.lineTo(x1 + 2, y1); g.stroke(); };
-  const N = 16, step = w / N;
-  for (let k = 0; k < N; k++) cord(step * (k + 0.5), 0, step * (k + 0.5), h * 0.18);   // straight cords from the dowel
-  for (let r = 0; r < 4; r++) for (let k = 0; k < N - 1; k++) { if ((k + r) % 2) continue; const cx = step * (k + 1), cy = h * (0.08 + r * 0.05); g.fillStyle = "#efe8d8"; g.beginPath(); g.ellipse(cx, cy, 14, 10, 0, 0, 7); g.fill(); g.strokeStyle = "rgba(120,100,70,.4)"; g.lineWidth = 2; g.stroke(); }
-  for (let k = 0; k < N; k++) { const x = step * (k + 0.5), toward = w / 2 + (x - w / 2) * 0.15; cord(x, h * 0.2, toward, h * 0.48); cord(toward, h * 0.48, x, h * 0.74); }   // the diamond
-  for (let r = 0; r < 6; r++) { const cy = h * (0.3 + r * 0.06), half = (r < 3 ? r + 1 : 6 - r) * step * 1.1; for (let x = w / 2 - half; x <= w / 2 + half; x += step) { g.fillStyle = "#efe8d8"; g.beginPath(); g.ellipse(x, cy, 12, 9, 0, 0, 7); g.fill(); } }
-  for (let k = 0; k < N; k++) cord(step * (k + 0.5), h * 0.74, step * (k + 0.5) + Math.sin(k) * 6, h, 7);   // fringe
-}).tex;
-const knots = new THREE.Mesh(new THREE.PlaneGeometry(MW, 14), new THREE.MeshStandardMaterial({ map: knotTex, transparent: true, alphaTest: 0.35, roughness: 1, side: THREE.DoubleSide }));
-knots.position.set(0, -7.0, 0.05); macrame.add(knots);
-for (const sx of [-1, 1]) macrame.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(sx * (MW / 2 + 0.35), 0, 0), new THREE.Vector3(sx * (MW / 2 + 0.6), M_SHELF / 2, 0.4), new THREE.Vector3(sx * (MW / 2 + 0.55), M_SHELF, 1.1), new THREE.Vector3(sx * (MW / 2 + 0.55), M_SHELF - 4.2, 1.1)]), 30, 0.12, 6), ropeMat));
-const shelf = rbox(MW + 1.8, 0.32, 2.3, 0.05, mat(0xd9b98c, { roughness: 0.7 }), 2); shelf.position.set(0, M_SHELF, 1.15); macrame.add(shelf);
-for (const sx of [-1, 1]) {   // two white pots with succulents
-  const pot = mesh(new THREE.CylinderGeometry(0.55, 0.48, 1.05, 24), mat(0xf6f6f3, { roughness: 0.35, clearcoat: 0.4 })); pot.position.set(sx * 2.2, M_SHELF + 0.68, 1.15); macrame.add(pot);
-  const succ = spiky(14, 1.4, 0x4f7a4a, 0.55); succ.position.set(sx * 2.2, M_SHELF + 1.2, 1.15); macrame.add(succ);
+
+/* ───────────────────────── The MacBook's charging cable: off the desk's back edge, along the skirting, up to a charger in the socket ───────────────────────── */
+{
+  const SW = TABLE.x + 19, SY = FLOOR_Y + 25, BZ = WALL_Z + 0.25;
+  const pts = [[2.15, 0.12, -0.9], [2.6, 0.06, -2.2], [3.4, 0.04, -3.1], [3.7, -0.4, -3.35], [3.8, -6, BZ + 0.05], [4.6, FLOOR_Y + 0.3, BZ + 0.3],
+    [9, FLOOR_Y + 0.12, BZ + 0.45], [SW - 0.6, FLOOR_Y + 0.15, BZ + 0.4], [SW - 0.55, FLOOR_Y + 1.6, BZ], [SW - 0.55, SY - 2.6, BZ - 0.1], [SW + 1.0, SY - 0.95, BZ + 0.2]].map((v) => new THREE.Vector3(...v));
+  const cableC = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.35), 160, 0.07, 6), mat(0xf2f1ee, { roughness: 0.55 }));
+  scene.add(cableC);
+  const brick = rbox(0.95, 1.05, 0.62, 0.15, mat(0xf4f4f2, { roughness: 0.4 }), 2); brick.position.set(SW + 1.1, SY - 0.05, WALL_Z + 0.45); scene.add(brick);   // USB-C charger in the socket
+  const magsafe = rbox(0.42, 0.1, 0.22, 0.05, mat(0x9a9ca0, { metalness: 0.8, roughness: 0.3 }), 2); magsafe.position.set(2.05, 0.12, -0.9); magsafe.rotation.y = -0.4; scene.add(magsafe);
 }
-const bus = new THREE.Group();   // a little toy bus
-const busBody = rbox(1.5, 0.62, 0.62, 0.1, mat(0xd23a1e, { roughness: 0.35, clearcoat: 0.5 }), 2); busBody.position.y = 0.45; bus.add(busBody);
-const busRoof = rbox(1.4, 0.12, 0.58, 0.05, mat(0xffc21a, { roughness: 0.4 }), 1); busRoof.position.y = 0.8; bus.add(busRoof);
-const busWin = rbox(1.2, 0.2, 0.64, 0.03, mat(0x2a3440, { roughness: 0.1 }), 1); busWin.position.y = 0.57; bus.add(busWin);
-for (const [x, z] of [[-0.5, 0.3], [0.5, 0.3], [-0.5, -0.3], [0.5, -0.3]]) { const wh = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.1, 12), mat(0x111111)); wh.rotation.x = Math.PI / 2; wh.position.set(x, 0.15, z); bus.add(wh); }
-bus.position.set(0, M_SHELF + 0.16, 1.2); bus.rotation.y = 0.2; macrame.add(bus);
-macrame.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-macrame.position.set(onRight(3.4), FLOOR_Y + 41.5, 0.12);
-rightWall.add(macrame);
-interactive(macrame, "Macramé shelf (and a tiny bus)", () => { Sound.click(); wiggle(bus); });
 
 /* ───────────────────────── Contact shadows: the soft dark rim real objects leave where they touch a surface ───────────────────────── */
 const contactTex = canvasTex(128, 128, (g, w, h) => { const rg = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); rg.addColorStop(0, "rgba(0,0,0,1)"); rg.addColorStop(0.55, "rgba(0,0,0,.6)"); rg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = rg; g.fillRect(0, 0, w, h); }).tex;
@@ -1415,10 +1314,10 @@ contact(-1.0, DESK_Y, -0.25, 7.6, 5.6, 0.42, 0.08);      // laptop
 contact(6.15, DESK_Y, -2.75, 7.8, 2.5, 0.5);             // speaker
 contact(-7.4, DESK_Y, -2.2, 3.2, 3.0, 0.45);             // galaxy light
 contact(-8.6, DESK_Y, -0.35, 1.8, 1.8, 0.45);           // bottle
-contact(-4.8, DESK_Y, -2.8, 2.6, 2.6, 0.4);              // plant
+contact(-4.95, DESK_Y, -1.95, 2.4, 2.4, 0.4);             // plant
 contact(-8.4, DESK_Y, 5.2, 1.4, 1.4, 0.45);              // pencil cup
-contact(-5.7, DESK_Y, 1.6, 4.2, 3.2, 0.35, -0.25);       // sketchbook
-contact(4.7, DESK_Y, 4.6, 5.4, 4.2, 0.28, 0.1);          // folders
+contact(-6.9, DESK_Y, 2.1, 3.2, 2.4, 0.35, -0.25);       // sketchbook
+contact(4.85, DESK_Y, 4.6, 4.4, 3.4, 0.28, 0.1);         // folders
 contact(6.4, DESK_Y, 0.0, 5.0, 3.0, 0.3, 1.15);          // Shea
 contact(TABLE.x, FLOOR_Y + 0.03, TABLE.z, TABLE.w + 3, TABLE.d + 3, 0.5);   // the desk on the floor
 contact(TABLE.x + ROOM_HALF - 3.4, FLOOR_Y + 0.03, WALL_Z + 3.2, 6.5, 6.5, 0.5);   // pedestal
@@ -1431,7 +1330,7 @@ const switchTex = canvasTex(512, 256, (g, w, h) => {
   g.fillStyle = "#f7f6f2"; g.fillRect(0, 0, w, h);
   for (let k = 0; k < 4; k++) { g.fillStyle = "#ecebe6"; g.fillRect(36 + k * 68, 48, 52, 150); g.fillStyle = "#e2e1dc"; g.fillRect(36 + k * 68, 48, 52, 75); g.fillStyle = k === 1 ? "#ff5a3c" : "#c9c8c2"; g.fillRect(56 + k * 68, 60, 12, 6); }
   g.fillStyle = "#ecebe6"; g.beginPath(); g.arc(395, 123, 66, 0, 7); g.fill();
-  g.fillStyle = "#333"; for (const [x, y] of [[372, 105], [418, 105], [395, 150]]) { g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }
+  g.fillStyle = "#333"; for (const [x, y] of [[372, 141], [418, 141], [395, 96]]) { g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }
 });
 const switchPlate = rbox(4.2, 2.1, 0.18, 0.08, new THREE.MeshStandardMaterial({ map: switchTex.tex, roughness: 0.45 }), 2);
 switchPlate.position.set(TABLE.x + 19, FLOOR_Y + 25, WALL_Z + 0.12); switchPlate.castShadow = true; scene.add(switchPlate);
@@ -1476,7 +1375,8 @@ function applyDay(k) {
   rim.intensity = f(D.rim, N.rim);
   lampLight.intensity = f(D.lamp, N.lamp); glowSprite.material.opacity = f(D.glow, N.glow);
   renderer.toneMappingExposure = f(D.exp, N.exp);
-  scene.environmentIntensity = f(1, 0.32);   // the ambient light from the room itself dims at night too
+  scene.environmentIntensity = f(1, 0.32);
+  glow.intensity = f(1.2, 3.2);   // the ambient light from the room itself dims at night too
   shaftMat.opacity = f(D.shaft, N.shaft); mixC(shaftMat.color, D.shaftC, N.shaftC, k);
   patchMat.opacity = f(D.patch, N.patch); mixC(patchMat.color, D.patchC, N.patchC, k);
   glassNight.material.opacity = k;
@@ -1501,7 +1401,7 @@ function stepDay(now) {
 const windowHit = new THREE.Mesh(new THREE.BoxGeometry(CUR_W + 1, ROD_Y - WIN_Y0 + 1, ROD_OUT + 0.6), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
 windowHit.position.set(winC, (ROD_Y + WIN_Y0) / 2, (ROD_OUT + 0.6) / 2); corner.add(windowHit);
 interactive(windowHit, "Let the night in ☾", () => { Sound.click(); setNight(dayTarget === 0); });
-{ const h = new Date().getHours(); setNight(h < 6 || h >= 18, true); }   // start at the visitor's own time of day
+setNight(true, true);   // every visit starts at night (Sijo's favourite look); click the curtains for morning
 
 
 
