@@ -263,7 +263,9 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 @media (pointer: coarse) { .case-hint { display: block; } }
 .case { max-width: 1920px; margin: 0 auto; }   /* big monitors: stop at 1920 px (the 2× images stay sharp), centred */
 @media (min-resolution: 1.5dppx) and (pointer: fine) { .case { max-width: 1512px; } }   /* Retina laptops: never wider than the 2880 px files can fill */
-.case img { display: block; width: 100%; height: auto; background: var(--g-fill); }
+.case img { display: block; width: 100%; height: auto; background: var(--case-bg, #1c1c1e); opacity: 0; transition: opacity .45s var(--smooth); }
+.case img.in { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .case img { opacity: 1; transition: none; } }
 /* ── Notch (desktop/tablet only — phones have their own) ── */
 .notch { position: absolute; z-index: 20; top: 0; left: 50%; transform: translateX(-50%); width: clamp(64px, 7.4%, 120px); height: 30px;   /* MacBook Air: 7.4% of the width, menu-bar tall */
   background: #050506; border-radius: 0 0 11px 11px; pointer-events: none; }

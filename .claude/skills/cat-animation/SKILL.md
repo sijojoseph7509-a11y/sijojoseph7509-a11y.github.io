@@ -5,6 +5,9 @@ description: Rig, animate and check Shea the cat (models/cat/shea.glb + cat.js) 
 
 # Cat animation (Shea)
 
+**Current state (v85, Sijo's choice): she stands still; only head/neck, tail and breathing move.** Don't bring back walking or
+sitting unless he asks. The walk/sit/jump machinery below still exists for that day.
+
 **How she works**
 - `models/cat/shea.glb`: the cat mesh with a 32-bone quadruped skeleton (root, hips → spine → chest → neck → neck2 → head,
   pelvisBack → tail0–5, scapula/humerus/forearm/hand/fingers L+R, thigh/shin/foot/toes L+R), skinned in Blender with bone-heat
