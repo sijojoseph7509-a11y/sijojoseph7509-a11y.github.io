@@ -1,76 +1,87 @@
-# Handover — Sijo Joseph · Interactive 3D Portfolio
+# Handover — Sijo Joseph · Interactive 3D Portfolio (sijo.work)
 
 | | |
 |---|---|
-| **Document** | Project handover & technical reference |
-| **Version** | 1.4 — 3 October 2026 (load time, bug fixes, stale-cache fix, phone/UX pass, automated QA) |
-| **Owner** | Sijo Joseph (GitHub: `sijojoseph7509-a11y`) |
-| **Prepared by** | Claude (AI assistant), working with Sijo Joseph |
-| **Live site** | https://sijojoseph7509-a11y.github.io |
-| **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io (public, branch `main`) |
-| **Mobile preview page** | https://sijojoseph7509-a11y.github.io/mobile-preview.html |
-| **Status** | Live and working. Content (email, links, projects, experience, résumé) is still **placeholder** — see §13. |
-| **Last commit at handover** | `4787a8c` — "Apple-style boot zoom, poster above the Mac, phone zoom-out fix" |
-| **Asset version (cache-buster)** | `?v=61` — must match `BUILD` in index.html and `version.json` |
+| **Document** | Complete project handover & technical reference — everything needed to run, change, test, deploy and continue this site |
+| **Version** | **5.0 — 10 October 2026** (site build **v76**) |
+| **Owner** | Sijo Joseph · sijojoseph7509@gmail.com · GitHub `sijojoseph7509-a11y` |
+| **Prepared by** | Claude (AI assistant, Claude Code in the Claude desktop app), working with Sijo |
+| **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
+| **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
+| **Phone preview page** | https://sijo.work/mobile-preview.html |
+| **Status** | Live, all automated checks green (site-qa 34/34, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
+| **Cache-buster** | `?v=76` everywhere in `index.html` **and** `{"build": "76"}` in `version.json` — always the same number (§19) |
 
 ---
 
 ## Contents
-1. [Summary](#1-summary)
-2. [Access, accounts and hosting](#2-access-accounts-and-hosting)
-3. [Quick start](#3-quick-start)
-4. [Tech stack and dependencies](#4-tech-stack-and-dependencies)
-5. [File structure](#5-file-structure)
-6. [Architecture and runtime flow](#6-architecture-and-runtime-flow)
-7. [World conventions (scale, axes, units)](#7-world-conventions-scale-axes-units)
-8. [Scene inventory — every object](#8-scene-inventory--every-object)
-9. [Camera and controls](#9-camera-and-controls)
-10. [Lighting, materials and rendering](#10-lighting-materials-and-rendering)
-11. [The Mac desktop (OS overlay)](#11-the-mac-desktop-os-overlay)
-12. [Overlay UI on the 3D page (HUD, nav, hint, loader)](#12-overlay-ui-on-the-3d-page-hud-nav-hint-loader)
-13. [Content — how to edit, and what is still placeholder](#13-content--how-to-edit-and-what-is-still-placeholder)
-14. [3D models and assets — sources, processing, licences](#14-3d-models-and-assets--sources-processing-licences)
-15. [Audio](#15-audio)
-16. [Design tokens](#16-design-tokens)
-17. [Responsive, mobile and accessibility](#17-responsive-mobile-and-accessibility)
-18. [Performance](#18-performance)
-19. [Deployment and cache-busting](#19-deployment-and-cache-busting)
-20. [QA checklist](#20-qa-checklist)
-21. [Known issues, limitations and tech debt](#21-known-issues-limitations-and-tech-debt)
-22. [Decision log (what was tried, kept or reverted)](#22-decision-log-what-was-tried-kept-or-reverted)
-23. [Change history](#23-change-history)
-24. [Open items / recommended next steps](#24-open-items--recommended-next-steps)
-25. [Legal, credits and IP notes](#25-legal-credits-and-ip-notes)
+1. Summary — what the site is
+2. Access, accounts, hosting, domain & DNS
+3. Quick start
+4. Tech stack, dependencies and tools
+5. File structure
+6. Architecture and runtime flow
+7. World conventions (scale, axes, units)
+8. The room — every object, where it is, how it's made
+9. Camera and controls
+10. Lighting, materials, shadows, day ↔ night
+11. Overlay UI on the 3D page
+12. The Mac desktop (OS overlay)
+13. Audio
+14. Content and case studies
+15. Assets, models, sources and licences
+16. Design tokens
+17. Responsive, devices, accessibility
+18. Performance
+19. Deployment and cache-busting
+20. Skills (project + personal) and how to run every check
+21. AI tooling, plugins, connectors and machine setup
+22. Memory (what the assistant remembers between sessions)
+23. Known issues, open items, next steps
+24. Decision log
+25. Change history
+26. Legal, credits and IP
 
 ---
 
-## 1. Summary
+## 1. Summary — what the site is
 
-A single-page, no-build personal portfolio. The landing view is a **3D recreation of Sijo's real desk corner** (built with Three.js), viewed straight-on through a perspective camera:
+A single-page, **no-build** personal portfolio. Everything is static files on GitHub Pages: no package.json, no server, no
+analytics, no cookies, no third-party requests (fonts and three.js are self-hosted).
 
-- A black desk with a zebra-print fleece throw, a Midnight-coloured 13" laptop, a ginger Persian cat, an upright headset, a mango-yellow plant pot, a green bottle, a soundbar, black project folders, a phone, a sketchbook, a pen stand and a football on the marble floor.
-- Sijo's own **A1 typographic poster** on the wall, his name and roles as wall lettering, and a **woven wire-cage pendant lamp**.
-- Clicking the laptop flies the camera into the screen; the screen then **zooms out into a full macOS 27-style desktop** (menu bar with real menus, Spotlight, dock, window with sidebar + unified toolbar) containing **About, Work, Skills, Resume, Contact**.
-- Original generative **lo-fi music** (synthesised live — no audio files) and small UI sounds.
-
-Everything is static files served by GitHub Pages. There is **no build step, no package.json, no server code**.
+1. **Welcome screen** (black, SJ ring, progress bar, "Good things take time") → **Enter** (with sound) or *Enter without sound*.
+2. **The 3D room** — a recreation of Sijo's Bengaluru room, built in Three.js at real-world scale, **always at night on arrival**:
+   - Oat-painted plaster walls with real texture and corner shading, glazed Mulberry floor tiles with grout.
+   - A black desk with the **MacBook Pro 14" (M5, Space Black)**, **Shea** the ginger cat, a soundbar, an astronaut galaxy light,
+     a rubber plant in a mango-yellow pot, a 1 L green bottle, the "Personal explorations" sketchbook, an iPhone, the lightning desk
+     mat and the **My Projects** folders (one tab per case study).
+   - Back wall: Sijo's own A1 typographic poster, the woven wire-cage pendant lamp, a **profile card** (frosted-photo UI card) and a
+     modular switch board with a charger whose cable lies on the floor.
+   - Left wall: Sijo's **One Piece prints** (his photo) and a 61-key keyboard leaning on the wall.
+   - Right wall: a window with half-open rose-print curtains looking out on the **NID Bengaluru campus gate**; a fluted pedestal with a
+     peace lily in the corner. Click the curtains → morning ↔ night.
+   - A football on the floor (click to kick).
+3. **Click the laptop** → the camera flies into the screen, which zooms out into a full **macOS 27-style desktop** (menu bar with real
+   menus, Spotlight, dock, Liquid Glass windows): **About, Work, Skills, Resume, Contact**. Work opens three full-screen case studies
+   (Tidewell, Backwater Line, Ekmaati) exported from Figma at 2×.
+4. Original generative **lo-fi music** synthesised live (no audio files) + small UI sounds.
 
 ---
 
-## 2. Access, accounts and hosting
+## 2. Access, accounts, hosting, domain & DNS
 
 | Item | Detail |
 |---|---|
-| GitHub account | `sijojoseph7509-a11y` (also the git author name on Sijo's Mac) |
-| Repository | `sijojoseph7509-a11y.github.io` — public. A "user site" repo, so Pages serves it at the root domain. |
-| Hosting | GitHub Pages, **legacy build** from branch `main`, folder `/` (root). HTTPS enforced. Enabled automatically on repo creation. |
-| Custom domain | None (`cname: null`). To add one: repo Settings → Pages → Custom domain. |
-| Deploy trigger | Any push to `main`. Build takes **~40–95 s**. |
-| CLI auth | GitHub CLI (`gh`) logged in on Sijo's Mac via browser (keyring). Scopes: `gist, read:org, repo, workflow`. |
-| Third-party services | None. No analytics, no backend, no API keys, no cookies. `localStorage` keys used: `muted` (sound on/off). (`theme`/`lamp` keys exist from older versions and are no longer read.) |
-| External CDNs | `cdn.jsdelivr.net` (Three.js), `fonts.googleapis.com` / `fonts.gstatic.com` (Inter, Caveat). |
-
-> ⚠️ **Working-copy location:** the project was built in a temporary "scratch" folder that belongs to the Claude session and is **deleted when that session is deleted**. **GitHub is the source of truth.** To work on it elsewhere: `git clone https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io.git`.
+| GitHub account | `sijojoseph7509-a11y` (git author on Sijo's Mac). GitHub CLI `gh` is logged in on the Mac (keyring; scopes `gist, read:org, repo, workflow`). |
+| Repository | `sijojoseph7509-a11y.github.io` — a GitHub **user site** repo. ⚠️ **Never rename it.** On 8 Oct 2026 it was renamed by mistake (`https-sijojoseph7509-a11y.github.io-v-65`) and the site went down until it was renamed back. A custom domain never needs a rename. |
+| Hosting | GitHub Pages, legacy build from `main`, folder `/`. Any push deploys in ~40–95 s. |
+| Custom domain | **sijo.work**, bought at **GoDaddy** (nameservers `ns63/ns64.domaincontrol.com`). Set in repo Settings → Pages (and the `CNAME` file in the repo root contains `sijo.work`). **Enforce HTTPS: on.** Certificate issued by GitHub (Let's Encrypt), covers `sijo.work` + `www.sijo.work`, renews automatically (current one expires 6 Jan 2027). |
+| GoDaddy DNS records (set 8 Oct 2026) | `A @ 185.199.108.153` · `A @ 185.199.109.153` · `A @ 185.199.110.153` · `A @ 185.199.111.153` · `CNAME www → sijojoseph7509-a11y.github.io` (TTL 1 h). Leave GoDaddy's `NS`, `SOA`, `_domainconnect` and `_dmarc` records alone. The old "Parked" A record and forwarding were removed. |
+| Recommended (not confirmed added) | IPv6: `AAAA @` → `2606:50c0:8000::153`, `…8001::153`, `…8002::153`, `…8003::153`. |
+| Moving the domain elsewhere later | Replace the A/CNAME records with the new host's, then clear the custom domain in Pages settings and delete `CNAME`. Moving back = restore the records above. |
+| Third-party services at runtime | **None.** `localStorage`: `muted` only. `sessionStorage`: `updatedTo` (self-update guard). |
+| Working copy | The project was built in a Claude session "scratch" folder (deleted with the session). **GitHub is the source of truth** — clone it to work elsewhere. |
 
 ---
 
@@ -79,32 +90,32 @@ Everything is static files served by GitHub Pages. There is **no build step, no 
 ```bash
 git clone https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io.git
 cd sijojoseph7509-a11y.github.io
-python3 -m http.server 4173        # any static server works
-# open http://localhost:4173
+npx -y http-server@14 . -p 4321 -c-1 -s     # or: python3 -m http.server 4321
+# open http://localhost:4321
 ```
-
-- Must be served over **http(s)** — opening `index.html` as a `file://` breaks ES-module imports and model loading.
-- Handy URL parameters:
-  - `?open=about|work|skills|resume|contact` — boots straight into that window on load.
-  - `?v=N` — harmless; used to defeat browser caching while testing.
-- To edit text/links/projects: change **`content.js`** only (see §13).
-- To publish: commit and push to `main` (see §19). **Bump `?v=` in `index.html` on every release.**
+- Must be served over http(s) (ES modules + model loading break on `file://`).
+- URL parameters: `?open=about|work|skills|resume|contact` boots straight into a window; `?open=case:tidewell|backwater|ekmaati`
+  opens a case study full screen; `?v=N` defeats caches while testing.
+- Text, links, projects, skills: edit **`content.js`** only (§14). Room objects: `main.js` (§8, room-scene skill §20).
+- Publish: bump the version (§19), run the checks (§20), commit, push.
+- In the browser console, `Desk.state()` shows what's loaded (`started, cat, ball, night, music, room…`) and `Desk.boxes()` the
+  footprints of the desk props.
 
 ---
 
-## 4. Tech stack and dependencies
+## 4. Tech stack, dependencies and tools
 
-| Layer | Choice | Version / source | Notes |
-|---|---|---|---|
-| 3D engine | Three.js | **0.165.0**, self-hosted in `vendor/three/` (v2.4; was jsDelivr CDN) | Pinned. Upgrading may change lighting/colour defaults — re-test. |
-| Three addons | OrbitControls, RoundedBoxGeometry, RoomEnvironment, GLTFLoader + MeshoptDecoder, BufferGeometryUtils (`mergeGeometries`) | same CDN, `examples/jsm/` | All three models are meshopt-compressed GLBs. |
-| UI | Hand-written HTML/CSS/JS | — | No framework. |
-| Fonts | System font stack (SF Pro on Apple devices) → **Inter** fallback; **Caveat** (sticky note) | Google Fonts | Canvas text waits for fonts (max 3 s) before drawing. |
-| Audio | Web Audio API | built-in | No audio files. |
-| Hosting | GitHub Pages | — | Static. |
-| Tooling used once (not needed to run) | `gltfpack` 0.22 via `npx` (headset mesh simplification), macOS `sips` (texture resize/convert), `bsdtar` (unpacking .rar/.zip) | — | See §14. |
+| Layer | Choice | Notes |
+|---|---|---|
+| 3D | **Three.js 0.165.0**, self-hosted in `vendor/three/` | Pinned. File hashes recorded in `.claude/skills/site-security/vendor-hashes.json`. Addons used: OrbitControls, RoundedBoxGeometry, RoomEnvironment, GLTFLoader + MeshoptDecoder, BufferGeometryUtils (`mergeGeometries`). |
+| UI | Hand-written HTML/CSS/JS | No framework. Load order: `update.js` → `content.js` → `os.js` → `music.js` → `main.js` (module). |
+| Fonts | System font (SF Pro on Apple) → **Inter**; **Caveat** (sticky note) | Self-hosted in `fonts/` (latin + latin-ext WOFF2 + OFL licences). Canvas text waits for fonts (≤ 3 s). |
+| Audio | Web Audio API | No files. |
+| Security | CSP meta tag (`default-src 'self'`, script hash for the import map, `font-src 'self'`, no plugins, no form posts), referrer policy, `safeUrl()` + escaping in os.js, no inline scripts | §20 site-security. |
+| Hosting | GitHub Pages + GoDaddy DNS | §2. |
+| Tools used to build assets (not needed at runtime) | headless **Google Chrome** via **puppeteer-core 23** (QA, screenshots, image slicing, canvas renders); **gh** CLI; **Figma MCP** (case-study exports); macOS **sips** (HEIC → JPEG, resize); **Swift** + Apple **Vision** (subject cut-outs) and **RealityKit Object Capture** (photogrammetry); **uv** (Python 3.12 venv for `gradio_client`); Hugging Face **TRELLIS** (image → 3D test); `gltfpack` (earlier model compression). | §21. |
 
-Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. If WebGL fails, the page skips the 3D and opens the desktop directly.
+Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. Without WebGL the page opens the desktop directly.
 
 ---
 
@@ -112,28 +123,34 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. I
 
 ```
 /
-├── index.html            7.3 KB  Page shell: import map, HUD, nav, loader, desktop markup
-├── styles.css           26.1 KB  All styling (3D page overlays + macOS-style desktop)
-├── main.js              ~70 KB   Three.js scene, camera, interactions, models, render loop (≈1,300 lines)
-├── os.js                21.6 KB  The Mac desktop: windows, sidebar, dock, menus, Spotlight, shortcuts, zoom animation
-├── music.js              6.2 KB  Original generative lo-fi track (Web Audio)
-├── content.js            3.4 KB  ★ ALL editable text, links, projects, skills, experience
-├── mobile-preview.html   2.7 KB  Phone-frame preview of the live site (3 sizes)
-├── .gitignore                    ignores .claude/ and .DS_Store
-├── HANDOVER.md                   this document
-└── models/
-    ├── cat/
-    │   ├── cat.glb               343 KB  realistic cat mesh, meshopt-compressed + quantised (unpacked to float cm at load for the tail rig)
-    │   ├── cat_diffuse.jpg       238 KB  recoloured to ginger at runtime (keep it RGB — a greyscale JPEG shifts the tone darker)
-    │   └── cat_bump.jpg           83 KB  (512 px)
-    ├── football/
-    │   ├── football.glb           89 KB  (from the FBX, simplified to 15k triangles)
-    │   ├── BaseColor.jpg (512 px) / Normal.jpg / Roughness.jpg (256 px)
-    └── headphones/headphones.glb  166 KB  (simplified from a 97 MB OBJ, meshopt-compressed)
+├── index.html            ≈11 KB   shell: CSP, import map, HUD, nav, loader/welcome, desktop markup
+├── styles.css            ≈39 KB   3D-page overlays + the macOS-style desktop + case viewer + big-screen scaling
+├── main.js              ≈147 KB   the whole 3D room (≈2,050 lines): renderer, camera, room, props, window view, card, loop
+├── os.js                 ≈30 KB   Mac desktop: windows, sidebar, dock, menus, Spotlight, shortcuts, case viewer
+├── music.js               ≈6 KB   generative lo-fi track
+├── content.js            ≈21 KB   ★ all text, links, projects (+ case-study section lists), skills, experience
+├── update.js            ≈1.5 KB   self-update (reads version.json, reloads to ?v=N once)
+├── version.json                   { "build": "76" }
+├── CNAME                          sijo.work
+├── mobile-preview.html            phone-frame preview (3 sizes)
+├── HANDOVER.md                    this document
+├── .gitignore                     ignores .claude/* except .claude/skills/, and .DS_Store
+├── assets/
+│   ├── profile.jpg                Sijo on a light studio backdrop (1200 px; cut out on-device, §15) — profile card
+│   ├── wall-prints.webp           Sijo's photo of his ten One Piece prints, wall keyed out (2048 px) — left wall
+│   ├── wallpaper.jpg              Sijo's selfie (edited) — laptop screen + Mac desktop wallpaper
+│   ├── deskmat.jpg / deskmat-phone.jpg   original lightning artwork, 3:1 (3072 / 2048 px)
+├── fonts/                         Inter + Caveat WOFF2, fonts.css, OFL licences
+├── models/
+│   ├── cat/ cat.glb, cat_diffuse.jpg, cat_bump.jpg      Free3D cat (licence unverified, §15), recoloured ginger at runtime
+│   └── football/ football.glb, color.jpg, normal.jpg, arm.jpg   Poly Haven "Football" (CC0)
+├── work/
+│   ├── tidewell/ 01–39 (.webp 1440 w + @2x.webp 2880 w)
+│   ├── backwater/ 01–38
+│   └── ekmaati/ 01–27
+├── vendor/three/                  three.js 0.165 build + the addons above
+└── .claude/skills/                project skills (§20): site-qa, site-security, copy-check, room-scene, object-capture
 ```
-
-Script load order in `index.html` (classic scripts first, module last):
-`content.js` → `os.js` → `music.js` → `main.js` (type=module). `os.js` exposes `window.OS`; `music.js` exposes `window.Music`; `main.js` exposes `window.Sound`.
 
 ---
 
@@ -144,18 +161,23 @@ Script load order in `index.html` (classic scripts first, module last):
 1. Loader visible (black, SJ ring, progress bar, "Good things take time").
 2. Wait for web fonts (`document.fonts.load`, capped at 3 s) so canvas textures draw with the right type.
 3. Create renderer (WebGL, antialias, pixel ratio ≤ 2, ACES tone mapping, PCF soft shadows), scene, perspective camera, OrbitControls.
-4. Build all procedural geometry synchronously (desk, throw, mat, walls, floor, poster, lamp, laptop, objects, wall lettering, desk labels).
-5. Load the cat, football and headset through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 5 s from script start**; anything still downloading pops in when it arrives.
+4. Build all procedural geometry synchronously (room, desk, props, wall pieces, window view, profile card).
+5. Load the cat and football through a `LoadingManager` that drives the progress bar (50→95 %). Each model retries once; a model that still fails is simply left out (warning in console) — there are **no built-in stand-ins** any more. The loader waits **at most 5 s from script start**; anything still downloading pops in when it arrives.
 6. Draw the laptop screen canvas, `renderer.compileAsync` (capped at 4 s), start the `requestAnimationFrame` loop, fade the loader.
 7. **Welcome screen** (inside `#loader`, `.ready` state): three tips + **Enter** / "Enter without sound". That tap is the user gesture browsers require for audio, so music starts on it; it also stops a first "wake-up" tap from landing on the laptop. Wording switches to "Tap" on touch devices (`TOUCH` = `pointer: coarse`).
-8. After Enter, first-time visitors see a bobbing **"Tap the laptop" pointer** (`#coach`, positioned over the laptop every frame) until they open the laptop once (`localStorage.openedLaptop`).
+8. After Enter, a bobbing **"Click/Tap the laptop" pointer** (`#coach`, pinned to the lid's top edge every frame) shows until the laptop is opened in that visit.
 9. If `?open=` is present, the welcome screen is skipped and it boots into that section after 0.9 s.
 
+
 ### 6.2 Render loop (`loop(now)`)
-Per frame (skipped entirely while the Mac desktop fully covers the scene — `OS.isCovering()`; animation steps are scaled by frame time so 120 Hz screens don't run double speed): camera tween (if any) → `controls.update()` → hover lift/scale for interactive objects → power-key pulse → cat tail swish → hearts → football roll → wiggle → laptop screen redraw (every 33 ms, ~30 fps) → render.
+Skipped while the Mac desktop fully covers the scene (`OS.isCovering()`); steps scale with frame time. Order: laptop-focus glide →
+`adaptQuality` → model fade-ins → `stepDay` (day/night cross-fade) → `stepAstro` (galaxy-light head tilt) → camera tween →
+`controls.update()` + `keepInsideRoom()` (skipped while a test camera `Desk.debugView` is active) → hover lift → power-key pulse →
+cat tail swish → hearts → football roll → wiggle → laptop screen redraw (~30 fps) → render.
 
 ### 6.3 Interactivity registry
-`interactive(object, label, onClick)` registers an object in `hoverables`. A raycaster on `pointermove` finds the nearest registered ancestor → tooltip + pointer cursor + 5 % hover scale. A `pointerup` within 6 px of `pointerdown` counts as a click (drags never click).
+`interactive(object, label, onClick)` adds an object to `hoverables`. A raycaster on `pointermove` finds the nearest registered
+ancestor → tooltip + pointer cursor + hover lift. A `pointerup` within a few px of `pointerdown` counts as a click (drags never click).
 
 ### 6.4 Boot / un-boot (camera ↔ desktop hand-off)
 1. `boot(app)` lifts the zoom minimum (`controls.minDistance = 0`), computes the distance that frames the laptop screen (`SCREEN_W × SCREEN_H` × 1.15), and flies the camera along the screen's normal over **1250 ms** with `EASE_IN_OUT = cubic-bezier(0.42, 0, 0.2, 1)`.
@@ -169,80 +191,65 @@ Per frame (skipped entirely while the Mac desktop fully covers the scene — `OS
 | Global | Defined in | API |
 |---|---|---|
 | `window.SITE` | content.js | data only |
-| `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()`, `isCovering()` |
+| `window.OS` | os.js | `open(key, onClose?, fromRect?)`, `close()`, `setDark(bool)`, `isOpen()`, `isCovering()`, `toast()` |
 | `window.Music` | music.js | `start(audioCtx)`, `stop()`, `playing` |
-| `window.Sound` | main.js | `hover()`, `click()`, `boot()`, `purr()`, `audio()`, `toggle()`, `muted` |
+| `window.Sound` | main.js | `hover()`, `click()`, `boot()`, `purr()`, `toggle()`, `setMuted()`, `muted`, `state` |
+| `window.Desk` | main.js | test hooks: `state()`, `boxes()`, `offscreen()`, `screenPos()`, `toggleDay()`, `astro()`, `debugView([x,y,z],[tx,ty,tz])` (fixed camera for screenshots) |
 
 ---
 
 ## 7. World conventions (scale, axes, units)
 
-- **Y is up.** The **desk top surface is y = 0**. The floor is **y = −14.8** (desk height ≈ 74 cm).
-- **1 world unit ≈ 5 cm.** Reference: the 13" laptop is 6.0 units wide (≈ 30 cm).
-- +Z points toward the viewer; the back wall is at **`WALL_Z = TABLE.z − TABLE.d/2 − 0.35 = −3.75`**.
-- Desk footprint (`TABLE`): centre x 0.2, z 1.6; width 19 (≈ 95 cm), depth 10 (≈ 50 cm), top thickness 0.5.
-- Derived edges: `X0 = −9.3`, `X1 = 9.7`, `Z0 = −3.4`, `Z1 = 6.6`. Right cubby spans `CX0 = 2.9` → `CX1 = 9.5`.
+- **1 unit = 5 cm. Y is up.** Desk top surface **y = 0**; floor **y = −14.8** (74 cm desk); ceiling **y = 40.2** (2.75 m, `CEIL_Y`).
+- The ruler is the **MacBook Pro 14" (M5)**: 31.26 × 22.12 cm = **6.25 × 4.43 units** (`LAP_SCALE` = 31.26 / 30).
+- +Z points into the room toward the viewer. Back wall `WALL_Z = −3.75`. Side walls at `x = 0.2 ± ROOM_HALF (26.4)` (room ≈ 2.6 m wide).
+- Desk `TABLE`: centre (0.2, 1.6), 19 × 10, top 0.5 thick → edges `X0 −9.3`, `X1 9.7`, `Z0 −3.4`, `Z1 6.6`; right cubby `CX0 2.9 → CX1 9.5`.
+- Side-wall helpers: `leftWall`/`rightWall` groups (local +z into the room); `onLeft(z)` / `onRight(z)` convert world z → local x.
 
 ---
 
-## 8. Scene inventory — every object
+## 8. The room — every object
 
-Positions are world units (x, y, z); rotation is about Y unless stated.
+Positions are world (x, y, z) unless "local". All geometry is procedural (code + canvas textures) except the cat and football models
+and the photo assets in §5.
 
-### 8.1 Room
+### 8.1 Shell
 | Object | Detail |
 |---|---|
-| Back wall | Plane 400 × 220 at (0.2, 60, −3.75). Procedural plaster noise texture tinted **#45403b warm graphite** (v1.8 — sage green #87a081 was tried in v1.7 and reverted; near-black #2c2b2a before v1.5). Skirting #2e2a27. Name lettering light (#f5f5f7 / #d1d1d6 / #aeaeb2). Receives shadows. |
-| Side walls | Two planes 400 × 220 at x = 0.2 ± **44** (v1.5; were ± 24 and boxed the desk in), y 60, centred z = WALL_Z + 200 (span z −3.75 → 396). Same material as back wall. Added so orbiting never shows the void. |
-| Skirting | 400 × 0.5 × 0.12 at y = −14.55, tinted #232221. |
-| Floor | Plane 600 × 600 at y = −14.8. Procedural **cream-white marble** (veins, clouding, grout every 2 units), clearcoat 0.8. |
-| Background / fog | Scene background #1d1d1f. Fog colour = background; near = camera distance + 30, far = + 130. |
+| Walls | Matte **Oat #CDBEA5** paint (`WALL_PAINT` 0xab9271, pre-darkened so the *rendered* colour matches the swatch). `paintTextures()`: roller-stipple + plaster relief bump (80 cm repeat, bumpScale 0.9), broad tonal drift + faint roller laps + a few lived-in marks (2.4 m repeat). `aoStrip()` soft shadows above the skirting, under the cornice and in each inside corner. `trimWall(len, x, z, rotY, corners)` builds each wall. |
+| Skirting / cornice | Skirting **Mulberry #664139** (clearcoat); cornice `TRIM` 0xc2b296. Ceiling 0xe3d8c6. |
+| Floor | Glazed **Mulberry** ceramic tiles, 60 cm (12 units), light grout ≈ 9 mm, bump-mapped joints, per-tile tone variation (`tileTextures`, `FLOOR_TINT` 0x8a6357); aligned to the back wall with a tile centred under the desk. |
+| Background | `#1d1d1f`, fog 70–170. Environment `RoomEnvironment` (PMREM). |
 
-### 8.2 Desk (built from Sijo's photo)
-| Part | Detail |
-|---|---|
-| Top | 19 × 0.5 × 10, dark laminate **#221e1c** (roughness 0.5, clearcoat 0.25). |
-| Left side panel | 0.6 thick, full height/depth, at x ≈ −8.8. |
-| Right cubby | Outer + inner panels (0.5 thick), shelf at y −5.2, bottom at y −13.9, back panel; open front. Contains a dark keyboard (canvas key grid) and a white charger cube. |
-| Back rail | 18 × 1.8 × 0.25 under the back edge. |
-| Zebra fleece throw | **Removed in v69** at Sijo's request; the desk top is bare dark laminate. |
-| Desk mat | 11.4 × 3.8 at (−3.1, 0.04, 4.6). **Original** deep navy → violet → blue gradient with light streaks, sparkles and a dashed stitched edge. (Sijo's real mat shows a copyrighted anime character — deliberately not reproduced.) |
+### 8.2 Desk and desk props (sizes from real objects)
+| Object | Real size | Where / how | Interaction |
+|---|---|---|---|
+| Desk | 95 × 50 × 74 cm | dark laminate #221e1c; left side panel; right cubby with shelf, keyboard and white charger cube; back rail | — |
+| **MacBook Pro 14" M5**, Space Black #2e2d30 | 31.3 × 22.1 cm | (−1.0, 0, −0.25), rot −0.08, lid ≈105°. Keys (instanced), speaker grilles, trackpad, hinge, SJ monogram + stickers on the lid back, sticky note "make it simple, then make it fun ✶" (76 mm). Screen: live 1600 × 1024 canvas (wallpaper + "Hi, I'm Sijo" window + dock + notch). | Screen / power key → About; keys / trackpad → types hello |
+| **Shea** (cat model) | ≈29 cm to head (`CAT_HEIGHT` 5.8) | (6.4, 0, 0), facing −1.15 (side-on, looking at the laptop, tail over the desk edge); fur recoloured ginger; tail rig swishes | Hover "pet me?", click = purr + hearts |
+| Soundbar | 34 × 6 × 7 cm | (6.15, 0, −2.75) behind Shea; mesh front, 4 top buttons, curved feet, no brand | Click = music on/off |
+| **Astronaut galaxy light** | ≈26 cm | (−7.4, 0, −2.2), rot 0.3; moon-rock base, suit, backpack, cable, full oval visor; head (`astroHead`) **tilts ≈35° up** while projecting (`stepAstro`) | Click = projection on/off. At night projects a nebula + stars on ceiling and back wall (`projCeil`, `projWall`). |
+| Rubber plant | pot ≈10 cm | (−4.95, 0, −1.95) ×0.9; mango-yellow pot #ffb21a; three stems leaning into the room, pointed glossy leaves, lighter new leaves on top | Click = wiggle |
+| Water bottle (1 L) | 10.4 × 26 cm | (−8.4, 0, 5.2) front-left corner; translucent ribbed green (no `transmission`) | — |
+| "Personal explorations" sketchbook | ≈12 × 8 cm | (−6.9, 0.01, 2.1) ×1.3 on a darker book; illustrated cover, elastic band, pencil | Click → About |
+| **My Projects** folders | ≈18 × 13.5 cm | front-right stack (group ×0.576 at (2.2, 0.02, 2.0)); one folder per project, coloured index tab with the project name, cover label "My Projects" | Click a folder → that case study |
+| iPhone | 147.6 × 71.6 mm | (−4.3, 0.06, 4.5) on the mat; lock screen with date/time + "Let's work together →" | Click → Contact |
+| Desk mat | 57 × 19 cm (11.4 × 3.8) | (−3.1, 0.04, 4.6); original lightning artwork (`assets/deskmat*.jpg`) | — |
+| Contact shadows | — | `contact(x, y, z, w, d, opacity)` soft dark ellipses under every prop, under the desk, pedestal and keyboard | — |
 
-### 8.3 Wall items
+### 8.3 Walls
 | Object | Detail | Interaction |
 |---|---|---|
-| **Poster** (Sijo's own work) | **A1: 11.88 × 16.82 units** (594 × 841 mm) at (−7.8, 13.1, WALL_Z + 0.03) — bottom edge just above the MacBook screen line. Canvas 2048 × 2896 (drawn on a 1240-wide layout at 2×). Red #c7262e scattered "SOMETHING" letters; black (#0a0a0a, Inter 900, 84 px, −5 px tracking) lines: "TO CREATE A SOLUTION / FOR SOMETHING / SOMETHING THAT HAS / EVEN BIGGER CAUSE / THAN ME / SOMETHING THAT I AM / SUPPOSED TO MAKE / TO BEGIN AN ERA"; vertical "SIJO JOSEPH" (left) and "GIVE ME THE WISDOM THAT SITS BY YOUR THRONE" (right). Paper curl + 4 clear tape pieces. | **None** (decoration only, by request). |
-| **Name lettering** | Plane 8.4 wide at (6.6, 9.4) — "Sijo Joseph." (Inter 700, 210 px) + "Multidisciplinary Designer" (112 px, #d1d1d6). | Click → About. |
-| **Roles lettering** | Plane 8.4 wide at (6.6, 7.2) — two lines of roles joined with " · " (92 px, #aeaeb2). | — |
-| **Pendant lamp** | Woven wire cage (38 random tube strands + 2 rings, merged, #2b2522 metal), urn profile 4.2 tall; cap, 30-unit cord; bulb #ffd39a + additive glow sprite. Hangs at (0.4, **15.4**, −0.8) (v1.6: raised so the cage sits at about half the poster's height); sways ±0.025 rad. Point light #ffb468, intensity **55**, distance 34, decay 2; casts 512 px shadows on screens wider than 760 px only. | None (the light/dark toggle was removed). |
-
-### 8.4 Laptop (13", Midnight)
-| Item | Detail |
-|---|---|
-| Group | at (0, 0, 0.4), rotated −0.08 rad. Dimensions `LAP_W 6.0`, `LAP_D 4.25`, base 0.2, lid 0.11 × 4.15. Lid opened −0.26 rad (~105°). |
-| Finish | **Midnight** `#2a303c` (metalness 0.7, roughness 0.34); scoop #222833; trackpad #343b48. |
-| Details | Black keys (function row + 5 rows, instanced), speaker grilles (2 × 60 holes), notch + camera dot, hinge, rubber feet, **SJ monogram** on lid back (no Apple logo), stickers on lid back (pixel heart, "3D" star), sticky note on palm rest ("make it simple, then make it fun ✶", Caveat). |
-| Screen | 5.62 × 3.6 plane with a live 800 × 512 canvas (unlit, no tone mapping): original gradient wallpaper with drifting blobs, transparent menu bar ("SJ Portfolio File Edit View Go Window Help" + clock), glass window "Hi, I'm Sijo." with pulsing **Click to open** button, glass dock. Typing mode shows a Terminal. |
-| Power key | Top-right key with an orange glowing ring (pulses). Click → boot About. |
-| Interactions | Screen → boot About · Power key → boot About · Keys/trackpad → types "hello, world! I'm Sijo :)" in the screen Terminal. |
-
-### 8.5 Desk objects
-| Object | Position | Detail | Interaction |
-|---|---|---|---|
-| **Cat** (model) | (7.0, 0, 1.0), facing −0.55 rad, height **5.0** | Realistic OBJ, fur recoloured to ginger at runtime (`gingerize`), bump map kept. Tail vertices (|x| < 1.8, y > 19.5, z > 17 in model cm) bent per frame: idle amp 0.14 @ 1.8 rad/s; hover 0.4 @ 6; petting 0.75 @ 9 + tip lift. | Hover: "pet me? 🥺". Click: purr (1.8 s), 5 floating hearts, big tail swish for 2.6 s. |
-| **Headset** (model) | (6.3, 0, −2.0), upright, rotated −0.25, 4.2 tall | Simplified GLB on its stand; untextured parts restyled: graphite leather #2c2c2e, brushed metal #8e8e93, black plastic #161618; brand-green accents → #48484a. | Click: sound on/off. |
-| Football (model) | (−3.2, floor + 1.5, 0.8), radius **1.5** | FBX + matte PBR textures (BaseColor/Normal/Roughness). | Hover "Kick me ⚽"; click rolls it (vx 0.4, friction 0.985, spins). Hard-stops at the inside faces of the left panel (x = X0 + 0.8 + R + 0.05) and cubby (x = CX0 − R − 0.05), bouncing back at 75 %. |
-| Plant | (−3.9, 0, −2.7) | **Mango-yellow** pot #ffb21a (clearcoat), 9 rubber-plant leaves. | Hover "My desk plant 🌱", click wiggles. |
-| Green bottle | (−8.5, 0, −2.9) | Ribbed translucent green (plain transparency + clearcoat; **not** `transmission`, which re-rendered the scene every frame). | — |
-| Soundbar | (−0.1, 0, −3.0) | 5.2 × 0.9 × 1.0 black, grille front. | Click: music/sound on/off. |
-| Pen stand | (3.6, 0, −2.6) | Glossy black cup; 3 pencils (white, silver, blue) kept inside. | — |
-| Sketchbook (hobby book) | (−5.4, 0.01, 1.2) | Graphite book + "Weekend — sketches · hobbies · notes" sketchbook (original illustrated cover), elastic band, yellow pencil. Placeholder hobby. | Hover "My weekend sketchbook"; click → About. |
-| Project folders | Spots (−2.4, 4.8), (0.9, 5.5), (5.4, 5.7), (−7.9, 1.5), (8.1, 5.3); projects 6+ stack on top of earlier folders | One per project in `content.js`; **black** (#1c1c1e family) with white paper label (title, tag, number). | Click → Work. |
-| Phone | (3.4, 0, 4.4), rotated 0.5 | Generic silver phone, lock screen (date, time, "New message — Let's work together →"). No logos. | Click → Contact. |
-| "Let's connect." label + 3 tiles | Label (−6.9, 0.03, −2.0) on a dark pill; tiles @ / in / Bē at x −8.0, −6.85, −5.7, z −1.0 | Glossy white tiles. | Open email / LinkedIn / Behance. |
-| Desk labels | "Work ›, Skills ›, Resume ›, Contact ›" on the mat at x −7.2…−6.45, z 3.4…5.8 | White Inter 600. | Open that section. |
-
-**No built-in fallbacks.** The procedural cartoon cat and flat headphones were removed in v1.1 — when the cat model failed on a visitor's laptop, the cartoon cat appeared in the wrong place, clipping the headset stand.
+| **Poster** (Sijo's own) | A1 (11.88 × 16.82) at (−7.8, 13.1, WALL_Z + 0.03); red scattered "SOMETHING" letters + black lines "TO CREATE A SOLUTION… TO BEGIN AN ERA"; tape corners, paper curl | none (decoration) |
+| **Pendant lamp** | woven wire cage (38 strands) at (0.4, 15.4, −0.8), warm bulb + glow sprite; `lampLight` #ffb468 (distance 34, decay 2), shadows 1024² on screens > 760 px | — |
+| **Profile card** | `drawCard()` on a 1000 × 1650 canvas: full-bleed `assets/profile.jpg`, progressive blur + dark glass at the bottom, white "Sijo Joseph" + verified seal, "A multidisciplinary designer: / product, brand, experience, 3D.", stats (person icon = roles count 4, stack icon = projects 3), white pill "Say hi +". Mounted on a white acrylic panel with a soft wall shadow. 6.27 × 10.34 (≈31 × 52 cm) at (7.4, 11.05, WALL_Z + 0.03). | Click → About |
+| Switch board + charger | 4.2 × 2.1 at (19.2, 10.2, WALL_Z + 0.12): four switches + a 3-pin socket (earth pin on top); upright white USB-C charger in the socket; cable straight down the wall, then lying in loose coils on the floor with the plug end free | — |
+| **One Piece prints** (left wall) | `assets/wall-prints.webp` on a 16 × 9.06 plane (≈80 × 45 cm) at local x `onLeft(13)`, y −14.8 + 34; each print's edges lift slightly | Click = wiggle |
+| Keyboard (left wall) | 61-key, ≈94 × 32 × 9 cm, real white/black keys (instanced), leaning ≈9° at `onLeft(9)` | — |
+| Window (right wall) | world z 9 → 31, frame + mullions; glass shows `skyTex(night)` cross-faded; half-open rose-print curtains (irregular pleats, sheen, daylight glow) on a black grommet rod | Click curtains/window = morning ↔ night |
+| Window view | **NID Bengaluru campus gate** from Sijo's photos (painted on canvas, not the photos): granite-block gate walls with caps, white sign (Hindi / NATIONAL INSTITUTE OF DESIGN / Bengaluru Campus / Kannada), half-open steel gate, tree-lined drive with potted plants, white campus building (round balcony, railings, orange canopy) behind trees, street lamp, footpath + road. Night: sign lit, campus windows + lamps glow. Keep the sign/gate centred — the curtains hide the sides. | — |
+| Corner plant | fluted white pedestal with a peace lily, back-right corner | — |
+| Football | size ≈17 cm (`BALL_R` 1.7) on the floor at the desk front; rolls between the desk panels | Click = kick |
 
 ---
 
@@ -250,38 +257,47 @@ Positions are world units (x, y, z); rotation is about Y unless stated.
 
 | Setting | Value |
 |---|---|
-| Camera (v1.7) | Two solved views (`solveDesk`, `solveRoom`): **HOME** (v2.0) = a desk-setup-photo angle: from the front-left (`HOME_AZ` −0.45 rad ≈ 26°), low (`HOME_EL` 0.22 rad ≈ 13° above the desk), aimed a little left of the laptop (`HOME_AIM_X` −2) so the laptop sits right of centre; closest distance at which `HOME_SEE` (bottle, plant, laptop, cat, headset, mat front edge, lamp bulb) fits — desk ends and the poster top may crop. **ROOM** (zoom button "step back") = centred on the desk (`VIEW_X` 0.2), seated eye level of a 6 ft person (`EYE_Y` = 10 units ≈ 124 cm above the floor) fitting poster, name, desk and the football (`ROOM_SEE`). Vertical FOV 56° (62° portrait). Scroll/pinch zooms toward the cursor. Re-solved on resize; orbit limits cover both views. |
-| Camera (before v1.5) | `PerspectiveCamera`, FOV 30°, high and looking down ~20° — felt "odd" / top-down |
-| Home target | `(−0.6, 8.6, 0.0)` |
-| Home direction | `normalize(0, 0.34, 0.94)` — ~20° above the desk, straight on |
-| Home distance | `max( 31 / tan(vFOV/2) × 0.62 , 12.5 / tan(hFOV/2) )` — first term fits the wall + desk vertically; second fits ~25 units of width on tall/phone screens. Recomputed on resize. |
-| Zoom limits | min = home × 0.4, max = home × **1.2** (re-applied after boot/resize). Lifted to 0 during the boot fly-in. |
-| Orbit limits | Azimuth ±0.6 rad around home; polar 0.55–1.2 rad; **pan disabled**; damping 0.08. |
-| Zoom button (HUD) | Toggles `camera.zoom` 1 ↔ 1.7 over 600 ms. |
-| Easing | Fly-in `cubic-bezier(0.42,0,0.2,1)` 1250 ms; fly-out `cubic-bezier(0.32,0.72,0,1)` 1150 ms. |
+| Views | Solved by `solveDesk` / `solveRoom`. **HOME** (start): desk-photo angle from the front-left (`HOME_AZ` −0.45 ≈ 26°), low (`HOME_EL` 0.22 ≈ 13°), aimed left of the laptop (`HOME_AIM_X` −2); closest distance fitting `HOME_SEE`. **ROOM** (zoom button / zoom out): centred on the desk at seated eye level (`EYE_Y` 10 ≈ 124 cm above the floor) fitting poster, card, desk, football (`ROOM_SEE`). |
+| Lens | Vertical FOV 56° (62° portrait). Re-solved on resize. |
+| Controls | OrbitControls, damping 0.08, pan off; polar/azimuth limits cover both views (±0.5 rad around them); `keepInsideRoom()` slides the camera inward instead of through a wall. Zoom-in from anywhere glides onto the laptop (`focusLaptop`); zoom-out past HOME glides into ROOM. |
+| Boot fly-in / fly-out | arc with log-distance dolly; `EASE_IN_OUT` in, `EASE_APPLE` out (§6.4). |
 
 ---
 
-## 10. Lighting, materials and rendering
+## 10. Lighting, materials, shadows, day ↔ night
 
 | Item | Value |
 |---|---|
-| Renderer | antialias on, pixel ratio ≤ 2, `ACESFilmicToneMapping`, exposure **1.05**, `PCFSoftShadowMap` |
-| Environment | `RoomEnvironment` via PMREM (soft reflections on metal/glass) |
-| Hemisphere | sky #ffffff, ground #2a2a2e, intensity 0.45 (dark mode values applied at start) |
-| Sun (directional) | #9fb4ff, intensity 1.1, position (−7, 16, 9), shadow map 2048², bounds ±20, bias −0.0004, normalBias 0.02 |
-| Rim (directional) | #c8d4ff, intensity 0.5, position (10, 6, −8) |
-| Lamp (point) | #ffb468, intensity 55, distance 34, decay 2 (see §8.3) |
-| Laptop screen glow | Point light #dcd6ff, intensity 1.2, distance 6 |
-| Look | Fixed **dark room with the lamp always on**. The old light/dark `MODES`/`applyMode` code was removed in v1.1; the values are set directly. |
+| Renderer | antialias, pixel ratio ≤ 2, ACES filmic, `PCFSoftShadowMap` |
+| Start state | **Night on every visit** (`setNight(true, true)`), whatever the visitor's clock. Clicking the curtains cross-fades to morning (1.8 s) and back. |
+| `LOOK.day` | sun 1.5 #fff0d6, hemi 0.62, rim 0.3, lamp 28, exposure 1.02, light shaft 0.14, floor sun-patch 0.2 |
+| `LOOK.night` | sun (moon) 0.16 #7f96ff, hemi 0.07, rim 0.05, **lamp 70**, exposure 0.98, shaft 0.05, patch 0.1 |
+| Also mixed by day/night | `scene.environmentIntensity` 1 → 0.32; laptop screen glow `glow` 1.2 → 3.2 (lights the desk at night); curtain emissive glow (day); galaxy projection (night, if on). |
+| Sun / moon | from the window direction (`SUN_DIR`), shadow map 2048² ±20; light shaft + soft floor patch through the curtain gap |
+| Lamp | point light, shadows 1024² radius 4 (desktop widths) — this is the main night light |
+| Adaptive quality | below ~25 fps after 4 s: pixel ratio → 1.5, then lamp shadows off + sun map 1024² |
 
 ---
 
-## 11. The Mac desktop (OS overlay)
+## 11. Overlay UI on the 3D page
+
+| Element | Detail |
+|---|---|
+| Loader / welcome | black, SJ ring, progress bar, "Good things take time", three tips, **Enter** / *Enter without sound* (the gesture that unlocks audio) |
+| Zoom (top-left) / Sound (top-right) | 44 px frosted circles; sound state persists (`localStorage.muted`) |
+| Top nav | glass pill **Work · Resume · Contact** (#0a84ff, no underline); boots the laptop into that section |
+| Hint (bottom) | "Drag to look around · Click the laptop to open my portfolio" ("Tap" on touch) |
+| Skip link | "open portfolio without 3D →" — opens the desktop directly (accessible path) |
+| Coach pointer | "Click the laptop" bubble pinned to the lid until the laptop is opened |
+| Tooltip | dark pill over interactive objects |
+
+---
+
+## 12. The Mac desktop (OS overlay)
 
 Markup in `index.html` (`#os`), logic in `os.js`, styles in `styles.css` ("Desktop — macOS 27-style").
 
-### 11.1 Layout
+### 12.1 Layout
 - **Screen** (`.os-screen`): max 1180 × 760, radius 20, laptop bezel shadow, original multi-blob gradient wallpaper (#7d6cff, #ff8fb1, #ffb36b, #3fc6ff over #4b3fd1 → #e46aa0).
 - **Menu bar** (transparent, macOS 27 style): `SJ` (logo) · **Portfolio** (bold) · File · Edit · View · Go · Window · Help — right side: Wi-Fi, battery, **Spotlight icon**, Control Center glyph, clock ("Sat 3 Oct  3:02 AM", updates every 15 s).
 - **Widget** (top right, glass): "Designer / Sijo Joseph / roles / ● Available for new work".
@@ -291,7 +307,7 @@ Markup in `index.html` (`#os`), logic in `os.js`, styles in `styles.css` ("Deskt
   - **Body** scrolls (`min-height: 0` on the flex chain is what makes it scroll — don't remove it).
 - **Dock** (glass, radius 26): About, Work, Skills, Resume, Contact | LinkedIn, Behance, Back to desk. Magnification on hover (desktop only), bounce on click, running dot.
 
-### 11.2 Sections (`apps` in os.js)
+### 12.2 Sections (`apps` in os.js)
 | Key | Title | Content |
 |---|---|---|
 | about | About | Name, title · location, role chips (all neutral), about paragraphs, "See my work" / "Get in touch" |
@@ -300,7 +316,7 @@ Markup in `index.html` (`#os`), logic in `os.js`, styles in `styles.css` ("Deskt
 | resume | Resume | Experience list; "Download résumé" if `resumeUrl` is real, otherwise "Ask for my résumé" → Contact |
 | contact | Contact | Big email link + Email / LinkedIn / Behance / GitHub buttons |
 
-### 11.3 Menus (click to open, hover to slide between open menus, click outside to close)
+### 12.3 Menus (click to open, hover to slide between open menus, click outside to close)
 | Menu | Items |
 |---|---|
 | SJ / Portfolio | About This Portfolio · — · Back to Desk (Esc) |
@@ -313,14 +329,14 @@ Markup in `index.html` (`#os`), logic in `os.js`, styles in `styles.css` ("Deskt
 
 Shortcut labels show "⌘" on Apple devices and "Ctrl+" elsewhere.
 
-### 11.4 Keyboard shortcuts (active only while the desktop is open)
+### 12.4 Keyboard shortcuts (active only while the desktop is open)
 ⌘/Ctrl + **1–5** sections · **K** Spotlight · **W** close window · **M** minimise · **Esc** closes Spotlight → menu → desktop (in that order).
 On the 3D page: **Enter / Space** boots the laptop (when nothing is focused).
 
-### 11.5 Spotlight
+### 12.5 Spotlight
 Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project titles, every skill, "Email Sijo", "Back to desk". Live filter, ↑/↓ to move, Enter to open, click outside to close. Results show app-style icons.
 
-### 11.6 Other behaviour
+### 12.6 Other behaviour
 - **Share** copies `origin + pathname` to the clipboard and shows a "Link copied" toast (falls back to showing the URL).
 - **Traffic lights**: red = close window (desktop stays), yellow = minimise animation, green / double-click toolbar = zoom (fills above the dock).
 - **Drag** the window by its toolbar (desktop widths only); size is locked while dragging; position resets each time a section opens.
@@ -329,25 +345,38 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 
 ---
 
-## 12. Overlay UI on the 3D page (HUD, nav, hint, loader)
 
-| Element | Detail |
-|---|---|
-| Loader | Black; SJ ring (84 px), 180 px white progress bar, **"Good things take time"** (15 px, #a1a1a6, fades in). Fades out when ready. |
-| Zoom button (top-left) / Sound button (top-right) | 44 px dark frosted glass circles. Sound state persists (`localStorage.muted`). |
-| **Top nav** (top centre) | Glass pill (same as hint) with **Work · Resume · Contact** in `--blue` #0a84ff, system font 13 px / 500. Hover = soft highlight, **no underline**. Click boots the laptop into that section. |
-| Hint (bottom centre) | "drag to look around · click the laptop to boot" glass pill; fades during boot. |
-| Skip link (bottom right) | "open portfolio without 3D →" — opens the desktop without the 3D fly-in. |
-| Tooltip | Dark pill following the cursor over interactive objects. |
-| Short screens (`max-height: 620px`) | Nav/HUD/hint/skip shrink and hug the edges so the poster stays visible. |
+## 13. Audio
+
+**Phones (v1.4):** the audio context is created only inside a gesture; *every* tap/click/key retries until `ctx.state === "running"` (iOS refuses the first touch-down and suspends audio on app switches); `navigator.audioSession.type = "playback"` (or a silent looping `<audio>` on older iOS) so the iPhone **silent switch doesn't mute the music**. Hover/click blips are skipped until audio is running.
+
+- **Music (`music.js`)** — original lo-fi loop synthesised live: **76 BPM**, eighth-note grid with 0.12 swing; 4-bar progression Fmaj7 · Em7 · Dm9 · Cmaj7(add9); triangle/sine pads (lowpass 900 Hz), sine bass, soft keys melody chosen per bar from 5 motifs, kick / noise snare / hats, vinyl-crackle bed; master → lowpass 5.2 kHz → compressor; 2.5 s fade-in, 0.8 s fade-out. **No samples or recordings → no copyright issues.**
+- Starts on the first pointer/keyboard gesture (browser autoplay rules) unless muted.
+- **UI sounds (`Sound` in main.js)**: hover blip (880 Hz sine), click (520 Hz square), boot arpeggio (C-E-G-C), purr (55 Hz saw + 24 Hz tremolo, 1.8 s).
+- Mute/unmute: HUD sound button, or the soundbar on the desk. State saved in `localStorage.muted`.
+
 
 ---
 
-## 13. Content — how to edit, and what is still placeholder
+## 14. Content and case studies
 
-**v2.5 status:** About text, location (Bangalore), email, cat name (Shea), weekend hobbies (sketchbook) are **real**, from Sijo's interview. Projects are **Tidewell, Ledgerly and Backwater Line** (concept case studies, labelled as such). Still to add: LinkedIn, Behance, résumé PDF, work history (`experience: []` hides the list until filled), and Ekmaati (Sijo's real Semester 2 project). Interview answers not yet used: what he made as a teen, and the meaning of "the process for the outcome" (About assumes "never skip the process").
+### 14.1 `content.js` (edit only this for text)
+| Field | Value | Status |
+|---|---|---|
+| `name`, `first`, `title`, `roles`, `location` | Sijo Joseph · SIJO · Multidisciplinary Designer · Product Designer / Brand Strategist / Experience Designer / 3D Designer · Bangalore, India | ✅ |
+| `email`, `links.mail` | sijojoseph7509@gmail.com | ✅ |
+| `links.github` | github.com/sijojoseph7509-a11y | ✅ |
+| `links.linkedin`, `links.behance` | generic linkedin.com / behance.net | ✏️ **need Sijo's profile URLs** |
+| `resumeUrl` | `#` | ✏️ add a PDF (e.g. `/resume.pdf`); until then Resume shows "Ask for my résumé" |
+| `about` | four paragraphs from Sijo's interview (Kerala → Bangalore, teens, smart/lazy/adventurous, poster meaning, games/football/bike rides, phonk/Malayalam/Hindi, Shea) | ✅ |
+| `projects` | Tidewell (UX / Product), Backwater Line (Information Design · Wayfinding), Ekmaati (Branding · Packaging, NID Semester 2) with full `case.sections` | ✅ |
+| `skills` | Product Design, Brand Strategy, Experience Design, 3D & Motion, Tools | ⚠️ review |
+| `experience` | `[]` (list hidden while empty) | ✏️ add real roles `{ company, role, from, to }` |
 
-### 13.1 Case studies (Work window)
+Hard-coded copy in `main.js`: profile-card lines (`drawCard`), sticky note, phone lock screen, sketchbook cover ("Personal
+explorations · sketches · side projects · ideas"), poster text, terminal message, cat bubble, window-view sign text.
+
+### 14.2 Case studies (Work window)
 - Source (v68): Tidewell `s6WXmDrd36Frlkg1kVsvUg` page **"Tidewell v3"** (frame `30:3`, 39 sections) · Backwater Line `6iuhjuMILOUIsgbqNKq8OG` page **"Backwater Line v3"** (frame `36:3`, 38 sections) · Ekmaati `tkze0DYw6HIb4LdZGvdsht` "ekmaati final", frame **"Desktop - 1"** `1:694` (27 sections, absolutely positioned and slightly overlapping, so slices are cut at each next section's y). Ledgerly removed from the site in v68.
 - **Export at 2× (Figma quality — never ship 1× only):** on a temporary page, clone the frame into a clipping frame, `rescale(2)` the clone (2880 px wide), and move the clone up so each window < 32,768 px tall shows one chunk (cut at section boundaries); `get_screenshot` the clip with `maxDimension: 32768` (it never upscales, so the 2× rescale is required); delete the temp page afterwards. Slice per section in headless Chrome into `work/<slug>/NN@2x.webp` (2880 w) and `NN.webp` (1440 w), WebP q90. `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
 - Sections are fixed 1440-px compositions (no auto layout inside), so they cannot reflow for phones; phones get the full-width image + pinch-zoom. A true phone layout would need mobile frames designed in Figma.
@@ -356,55 +385,31 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 - **Full screen (v2.6):** a case study opens like a full-screen Mac app (`.os-screen.case-fs`): the window fills the Mac screen; menu bar, widget, sidebar and dock are hidden; a sticky `.fs-bar` has window buttons (red/green = back to Work), "‹ All work", title + discipline + status, ‹ n / N › project switching and share. Esc, the back gesture (history entry `{sjCase}`) and ⌘1–5 leave full screen; prev/next replace the history entry.
 - To update a case study: edit the Web page in Figma → run the copy-check skill on its text → re-export and re-slice → bump `?v=`.
 
-**Edit only `content.js`.** Everything (wall lettering, folders, desktop, Spotlight) reads from `window.SITE`. Then bump `?v=` and push.
-
-| Field | Current value | Status |
-|---|---|---|
-| `name`, `first`, `title`, `roles`, `location` | Sijo Joseph · SIJO · Multidisciplinary Designer · [Product Designer, Brand Strategist, Experience Designer, 3D Designer] · India | ✅ real |
-| `email` | `your@email.com` | ✏️ **placeholder** |
-| `resumeUrl` | `#` | ✏️ **placeholder** (Resume shows "Ask for my résumé" until set) |
-| `links.mail` | `mailto:your@email.com` | ✏️ placeholder |
-| `links.linkedin` | `https://www.linkedin.com/` | ✏️ placeholder (needs profile URL) |
-| `links.behance` | `https://www.behance.net/` | ✏️ placeholder |
-| `links.github` | `https://github.com/sijojoseph7509-a11y` | ✅ real |
-| `about` (3 paragraphs) | Drafted copy | ⚠️ review |
-| `projects` (4) | Product redesign / Brand from scratch / Immersive exhibit / 3D product visuals, all `url: "#"` | ✏️ **placeholder** — cards show "Case study coming soon" |
-| `skills` (5 groups) | Product, Brand, Experience, 3D & Motion, Tools | ⚠️ review |
-| `experience` (3) | Company Name / Studio Name / First Job | ✏️ **placeholder** |
-
-Project fields: `{ title, tag, color (hex), summary, url }`. Up to 6 projects get desk folder spots; more will overlap (add spots in `main.js` → `spots`).
-
-Hard-coded copy outside `content.js` (edit in `main.js` if needed): sticky note text, phone lock-screen message, sketchbook cover ("Weekend — sketches · hobbies · notes"), poster text, terminal message, cat bubble text ("pet me? 🥺").
 
 ---
 
-## 14. 3D models and assets — sources, processing, licences
+## 15. Assets, models, sources and licences
 
-All downloaded by Sijo into `~/Downloads`. **Licences have not been verified** — check each source page before relying on the public site (see §25).
-
-| Model | Source file | Processing done | In repo |
+| Asset | Source | Processing | Licence / status |
 |---|---|---|---|
-| Cat | `Cat_v1_L3.123cb1b1943a-2f48-4e44-8f71-6bbe19a3ab64.zip` (OBJ, 3ds Max export, Z-up, cm) | v1.2: `gltfpack -i cat.obj -o cat.glb -cc -kv -vtf`, then image references stripped from the GLB (textures are loaded separately). Positions are quantised; `loadCat` unpacks them to float cm through the node matrix so the tail-rig thresholds still work. **`-vtf` (float UVs) is required**: quantised UVs rely on a texture transform in the glTF material, which is lost because we replace the material. Rotated to Y-up, scaled to 5.0 units tall at runtime; diffuse **recoloured to ginger at runtime**; bump kept. Textures use `flipY = false` (glTF UVs). | yes (0.66 MB incl. textures) |
-| Headset | `headphone.rar` → "Razer kraken.obj" (97 MB, ~896k triangles, C4D) | Simplified with `gltfpack -si 0.03` → 29.5k triangles; v1.1 re-packed with `-cc` → 166 KB; untextured materials restyled; green brand accents greyed. Model of a branded product — see §25. | yes |
-| Football | `73-soccer_ball.zip` → `football.fbx` + PBR PNGs | v1.1: FBX → OBJ with three.js `FBXLoader` + `OBJExporter` in Node, then `gltfpack -si 0.4 -sv -kv -vtf -cc` → 89 KB GLB (float UVs, see cat note); textures 512/256 px JPEG. | yes (0.4 MB) |
-| Table (retired) | `15-table_dae.rar` | Used for a while, then replaced by the procedural desk from Sijo's photo; files removed from repo. | no |
-| Ball (retired) | `xh0avas9ej9c-Ball.zip` | Replaced by the matte football. | no |
-| Not used | `34-cat3d.rar` (SketchUp only), `9182knlssry8-Mac201512.rar` (Blender only; contains Apple wallpaper), `plant 1.zip`, `plants 2.rar`, `sshpy95hl0qo-table.wood.rar` (3ds Max only) | — | no |
+| `models/football/*` | **Poly Haven "Football"** by Amal Kumar | inflated variant only, trimmed GLB 50 KB; textures 512/256 px (`arm.jpg` = AO + roughness) | **CC0** ✅ |
+| `models/cat/*` | **Free3D** cat (OBJ "12221_Cat_v1_l3") downloaded by Sijo | `gltfpack -cc -kv -vtf`, image refs stripped, quantised positions unpacked at load for the tail rig; recoloured ginger at runtime | ⚠️ **licence unverified** (Free3D personal-use risk). Replacement pending (§23). Raw source files removed from the repo. |
+| `assets/profile.jpg` | Sijo's portrait (400 px original, dark background) | subject cut out on-device with Apple Vision (`VNGenerateForegroundInstanceMaskRequest`), composited on a light grey studio gradient with a soft shadow, 1200 px | Sijo's own photo ✅ — a higher-res original would make the card sharper |
+| `assets/wall-prints.webp` | Sijo's photo IMG_5904 of his ten One Piece prints | wall keyed out (flood fill from the border), trimmed, 2048 px | ⚠️ third-party character art (One Piece © Eiichiro Oda / Shueisha), shown at Sijo's explicit request |
+| `assets/wallpaper.jpg` | Sijo's selfie | cropped, a stranger's hand removed, extended with Adobe generative expand | Sijo's ✅ (part AI-generated hillside) |
+| `assets/deskmat*.jpg` | generated in headless Chrome (navy storm, lightning, embers) | — | original ✅ (replaced a Sasuke / Naruto print in v67) |
+| Window view (NID gate) | painted in code from Sijo's two photos (gate, campus) | — | original drawing ✅ (the photos themselves were not used — likely third-party). The NID name/mark is shown descriptively. |
+| Poster | Sijo's own typographic poster, redrawn in code | — | Sijo's ✅ |
+| Fonts | Inter, Caveat | self-hosted | SIL OFL ✅ |
+| three.js | vendor | — | MIT ✅ |
+| Music / sounds | synthesised | — | original ✅ |
 
-Everything else (desk, throw, mat, walls, floor, poster, lamp, laptop, phone, plant, bottle, soundbar, pen stand, sketchbook, folders, labels, wallpapers, icons) is **procedural** — drawn in code or on canvases at load time.
+Retired assets (removed): headset (Razer Kraken model), Free3D football, zebra throw, plaster/epoxy photo textures, cap + camera,
+macramé shelf, pencil stand, floor plants, Ledgerly case study, the `lab/` prototype.
 
-Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall/camera hook), IMG_5839 (poster), IMG_5840 (pendant lamp), IMG_5843 (wall paint colour), plus cat photo.
-
----
-
-## 15. Audio
-
-**Phones (v1.4):** the audio context is created only inside a gesture; *every* tap/click/key retries until `ctx.state === "running"` (iOS refuses the first touch-down and suspends audio on app switches); `navigator.audioSession.type = "playback"` (or a silent looping `<audio>` on older iOS) so the iPhone **silent switch doesn't mute the music**. Hover/click blips are skipped until audio is running.
-
-- **Music (`music.js`)** — original lo-fi loop synthesised live: **76 BPM**, eighth-note grid with 0.12 swing; 4-bar progression Fmaj7 · Em7 · Dm9 · Cmaj7(add9); triangle/sine pads (lowpass 900 Hz), sine bass, soft keys melody chosen per bar from 5 motifs, kick / noise snare / hats, vinyl-crackle bed; master → lowpass 5.2 kHz → compressor; 2.5 s fade-in, 0.8 s fade-out. **No samples or recordings → no copyright issues.**
-- Starts on the first pointer/keyboard gesture (browser autoplay rules) unless muted.
-- **UI sounds (`Sound` in main.js)**: hover blip (880 Hz sine), click (520 Hz square), boot arpeggio (C-E-G-C), purr (55 Hz saw + 24 Hz tremolo, 1.8 s).
-- Mute/unmute: HUD sound button, headset, or soundbar. State saved in `localStorage.muted`.
+Reference photos Sijo shared (kept on his Mac, not in the repo): desk/poster/lamp (IMG_5837–5843), Shea (IMG_5873–5880), soundbar
+(IMG_5882–5889), astronaut light (IMG_5890–5899), cap + camera (IMG_5900–5902), One Piece prints (IMG_5903–5904), macramé
+(IMG_5905–5907), NID gate + campus photos, colour swatches (Oat #CDBEA5, Mulberry #664139), UI-card reference.
 
 ---
 
@@ -412,105 +417,126 @@ Reference photos provided by Sijo (not in repo): IMG_5837 (desk), IMG_5838 (wall
 
 | Token | Value |
 |---|---|
-| Page background | `#1d1d1f` |
-| Ink / muted | `#f5f5f7` / `#a1a1a6` |
-| Accent blue | `#0a84ff` (pressed `#0071e3`) |
-| Labels | `#1d1d1f`, `#6e6e73`, `#86868b` |
-| Glass (dark pills) | `rgba(40,40,44,.55)` + blur 20 + saturate 180 % + 0.5 px inner white edge |
-| Desktop glass (light) | window `rgba(250,250,252,.86)`, sidebar `rgba(236,236,242,.62)`, highlight `rgba(255,255,255,.9)`, edge `rgba(0,0,0,.14)` |
-| Fonts | `--font` system → SF Pro Text → Inter; `--display` system → SF Pro Display → Inter; Caveat (sticky note) |
+| Page / ink / muted | `#1d1d1f` / `#f5f5f7` / `#a1a1a6` |
+| Accent blue | `#0a84ff` |
+| Desktop glass (light) | window `rgba(250,250,252,.86)`, sidebar `rgba(236,236,242,.62)` |
+| Fonts | `--font` system → SF Pro Text → Inter; `--display` system → SF Pro Display → Inter; Caveat |
 | Radii | window 26, sidebar 18, cards 22, dock 26, pills 999 |
-| Easing | `--ease cubic-bezier(.25,.8,.25,1)`, `--spring cubic-bezier(.34,1.4,.5,1)`, Apple out `cubic-bezier(.32,.72,0,1)` |
-| 3D colours | Laminate #221e1c · Midnight #2a303c · Mango #ffb21a · Poster red #c7262e · Wall #2c2b2a · Lamp #ffb468 |
+| Easing | `--ease cubic-bezier(.25,.8,.25,1)`, springs via CSS `linear()`; Apple out `cubic-bezier(.32,.72,0,1)` |
+| Room colours | Oat #CDBEA5 · Mulberry #664139 · laminate #221e1c · Space Black #2e2d30 · mango #ffb21a · poster red #c7262e · lamp #ffb468 |
 
 ---
 
-## 17. Responsive, mobile and accessibility
+## 17. Responsive, devices, accessibility
 
-- **Breakpoints**: `max-width: 760px` (phone desktop layout: sidebar becomes a pill tab bar, window fills between menu bar and dock, widget hidden, smaller dock); `max-height: 620px` (compact HUD/nav/hint).
-- **3D framing** adapts to aspect ratio (§9); phones get a wider camera distance; lamp shadows disabled on narrow screens.
-- **Touch**: drag to orbit, pinch to zoom, tap to click; window body has `touch-action: pan-y` and momentum scrolling.
-- **Mobile preview page**: phone frame at 390×844 / 430×932 / 360×780.
-- **Accessibility**: buttons/links are real elements with labels; menus use `role=menu/menuitem`; Spotlight is `role=dialog` with a labelled input; focus-visible outlines; `prefers-reduced-motion` disables CSS animations, the camera tween and the desktop zoom. The 3D scene itself is not screen-reader navigable — "open portfolio without 3D" is the accessible path.
+- **Tested on 18 sizes** by `sweep.mjs`: iPhone SE / 15 / 15 Pro Max, small Android, phone landscape, iPad, iPad landscape,
+  iPad Pro portrait, very narrow + narrow windows, small laptop, Windows laptop 1366, MacBook, MacBook Pro 16, Full HD, QHD, ultrawide 3440, 4K.
+- Phones: desktop window becomes a tab layout; case studies full width with pinch-zoom ("Pinch to zoom" hint). Big monitors: the
+  Mac display scales up with stepped CSS `zoom` (1.15 / 1.55 / 2 / 2.3); case column ≤ 1920 px (≤ 1512 px on Retina laptops) so the
+  2880 px images stay sharp.
+- `prefers-reduced-motion` disables the camera tween, desktop zoom and animations. Real buttons/links, ARIA menus, Spotlight dialog,
+  focus outlines. The 3D scene is not screen-reader navigable — the skip link opens the plain portfolio.
 
 ---
 
 ## 18. Performance
 
-- v1.2: models + textures ≈ **1.06 MB**, whole first visit ≈ 1.5 MB (was ≈ 9.6 MB of models; the 5.4 MB cat OBJ was served uncompressed as `application/x-tgif`). Everything downloads in parallel from the first moment, and the loader never waits more than 5 s (from script start) + 4 s shader warm-up; models arriving later fade in (`reveal()`).
-- **Adaptive quality** (`adaptQuality` in main.js): if the median frame time over 90 frames is > 28 ms, pixel ratio drops to 1; if still slow, lamp shadows go off and the sun shadow map drops to 1024².
-- The desk is rendered only while visible — not while the Mac desktop covers it.
-- Shadow maps: sun 2048², lamp 512² ×6 (desktop only).
-- Laptop screen canvas redraws at ~30 fps; cat tail updates ~6,200 vertices per frame.
-- Pixel ratio capped at 2.
-- Further ideas: KTX2 textures; simplify the cat (`-si 0.5`) if needed.
+- First visit ≈ 1.5 MB before case studies (models ≈ 1 MB, photos ≈ 1.8 MB lazy where possible); case-study images lazy-load.
+- Models start downloading at the first line of `main.js`; loader waits ≤ 5 s + ≤ 4 s shader warm-up; late models fade in.
+- Rendering pauses while the Mac desktop covers the room. Laptop screen redraws ~30 fps. Adaptive quality (§10).
+- Live load measured ≈ 2.8 s to the room on a home connection. GitHub Pages is occasionally slow (QA live runs sometimes time out
+  once; a rerun passes).
 
 ---
 
 ## 19. Deployment and cache-busting
 
 1. Edit files.
-2. **Bump the version — in two places, the same number:** every `?v=N` in `index.html` (update.js, styles, content/os/music/main.js + the main.js modulepreload) and `version.json`. (v2.4: the self-update script moved to `update.js` and reads its version from its own `?v=`; main.js and os.js append the same number to every image/model URL, so replaced assets are never stale.)
-   - *Why:* phones often reopen a saved copy of the page. The inline script fetches `version.json` (never cached) on load, on back/forward restore, and when the tab returns after > 60 s away; if it's newer than `BUILD`, the page reloads itself at `?v=N` (a fresh URL, so it can't come from cache). It never loops (URL + sessionStorage guards) and never reloads while the Mac desktop is open.
-   - **Never delete a model file an older version used** without leaving it in place for a few weeks: a phone showing an old cached page will request it, and old code falls back to broken stand-ins (this is what produced the cartoon cat on Sijo's phone on 3 Oct 2026). The pre-v39 cat OBJ and football FBX are kept at their old paths for this reason — see the README in that folder.
-3. **Run the QA skill, the bug sweep and the security audit** (`.claude/skills/site-security/`) (`.claude/skills/site-qa/SKILL.md`) against the local server; fix every ❌. in `index.html` (`styles.css?v=N`, `content.js?v=N`, `os.js?v=N`, `music.js?v=N`, `main.js?v=N`). Browsers cache these aggressively; without a bump, visitors can see a mix of old and new files.
-4. `git add -A && git commit -m "…" && git push origin main`
-5. Wait ~1 minute; confirm with `curl -s https://sijojoseph7509-a11y.github.io/version.json`, then run the QA skill against the live URL.
-
-Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` for commits made with the assistant.
-
----
-
-## 20. QA checklist
-
-**Automated:** `.claude/skills/site-qa/qa.mjs` — 15 headless-Chrome checks (loads, models, deep links, boot/Esc, menus, Spotlight, scrolling, resize, model-failure path, stale-cache path, self-update, legacy paths). See its SKILL.md. `window.Desk.state()` in the browser console shows what's loaded. The manual list below covers what the script can't see (looks, feel, real devices).
-
-**3D page**
-- [ ] Loader shows SJ + progress + "Good things take time", then fades.
-- [ ] Whole A1 poster visible above the MacBook; name + roles readable; nav pill doesn't cover the poster.
-- [ ] Drag left/right: side walls visible, no black void. Pinch/scroll out to the limit on a phone: still inside the room.
-- [ ] Hover tooltips on cat, laptop, plant, folders, phone, tiles, headset, soundbar, ball, labels.
-- [ ] Cat: tail sways; hover → faster; click → purr, hearts, big swish.
-- [ ] Ball: click rolls; never enters the left panel or cubby.
-- [ ] Sound button / headset / soundbar toggle music; state survives reload.
-- [ ] Top nav Work / Resume / Contact → boots into the right window. No underline on hover.
-
-**Boot / desktop**
-- [ ] Camera glides right up to the screen; desktop grows out of the laptop screen; window pops in after.
-- [ ] Every menu opens; hover-slides between menus; disabled items grey.
-- [ ] ⌘1–5, ⌘K, ⌘W, ⌘M, Esc work.
-- [ ] Spotlight: type "blend" → Blender → Enter opens Skills.
-- [ ] Share → "Link copied".
-- [ ] All windows scroll (mouse, trackpad, touch); window never hidden behind the dock.
-- [ ] Placeholder project cards do **not** open new tabs.
-- [ ] Back to desk → desktop shrinks into the laptop → camera returns.
-
-**Devices**: iPhone Safari (portrait + landscape), Android Chrome, Mac Safari/Chrome, Windows Chrome/Edge.
+2. **Bump the version** — the same number in every `?v=N` in `index.html` and in `version.json` (a Python one-liner is in every
+   recent commit flow: read `version.json`, +1, regex-replace `?v=\d+`).
+   - Why: phones reopen cached pages. `update.js` fetches `version.json` (never cached) on load / back-forward / return after 60 s and
+     reloads once to `?v=N` if newer (guarded against loops; never while the desktop is open). main.js/os.js append `?v=` to every asset.
+   - Don't delete a model file an older build used without thinking about cached pages (old builds simply leave a failed model out).
+3. Run the checks (§20): site-qa, sweep, site-security, copy-check — fix every ❌.
+4. `git add -A && git commit -m "vNN: …" && git push origin main` (commit messages end with the Co-Authored-By line for assistant commits).
+5. Wait ~1 min, confirm `curl -s https://sijo.work/version.json`, run site-qa against `https://sijo.work/`.
 
 ---
 
-## 21. Known issues, limitations and tech debt
+## 20. Skills (project + personal) and how to run every check
 
-1. **Content is placeholder** (§13) — the biggest blocker for real use.
-2. **Model licences unverified** (§14, §25).
-3. **Phone pinch zoom-out** fix (bigger room + 1.2× cap) was verified by reasoning and desktop testing; the preview tool could not simulate a pinch. Confirm on a real phone.
-4. ~~Stale code comments / leftovers~~ — cleaned up in v1.1 (unused loaders, light/dark mode code, fallback cat/headphones, stale comments).
-5. **Single large `main.js`** (~1,460 lines). Candidates to split: `scene/room.js`, `scene/desk.js`, `scene/objects.js`, `screen.js`, `camera.js`.
-6. Automated QA exists (§20) but isn't wired to CI — run it before each push.
-7. **SEO/social**: no Open Graph image or description tags beyond `<meta name="description">`; no favicon; no `404.html`.
-8. **Accessibility**: 3D objects aren't keyboard-focusable; rely on the skip link / nav.
-9. **Browser cache**: forgetting to bump `?v=` causes stale mixes.
-10. The "Show Sidebar", "New Window", "Undo/Redo" menu items are intentionally disabled placeholders.
+All project skills live in the repo at `.claude/skills/` (versioned; Claude Code picks them up automatically in this repo).
+One-time setup for the scripts: `npm i --prefix <scratch-dir> puppeteer-core@23` and use `QA_DEPS=<scratch-dir>`; Google Chrome must
+be installed at `/Applications/Google Chrome.app`. Serve the repo locally first (§3).
+
+| Skill | What it's for | Run |
+|---|---|---|
+| **site-qa** | 34 real-browser checks: desktop + phone load (cat, ball, no errors), every desk item on screen, welcome/Enter/music, every `?open=` deep link, boot + Esc, menus, Spotlight, ⌘ shortcuts, scrolling, resize, model-failure path, stale-cache path, self-update, fonts self-hosted, case studies open + images load + no notes, window day↔night, zoom behaviour | `QA_DEPS=… node .claude/skills/site-qa/qa.mjs http://localhost:4321/` (or `https://sijo.work/`) |
+| site-qa · sweep | layout bugs on 18 devices (off-screen / overlapping controls, cut text, sideways scroll, missing models/wallpaper, blurry case images) + screenshots of every screen | `QA_DEPS=… node .claude/skills/site-qa/sweep.mjs <url> <out-dir>` |
+| **site-security** | 15 checks: CSP present + hash valid, no inline scripts, vendor file hashes, no third-party hosts, safe links, no secrets, HTTPS redirect (live) | `QA_DEPS=… node .claude/skills/site-security/audit.mjs <url>` (`--fix` re-records hashes after an intended import-map/three.js change) |
+| **copy-check** | finds notes-to-self, placeholders, AI-style words, em dashes, emoji/stray symbols in content.js / os.js / index.html (and Figma text) | `node .claude/skills/copy-check/check.mjs` |
+| **room-scene** | real-size table of every room object, art-direction rules, scripts: `render.mjs` (screenshots of home/room/any debug camera, day or night + `Desk.boxes()`), `pixel.mjs` (rendered colour vs swatch) | `QA_DEPS=… node .claude/skills/room-scene/render.mjs <url> /tmp/r night home room "win:5,19,20,30,18,20"` |
+| **object-capture** | turn 40–80 photos into a 3D model on the Mac (Apple RealityKit PhotogrammetrySession); 8 one-sided photos fail | `swiftc -O .claude/skills/object-capture/scan.swift -o scan && ./scan <photos-dir> out.usdz` |
+
+Personal / app skills Sijo has installed (in `~/.claude`, not the repo) and that were used or are relevant:
+`portfolio-case-study`, `studio-grade-case-study`, `portfolio-evidence-and-imagery`, `portfolio-image-generation`,
+`human-art-direction`, `agency-brand-documentation`, `editorial-narrative-illustration`, `impeccable` (UI design/critique),
+design plugin skills (`design:design-critique`, `design:accessibility-review`, `design:ux-copy`, …), `figma:figma-use` (Figma
+Plugin API rules — used for every export), `anthropic-skills:*` (browser, docs, pdf, pptx, xlsx, schedule, deep-research…).
 
 ---
 
-## 22. Decision log (what was tried, kept or reverted)
+## 21. AI tooling, plugins, connectors and machine setup
+
+| Tool / connector | Used for | Status |
+|---|---|---|
+| **Claude Code** (Claude desktop app, Code tab) | all building, testing, deploying | ✅ |
+| **Figma MCP** (`use_figma`, `get_metadata`, `get_screenshot`) | reading case-study files and exporting them at 2× (temp pages created and deleted; originals never edited) | ✅ connected. Files: Tidewell `s6WXmDrd36Frlkg1kVsvUg`, Backwater Line `6iuhjuMILOUIsgbqNKq8OG`, Ekmaati `tkze0DYw6HIb4LdZGvdsht` (+ the old Ledgerly `K030R1Iv01ggC5Xf4Tu23h`) |
+| **GitHub CLI `gh`** | repo rename back, Pages custom domain + HTTPS via API | ✅ logged in |
+| Built-in app browser (Claude Browser) | previews, a GoDaddy attempt | GoDaddy's login doesn't render in it (scripts blocked) — DNS was done by Sijo in Brave |
+| Claude in Chrome extension | (offered for GoDaddy) | not connected — Sijo uses **Brave** |
+| Apple **Vision** (Swift) | subject cut-outs (Shea photos, profile photo) | ✅ on-device, nothing uploaded |
+| Apple **RealityKit Object Capture** (Swift) | photogrammetry test of Shea | ✅ works on the Mac (M5); needs 40–80 photos (object-capture skill) |
+| Hugging Face **TRELLIS** (`trellis-community/TRELLIS`, MIT) via `gradio_client` in a `uv` Python 3.12 venv | image → 3D test of Shea (first result: tail and eyes wrong) | free ZeroGPU quota runs out after one generation; a free HF login (`uvx --from huggingface_hub hf auth login`) gives more |
+| Sketchfab / Poly Haven / Quaternius / OpenGameArt APIs | finding free (CC0/CC-BY) models | Poly Haven football used |
+| Adobe for creativity, creative-claw, Canva, Notion, Slack, Linear, Atlassian, HubSpot… (plugins/connectors in the app) | — | **not authorised / not used** (need sign-in via claude.ai connector settings or `/mcp`) |
+| Image generation connectors (Abracadabrax, ManyMotions) | — | not used |
+
+Machine: Apple M5 Mac, macOS 27, Xcode (swift), Google Chrome (for headless checks), Brave (Sijo's browser), Node 26, `uv`.
+
+---
+
+## 22. Memory (what the assistant remembers between sessions)
+
+Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
+- **hiring-quality-projects** — case studies must match Figma resolution; every change is judged by "does this get Sijo hired".
+- **sijo-portfolio-site** — site is sijo.work, repo name must stay `*.github.io`, the lab prototype was rejected, where handover/skills live.
+
+---
+
+## 23. Known issues, open items, next steps
+
+1. **Shea (cat) model** is still the Free3D cat (licence unverified) and doesn't look like Shea. Options: (a) Sijo takes 40–80 photos
+   (two full circles, soft light) → object-capture skill → real scan; (b) TRELLIS image-to-3D with the five Vision cut-outs (needs HF
+   login); (c) the CC-BY Sketchfab "Orange Tabby Cat" by Chenchanchong (needs a credit line).
+2. **Content**: LinkedIn + Behance URLs, résumé PDF, work experience.
+3. **Profile photo** is upscaled from 400 px — send a ≥ 1500 px original for a sharp card.
+4. **Wikimedia Commons photos inside the Ekmaati case study** need their licence named (e.g. "CC BY-SA 4.0") in the Figma credits.
+5. **One Piece prints** are third-party art (Sijo's decision) — replace with original art if the portfolio is used commercially.
+6. Old Sasuke mat / Free3D files remain in **git history** (not on the site); purging needs a history rewrite (ask first).
+7. Case studies are fixed 1440 px designs — phones pinch-zoom; real mobile layouts would need phone frames in Figma.
+8. Optional: AAAA DNS records; Open Graph tags + share image; `404.html`; split `main.js` (≈2,050 lines).
+9. Brand-new domains are sometimes blocked by corporate firewalls for ~30 days — normal; it clears on its own.
+
+---
+
+## 24. Decision log
 
 | Topic | History → final |
 |---|---|
 | Overall concept | Started from a reference portfolio (ishantp.com, desk-diorama idea). Built **original** designs only — no copying of his assets, text or stickers (Pokéball, Dragon Ball, Capsule Corp, anime car were deliberately excluded). |
 | Background/floor | Dark dots → light Apple studio → dark dots → **cream marble tiles**. |
-| Computer | Retro CRT → silver 13" laptop → **Midnight** laptop. No Apple logo (SJ monogram instead). |
+| Computer | Retro CRT → silver 13" laptop → Midnight 13" → **MacBook Pro 14" M5, Space Black, real size**. No Apple logo (SJ monogram instead). |
 | Cat | Procedural ginger cat → removed → re-added modelled on Sijo's cat → **downloaded realistic cat tinted ginger** at real scale. Sitting + licking was built, then **reverted** (didn't look good). Tail swish kept. |
 | Desk | Procedural wood → downloaded `table_dae` (black-stained) → **procedural recreation of Sijo's actual desk** (side panel, cubby, zebra throw). |
 | Headphones | Procedural (flat) → downloaded Kraken model flat → **upright on its stand**, behind the cat. |
@@ -521,10 +547,14 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | Desktop UI | Retro OS → Apple-style → **macOS 27 Liquid Glass** (verified macOS 27 "Golden Gate", released 14 Sep 2026) with real menus, Spotlight, shortcuts, squircle icons, Apple-style zoom transition. |
 | Butterfly / paper plane | Both added at some point, **both removed**. |
 | Plugins | Liquid Glass plugins in the Claude directory were evaluated and **not installed** (SwiftUI/AppKit only, not web). |
+| Room direction (Oct 2026) | Desk-only diorama → full room from Sijo's references; brown panelling → oxblood → plaster photo → gingerbread → **Oat paint + Mulberry tiles**; top-view **lab** prototype built and **rejected** (deleted). |
+| Copyright line | Sasuke mat replaced with original art; Free3D football replaced with CC0; original pop-art made first, then Sijo chose to show **his own photo of the One Piece prints**; NID view painted, not the web photos. |
+| Night default | Day/night followed the visitor's clock → **always night on arrival** (Sijo liked it best); the curtains are the switch. |
+| Desk props | Cap + camera, macramé shelf, pencil stand, floor plants, zebra throw, headset all tried and removed at Sijo's request. |
 
 ---
 
-## 23. Change history
+## 25. Change history (newest builds first in the v3–v4 block)
 
 | Commit | Summary |
 |---|---|
@@ -578,31 +608,16 @@ Commit messages in this repo end with `Co-Authored-By: Claude Opus 5.5 <noreply@
 | (v1.2) | Cat mesh quantised (343 KB) + smaller textures → 1.06 MB of models; football UVs fixed (was plain white in v1.1); late models fade in; adaptive quality for slow GPUs; favicon (no more 404). |
 | (v1.1) | Load time: compressed GLB models (9.6 → 2.1 MB), parallel preloading, 7 s loader cap, async shader compile, no `transmission`, 2048 shadows, render paused behind the desktop. Bugs: cartoon fallback cat removed (it clipped the headset), folder spots no longer overlap, Enter/Space boots, frame-rate-independent animation, ⌘Q label → Esc, drag `pointercancel`. |
 
-(Earlier non-git iterations — the first flat site, the retro CRT, the paper plane, the butterfly, the procedural cats — predate the repository.)
 
 ---
 
-## 24. Open items / recommended next steps
+## 26. Legal, credits and IP
 
-1. **Fill real content** in `content.js`: email, LinkedIn, Behance, résumé PDF (add to repo, e.g. `/resume.pdf`, and set `resumeUrl`), real projects with case-study links and cover colours, real experience.
-2. **Verify licences** for the cat, headset and football models; add a credits line (e.g. in About or a small footer) if required — or replace with self-made/CC0 models.
-3. Real hobby on the sketchbook cover.
-4. Confirm the **phone pinch zoom-out** on a real device.
-5. Optionally split `main.js`.
-6. Add Open Graph tags + share image, favicon, `404.html`.
-7. Optional: custom domain.
-
----
-
-## 25. Legal, credits and IP notes
-
-- **Desk mat artwork:** since v67 an original generated artwork (navy storm, blue lightning, red embers; no characters or symbols). The earlier photo of Sijo's real mat showed a third-party anime character and was removed for copyright reasons.
-- **Football (v67):** Poly Haven "Football" by Amal Kumar, **CC0** (polyhaven.com/a/football) — inflated variant only, textures 512/256 px.
-
-- **Original work** (by Sijo / produced for this project): all procedural geometry, textures, wallpapers, icons, desk mat design, zebra pattern, music and sounds.
-- **Sijo's own artwork**: the typographic poster ("To begin an era") — reproduced with his permission as the owner.
-- **Third-party models** (§14): sourced from free model sites; **licence terms not yet checked**. The headset is a model of a commercial product (Razer Kraken); brand colour removed, no logo textures used.
-- **Not used on purpose**: Apple logo, Apple wallpapers, Apple app icons (all copyrighted/trademarked) — replaced with an SJ monogram, original wallpaper and original icons; the anime character from Sijo's real desk mat; the reference portfolio's assets.
-- **Trademarks** (Apple, MacBook, macOS, LinkedIn, Behance, Razer) are referenced descriptively only.
-- Fonts: Inter (SIL OFL), Caveat (SIL OFL), **self-hosted** in `fonts/` (latin + latin-ext) with their OFL licence files since v66 — no Google servers, works on networks that block them and avoids the EU Google-Fonts privacy issue. Three.js: MIT licence.
-- Raw third-party model sources (cat OBJ folder, football.fbx) removed from the public repo in v66; only the converted GLBs + textures remain.
+- **Sijo's own**: poster, photos (profile, wallpaper, prints photo), case-study content, the room itself.
+- **Original, made for this site**: all procedural geometry and textures (walls, tiles, desk, props, astronaut, soundbar, window
+  view, curtains), desk-mat art, profile-card design, icons, music and sounds.
+- **Third-party**: football — Poly Haven, CC0; cat — Free3D (licence unverified, to replace); One Piece print artwork (© Eiichiro Oda /
+  Shueisha) shown via Sijo's own photo at his request; fonts — SIL OFL; three.js — MIT.
+- **Not used on purpose**: Apple logos/wallpapers/app icons (SJ monogram + original icons instead), brand logos on the speaker/camera,
+  the NID web photos, the reference portfolio's assets.
+- Trademarks (Apple, MacBook, macOS, LinkedIn, Behance, NID, Portronics) are referenced descriptively only.
