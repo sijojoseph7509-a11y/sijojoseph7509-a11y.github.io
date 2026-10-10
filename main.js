@@ -1929,9 +1929,9 @@ function recolor(img, dark, mid, light) {
 const CAT_HEIGHT = 5.8; // ≈29 cm to the top of the head — a real adult female cat next to the 14" MacBook Pro
 const CAT_FACING = -1.15; // her spot: side-on in front of the speaker, looking towards the laptop
 /* Shea moves like a cat: cat.js drives a rigged model (models/cat/shea.glb, 32 bones, skinned in Blender) with IK paws
-   planted on the surface, a lateral-sequence walk, sitting, head look-at, a spring tail and breathing. She stays on the
-   desk: 10 s after "Enter" she gets up, walks over to the desk mat, sits and meows, then strolls back to her spot by the
-   laptop and sits; she keeps doing little rounds like that. She meows when you pet her. Reduced motion: she stays put. */
+   planted on the surface, a sit clip keyframed in Blender, head look-at, a spring tail and breathing. She stays at her
+   spot by the laptop: 10 s after "Enter" she sits down and meows, sits a while looking around, then stands up again,
+   and keeps doing that. She meows when you pet her. Reduced motion: she stays standing. */
 const CAT_SPOT = {
   desk: new THREE.Vector3(6.4, 0, 0),           // her spot by the laptop (faces CAT_FACING)
   via: new THREE.Vector3(4.2, 0, 3.6),          // in front of the laptop's corner, so she walks round it, over the folders
@@ -1968,15 +1968,13 @@ function catIdleLook(t, attention) {
   return catGaze;
 }
 let catRounds = 0;
-function catWanderPlan() {   // little rounds on the desk: to the mat and back, or a sit and a meow at her spot
-  const A = shea.act, atMat = () => camera.position;
-  const toMat = [() => A.stand(), () => A.walk(CAT_SPOT.via, 4), () => A.arrive(CAT_SPOT.mat, MAT_FACING, 4), () => A.turn(MAT_FACING),
-    () => A.sit(), () => A.meow(atMat), () => A.wait(6 + Math.random() * 5), () => A.meow(), () => A.wait(2 + Math.random() * 2)];
-  const back = [() => A.stand(), () => A.walk(CAT_SPOT.via, 4), () => A.arrive(CAT_SPOT.desk, CAT_FACING, 4), () => A.turn(CAT_FACING), () => A.sit()];
-  const stay = [() => A.sit(), () => A.wait(2 + Math.random() * 2), () => A.meow(atMat), () => A.wait(3)];
-  return catRounds++ % 3 === 2 ? stay : [...toMat, ...back];
+function catWanderPlan() {   // she stays at her spot: sits down, meows, sits a while looking around, then stands up again
+  const A = shea.act, atYou = () => camera.position;
+  const meowFirst = catRounds++ % 2 === 0;
+  return [() => A.sit(), ...(meowFirst ? [() => A.wait(0.6), () => A.meow(atYou)] : []), () => A.wait(8 + Math.random() * 7),
+    ...(meowFirst ? [] : [() => A.meow(atYou), () => A.wait(2)]), () => A.stand()];
 }
-function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 25000 + Math.random() * 20000; }); }
+function catWander() { shea.go(catWanderPlan(), () => { catNextWander = performance.now() + 14000 + Math.random() * 12000; }); }
 let catManual = false;   // test hook: Desk.catStep() advances her in fixed steps for frame-exact captures
 function stepCat(now, dt) {
   if (!shea || catManual) return;
