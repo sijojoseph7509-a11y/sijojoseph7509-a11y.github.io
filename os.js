@@ -42,36 +42,72 @@
   };
   const appIcon = (k, cls = "app") => `<span class="${cls}" style="background:${GRAD[k]}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPH[k]}</svg></span>`;
 
+  // discipline glyphs (original line icons) and tool logos (icons.js: Simple Icons, CC0 data)
+  const DISC = {
+    product: '<rect x="7" y="2.5" width="10" height="19" rx="2.6"/><path d="M10.5 18.5h3"/>',
+    brand: '<path d="M12 3l7 7-7 11L5 10z"/><path d="M5 10h14M12 3v18"/>',
+    experience: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
+    threed: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/>'
+  };
+  const discIcon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DISC[k] || DISC.product}</svg>`;
+  const toolIcon = (t) => {
+    const ic = t.icon && window.TOOL_ICONS && window.TOOL_ICONS[t.icon];
+    if (ic) return `<span class="tool-ico" style="--b:#${esc(ic.hex)}"><svg viewBox="0 0 24 24" role="img" aria-label="${esc(ic.name)} logo"><path d="${esc(ic.path)}"/></svg></span>`;
+    return `<span class="tool-ico letter l-${esc(t.name.charAt(0))}" aria-hidden="true">${esc(t.name.charAt(0))}</span>`;
+  };
   const apps = {
     about: {
       title: "About", key: "1",
-      html: () => `
-        <h1>${esc(S.name)}</h1>
-        <p class="sub">${esc(S.title)} · ${esc(S.location)}</p>
-        <ul class="chips">${S.roles.map((r) => `<li class="chip">${esc(r)}</li>`).join("")}</ul>
-        <p class="lead">${esc(S.about[0])}</p>
-        ${S.about.slice(1).map((p) => `<p>${esc(p)}</p>`).join("")}
-        <div class="btn-row">
-          <button class="btn" data-open="work">See my work</button>
-          <button class="btn alt" data-open="contact">Get in touch</button>
-        </div>`
+      html: () => {
+        const first = esc(S.name.split(" ")[0]), cases = S.projects.filter((x) => x.case);
+        return `
+        <section class="ab-hero">
+          <div class="ab-photo"><img src="${esc(`assets/profile.jpg?v=${BUILD}`)}" alt="Portrait of ${esc(S.name)}" width="1200" height="1200" decoding="async"></div>
+          <div class="ab-intro">
+            <p class="eyebrow">${esc(S.focus)}</p>
+            <h1>Hi, I'm ${first}.</h1>
+            <p class="lead">${esc(S.education)}. ${esc(S.seeking)}</p>
+            <dl class="ab-facts">
+              <div><dt>Role</dt><dd>${esc(S.focus)}</dd></div>
+              <div><dt>Studying</dt><dd>${esc(S.education)}</dd></div>
+              <div><dt>Based in</dt><dd>${esc(S.location)}</dd></div>
+            </dl>
+            <div class="btn-row">
+              <button class="btn" data-open="work">See my work</button>
+              ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn alt" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Résumé</a>` : ""}
+              <button class="btn alt" data-open="contact">Get in touch</button>
+            </div>
+          </div>
+        </section>
+        <h2 class="sec">Selected work</h2>
+        <div class="ab-work">${cases.map((x) => `
+          <button class="ab-proj" data-case="${esc(x.case.slug)}" aria-label="Open the ${esc(x.title)} case study">
+            <img src="${caseImg(x.case.slug, x.case.sections[0][0])}" srcset="${caseImg(x.case.slug, x.case.sections[0][0])} 1440w, ${caseImg(x.case.slug, x.case.sections[0][0], 2)} 2880w" sizes="(max-width: 760px) 90vw, 360px" alt="" decoding="async">
+            <span><b>${esc(x.title)}</b><small>${esc(x.tag)}</small></span>
+          </button>`).join("")}
+        </div>
+        <div class="bento">
+          <div class="tile story"><small>About me</small>${S.about.slice(0, 2).map((t) => `<p>${esc(t)}</p>`).join("")}</div>
+          <div class="tile photo" style="background-image:url('${esc(`assets/wallpaper.jpg?v=${BUILD}`)}')"><div class="cap"><small>Away from the desk</small><p>${esc(S.about[3] || "")}</p></div></div>
+          <div class="tile quote"><small>On my wall</small><p>${esc(S.about[2] || "")}</p></div>
+          <button class="tile skills-tile" data-open="skills"><small>What I do</small>
+            <span class="mini-disc">${S.skills.map((g) => `<span>${discIcon(g.icon)}${esc(g.group)}</span>`).join("")}</span>
+            <span class="more">See skills and tools ›</span></button>
+        </div>`;
+      }
     },
     work: {
       title: "Work", key: "2",
       html: () => `
         <h1>Selected work</h1>
-        <p class="sub">${S.projects.length} case studies across product design, information design and branding.</p>
-        <div class="cards">${S.projects.map((p) => {
-          if (p.case) return `<button class="card" data-case="${esc(p.case.slug)}" aria-label="Open the ${esc(p.title)} case study">
-            <div class="cover" style="background:${esc(p.color)} image-set(url('${caseImg(p.case.slug, p.case.cover)}') 1x, url('${caseImg(p.case.slug, p.case.cover, 2)}') 2x) center / cover"></div>
-            <div class="meta"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>
-              <span class="more">View case study ›</span></div></button>`;
-          const live = p.url && p.url !== "#";
-          const inner = `
-            <div class="cover" style="background:linear-gradient(135deg, ${esc(p.color)}, ${esc(p.color)}cc)"></div>
-            <div class="meta"><small>${esc(p.tag)}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>
-              <span class="more${live ? "" : " muted"}">${live ? "View case study ›" : "Case study coming soon"}</span></div>`;
-          return live ? `<a class="card" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${inner}</a>` : `<div class="card soon">${inner}</div>`;
+        <p class="sub">${S.projects.length} case studies. ${esc(S.focus)} first, with information design and branding alongside.</p>
+        <div class="works">${S.projects.map((p) => {
+          const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p><span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
+          if (!p.case) return `<div class="work-card soon" style="--c:${esc(p.color)}">${info}</div>`;
+          const [f, h] = p.case.sections[0];
+          return `<button class="work-card" data-case="${esc(p.case.slug)}" style="--c:${esc(p.color)}" aria-label="Open the ${esc(p.title)} case study">
+            <span class="wc-img"><img src="${caseImg(p.case.slug, f)}" srcset="${caseImg(p.case.slug, f)} 1440w, ${caseImg(p.case.slug, f, 2)} 2880w" sizes="(max-width: 760px) 92vw, 980px" width="1440" height="${+h}" alt="${esc(p.title)}: cover" decoding="async"></span>
+            ${info}</button>`;
         }).join("")}
         </div>`
     },
@@ -79,10 +115,17 @@
       title: "Skills", key: "3",
       html: () => `
         <h1>What I do</h1>
-        <p class="sub">A multidisciplinary toolkit, from research to pixels to polygons.</p>
-        ${S.skills.map((g) => `
-          <h3>${esc(g.group)}</h3>
-          <ul class="chips">${g.items.map((i) => `<li class="chip">${esc(i)}</li>`).join("")}</ul>`).join("")}`
+        <p class="sub">${esc(S.focus)} first, with a multidisciplinary toolkit behind it.</p>
+        <div class="disc-grid">${S.skills.map((g, i) => `
+          <div class="disc${i === 0 ? " primary" : ""}">
+            <span class="disc-ico ${esc(g.icon || "")}">${discIcon(g.icon)}</span>
+            <h4>${esc(g.group)}</h4>
+            <p>${esc(g.desc || "")}</p>
+            <ul class="chips">${g.items.map((it) => `<li class="chip">${esc(it)}</li>`).join("")}</ul>
+          </div>`).join("")}
+        </div>
+        <h2 class="sec">Tools I use</h2>
+        <ul class="tool-grid">${(S.tools || []).map((t) => `<li>${toolIcon(t)}<span>${esc(t.name)}</span></li>`).join("")}</ul>`
     },
     resume: {
       title: "Resume", key: "4",
@@ -98,7 +141,7 @@
       title: "Contact", key: "5",
       html: () => `
         <h1>Let's make something together.</h1>
-        <p class="sub">Open to product, brand, experience and 3D projects: full-time roles and collaborations.</p>
+        <p class="sub">${esc(S.seeking)} Happy to talk brand, experience and 3D work too.</p>
         <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
         <div class="btn-row">
           <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
@@ -165,7 +208,7 @@
   dock.addEventListener("mouseleave", () => { dockX = null; dockKick(); });
 
   // Widget
-  $("#widget").innerHTML = `<small>Designer</small><b>${esc(S.name)}</b><span>${esc(S.roles.join(" · "))}</span><div class="status"><i></i>Available for new work</div>`;
+  $("#widget").innerHTML = `<small>${esc(S.focus)}</small><b>${esc(S.name)}</b><span>${esc(S.education)}</span><div class="status"><i></i>${esc(S.seeking.replace(/\.$/, ""))}</div>`;
 
   /* ── Window ── */
   function resetWindowPlacement() {

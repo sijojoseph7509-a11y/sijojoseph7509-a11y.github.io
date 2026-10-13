@@ -6,7 +6,10 @@
 window.SITE = {
   name: "Sijo Joseph",
   first: "SIJO",
-  title: "Multidisciplinary Designer",
+  title: "Product & UX Designer",
+  focus: "Product / UX designer",                 // the role he is going for: said first, everywhere
+  education: "M.Des design student, NID Bengaluru",
+  seeking: "Open to product and UX design roles.",
   roles: ["Product Designer", "Brand Strategist", "Experience Designer", "3D Designer"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",
@@ -146,12 +149,22 @@ window.SITE = {
       ] } }
   ],
 
+  // Disciplines (Product Design first: it's the role he's going for) + the tools he uses (logos in icons.js)
   skills: [
-    { group: "Product Design",    items: ["UX research", "Interaction design", "UI systems", "Prototyping", "Usability testing"] },
-    { group: "Brand Strategy",    items: ["Positioning", "Brand identity", "Naming & voice", "Campaigns", "Guidelines"] },
-    { group: "Experience Design", items: ["Service design", "Journey mapping", "Spatial / exhibit", "Workshops"] },
-    { group: "3D & Motion",       items: ["Blender", "Spline", "Cinema 4D", "Three.js / WebGL", "KeyShot", "After Effects"] },
-    { group: "Tools",             items: ["Figma", "Adobe CC", "Framer", "Protopie", "Notion"] }
+    { group: "Product Design",    icon: "product", desc: "From research to tested prototypes and the UI systems behind them.",
+      items: ["UX research", "Interaction design", "UI systems", "Prototyping", "Usability testing"] },
+    { group: "Brand Strategy",    icon: "brand", desc: "Positioning, names and identities, with guidelines that hold them together.",
+      items: ["Positioning", "Brand identity", "Naming & voice", "Campaigns", "Guidelines"] },
+    { group: "Experience Design", icon: "experience", desc: "Services, journeys and the spaces people move through.",
+      items: ["Service design", "Journey mapping", "Spatial / exhibit", "Workshops"] },
+    { group: "3D & Motion",       icon: "threed", desc: "Modelling, rendering and real-time 3D, like the room you just walked through.",
+      items: ["Blender", "Spline", "Cinema 4D", "Three.js / WebGL", "KeyShot", "After Effects"] }
+  ],
+  tools: [
+    { name: "Figma", icon: "figma" }, { name: "Adobe CC", icon: "adobecc" }, { name: "Framer", icon: "framer" },
+    { name: "ProtoPie", icon: null }, { name: "Notion", icon: "notion" }, { name: "Blender", icon: "blender" },
+    { name: "Spline", icon: null }, { name: "Cinema 4D", icon: "cinema4d" }, { name: "Three.js", icon: "threejs" },
+    { name: "KeyShot", icon: null }, { name: "After Effects", icon: "aftereffects" }
   ],
 
   experience: []   // ✏️ add real roles: { company, role, from, to } — the Resume window hides the list while it's empty
