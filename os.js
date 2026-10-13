@@ -82,7 +82,7 @@
         <h2 class="sec">Selected work</h2>
         <div class="ab-work">${cases.map((x) => `
           <button class="ab-proj" data-case="${esc(x.case.slug)}" aria-label="Open the ${esc(x.title)} case study">
-            <img src="${caseImg(x.case.slug, x.case.sections[0][0])}" srcset="${caseImg(x.case.slug, x.case.sections[0][0])} 1440w, ${caseImg(x.case.slug, x.case.sections[0][0], 2)} 2880w" sizes="(max-width: 760px) 90vw, 360px" alt="" decoding="async">
+            <img src="${caseImg(x.case.slug, (x.case.coverSlide || x.case.sections[0])[0])}" srcset="${caseImg(x.case.slug, (x.case.coverSlide || x.case.sections[0])[0])} 1440w, ${caseImg(x.case.slug, (x.case.coverSlide || x.case.sections[0])[0], 2)} 2880w" sizes="(max-width: 760px) 90vw, 360px" alt="" decoding="async">
             <span><b>${esc(x.title)}</b><small>${esc(x.tag)}</small></span>
           </button>`).join("")}
         </div>
@@ -104,7 +104,7 @@
         <div class="works">${S.projects.map((p) => {
           const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p><span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
           if (!p.case) return `<div class="work-card soon" style="--c:${esc(p.color)}">${info}</div>`;
-          const [f, h] = p.case.sections[0];
+          const [f, h] = p.case.coverSlide || p.case.sections[0];   // a project can give its own cover slide (Syntra)
           return `<button class="work-card" data-case="${esc(p.case.slug)}" style="--c:${esc(p.color)}" aria-label="Open the ${esc(p.title)} case study">
             <span class="wc-img"><img src="${caseImg(p.case.slug, f)}" srcset="${caseImg(p.case.slug, f)} 1440w, ${caseImg(p.case.slug, f, 2)} 2880w" sizes="(max-width: 760px) 92vw, 980px" width="1440" height="${+h}" alt="${esc(p.title)}: cover" decoding="async"></span>
             ${info}</button>`;
@@ -237,6 +237,7 @@
     const k = list.findIndex((x) => x.case.slug === slug);
     if (k < 0) return show("work");
     const p = list[k], prev = list[(k - 1 + list.length) % list.length], next = list[(k + 1) % list.length];
+    if (p.case.page) { location.href = p.case.page; return; }   // a case study with its own long-scroll web page (Syntra)
     try { const st = history.state || {}; if (st.sjCase) history.replaceState({ sjDesktop: 1, sjCase: slug }, ""); else history.pushState({ sjDesktop: 1, sjCase: slug }, ""); } catch (_) {}
     const entering = !caseSlug;
     caseSlug = slug; current = "work";
@@ -275,6 +276,9 @@
       }
     };
     setTimeout(pump, 700);
+    // a case study can bring its own motion layer (Syntra): an ES module loaded only when it opens
+    const fxFile = /^[\w-]+\.js$/.test(p.case.fx || "") ? p.case.fx : "";   // only a plain local module name
+    if (fxFile) import(`./${fxFile}?v=${BUILD}`).then((m) => { if (caseSlug === slug) m.default($(".case"), { slug, v: BUILD, sections: p.case.sections }); }).catch(() => {});
   }
   // hovering a project (Work card, Spotlight result, desk folder) starts downloading its first sections
   const warmed = new Set();

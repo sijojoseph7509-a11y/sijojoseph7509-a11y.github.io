@@ -1,0 +1,82 @@
+/* ── Syntra case study: motion layer (syntra-fx.js). Layers sit on 2× exports in the documentation's 1440-px coordinates. ── */
+.case-syntra { --case-bg: #fff; background: #fff; }
+.case-syntra .sx-sec { position: relative; overflow: hidden; isolation: isolate; background: #fff; }
+.case-syntra .sx-base { position: relative; z-index: 1; }
+.case-syntra .sx-stack .sx-base { mix-blend-mode: multiply; }
+.sx-layer { position: absolute; z-index: 2; pointer-events: none; }
+.sx-layer > img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 1; background: none; }
+.sx-under { z-index: 0; }
+.sx-mul { mix-blend-mode: multiply; }
+/* sections surface out of a warm mist */
+.case-syntra .sx-sec:not(.sx-in) > .sx-base,
+.case-syntra .sx-sec:not(.sx-in) > .sx-layer { opacity: 0; filter: blur(18px); transform: translateY(28px) scale(1.01); }
+.case-syntra .sx-sec > .sx-base,
+.case-syntra .sx-sec > .sx-layer { transition: opacity 1.4s cubic-bezier(.22,.7,.2,1), filter 1.6s cubic-bezier(.22,.7,.2,1), transform 1.6s cubic-bezier(.22,.7,.2,1); }
+/* cover: the bottle breathes, the bottles drift, the headline drifts in and out of focus */
+.sx-breathe > img { animation: sxBreathe 16s ease-in-out infinite alternate; transform-origin: 70% 30%; }
+@keyframes sxBreathe { from { transform: scale(1); filter: blur(0); } to { transform: scale(1.05); filter: blur(2.5px); } }
+.sx-drift { mix-blend-mode: multiply; }
+.sx-drift > img { animation: sxDrift 22s ease-in-out infinite alternate; }
+@keyframes sxDrift { from { transform: translate(0, 0) rotate(0); } to { transform: translate(1.5%, -2.5%) rotate(-.6deg); } }
+.sx-focus > img { animation: sxFocus 9s ease-in-out infinite; }
+@keyframes sxFocus { 0%, 100% { filter: blur(calc(14 * var(--u, 1px))); opacity: .55; } 38%, 62% { filter: blur(calc(1 * var(--u, 1px))); opacity: 1; } }
+.sx-kenburns > img { animation: sxKen 20s ease-in-out infinite alternate; }
+@keyframes sxKen { from { transform: scale(1); } to { transform: scale(1.035) translate(-.6%, -.4%); } }
+/* how it works */
+.sx-svg svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.sx-flow path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.sx-go .sx-flow path { animation: sxDraw 1.8s cubic-bezier(.45,0,.2,1) var(--d, 0s) forwards; }
+@keyframes sxDraw { to { stroke-dashoffset: 0; } }
+.sx-dots > g { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.sx-go .sx-dots > g { animation: sxPop .7s cubic-bezier(.3,1.6,.5,1) var(--d, 0s) forwards; }
+@keyframes sxPop { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+.sx-ping { transform-box: fill-box; transform-origin: center; opacity: 0; }
+.sx-go .sx-ping { animation: sxPing 3.2s ease-out calc(var(--d, 0s) + 1.2s) infinite; }
+@keyframes sxPing { 0% { opacity: .55; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(2.6); } }
+.sx-tick { transition: transform 1.1s cubic-bezier(.5,0,.15,1); }
+.sx-knobglow { transition: cx 1.1s cubic-bezier(.5,0,.15,1), cy 1.1s cubic-bezier(.5,0,.15,1); }
+.sx-cap { transition: transform .9s cubic-bezier(.5,0,.15,1); }
+.sx-bars rect { transform-box: fill-box; transform-origin: left center; transform: scaleX(0); }
+.sx-go .sx-bars rect { animation: sxGrow 1.3s cubic-bezier(.22,.7,.2,1) calc(var(--d) + .9s) forwards; }
+@keyframes sxGrow { to { transform: scaleX(1); } }
+.sx-num { display: flex; align-items: flex-start; }
+.sx-num span { font: 100 calc(var(--fs) * var(--u, 1px)) / 1 "Lato", "Inter", sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+  background: linear-gradient(135deg, #F99C36, #975C1C); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* the screens: the kiosk plays its own sequence */
+.sx-loop { background: linear-gradient(#fff 94%, rgba(255,255,255,0)); }
+.sx-loop img { -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
+.sx-loop:not(.sx-run) { display: none; }
+.sx-loop img { position: absolute; inset: 0; opacity: 0; transition: opacity 1.1s ease-in-out, filter 1.1s ease-in-out; filter: blur(6px); }
+.sx-loop img.on { opacity: 1; filter: blur(0); }
+.sx-loop:not(.sx-run) img { display: none; }
+/* step inside: live 360° */
+.sx-vr { pointer-events: auto; z-index: 3; background: #0e0a07; cursor: grab; touch-action: pan-y; }
+.sx-vr.sx-dragging { cursor: grabbing; }
+.sx-vr canvas { display: block; width: 100%; height: 100%; }
+.sx-vr-off { display: none; }
+.sx-vr-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; padding: 8px 16px; border-radius: 999px;
+  font: 600 11px/1 var(--font); letter-spacing: .2em; text-transform: uppercase; color: #fff; background: rgba(14,10,7,.35);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); pointer-events: none; transition: opacity .6s; }
+.sx-dragging .sx-vr-hint, .sx-vr:hover .sx-vr-hint { opacity: 0; }
+.sx-vr-chips { position: absolute; left: 12px; right: 12px; bottom: 10px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.sx-vr-chips button { flex: none; font: 500 11px/1 var(--font); color: #fff; padding: 7px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35);
+  background: rgba(14,10,7,.32); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; }
+.sx-vr-chips button[aria-pressed="true"] { background: #EADCCB; color: #120D09; border-color: #EADCCB; }
+.sx-vr-chips button:focus-visible { outline: 2px solid #F99C36; outline-offset: 2px; }
+/* take it home: tickets feed out of the printer */
+.sx-ticket { box-shadow: 0 18px 40px rgba(150,92,28,.16); clip-path: inset(0 0 100% 0); transform: translateY(-3%); }
+.sx-ticket > img { object-fit: fill; }
+.sx-go .sx-ticket { animation: sxPrint 2.1s steps(28, end) var(--d) forwards, sxSettle .6s ease-out calc(var(--d) + 2.1s) forwards; }
+@keyframes sxPrint { to { clip-path: inset(0 0 0 0); } }
+@keyframes sxSettle { to { transform: none; } }
+/* perfume motes + a warm lantern under the pointer */
+.sx-motes { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2147483000; pointer-events: none; mix-blend-mode: multiply; }
+.sx-lamp { position: fixed; left: -260px; top: -260px; width: 520px; height: 520px; border-radius: 50%; z-index: 2147482999; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(249,156,54,.16), rgba(218,179,118,.07) 55%, transparent); mix-blend-mode: multiply; opacity: 0; transition: opacity .8s; }
+.sx-lamp.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .sx-breathe > img, .sx-drift > img, .sx-focus > img, .sx-kenburns > img { animation: none; }
+  .sx-focus > img { filter: blur(calc(6 * var(--u, 1px))); }
+  .sx-flow path { stroke-dashoffset: 0; } .sx-dots > g, .sx-bars rect { opacity: 1; transform: none; animation: none !important; }
+  .sx-ticket { clip-path: none; transform: none; animation: none !important; }
+}

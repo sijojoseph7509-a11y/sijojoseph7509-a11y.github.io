@@ -859,13 +859,16 @@ S.projects.forEach((p, i) => {
   const front = rbox(FOLDER.w, 0.035, FOLDER.d - 0.15, 0.06, card, 2);
   front.position.set(0, 0.09, 0.07);
   // index tab on the front edge
-  const tabX = -FOLDER.w / 2 + 1.1 + i * ((FOLDER.w - 2.2) / Math.max(1, NF - 1));
+  const TAB_W = Math.min(1.9, (FOLDER.w - 0.5) / NF - 0.06);   // tabs share the edge without overlapping (4 projects since v88)
+  const tabX = -FOLDER.w / 2 + 0.25 + TAB_W / 2 + i * ((FOLDER.w - 0.5 - TAB_W) / Math.max(1, NF - 1));
   const tabTex = canvasTex(512, 160, (g, w, h) => {
     g.fillStyle = tabColors[i % tabColors.length]; g.beginPath(); g.roundRect(0, 0, w, h, 26); g.fill();
     g.fillStyle = "#1b1a17"; g.font = `700 64px ${UI}`; g.textBaseline = "middle"; g.textAlign = "center";
-    g.fillText(p.title.length > 14 ? p.title.slice(0, 13) + "…" : p.title, w / 2, h / 2 + 4);
+    const t = p.title.length > 14 ? p.title.slice(0, 13) + "…" : p.title;
+    let fs = 64; g.font = `700 ${fs}px ${UI}`; while (g.measureText(t).width > w - 40 && fs > 30) { fs -= 2; g.font = `700 ${fs}px ${UI}`; }
+    g.fillText(t, w / 2, h / 2 + 4);
   });
-  const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.6), new THREE.MeshStandardMaterial({ map: tabTex.tex, roughness: 0.7 }));
+  const tab = new THREE.Mesh(new THREE.PlaneGeometry(TAB_W, TAB_W * 160 / 512), new THREE.MeshStandardMaterial({ map: tabTex.tex, roughness: 0.7 }));
   tab.rotation.x = -Math.PI / 2; tab.position.set(tabX, 0.11, FOLDER.d / 2 + 0.22);
   // cover label (shows on the top folder)
   const label = canvasTex(1024, 512, (g, w, h) => {

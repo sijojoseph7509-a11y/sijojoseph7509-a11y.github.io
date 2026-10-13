@@ -31,6 +31,27 @@ window.SITE = {
   // Featured work — case studies exported from Figma (Tidewell v3, Backwater Line v3, ekmaati final).
   // `case.sections` are images in work/<slug>/; `color` tints the card while the cover loads.
   projects: [
+    { title: "Syntra", tag: "Interaction Design · Phygital Retail", color: "#F3E7D8", status: "Team project · Retail Tech, NID", url: "#",
+      summary: "An interactive perfume finder for ZARA: turn a knob and three sliders, see your scent, step into its world in VR and take it home on a ticket that comes alive in AR.",
+      case: { slug: "syntra", cover: "fx/card.webp", coverSlide: ["fx/cover-slide.webp", 900], fx: "syntra-fx.js", sections: [
+          // 2× exports of Figma "Syntra · Documentation" (RFow6mVvYRDVcu5NrMgO7D, page 223:2) with the moving parts left out; syntra-fx.js adds them back
+        ["01.webp", 2725, "Syntra. An interactive perfume finder. Know the feeling, not the name? Let's find your perfume. Utsav Sharma, Sijo Joseph, Rajat Chaple; Retail Tech module, 2 weeks."],
+        ["02.webp", 2330, "Meet Syntra: a kiosk you play like an instrument. A visitor in the VR headset at our exhibit, then four steps: turn, see, step in, take it home."],
+        ["03.webp", 2725, "Choosing a scent is choosing how you'll be remembered. How we went about the process, as layers of a perfume bottle: concept, research, ideation, prototyping, experience."],
+        ["04.webp", 2725, "The problem: shoppers arrive knowing a mood but the store speaks in names and notes. 24 options turn into 3% bought, 6 into 30%; 60% of US perfume users discover scents by trying them in store; the nose tires after 3 to 4 perfumes."],
+        ["05.webp", 2725, "Current journey map from our store visits: walks in, browse, test, ask staff, decide, and where each step breaks. What shoppers and staff told us."],
+        ["06.webp", 2350, "What we heard, again and again: people know the mood, not the notes; too many choices, too few words; the nose gives up before the mind does; nobody is there to translate."],
+        ["07.webp", 2700, "Why these choices: physical controls because turning a knob feels like playing; ZARA because it is affordable, wide and focused; VR and AR because people remember a scent as a place."],
+        ["08.webp", 3300, "How Syntra works: turn, read, score, match, then step in with a double press or print with a 2-second hold. Four controls, 162 settings, and how the match is weighed: mood 36%, expression 26%, occasion 22%, longevity 16%."],
+        ["09.webp", 2950, "What the screen says back: the Femme result at 99%, five states from wake-up to your scent, and four different answers for four different settings."],
+        ["10.webp", 3050, "Step inside the scent: nine real 360-degree worlds on a Meta Quest 3, from a flower garden to a starry lake, with the bottle on an oak plinth and the notes floating around you."],
+        ["11.webp", 2160, "This isn't just a ticket: six thermal tickets printed at our exhibit, each with its own drawing, and the AR scan that lifts the drawing off the paper. 66 tickets printed on 30 September 2026."],
+        ["12.webp", 3500, "Wires, foam and light: the ESP32 circuit and pin map, the backdrop from foam model to glowing channels, and what changed from first try to final."],
+        ["13.webp", 2100, "Putting it in their hands: visitors at our exhibit, what confused them and what we changed, and what testers told us."],
+        ["14.webp", 2200, "A scent found, felt and kept: the printed Syntra Manual in eight steps and the kiosk in use at our exhibit."],
+        ["15.webp", 2700, "What we carry forward: what worked, what we'd do next, the team and the tools."],
+        ["16.webp", 900, "Sources and credits: Iyengar and Lepper 2000, YouGov 2025, IMARC, Grosofsky et al. 2011, Poly Haven, Wikimedia Commons. ZARA is not affiliated with this student project."],
+      ] } },
     { title: "Tidewell", tag: "UX / Product Design", color: "#0F3B38", status: "Self-initiated project", url: "#",
       summary: "One calm care loop that joins the pillbox, the paper prescription and the family WhatsApp group, so everyone knows the evening dose was given.",
       case: { slug: "tidewell", cover: "02.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "Tidewell v3"
