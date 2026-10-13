@@ -29,5 +29,5 @@ Then export with `get_screenshot` (wrapper node, `maxDimension` ≥ height) and 
 - `✓`, emoji and informal text **inside UI or chat mockups** — they're part of the product being shown.
 
 ## Never
-- Turn a concept into a real project: keep "Concept project", "targets, not results", "Illustrative photo" labels.
+- Claim a self-initiated project was launched, tested or used: keep "Self-initiated project" (Sijo's choice since 13 Oct 2026 — never "Concept project"), "targets, not results", "Illustrative photo" labels.
 - Invent research, quotes, numbers or results to replace a removed note. Prefer neutral wording ("Working insights") over claims.

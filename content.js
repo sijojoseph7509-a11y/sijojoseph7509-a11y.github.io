@@ -28,7 +28,7 @@ window.SITE = {
   // Featured work — case studies exported from Figma (Tidewell v3, Backwater Line v3, ekmaati final).
   // `case.sections` are images in work/<slug>/; `color` tints the card while the cover loads.
   projects: [
-    { title: "Tidewell", tag: "UX / Product Design", color: "#0F3B38", status: "Concept project", url: "#",
+    { title: "Tidewell", tag: "UX / Product Design", color: "#0F3B38", status: "Self-initiated project", url: "#",
       summary: "One calm care loop that joins the pillbox, the paper prescription and the family WhatsApp group, so everyone knows the evening dose was given.",
       case: { slug: "tidewell", cover: "02.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "Tidewell v3"
         ["01.webp", 671, "Tidewell. One calm care loop that joins the pillbox, the paper prescription and the family WhatsApp group. UX / Product Design, Android app + WhatsApp, 2026, 2 weeks."],
@@ -71,7 +71,7 @@ window.SITE = {
         ["38.webp", 411, "Roadmap: MVP with Today view, Home mode and change cards; v1.1 adds prescription photo suggestions and refill reminders; v2 adds a parent mode."],
         ["39.webp", 497, "Reflection: the screens were the easy part; the real design work was deciding who sees a change, when, and how it is confirmed."]
       ] } },
-    { title: "Backwater Line", tag: "Information Design \u00b7 Wayfinding", color: "#0E0F10", status: "Concept project", url: "#",
+    { title: "Backwater Line", tag: "Information Design \u00b7 Wayfinding", color: "#0E0F10", status: "Self-initiated project", url: "#",
       summary: "One map, one naming system and four sign types that let a first-time rider choose the right boat, from the right side, in either language.",
       case: { slug: "backwater", cover: "02.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "Backwater Line v3"
         ["01.webp", 632, "Backwater Line. One map, one naming system and four sign types that let a first-time rider choose the right boat from the right side, in either language. Information design and wayfinding, 2026."],
