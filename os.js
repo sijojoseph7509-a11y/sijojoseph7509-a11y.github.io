@@ -263,6 +263,10 @@
     try { const st = history.state || {}; if (st.sjCase) history.replaceState({ sjDesktop: 1, sjCase: slug }, ""); else history.pushState({ sjDesktop: 1, sjCase: slug }, ""); } catch (_) {}
     const entering = !caseSlug;
     caseSlug = slug; current = "work";
+    if (window.SJT) {   // counted: which case study, and whether it is still open after 1 and 3 minutes
+      SJT.view("/case/" + slug, p.title);
+      [[60, "1min"], [180, "3min"]].forEach(([sec, tag]) => setTimeout(() => { if (caseSlug === slug && !os.hidden) SJT.once(`case-${slug}-${tag}`); }, sec * 1000));
+    }
     const goFull = () => { win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement(); screen.classList.add("case-fs"); os.classList.add("case-fs"); };
     if (entering) morphWindow(goFull); else goFull();
     $("#winTitle").textContent = p.title;
@@ -288,7 +292,8 @@
     // a hairline under the bar shows how far into the case study you are
     const prog = body.querySelector(".fs-progress");
     if (body._prog) body.removeEventListener("scroll", body._prog);
-    body._prog = () => { if (!prog.isConnected) return; const max = body.scrollHeight - body.clientHeight; prog.style.transform = `scaleX(${max > 0 ? Math.min(1, body.scrollTop / max) : 0})`; };
+    body._prog = () => { if (!prog.isConnected) return; const max = body.scrollHeight - body.clientHeight; const f = max > 0 ? Math.min(1, body.scrollTop / max) : 0; prog.style.transform = `scaleX(${f})`;
+      if (window.SJT && caseSlug) { if (f > 0.5) SJT.once(`case-${caseSlug}-half`); if (f > 0.95) SJT.once(`case-${caseSlug}-end`); } };
     body.addEventListener("scroll", body._prog, { passive: true });
     // images fade in as they arrive (no pop), over the project's own colour instead of a grey block
     const imgs = [...body.querySelectorAll(".case img")];
@@ -339,6 +344,7 @@
     current = key in apps ? key : "about";
     const switching = !win.hidden && !os.hidden && body.childElementCount > 0 && !opening;
     $("#winTitle").textContent = app.title;
+    if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
     body.scrollTop = 0;
     win.hidden = false;

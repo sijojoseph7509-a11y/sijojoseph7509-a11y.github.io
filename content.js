@@ -14,6 +14,7 @@ window.SITE = {
   roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",
+  analytics: "",                                 // ✏️ GoatCounter code (the "sijo" in sijo.goatcounter.com); empty = no counting. See track.js
   resumeUrl: "#",                                // ✏️ link to your PDF
   links: {
     mail: "mailto:sijojoseph7509@gmail.com",
