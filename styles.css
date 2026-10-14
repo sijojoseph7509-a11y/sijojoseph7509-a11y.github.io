@@ -485,15 +485,15 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C87 0 100 13 100 50S87 100 50 100 0 87 0 50 13 0 50 0Z'/%3E%3C/svg%3E") center / 100% 100%;
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C87 0 100 13 100 50S87 100 50 100 0 87 0 50 13 0 50 0Z'/%3E%3C/svg%3E") center / 100% 100%;
 }
-/* Liquid Glass icon: a specular rim, a bright top highlight, light refracting up from the bottom edge, a soft gloss streak */
-.dock-item .app::after, .sp-ico::after { content: ""; position: absolute; inset: 0; pointer-events: none;   /* gradients only: an inset box-shadow is rectangular and the squircle mask cut it into white lines */
-  background: radial-gradient(90% 40% at 50% 106%, rgba(255, 255, 255, .26), rgba(255, 255, 255, 0) 70%),
-    radial-gradient(140% 120% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, .12) 100%); }
-.dock-item .app::before, .sp-ico::before { content: ""; position: absolute; inset: 0;
-  background: radial-gradient(120% 62% at 50% -12%, rgba(255, 255, 255, .55), rgba(255, 255, 255, .1) 55%, rgba(255, 255, 255, 0) 70%),
-    linear-gradient(118deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, .16) 47%, rgba(255, 255, 255, 0) 56%); }
-.dock-item .app svg, .sp-ico svg { position: relative; width: 60%; height: 60%;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .22)) drop-shadow(0 0 5px rgba(255, 255, 255, .18)); }
+/* v93: Apple-like tiles. No gloss or streaks: a soft top light, a hairline edge and a clean glyph */
+.dock-item .app::after, .sp-ico::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 45%),
+    radial-gradient(140% 140% at 50% 50%, rgba(0,0,0,0) 66%, rgba(0,0,0,.10) 100%); }
+.dock-item .app::before, .sp-ico::before { content: none; }
+.dock-item .app svg, .sp-ico svg { position: relative; width: 58%; height: 58%; filter: drop-shadow(0 .6px .8px rgba(0, 0, 0, .16)); }
+.dock-item .app { box-shadow: none; }
+.dock-item { filter: drop-shadow(0 1px 1px rgba(0,0,0,.12)) drop-shadow(0 4px 7px rgba(0,0,0,.14)); }
+@media (pointer: coarse) { .dock-item { filter: drop-shadow(0 2px 4px rgba(0,0,0,.18)); } }
 .dock-item .app { width: 52px; height: 52px; flex: none; }
 .dock-item .name { margin-top: 7px; max-width: 100%; font-size: 11px; font-weight: 500; line-height: 1.15; letter-spacing: -.01em; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; color: var(--t1); pointer-events: none; }
@@ -633,6 +633,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .disc-ico svg { width: 24px; height: 24px; }
 .disc-ico.brand { background: linear-gradient(160deg, #ffd84a, #ffae1a 60%, #f08c00); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 6px 14px rgba(240, 140, 0, .25); }
 .disc-ico.experience { background: linear-gradient(160deg, #6ee7a8, #30d158 60%, #1fa347); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 6px 14px rgba(31, 163, 71, .25); }
+.disc-ico.ai { background: linear-gradient(180deg, #c784ff, #7c4dff); box-shadow: 0 6px 14px rgba(124, 77, 255, .22); }
 .disc-ico.threed { background: linear-gradient(160deg, #d68bff, #9b5cff 60%, #6e3cf0); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 6px 14px rgba(110, 60, 240, .25); }
 .tool-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 22px 12px; }
 .tool-grid li { display: flex; flex-direction: column; align-items: center; gap: 9px; font-size: 13px; font-weight: 500; color: var(--t1); text-align: center; }
@@ -696,3 +697,43 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .btn, .btn::after, .fs-btn, .side-item, .side-item svg, .case-next { transition: none; }
   .btn:hover, .fs-btn:hover { transform: none; }
 }
+/* v93: discipline and tool tiles share the dock's calm finish (no shine) */
+.disc-ico { background: linear-gradient(180deg, #54a8ff, #0a7cf5); box-shadow: 0 6px 14px rgba(10, 100, 230, .18); }
+.disc-ico.brand { background: linear-gradient(180deg, #ffbf47, #ff9a0a); box-shadow: 0 6px 14px rgba(240, 140, 0, .18); }
+.disc-ico.experience { background: linear-gradient(180deg, #5ad97f, #28b45a); box-shadow: 0 6px 14px rgba(31, 163, 71, .18); }
+.tool-ico { background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .1), 0 1px 2px rgba(0,0,0,.06), 0 8px 18px rgba(0, 0, 0, .07); }
+.tool-ico.letter { font-size: 24px; letter-spacing: -.02em; }
+.tool-ico.letter.l-H { background: linear-gradient(180deg, #3a3a3e, #1c1c1e); color: #fff; }   /* Higgsfield: lettered, not in Simple Icons */
+.tool-grid li span { transition: color .2s; }
+.tool-grid li:hover span { color: var(--accent); }
+/* v93: Contact */
+.ct { display: grid; gap: 22px; }
+.ct-hero h1 { margin-bottom: 8px; }
+.ct-status { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--t2);
+  background: var(--g-fill); box-shadow: inset 0 0 0 .5px var(--g-edge); font-variant-numeric: tabular-nums; }
+.ct-status i { width: 8px; height: 8px; border-radius: 50%; background: #30d158; box-shadow: 0 0 0 3px rgba(48, 209, 88, .18); animation: ctPulse 2.4s ease-in-out infinite; }
+@keyframes ctPulse { 50% { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); } }
+.ct-mail { padding: 22px 24px; border-radius: 24px; background: var(--card); box-shadow: 0 0 0 .5px var(--g-edge), 0 10px 30px rgba(0,0,0,.06); }
+.ct-mail small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t3); }
+.ct-mail .big-link { margin: 6px 0 16px; font-size: 30px; word-break: break-all; }
+.ct-mail .btn-row { margin-top: 0; }
+.ct-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ct-tile { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 0; border-radius: 20px; background: var(--card); color: var(--t1); text-decoration: none; text-align: left;
+  font: inherit; cursor: pointer; box-shadow: 0 0 0 .5px var(--g-edge), 0 4px 14px rgba(0,0,0,.04); transition: transform .45s var(--spring), box-shadow .3s var(--smooth); }
+.ct-tile:hover { transform: translateY(-2px); box-shadow: 0 0 0 .5px var(--g-edge), 0 14px 32px rgba(0,0,0,.1); }
+.ct-tile:active { transform: scale(.985); transition-duration: .12s; }
+.ct-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ct-ico { width: 44px; height: 44px; flex: none; position: relative; }
+.ct-ico .app { position: relative; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C87 0 100 13 100 50S87 100 50 100 0 87 0 50 13 0 50 0Z'/%3E%3C/svg%3E") center / 100% 100%;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C87 0 100 13 100 50S87 100 50 100 0 87 0 50 13 0 50 0Z'/%3E%3C/svg%3E") center / 100% 100%; }
+.ct-ico .app svg { width: 58%; height: 58%; }
+.ct-txt { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.ct-txt b { font-size: 15px; font-weight: 600; }
+.ct-txt small { font-size: 13px; color: var(--t2); }
+.ct-go { font-size: 22px; color: var(--t3); transition: transform .35s var(--spring), color .2s; }
+.ct-tile:hover .ct-go { transform: translateX(3px); color: var(--accent); }
+@media (max-width: 760px) { .ct-grid { grid-template-columns: 1fr; } .ct-mail .big-link { font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .ct-status i { animation: none; } .ct-tile { transition: none; } }
+/* v93: every project card is the same 16:10 slide */
+.work-card .wc-img img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: 50% 0; }

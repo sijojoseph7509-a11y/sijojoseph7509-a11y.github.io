@@ -1495,7 +1495,7 @@ function drawCard(photo) {
     g.strokeStyle = "#1d1d1f"; g.lineWidth = 6 * u; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(cx - 11 * u, cy + 1 * u); g.lineTo(cx - 3 * u, cy + 9 * u); g.lineTo(cx + 12 * u, cy - 8 * u); g.stroke(); }
   if ("letterSpacing" in g) g.letterSpacing = "0px";
   g.fillStyle = "rgba(255,255,255,.92)"; g.font = `400 ${44 * u}px ${F}`;
-  ["A multidisciplinary designer:", "product, brand, experience, 3D."].forEach((t, i) => g.fillText(t, L, nameY + (78 + i * 58) * u));
+  ["Product, UX & AI designer,", "and a vibe coder."].forEach((t, i) => g.fillText(t, L, nameY + (78 + i * 58) * u));
   // stats: disciplines + case studies, with outline icons
   const sy = H * 0.915; g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 3.5 * u; g.lineCap = "round";
   g.beginPath(); g.arc(L + 14 * u, sy - 26 * u, 9 * u, 0, 7); g.stroke(); g.beginPath(); g.arc(L + 14 * u, sy + 6 * u, 17 * u, Math.PI * 1.05, Math.PI * 1.95); g.stroke();   // person

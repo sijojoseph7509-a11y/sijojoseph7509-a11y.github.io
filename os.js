@@ -20,25 +20,27 @@
   const line = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE[k]}</svg>`;
 
   // App icons in the macOS style (original designs): solid white glyph on a layered gradient squircle
+  // v93: calmer, Apple-like glyphs: one clear shape per app, white on a softly lit tile (no gloss)
   const GLYPH = {
-    about:   '<circle cx="12" cy="8.2" r="4.2" fill="#fff"/><path d="M3.8 20.5c.9-4.3 4.2-6.8 8.2-6.8s7.3 2.5 8.2 6.8z" fill="#fff"/>',
-    work:    '<path d="M8.6 6.4V5.2c0-1 .8-1.8 1.8-1.8h3.2c1 0 1.8.8 1.8 1.8v1.2" fill="none" stroke="#fff" stroke-width="1.8"/><rect x="2.6" y="6.4" width="18.8" height="13.4" rx="2.6" fill="#fff"/><path d="M2.6 12.2h18.8" stroke="#e08400" stroke-width="1.4"/><rect x="10.4" y="10.8" width="3.2" height="2.8" rx=".8" fill="#e08400"/>',
-    skills:  '<path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.5L12 16.9l-5.8 3.3 1.4-6.5-4.9-4.4 6.5-.7z" fill="#fff"/>',
-    resume:  '<path d="M6.5 2.5h8l4.5 4.5v13a1.6 1.6 0 0 1-1.6 1.6H6.5a1.6 1.6 0 0 1-1.6-1.6V4.1c0-.9.7-1.6 1.6-1.6z" fill="#fff"/><path d="M14.5 2.5V7H19" fill="#d8dbe2"/><path d="M8 11h8M8 14h8M8 17h5" stroke="#2f7cf6" stroke-width="1.5" stroke-linecap="round"/>',
-    contact: '<rect x="2.6" y="5" width="18.8" height="14" rx="2.4" fill="#fff"/><path d="M3.4 6.4l8.6 6.6 8.6-6.6" fill="none" stroke="#1a8cff" stroke-width="1.6" stroke-linejoin="round"/>',
+    about:   '<circle cx="12" cy="8.6" r="3.9" fill="#fff"/><path d="M4.6 19.6c.8-3.7 3.8-5.9 7.4-5.9s6.6 2.2 7.4 5.9c.1.5-.3.9-.8.9H5.4c-.5 0-.9-.4-.8-.9z" fill="#fff"/>',
+    work:    '<path d="M9 6.6V5.4c0-.9.7-1.6 1.6-1.6h2.8c.9 0 1.6.7 1.6 1.6v1.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><rect x="3.2" y="6.6" width="17.6" height="12.8" rx="2.4" fill="#fff"/><path d="M3.2 11.6h17.6" stroke="rgba(214,120,0,.35)" stroke-width="1.1"/>',
+    skills:  '<path d="M10.2 3.6l1.7 4.9 4.9 1.7-4.9 1.7-1.7 4.9-1.7-4.9-4.9-1.7 4.9-1.7z" fill="#fff"/><path d="M17.4 13.6l.85 2.35 2.35.85-2.35.85-.85 2.35-.85-2.35-2.35-.85 2.35-.85z" fill="#fff" opacity=".9"/>',
+    resume:  '<path d="M7 3h6.6L18 7.4v12.2c0 .8-.6 1.4-1.4 1.4H7c-.8 0-1.4-.6-1.4-1.4V4.4C5.6 3.6 6.2 3 7 3z" fill="#fff" stroke="#c7c7cc" stroke-width=".8"/><path d="M13.6 3v3.6c0 .5.4.8.8.8H18" fill="none" stroke="#c7c7cc" stroke-width=".8"/><path d="M8.4 11.2h7.2M8.4 14h7.2M8.4 16.8h4.6" stroke="#0a84ff" stroke-width="1.3" stroke-linecap="round"/>',
+    contact: '<rect x="3.2" y="5.6" width="17.6" height="12.8" rx="2.2" fill="#fff"/><path d="M4.4 7.2l7.6 5.6 7.6-5.6" fill="none" stroke="#1f8cf9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
     linkedin:'<path d="M6.3 9.5h2.8V18H6.3zM7.7 5.3a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zM10.8 9.5h2.7v1.2c.4-.7 1.4-1.4 2.8-1.4 3 0 3.5 1.9 3.5 4.4V18H17v-3.8c0-.9 0-2.1-1.3-2.1s-1.5 1-1.5 2V18h-3.4z" fill="#fff"/>',
     behance: '<path d="M3.5 7h5c2.3 0 3.4 1 3.4 2.6 0 1.1-.6 1.8-1.4 2.1 1.1.3 1.9 1.2 1.9 2.5 0 2-1.6 2.8-3.7 2.8H3.5zm2.6 4h2.2c.8 0 1.2-.4 1.2-1s-.4-1-1.2-1H6.1zm0 4.1h2.4c.9 0 1.4-.4 1.4-1.1s-.5-1.1-1.4-1.1H6.1zM14.6 8h4.6v1.2h-4.6zM13.8 13.4c0-2.4 1.6-3.8 3.6-3.8 2.3 0 3.5 1.7 3.4 4.4h-4.6c.1 1.1.7 1.6 1.6 1.6.6 0 1.1-.3 1.3-.8h1.6c-.4 1.5-1.6 2.3-3 2.3-2.2 0-3.9-1.3-3.9-3.7zm4.7-.6c0-.8-.5-1.4-1.2-1.4-.8 0-1.3.6-1.4 1.4z" fill="#fff"/>',
-    desk:    '<rect x="4.2" y="5" width="15.6" height="10.6" rx="1.6" fill="#fff"/><rect x="5.6" y="6.4" width="12.8" height="7.8" rx=".6" fill="url(#deskScr)"/><path d="M2 17.4h20l-1.2 1.6H3.2z" fill="#fff"/><defs><linearGradient id="deskScr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7d6cff"/><stop offset="1" stop-color="#ff8fb1"/></linearGradient></defs>'
+    desk:    '<rect x="4.6" y="5.4" width="14.8" height="10" rx="1.4" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M2.6 18.2h18.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>'
   };
+  // one light source for every tile: a touch brighter at the top, the colour settling below
   const GRAD = {
-    about:   "linear-gradient(170deg,#6fd0ff,#1a8cff 55%,#0a64e6)",
-    work:    "linear-gradient(170deg,#ffd84a,#ffae1a 55%,#f08c00)",
-    skills:  "linear-gradient(170deg,#d68bff,#9b5cff 55%,#6e3cf0)",
-    resume:  "linear-gradient(170deg,#f4f5f7,#d9dde4)",
-    contact: "linear-gradient(170deg,#5fd3ff,#1a8cff 60%,#0a6ae6)",
-    linkedin:"linear-gradient(170deg,#2f8be0,#0a66c2)",
-    behance: "linear-gradient(170deg,#3d8bff,#1769ff)",
-    desk:    "linear-gradient(170deg,#5a5a60,#2c2c30)"
+    about:   "linear-gradient(180deg,#54a8ff,#0a7cf5)",
+    work:    "linear-gradient(180deg,#ffbf47,#ff9a0a)",
+    skills:  "linear-gradient(180deg,#c784ff,#9b4dff)",
+    resume:  "linear-gradient(180deg,#ffffff,#eceef2)",
+    contact: "linear-gradient(180deg,#5cc8ff,#1a8cff)",
+    linkedin:"linear-gradient(180deg,#1f7fd6,#0a66c2)",
+    behance: "linear-gradient(180deg,#2f7bff,#1361f0)",
+    desk:    "linear-gradient(180deg,#5c5c61,#2c2c2e)"
   };
   const appIcon = (k, cls = "app") => `<span class="${cls}" style="background:${GRAD[k]}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPH[k]}</svg></span>`;
 
@@ -47,7 +49,8 @@
     product: '<rect x="7" y="2.5" width="10" height="19" rx="2.6"/><path d="M10.5 18.5h3"/>',
     brand: '<path d="M12 3l7 7-7 11L5 10z"/><path d="M5 10h14M12 3v18"/>',
     experience: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
-    threed: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/>'
+    threed: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/>',
+    ai: '<path d="M10 3.5l1.6 4.6 4.6 1.6-4.6 1.6L10 15.9l-1.6-4.6-4.6-1.6 4.6-1.6z"/><path d="M17.5 13.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>'
   };
   const discIcon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DISC[k] || DISC.product}</svg>`;
   const toolIcon = (t) => {
@@ -64,11 +67,11 @@
         <section class="ab-hero">
           <div class="ab-photo"><img src="${esc(`assets/profile.jpg?v=${BUILD}`)}" alt="Portrait of ${esc(S.name)}" width="1200" height="1200" decoding="async"></div>
           <div class="ab-intro">
-            <p class="eyebrow">${esc(S.focus)}</p>
+            <p class="eyebrow">${esc(S.focus)}${S.also ? " · " + esc(S.also) : ""}</p>
             <h1>Hi, I'm ${first}.</h1>
             <p class="lead">${esc(S.education)}. ${esc(S.seeking)}</p>
             <dl class="ab-facts">
-              <div><dt>Role</dt><dd>${esc(S.focus)}</dd></div>
+              <div><dt>Role</dt><dd>${esc(S.focus)}${S.also ? "<br>" + esc(S.also) : ""}</dd></div>
               <div><dt>Studying</dt><dd>${esc(S.education)}</dd></div>
               <div><dt>Based in</dt><dd>${esc(S.location)}</dd></div>
             </dl>
@@ -100,7 +103,7 @@
       title: "Work", key: "2",
       html: () => `
         <h1>Selected work</h1>
-        <p class="sub">${S.projects.length} case studies. ${esc(S.focus)} first, with information design and branding alongside.</p>
+        <p class="sub">${S.projects.length} case studies across interaction, product, information design and branding.</p>
         <div class="works">${S.projects.map((p) => {
           const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p><span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
           if (!p.case) return `<div class="work-card soon" style="--c:${esc(p.color)}">${info}</div>`;
@@ -115,7 +118,7 @@
       title: "Skills", key: "3",
       html: () => `
         <h1>What I do</h1>
-        <p class="sub">${esc(S.focus)} first, with a multidisciplinary toolkit behind it.</p>
+        <p class="sub">${esc(S.focus)} and ${esc((S.also || "").toLowerCase())}, with a multidisciplinary toolkit behind it.</p>
         <div class="disc-grid">${S.skills.map((g, i) => `
           <div class="disc${i === 0 ? " primary" : ""}">
             <span class="disc-ico ${esc(g.icon || "")}">${discIcon(g.icon)}</span>
@@ -139,16 +142,34 @@
     },
     contact: {
       title: "Contact", key: "5",
-      html: () => `
-        <h1>Let's make something together.</h1>
-        <p class="sub">${esc(S.seeking)} Happy to talk brand, experience and 3D work too.</p>
-        <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
-        <div class="btn-row">
-          <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
-          <a class="btn alt" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener">LinkedIn</a>
-          <a class="btn alt" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener">Behance</a>
-          <a class="btn alt" href="${esc(safeUrl(S.links.github))}" target="_blank" rel="noopener">GitHub</a>
-        </div>`
+      html: () => {
+        const gh = window.TOOL_ICONS && window.TOOL_ICONS.github;
+        const ghIcon = gh ? `<span class="app" style="background:linear-gradient(180deg,#3a3a3e,#1c1c1e)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="${esc(gh.path)}"/></svg></span>` : appIcon("desk");
+        const tile = (href, icon, name, sub, ext) => `<a class="ct-tile" href="${esc(safeUrl(href))}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="ct-ico">${icon}</span><span class="ct-txt"><b>${esc(name)}</b><small>${esc(sub)}</small></span><span class="ct-go" aria-hidden="true">›</span></a>`;
+        return `
+        <div class="ct">
+          <div class="ct-hero">
+            <p class="eyebrow">Contact</p>
+            <h1>Let's make something together.</h1>
+            <p class="sub">${esc(S.seeking)} Brand, experience and vibe-coded projects are welcome too.</p>
+            <p class="ct-status"><i></i>${esc(S.location)} · <span data-ist>${esc(istNow())}</span> IST</p>
+          </div>
+          <div class="ct-mail">
+            <small>Email</small>
+            <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
+            <div class="btn-row">
+              <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
+              <button class="btn alt" type="button" data-copy-email>Copy address</button>
+            </div>
+          </div>
+          <div class="ct-grid">
+            ${tile(S.links.linkedin, appIcon("linkedin"), "LinkedIn", "Work history and recommendations", true)}
+            ${tile(S.links.behance, appIcon("behance"), "Behance", "More projects and visual work", true)}
+            ${tile(S.links.github, ghIcon, "GitHub", "Code, including this website", true)}
+            ${S.resumeUrl && S.resumeUrl !== "#" ? tile(S.resumeUrl, appIcon("resume"), "Résumé", "Download the PDF", true) : `<button class="ct-tile" type="button" data-open="resume"><span class="ct-ico">${appIcon("resume")}</span><span class="ct-txt"><b>Résumé</b><small>Experience and education</small></span><span class="ct-go" aria-hidden="true">›</span></button>`}
+          </div>
+        </div>`;
+      }
     }
   };
 
@@ -341,6 +362,7 @@
   os.addEventListener("click", (e) => {
     if (e.target.closest("[data-exit-case]")) { e.preventDefault(); show("work"); sound(); return; }
     if (e.target.closest("[data-share]")) { copyLink(); return; }
+    if (e.target.closest("[data-copy-email]")) { copyEmail(); sound(); return; }
     const c = e.target.closest("[data-case]");
     if (c) { e.preventDefault(); closeMenu(); closeSpotlight(); openCase(c.dataset.case); sound(); return; }
     const t = e.target.closest("[data-open]");
@@ -370,6 +392,13 @@
     const t = $("#toast"); t.textContent = msg; t.hidden = false;
     t.style.animation = "none"; void t.offsetWidth; t.style.animation = "";
     clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.hidden = true), 1800);
+  }
+  // Bangalore time for the Contact window
+  function istNow() { return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date()).toUpperCase(); }
+  setInterval(() => { const el = document.querySelector("[data-ist]"); if (el) el.textContent = istNow(); }, 30000);
+  async function copyEmail() {
+    try { await navigator.clipboard.writeText(S.email); toast("Email address copied"); }
+    catch (_) { toast(S.email); }
   }
   async function copyLink() {
     const url = location.origin + location.pathname;

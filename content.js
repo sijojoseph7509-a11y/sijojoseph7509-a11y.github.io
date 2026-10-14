@@ -6,11 +6,12 @@
 window.SITE = {
   name: "Sijo Joseph",
   first: "SIJO",
-  title: "Product & UX Designer",
-  focus: "Product / UX designer",                 // the role he is going for: said first, everywhere
+  title: "Product, UX & AI Designer",
+  focus: "Product, UX & AI designer",             // the role he is going for: said first, everywhere
+  also: "Vibe coder",                             // second line of the role: he designs and builds with AI coding agents
   education: "M.Des design student, NID Bengaluru",
-  seeking: "Open to product and UX design roles.",
-  roles: ["Product Designer", "Brand Strategist", "Experience Designer", "3D Designer"],
+  seeking: "Open to product, UX and AI design roles.",
+  roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",
   resumeUrl: "#",                                // ✏️ link to your PDF
@@ -54,7 +55,7 @@ window.SITE = {
       ] } },
     { title: "Carekin", tag: "UX / Product Design", color: "#0F3B38", status: "Self-initiated project", url: "#",
       summary: "Medication coordination for families caring for an ageing parent: one schedule, the Carekin app for the organiser and WhatsApp for the helper, so every dose change reaches every carer.",
-      case: { slug: "carekin", fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#FF8A6B", videos: [[2, 440, 120, 960, 540, "walkthrough.mp4"]] }, sections: [   // 2× export of Figma "Carekin · Case Study (Final)" (s6WXmDrd36Frlkg1kVsvUg, page 121:2)
+      case: { slug: "carekin", coverSlide: ["fx/cover-slide.webp", 900], fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#FF8A6B", videos: [[2, 440, 120, 960, 540, "walkthrough.mp4"]] }, sections: [   // 2× export of Figma "Carekin · Case Study (Final)" (s6WXmDrd36Frlkg1kVsvUg, page 121:2)
         ["01.webp", 671, "Carekin. Medication coordination for families caring for an ageing parent. UX / Product Design, Android app and WhatsApp, self-initiated, 2 weeks."],
         ["02.webp", 900, "The finished design: Lakshmi gets the dose on WhatsApp and taps Given, Priya sees it on the Carekin app, and a dose change reaches everyone."],
         ["03.webp", 760, "Watch it work: a 49-second walkthrough from a paper prescription to Given in the kitchen, recorded from the Figma prototype."],
@@ -102,7 +103,7 @@ window.SITE = {
       ] } },
     { title: "Backwater Line", tag: "Information Design \u00b7 Wayfinding", color: "#0E0F10", status: "Self-initiated project", url: "#",
       summary: "One map, one naming system and seven sign types for a ferry network on the Kochi backwaters, readable by day and after dark.",
-      case: { slug: "backwater", fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#F2C230", videos: [[3, 440, 120, 960, 540, "day-to-night.mp4"]], compare: [1, 0, 0, 1440, 551, "jetty-night.webp", "Day", "Night"] }, sections: [   // 2× export of Figma "Backwater Line · Case Study (Final)" (6iuhjuMILOUIsgbqNKq8OG, page 88:2)
+      case: { slug: "backwater", coverSlide: ["fx/cover-slide.webp", 900], fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#F2C230", videos: [[3, 440, 120, 960, 540, "day-to-night.mp4"]], compare: [1, 0, 0, 1440, 551, "jetty-night.webp", "Day", "Night"] }, sections: [   // 2× export of Figma "Backwater Line · Case Study (Final)" (6iuhjuMILOUIsgbqNKq8OG, page 88:2)
         ["01.webp", 632, "Backwater Line. One map, one naming system and seven sign types for a ferry network on the Kochi backwaters. Information design and wayfinding, self-initiated, 2 weeks."],
         ["02.webp", 640, "The finished signs by day at Valiya Kadavu jetty: fascia name, mast, gangway blade and berth post."],
         ["03.webp", 640, "The same jetty after dark: lettering and line discs are retroreflective and the key signs are lit."],
@@ -150,7 +151,7 @@ window.SITE = {
       ] } },
     { title: "Ekmaati", tag: "Branding \u00b7 Packaging", color: "#2A1A10", status: "NID Semester 2 project", url: "#",
       summary: "Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen.",
-      case: { slug: "ekmaati", cover: "13.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "ekmaati final"
+      case: { slug: "ekmaati", coverSlide: ["fx/cover-slide.webp", 900], cover: "13.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "ekmaati final"
         ["01.webp", 1000, "Ekmaati. Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen. Branding, 2026."],
         ["02.webp", 240, "Snapshot: sole designer for research, naming, identity, packaging and campaign; deliverables include the name, mark, colour, type, temple box, die line and two posters; a real project, prototyped by hand."],
         ["03.webp", 960, "Statement: turning a seasonal commodity into a keepsake, with a name, a mark and a temple-shaped box for the clay gods of Pen."],
@@ -185,18 +186,19 @@ window.SITE = {
   skills: [
     { group: "Product Design",    icon: "product", desc: "From research to tested prototypes and the UI systems behind them.",
       items: ["UX research", "Interaction design", "UI systems", "Prototyping", "Usability testing"] },
+    { group: "AI & Vibe Coding",  icon: "ai", desc: "Designing with AI and building with it: prototypes, tools and this very site, shipped with AI coding agents.",
+      items: ["Claude Code", "Codex", "ChatGPT", "Gemini", "Higgsfield", "Three.js / WebGL"] },
     { group: "Brand Strategy",    icon: "brand", desc: "Positioning, names and identities, with guidelines that hold them together.",
       items: ["Positioning", "Brand identity", "Naming & voice", "Campaigns", "Guidelines"] },
-    { group: "Experience Design", icon: "experience", desc: "Services, journeys and the spaces people move through.",
-      items: ["Service design", "Journey mapping", "Spatial / exhibit", "Workshops"] },
-    { group: "3D & Motion",       icon: "threed", desc: "Modelling, rendering and real-time 3D, like the room you just walked through.",
-      items: ["Blender", "Spline", "Cinema 4D", "Three.js / WebGL", "KeyShot", "After Effects"] }
+    { group: "Experience Design", icon: "experience", desc: "Services, journeys and the spaces people move through, modelled in Blender and SketchUp.",
+      items: ["Service design", "Journey mapping", "Spatial / exhibit", "Workshops", "Blender", "SketchUp"] }
   ],
   tools: [
-    { name: "Figma", icon: "figma" }, { name: "Adobe CC", icon: "adobecc" }, { name: "Framer", icon: "framer" },
-    { name: "ProtoPie", icon: null }, { name: "Notion", icon: "notion" }, { name: "Blender", icon: "blender" },
-    { name: "Spline", icon: null }, { name: "Cinema 4D", icon: "cinema4d" }, { name: "Three.js", icon: "threejs" },
-    { name: "KeyShot", icon: null }, { name: "After Effects", icon: "aftereffects" }
+    { name: "Figma", icon: "figma" }, { name: "Photoshop", icon: "adobephotoshop" }, { name: "Illustrator", icon: "adobeillustrator" },
+    { name: "SketchUp", icon: "sketchup" }, { name: "Blender", icon: "blender" }, { name: "Three.js", icon: "threejs" },
+    { name: "WebGL", icon: "webgl" }, { name: "Framer", icon: "framer" }, { name: "Notion", icon: "notion" },
+    { name: "Claude Code", icon: "claude" }, { name: "Codex", icon: "openai" }, { name: "ChatGPT", icon: "openai" },
+    { name: "Gemini", icon: "googlegemini" }, { name: "Higgsfield", icon: null }
   ],
 
   experience: []   // ✏️ add real roles: { company, role, from, to } — the Resume window hides the list while it's empty
