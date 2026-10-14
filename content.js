@@ -170,14 +170,14 @@ window.SITE = {
         ["17.webp", 1702, "Process hall of fame: logo iterations, three cardboard box prototypes, die lines and materials that led to the final box."],
         ["18.webp", 891, "Decision log: what was chosen, what was let go and why, for the name, mark, colour, type and box."],
         ["19.webp", 1300, "The temple box: a box that folds from flat sheets into a body, two roof tiers and a peak, with no tape or plastic; 350 GSM board, gold emboss and spot UV."],
-        ["20.webp", 4303, "Illustrated narrative, The Festival Errand: a buyer picks a small Pen idol in a temple-shaped box, tears the arch at home, and keeps the temple after immersion."],
+        ["20.webp", 4372, "Illustrated narrative, The Festival Errand: a buyer picks a small Pen idol in a temple-shaped box, tears the arch at home, and keeps the temple after immersion."],
         ["21.webp", 834, "Experience map: the errand mapped from the stall to carrying it home, tearing the arch, the ten days of worship and immersion."],
         ["22.webp", 761, "Accessibility and edge cases: Marathi and English at equal weight, measured contrast and no reliance on colour, plus edge cases such as monsoon damp."],
         ["23.webp", 978, "Campaign, Big faith for small places: posters showing a detailed Ganesha on a desk among keyboards, glasses and sticky notes."],
         ["24.webp", 632, "Validation: how I'd know it works, including an unboxing test with five people and whether buyers keep the box as a shrine."],
         ["25.webp", 466, "Reflection: cardboard prototypes taught more than renders; next is co-designing the box with an artisan family in Pen and testing the unboxing."],
         ["26.webp", 1001, "Back to the water: the clay idol returns to water while the temple box stays."],
-        ["27.webp", 1100, "Footer: Ekmaati, branding and packaging, Semester 2 jury at NID, 2026, with role, sources and credits."]
+        ["27.webp", 997, "Footer: Ekmaati, branding and packaging, Semester 2 jury at NID, 2026, with role and credits."]
       ] } }
   ],
 
