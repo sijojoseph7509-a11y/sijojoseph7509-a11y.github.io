@@ -819,9 +819,10 @@ const note = canvasTex(256, 256, (g) => {
   g.fillStyle = "#3b3b3b"; g.font = '600 40px "Caveat"';
   ["make it", "simple,", "then make", "it fun ✶"].forEach((t, i) => g.fillText(t, 26, 82 + i * 46));
 });
-const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 1.45), new THREE.MeshStandardMaterial({ map: note.tex, roughness: 0.8 }));
-noteMesh.rotation.set(-Math.PI / 2, 0, 0.12);
-noteMesh.position.set(2.05, TOP + 0.006, 1.2);
+// sits in the free palm rest right of the trackpad (trackpad edge x 1.45, deck edge x 3.0 / z 2.125), clear of both edges
+const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.15), new THREE.MeshStandardMaterial({ map: note.tex, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -1 }));
+noteMesh.rotation.set(-Math.PI / 2, 0, -0.05);
+noteMesh.position.set(2.24, TOP + 0.004, 1.16);
 noteMesh.receiveShadow = true;
 laptop.add(noteMesh);
 
