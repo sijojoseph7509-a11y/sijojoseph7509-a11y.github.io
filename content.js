@@ -17,7 +17,7 @@ window.SITE = {
   resumeUrl: "#",                                // ✏️ link to your PDF
   links: {
     mail: "mailto:sijojoseph7509@gmail.com",
-    linkedin: "https://www.linkedin.com/",       // ✏️
+    linkedin: "https://www.linkedin.com/in/sijodesign",
     behance: "https://www.behance.net/",         // ✏️
     github: "https://github.com/sijojoseph7509-a11y"
   },
