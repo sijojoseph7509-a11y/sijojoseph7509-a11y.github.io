@@ -98,3 +98,5 @@
 /* Lato Thin + Light (SIL OFL 1.1, OFL-Lato.txt): only the Syntra case study's live numbers use it, so it loads only there. */
 @font-face { font-family: 'Lato'; font-style: normal; font-weight: 100; font-display: swap; src: url(lato-100-latin.woff2) format('woff2'); unicode-range: U+0000-00FF; }
 @font-face { font-family: 'Lato'; font-style: normal; font-weight: 300; font-display: swap; src: url(lato-300-latin.woff2) format('woff2'); unicode-range: U+0000-00FF; }
+/* Noto Sans Malayalam (SIL OFL 1.1, OFL-NotoSansMalayalam.txt), subset to the one word on the welcome screen: നമസ്കാരം */
+@font-face { font-family: 'Noto Sans Malayalam Hello'; font-style: normal; font-weight: 600; font-display: swap; src: url(noto-malayalam-namaskaram.woff2) format('woff2'); }

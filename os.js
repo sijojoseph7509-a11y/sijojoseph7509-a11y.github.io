@@ -278,7 +278,7 @@
     setTimeout(pump, 700);
     // a case study can bring its own motion layer (Syntra): an ES module loaded only when it opens
     const fxFile = /^[\w-]+\.js$/.test(p.case.fx || "") ? p.case.fx : "";   // only a plain local module name
-    if (fxFile) import(`./${fxFile}?v=${BUILD}`).then((m) => { if (caseSlug === slug) m.default($(".case"), { slug, v: BUILD, sections: p.case.sections }); }).catch(() => {});
+    if (fxFile) import(`./${fxFile}?v=${BUILD}`).then((m) => { if (caseSlug === slug) m.default($(".case"), { slug, v: BUILD, sections: p.case.sections, opts: p.case.fxOpts || {} }); }).catch(() => {});
   }
   // hovering a project (Work card, Spotlight result, desk folder) starts downloading its first sections
   const warmed = new Set();

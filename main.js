@@ -899,26 +899,48 @@ const phoneBody = rbox(PH.w, PH.t, PH.l, 0.2, SILVER, 6);
 phoneBody.position.y = PH.t / 2;
 const phoneGlass = rbox(PH.w - 0.05, 0.012, PH.l - 0.05, 0.19, mat(0x0b0b0c, { roughness: 0.08, clearcoat: 1 }), 4);
 phoneGlass.position.y = PH.t + 0.002;
-const phoneScreenTex = canvasTex(512, 1080, (g, w, h) => {
-  g.scale(2, 2); w = 256; h = 540;   // laid out at 256×540, rendered at 2× for sharpness
+// The lock screen keeps Sijo's own clock: Bangalore time (IST), a line for what he is probably doing at that hour,
+// and what the soundbar is playing. Redrawn every 20 s and whenever the music changes.
+const IST = (o) => new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", ...o }).format(new Date());
+const HOUR_LINES = [[0, "Past midnight here. Probably still pushing pixels."], [5, "Early in Bangalore. Chai first, then design."],
+  [8, "Morning here. Deep-work hours."], [12, "Lunch, then back at the desk."], [15, "Afternoon. Sketching, testing, fixing."],
+  [18, "Evening. Might be out on a ride."], [21, "Night in Bangalore. The good ideas show up now."]];
+function drawPhone(g, w, h) {
+  g.setTransform(1, 0, 0, 1, 0, 0); g.scale(2, 2); w = 256; h = 540;   // laid out at 256×540, rendered at 2× for sharpness
   const lg = g.createLinearGradient(0, 0, w, h);
   lg.addColorStop(0, "#5e5ce6"); lg.addColorStop(0.55, "#bf5af2"); lg.addColorStop(1, "#ff9f0a");
   g.fillStyle = lg; g.fillRect(0, 0, w, h);
   g.fillStyle = "#fff"; g.textAlign = "center";
-  g.font = `600 22px ${UI}`; g.fillText(new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" }), w / 2, 92);
-  g.font = `700 92px ${UI}`; g.fillText(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M/i, ""), w / 2, 190);
-  g.fillStyle = "rgba(255,255,255,.28)"; g.beginPath(); g.roundRect(22, 380, w - 44, 70, 18); g.fill();
-  g.fillStyle = "#fff"; g.textAlign = "left"; g.font = `600 20px ${UI}`; g.fillText("New message", 40, 410);
-  g.font = `400 18px ${UI}`; g.fillText("Let's work together →", 40, 436);
+  g.font = `600 20px ${UI}`; g.fillText(IST({ weekday: "long", day: "numeric", month: "long" }), w / 2, 86);
+  g.font = `700 88px ${UI}`; g.fillText(IST({ hour: "numeric", minute: "2-digit", hour12: true }).replace(/\s?[ap]\.?m\.?/i, ""), w / 2, 180);
+  g.font = `600 13px ${UI}`; g.fillStyle = "rgba(255,255,255,.8)"; g.fillText("BANGALORE · IST", w / 2, 206);
+  const hr = +IST({ hour: "numeric", hourCycle: "h23" });
+  const line = HOUR_LINES.filter(([hh]) => hr >= hh).pop()[1];
+  const card = (y, hh, title, body) => {
+    g.fillStyle = "rgba(255,255,255,.26)"; g.beginPath(); g.roundRect(18, y, w - 36, hh, 18); g.fill();
+    g.fillStyle = "#fff"; g.textAlign = "left"; g.font = `600 16px ${UI}`; g.fillText(title, 34, y + 26);
+    g.font = `400 15px ${UI}`; wrapText(g, body, 34, y + 48, w - 68, 19);
+  };
+  card(236, 92, "Sijo, right now", line);
+  card(340, 74, "Now playing", window.Music && window.Music.playing ? `♪ ${window.Music.mood}` : "Music off · tap the soundbar");
+  card(426, 66, "New message", "Let's work together →");
   g.fillStyle = "#000"; g.beginPath(); g.roundRect(w / 2 - 42, 14, 84, 24, 12); g.fill();
-});
+}
+function wrapText(g, text, x, y, maxW, lh) {
+  let ln = "", yy = y;
+  for (const word of text.split(" ")) { const t = ln ? ln + " " + word : word; if (g.measureText(t).width > maxW && ln) { g.fillText(ln, x, yy); ln = word; yy += lh; } else ln = t; }
+  if (ln) g.fillText(ln, x, yy);
+}
+const phoneScreenTex = canvasTex(512, 1080, drawPhone);
+function redrawPhone() { drawPhone(phoneScreenTex.g, 512, 1080); phoneScreenTex.tex.needsUpdate = true; }
+setInterval(redrawPhone, 20000);
 const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(PH.w - 0.1, PH.l - 0.1), new THREE.MeshBasicMaterial({ map: phoneScreenTex.tex, toneMapped: false }));
 phoneScreen.rotation.x = -Math.PI / 2; phoneScreen.position.y = PH.t + 0.01;
 phone.add(phoneBody, phoneGlass, phoneScreen);
 phone.position.set(-4.3, 0.06, 4.5);
 phone.rotation.y = -0.5;
 scene.add(phone);
-interactive(phone, "New message — say hello", () => { Sound.click(); boot("contact"); }, 0.1);
+interactive(phone, "New message · say hello", () => { Sound.click(); boot("contact"); }, 0.1);
 
 // 2d. Things from Sijo's real desk: plant in a mango-yellow pot, green water bottle
 const plant = new THREE.Group();
@@ -1030,7 +1052,28 @@ for (const sx of [-1, 1]) { const foot = rbox(1.3, 0.32, 1.1, 0.15, spkBlack, 2)
 speaker.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 speaker.position.set(6.15, 0, -2.75); speaker.rotation.y = 0;
 scene.add(speaker);
-interactive(speaker, "Music on / off ♪", () => { if (!Sound.toggle()) setTimeout(() => Sound.click(), 60); });
+// a small status light on the soundbar takes the colour of the mood
+const MOOD_LED = { "Desk lo-fi": 0xffb468, "Night-drive phonk": 0xb06cff, "Kerala evening": 0xffc94a, "Monsoon chai": 0x5fd3c4 };
+const spkLed = mesh(new THREE.CircleGeometry(0.07, 16), new THREE.MeshBasicMaterial({ color: 0xffb468, toneMapped: false }));
+spkLed.position.set(2.7, 0.97, 0.69); speaker.add(spkLed);
+function syncMusicUI() {
+  const on = window.Music && window.Music.playing;
+  spkLed.material.color.setHex(on ? MOOD_LED[window.Music.mood] || 0xffb468 : 0x2a2a2c);
+  redrawPhone();
+}
+window.Music && window.Music.onChange && window.Music.onChange(syncMusicUI);
+// Click the soundbar: music on (if it was off), otherwise the next mood. The mute button (top right) still silences everything.
+interactive(speaker, "Change the music ♪", () => {
+  if (Sound.muted) { Sound.setMuted(false); toastNP(window.Music.mood); return; }
+  if (!window.Music.playing) { Sound.setMuted(false); }
+  const m = window.Music.next(); setTimeout(() => Sound.click(), 40); toastNP(m);
+});
+let npTimer = 0;
+function toastNP(name) {
+  const el = $("#nowPlaying"); if (!el) return;
+  el.querySelector("b").textContent = name; el.classList.add("on");
+  clearTimeout(npTimer); npTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
 
 // 7. Astronaut galaxy projector by the water bottle (≈26 cm tall on its moon-rock base). At night it throws a
 //    nebula and stars onto the ceiling and the back wall; click it to switch the projection on or off.
@@ -1857,10 +1900,23 @@ function loop(now) {
     h.material.opacity = Math.max(0, 1 - d.life / 1.4);
     if (d.life > 1.4) { scene.remove(h); h.material.dispose(); hearts.splice(i, 1); }
   }
+  if (ball && airborne) {
+    ballVY -= 0.03 * f;                                   // gravity (≈ 1 s in the air per touch)
+    ball.position.y += ballVY * f;
+    ball.position.z += (ballZ - ball.position.z) * Math.min(1, 0.12 * f);
+    ball.children[0].rotation.x += 0.08 * f;
+    if (ball.position.y <= ballY0) {                      // it landed: the round ends
+      ball.position.y = ballY0; airborne = false; ballVY = 0;
+      const best = keepy > keepyBest; if (best) { keepyBest = keepy; try { localStorage.setItem("keepy", keepyBest); } catch (_) {} }
+      gamePill(`${keepy} keepy-up${keepy === 1 ? "" : "s"}`, best && keepy > 1 ? "New best!" : `Best ${keepyBest} · click to try again`);
+      clearTimeout(gamePillT); gamePillT = setTimeout(() => $("#gamePill") && $("#gamePill").classList.remove("on"), 3200);
+      ballZ = 6.2; ballVX *= 0.5;
+    }
+  } else if (ball && Math.abs(ball.position.z - ballZ) > 0.01) ball.position.z += (ballZ - ball.position.z) * Math.min(1, 0.05 * f);
   if (ball && Math.abs(ballVX) > 0.001) {
     ball.position.x += ballVX * f;
     ball.children[0].rotation.z -= ballVX * f / BALL_R;
-    ballVX *= Math.pow(0.985, f);
+    ballVX *= Math.pow(airborne ? 0.995 : 0.985, f);
     const BX0 = X0 + 0.8 + BALL_R + 0.05, BX1 = CX0 - BALL_R - 0.05;   // rolls under the desk front, between the left panel and the cubby
     if (ball.position.x < BX0) { ball.position.x = BX0; ballVX = Math.abs(ballVX) * 0.75; }
     if (ball.position.x > BX1) { ball.position.x = BX1; ballVX = -Math.abs(ballVX) * 0.75; }
@@ -1982,7 +2038,22 @@ function catShadowFollow() {
 }
 
 // Ball on the marble floor — click to kick it
-let ball = null, ballVX = 0;
+let gamePillT = 0;
+let ball = null, ballVX = 0, ballVY = 0, ballY0 = 0, ballZ = 6.2, keepy = 0, keepyBest = 0, airborne = false;
+try { keepyBest = +localStorage.getItem("keepy") || 0; } catch (_) {}
+// Keepy-up: click the ball to pop it up, click it again before it lands. Each touch counts; your best is kept on this device.
+function kickUp() {
+  if (!ball) return;
+  Sound.click();
+  if (!airborne) { keepy = 0; airborne = true; ballZ = 8.9; }   // first touch: it comes out from under the desk edge
+  keepy++;
+  ballVY = 0.92 + Math.random() * 0.12; ballVX = (Math.random() - 0.5) * 0.12;
+  gamePill(`Keepy-ups <b>${keepy}</b>`, keepyBest ? `Best ${keepyBest}` : "Click it again before it lands");
+}
+function gamePill(main, sub) {
+  const el = $("#gamePill"); if (!el) return;
+  el.innerHTML = `<span>${main}</span><small>${sub}</small>`; el.classList.add("on");
+}
 const BALL_R = 1.7; // ≈17 cm across (a size-3 kickabout ball)
 async function loadBall() {
   const [gltf, base, normal, rough] = await Promise.all([
@@ -2004,7 +2075,8 @@ async function loadBall() {
   ball.add(spin);
   ball.position.set(-4.5, floor.position.y + BALL_R, 6.2); // on the floor at the front of the desk (under the desk front), in view
   reveal(ball);
-  interactive(ball, "Kick me ⚽", () => { Sound.click(); ballVX = (ball.position.x > 0 ? -1 : 1) * 0.4; });
+  ballY0 = ball.position.y;
+  interactive(ball, "Kick it up ⚽ keepy-up", kickUp);
 }
 
 
