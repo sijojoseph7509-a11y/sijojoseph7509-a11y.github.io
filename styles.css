@@ -661,3 +661,38 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .loader.ready .hello-ml { font-size: 18px; }
   .loader.ready .hello-en { display: none; }
 }
+
+/* ───────── Finish pass (v92): calmer, more tactile controls ───────── */
+/* buttons lift a touch on hover, glow softly, and press in with a spring; a slow sheen crosses the primary button */
+.btn { position: relative; overflow: hidden; transition: transform .45s var(--spring), box-shadow .3s var(--smooth), background .25s var(--smooth), filter .25s; }
+.btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+  transform: translateX(-120%); transition: transform .9s var(--smooth); pointer-events: none; }
+.btn:hover { filter: none; transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 8px 22px rgba(10,132,255,.36); }
+.btn:hover::after { transform: translateX(120%); }
+.btn:active { transform: translateY(0) scale(.96); transition-duration: .12s; }
+.btn.alt::after { background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.5) 50%, transparent 65%); }
+.btn.alt:hover { box-shadow: inset 0 1px 0 var(--g-hi), 0 0 0 .5px var(--g-edge), 0 6px 16px rgba(0,0,0,.08); }
+.btn:focus-visible, .fs-btn:focus-visible, .side-item:focus-visible, .case-next:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* small pill buttons (case bar, toolbar) swell slightly */
+.fs-btn { transition: background .2s var(--smooth), transform .35s var(--spring); }
+.fs-btn:hover { transform: scale(1.06); }
+.fs-btn:active { transform: scale(.94); transition-duration: .1s; }
+/* sidebar: the icon nudges forward on hover, the row presses in */
+.side-item { transition: background .25s var(--smooth), transform .3s var(--spring); }
+.side-item svg { transition: transform .35s var(--spring); }
+.side-item:hover svg { transform: translateX(2px) scale(1.08); }
+.side-item:active { transform: scale(.98); }
+/* traffic lights: glyphs fade in together, like macOS */
+.lights button::after { transition: opacity .15s; }
+.lights button { transition: filter .15s; }
+.lights button:active { filter: brightness(.85); }
+/* the next-case link at the end of a case study */
+.case-next { background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat; transition: background-size .45s var(--smooth), color .2s; padding-bottom: 2px; }
+.case-next:hover { background-size: 100% 2px; }
+/* reading progress in the case-study bar */
+.fs-bar { position: sticky; }
+.fs-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform-origin: left; transform: scaleX(0); opacity: .8; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn::after, .fs-btn, .side-item, .side-item svg, .case-next { transition: none; }
+  .btn:hover, .fs-btn:hover { transform: none; }
+}

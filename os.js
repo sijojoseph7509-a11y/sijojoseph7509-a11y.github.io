@@ -74,8 +74,8 @@
             </dl>
             <div class="btn-row">
               <button class="btn" data-open="work">See my work</button>
-              ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn alt" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Résumé</a>` : ""}
               <button class="btn alt" data-open="contact">Get in touch</button>
+              ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn alt" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Resume</a>` : `<button class="btn alt" data-open="resume">Resume</button>`}
             </div>
           </div>
         </section>
@@ -254,6 +254,7 @@
           <span>${k + 1} / ${list.length}</span>
           <button class="fs-btn" data-case="${esc(next.case.slug)}" aria-label="Next: ${esc(next.title)}">›</button></nav>` : ""}
         <button class="fs-btn fs-share" data-share aria-label="Copy link to this portfolio">${SHARE_ICON}</button>
+        <i class="fs-progress" aria-hidden="true"></i>
       </header>
       <div class="case">
       <p class="case-hint">Pinch to zoom in on the details.</p>
@@ -262,6 +263,11 @@
         <button class="btn alt" data-exit-case>All work</button></div>
     </div>`;
     body.scrollTop = 0;
+    // a hairline under the bar shows how far into the case study you are
+    const prog = body.querySelector(".fs-progress");
+    if (body._prog) body.removeEventListener("scroll", body._prog);
+    body._prog = () => { if (!prog.isConnected) return; const max = body.scrollHeight - body.clientHeight; prog.style.transform = `scaleX(${max > 0 ? Math.min(1, body.scrollTop / max) : 0})`; };
+    body.addEventListener("scroll", body._prog, { passive: true });
     // images fade in as they arrive (no pop), over the project's own colour instead of a grey block
     const imgs = [...body.querySelectorAll(".case img")];
     $(".case").style.setProperty("--case-bg", p.color || "#1c1c1e");

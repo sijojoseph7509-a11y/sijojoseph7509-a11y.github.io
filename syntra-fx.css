@@ -8,10 +8,9 @@
 .sx-under { z-index: 0; }
 .sx-mul { mix-blend-mode: multiply; }
 /* sections surface out of a warm mist */
-.case-syntra .sx-sec:not(.sx-in) > .sx-base,
-.case-syntra .sx-sec:not(.sx-in) > .sx-layer { opacity: 0; filter: blur(18px); transform: translateY(28px) scale(1.01); }
-.case-syntra .sx-sec > .sx-base,
-.case-syntra .sx-sec > .sx-layer { transition: opacity 1.4s cubic-bezier(.22,.7,.2,1), filter 1.6s cubic-bezier(.22,.7,.2,1), transform 1.6s cubic-bezier(.22,.7,.2,1); }
+/* the page itself is always there; only the live layers ease in (a soft focus-pull, no movement) */
+.case-syntra .sx-sec:not(.sx-in) > .sx-layer:not(.sx-under) { opacity: 0; filter: blur(8px); }
+.case-syntra .sx-sec > .sx-layer { transition: opacity 1.2s ease, filter 1.4s ease; }
 /* cover: the bottle breathes, the bottles drift, the headline drifts in and out of focus */
 .sx-breathe > img { animation: sxBreathe 16s ease-in-out infinite alternate; transform-origin: 70% 30%; }
 @keyframes sxBreathe { from { transform: scale(1); filter: blur(0); } to { transform: scale(1.05); filter: blur(2.5px); } }

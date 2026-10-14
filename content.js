@@ -37,9 +37,9 @@ window.SITE = {
           // 2× exports of Figma "Syntra · Documentation" (RFow6mVvYRDVcu5NrMgO7D, page 223:2) with the moving parts left out; syntra-fx.js adds them back
         ["01.webp", 2725, "Syntra. An interactive perfume finder. Know the feeling, not the name? Let's find your perfume. Utsav Sharma, Sijo Joseph, Rajat Chaple; Retail Tech module, 2 weeks."],
         ["02.webp", 2330, "Meet Syntra: a kiosk you play like an instrument. A visitor in the VR headset at our exhibit, then four steps: turn, see, step in, take it home."],
-        ["03.webp", 2725, "Choosing a scent is choosing how you'll be remembered. How we went about the process, as layers of a perfume bottle: concept, research, ideation, prototyping, experience."],
+        ["03.webp", 2425, "Choosing a scent is choosing how you'll be remembered. How we went about the process, as layers of a perfume bottle: concept, research, ideation, prototyping, experience."],
         ["04.webp", 2725, "The problem: shoppers arrive knowing a mood but the store speaks in names and notes. 24 options turn into 3% bought, 6 into 30%; 60% of US perfume users discover scents by trying them in store; the nose tires after 3 to 4 perfumes."],
-        ["05.webp", 2725, "Current journey map from our store visits: walks in, browse, test, ask staff, decide, and where each step breaks. What shoppers and staff told us."],
+        ["05.webp", 2245, "Current journey map from our store visits: walks in, browse, test, ask staff, decide, and where each step breaks. What shoppers and staff told us."],
         ["06.webp", 2350, "What we heard, again and again: people know the mood, not the notes; too many choices, too few words; the nose gives up before the mind does; nobody is there to translate."],
         ["07.webp", 2700, "Why these choices: physical controls because turning a knob feels like playing; ZARA because it is affordable, wide and focused; VR and AR because people remember a scent as a place."],
         ["08.webp", 3300, "How Syntra works: turn, read, score, match, then step in with a double press or print with a 2-second hold. Four controls, 162 settings, and how the match is weighed: mood 36%, expression 26%, occasion 22%, longevity 16%."],
@@ -49,12 +49,12 @@ window.SITE = {
         ["12.webp", 3500, "Wires, foam and light: the ESP32 circuit and pin map, the backdrop from foam model to glowing channels, and what changed from first try to final."],
         ["13.webp", 2100, "Putting it in their hands: visitors at our exhibit, what confused them and what we changed, and what testers told us."],
         ["14.webp", 2200, "A scent found, felt and kept: the printed Syntra Manual in eight steps and the kiosk in use at our exhibit."],
-        ["15.webp", 2700, "What we carry forward: what worked, what we'd do next, the team and the tools."],
+        ["15.webp", 2420, "What we carry forward: what worked, what we'd do next, the team and the tools."],
         ["16.webp", 900, "Sources and credits: Iyengar and Lepper 2000, YouGov 2025, IMARC, Grosofsky et al. 2011, Poly Haven, Wikimedia Commons. ZARA is not affiliated with this student project."],
       ] } },
     { title: "Carekin", tag: "UX / Product Design", color: "#0F3B38", status: "Self-initiated project", url: "#",
       summary: "Medication coordination for families caring for an ageing parent: one schedule, the Carekin app for the organiser and WhatsApp for the helper, so every dose change reaches every carer.",
-      case: { slug: "carekin", fx: "case-fx.js", fxOpts: { reveal: "rise", accent: "#FF8A6B", videos: [[2, 440, 120, 960, 540, "walkthrough.mp4"]] }, sections: [   // 2× export of Figma "Carekin · Case Study (Final)" (s6WXmDrd36Frlkg1kVsvUg, page 121:2)
+      case: { slug: "carekin", fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#FF8A6B", videos: [[2, 440, 120, 960, 540, "walkthrough.mp4"]] }, sections: [   // 2× export of Figma "Carekin · Case Study (Final)" (s6WXmDrd36Frlkg1kVsvUg, page 121:2)
         ["01.webp", 671, "Carekin. Medication coordination for families caring for an ageing parent. UX / Product Design, Android app and WhatsApp, self-initiated, 2 weeks."],
         ["02.webp", 900, "The finished design: Lakshmi gets the dose on WhatsApp and taps Given, Priya sees it on the Carekin app, and a dose change reaches everyone."],
         ["03.webp", 760, "Watch it work: a 49-second walkthrough from a paper prescription to Given in the kitchen, recorded from the Figma prototype."],
@@ -102,7 +102,7 @@ window.SITE = {
       ] } },
     { title: "Backwater Line", tag: "Information Design \u00b7 Wayfinding", color: "#0E0F10", status: "Self-initiated project", url: "#",
       summary: "One map, one naming system and seven sign types for a ferry network on the Kochi backwaters, readable by day and after dark.",
-      case: { slug: "backwater", fx: "case-fx.js", fxOpts: { reveal: "wipe", accent: "#F2C230", videos: [[3, 440, 120, 960, 540, "day-to-night.mp4"]], compare: [1, 0, 0, 1440, 551, "jetty-night.webp", "Day", "Night"] }, sections: [   // 2× export of Figma "Backwater Line · Case Study (Final)" (6iuhjuMILOUIsgbqNKq8OG, page 88:2)
+      case: { slug: "backwater", fx: "case-fx.js", fxOpts: { reveal: "none", accent: "#F2C230", videos: [[3, 440, 120, 960, 540, "day-to-night.mp4"]], compare: [1, 0, 0, 1440, 551, "jetty-night.webp", "Day", "Night"] }, sections: [   // 2× export of Figma "Backwater Line · Case Study (Final)" (6iuhjuMILOUIsgbqNKq8OG, page 88:2)
         ["01.webp", 632, "Backwater Line. One map, one naming system and seven sign types for a ferry network on the Kochi backwaters. Information design and wayfinding, self-initiated, 2 weeks."],
         ["02.webp", 640, "The finished signs by day at Valiya Kadavu jetty: fascia name, mast, gangway blade and berth post."],
         ["03.webp", 640, "The same jetty after dark: lettering and line discs are retroreflective and the key signs are lit."],

@@ -1,7 +1,7 @@
 // Motion layer for the Carekin and Backwater Line case studies (loaded by os.js openCase when content.js gives case.fx).
 // Each project brings its own tone through case.fxOpts:
-//   reveal  "rise" (Carekin: calm, sections settle in like a page turning slowly) or "wipe" (Backwater Line: sections
-//           open left to right behind a thin signage-yellow line, like a board being lit)
+//   reveal  "none" (default, used by both since v92: sections are simply there, so the story reads as one piece),
+//           "rise" (soft settle) or "wipe" (left-to-right)
 //   videos  [[section, x, y, w, h, file]]: the project film plays in place of its poster while it is on screen
 //   compare [section, x, y, w, h, file, leftLabel, rightLabel]: drag to compare (day / night)
 // Coordinates are the Figma documentation's own 1440-px units, so everything lines up at every width.
@@ -24,7 +24,7 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
 
   // sections arrive as you scroll
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("cfx-in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -10% 0px", threshold: 0.02 });
-  secs.forEach((s, i) => { if (i < 1 || reduce) s.classList.add("cfx-in"); else io.observe(s); });
+  secs.forEach((s, i) => { if (i < 1 || reduce || !opts.reveal || opts.reveal === "none") s.classList.add("cfx-in"); else io.observe(s); });
   cleanups.push(() => io.disconnect());
 
   // films play in place, only while on screen
@@ -55,7 +55,6 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     place(i, box, x, y, w, h);
     let p = 100;
     const setP = (v) => { p = Math.max(0, Math.min(100, v)); box.style.setProperty("--p", p + "%"); box.setAttribute("aria-valuenow", Math.round(100 - p)); };
-    setP(100);
     const at = (e) => { const r = box.getBoundingClientRect(); setP((e.clientX - r.left) / r.width * 100); };
     let drag = false;
     box.addEventListener("pointerdown", (e) => { drag = true; box.setPointerCapture(e.pointerId); box.classList.add("drag"); at(e); });
@@ -63,16 +62,8 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     const up = () => { drag = false; box.classList.remove("drag"); };
     box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up);
     box.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { setP(p - 5); e.preventDefault(); } if (e.key === "ArrowRight") { setP(p + 5); e.preventDefault(); } });
-    // when it first comes into view, dusk falls across the jetty once, then stops halfway so people see they can drag it
-    const cio = new IntersectionObserver((es) => {
-      if (!es[0].isIntersecting) return; cio.disconnect();
-      if (reduce) return setP(50);
-      const t0 = performance.now(), from = 100, to = 50, ms = 1800;
-      const step = (t) => { if (drag) return; const k = Math.min(1, (t - t0) / ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; setP(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
-      setTimeout(() => requestAnimationFrame(step), 500);
-    }, { threshold: 0.5 });
-    cio.observe(box);
-    cleanups.push(() => cio.disconnect());
+    setP(50);   // rests at the middle: day on the left, night on the right; drag to compare
+
   }
 
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
