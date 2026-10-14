@@ -32,7 +32,16 @@
 .cfx-tag { position: absolute; top: 14px; padding: 6px 10px; border-radius: 999px; font: 700 11px/1 var(--font, sans-serif); letter-spacing: .14em; text-transform: uppercase;
   color: #0E0F10; background: var(--cfx-accent, #F2C230); }
 .cfx-tag.l { left: 14px; } .cfx-tag.r { right: 14px; color: var(--cfx-accent, #F2C230); background: rgba(14,15,16,.8); }
+/* self-drawing line (journey map) */
+.cfx-draw { position: absolute; z-index: 2; pointer-events: none; }
+.cfx-draw img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; background: none; clip-path: inset(-2% 100% -2% 0); transition: clip-path 2.6s cubic-bezier(.45,.05,.25,1); }
+.cfx-draw.on img { clip-path: inset(-2% 0 -2% 0); }
+.cfx-ring { position: absolute; width: 0; height: 0; }
+.cfx-ring::before { content: ""; position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cfx-accent, #FF8A6B); opacity: 0; }
+.cfx-draw.on .cfx-ring::before { animation: cfxRing 2.4s ease-out calc(2.2s + var(--d)) infinite; }
+@keyframes cfxRing { 0% { transform: scale(.4); opacity: .9; } 70% { opacity: 0; } 100% { transform: scale(1.9); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
+  .cfx-draw img { clip-path: none; transition: none; } .cfx-draw.on .cfx-ring::before { animation: none; }
   .cfx-rise .cfx-sec > img, .cfx-wipe .cfx-sec > img { opacity: 1; transform: none; filter: none; clip-path: none; transition: none; }
   .cfx-wipe .cfx-sec::after { display: none; }
 }

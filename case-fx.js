@@ -4,6 +4,7 @@
 //           "rise" (soft settle) or "wipe" (left-to-right)
 //   videos  [[section, x, y, w, h, file]]: the project film plays in place of its poster while it is on screen
 //   compare [section, x, y, w, h, file, leftLabel, rightLabel]: drag to compare (day / night)
+//   draw    [section, x, y, w, h, file, [[x, y], …]]: a line layer that draws itself left to right when seen, with rings on the marked points
 // Coordinates are the Figma documentation's own 1440-px units, so everything lines up at every width.
 const W = 1440;
 
@@ -64,6 +65,18 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     box.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { setP(p - 5); e.preventDefault(); } if (e.key === "ArrowRight") { setP(p + 5); e.preventDefault(); } });
     setP(50);   // rests at the middle: day on the left, night on the right; drag to compare
 
+  }
+
+  // a line that draws itself (Carekin: the anxiety curve, with the two red hand-off moments pulsing)
+  if (opts.draw && secs[opts.draw[0]]) {
+    const [i, x, y, w, h, f, pts = []] = opts.draw;
+    const box = document.createElement("div"); box.className = "cfx-draw"; box.setAttribute("aria-hidden", "true");
+    box.innerHTML = `<img src="${asset(f)}" srcset="${asset(f)} 1x, ${asset(f.replace(/\.(\w+)$/, "@2x.$1"))} 2x" alt="" decoding="async">` +
+      pts.map(([px, py], k) => `<i class="cfx-ring" style="left:${(px - x) / w * 100}%;top:${(py - y) / h * 100}%;--d:${k * 0.35}s"></i>`).join("");
+    place(i, box, x, y, w, h);
+    secs[i].classList.add("cfx-drawsec");
+    if (reduce) box.classList.add("on");
+    else { const dio = new IntersectionObserver((es) => { if (es[0].isIntersecting) { box.classList.add("on"); dio.disconnect(); } }, { threshold: 0.45 }); dio.observe(box); cleanups.push(() => dio.disconnect()); }
   }
 
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
