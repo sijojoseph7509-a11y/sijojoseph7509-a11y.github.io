@@ -737,3 +737,20 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 @media (prefers-reduced-motion: reduce) { .ct-status i { animation: none; } .ct-tile { transition: none; } }
 /* v93: every project card is the same 16:10 slide */
 .work-card .wc-img img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: 50% 0; }
+/* v94: Skills cards line up. Each card shares the row's tracks (icon · title · description · chips), so titles,
+   descriptions and the first row of chips start at the same height across the three cards */
+.disc-grid { grid-auto-rows: auto; row-gap: 18px; }
+.disc:not(.primary) { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
+.disc:not(.primary) h4 { margin: 16px 0 8px; }
+.disc:not(.primary) p { margin: 0 0 18px; }
+.disc:not(.primary) .chips { align-content: start; align-self: start; }
+.disc.primary { display: grid; grid-template-columns: auto 1fr; column-gap: 20px; align-items: center; }
+.disc.primary .disc-ico { grid-row: span 2; align-self: start; }
+.disc.primary h4 { margin: 0 0 4px; }
+.disc.primary p { margin: 0; }
+.disc.primary .chips { grid-column: 1 / -1; margin-top: 18px; }
+/* chips answer the pointer like the primary button: they turn blue */
+.chip { transition: background .25s var(--smooth), color .25s var(--smooth), box-shadow .25s var(--smooth), transform .4s var(--spring); cursor: default; }
+.disc .chip:hover, .tile .chip:hover { background: var(--accent); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 12px rgba(10,132,255,.28); transform: translateY(-1px); }
+@media (max-width: 760px) { .disc:not(.primary) { grid-row: auto; grid-template-rows: none; } }
+@media (prefers-reduced-motion: reduce) { .chip { transition: none; } .disc .chip:hover { transform: none; } }
