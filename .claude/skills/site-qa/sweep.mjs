@@ -64,7 +64,7 @@ for (const [name, w, h, dpr, mobile] of DEVICES) {
     await p.goto(BASE + "?sweep=" + Date.now());
     await p.waitForFunction(() => window.Desk && Desk.state().started, { timeout: 60000 });
     await p.screenshot({ path: `${OUT}/${slug}-1-welcome.png` });
-    issues.push(...(await p.evaluate(() => { const b = document.getElementById("introQuiet").getBoundingClientRect(); return b.bottom > innerHeight ? ["welcome card runs off the bottom"] : []; })).map((m) => `${name} · welcome: ${m}`));
+    issues.push(...(await p.evaluate(() => { const b = document.getElementById("introSound").getBoundingClientRect(); return b.bottom > innerHeight ? ["welcome card runs off the bottom"] : []; })).map((m) => `${name} · welcome: ${m}`));
     await p.click("#introGo");
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && !s.catBusy; }, { timeout: 30000 }).catch(() => issues.push(`${name}: a 3D model didn't appear (or Shea never settled on the desk)`));
     await sleep(1800);
@@ -87,7 +87,15 @@ for (const [name, w, h, dpr, mobile] of DEVICES) {
       issues.push(...(await inspect(p, name, "mac")).map((m) => m.replace("· mac:", `· case ${cs}:`)));
       const bad = await p.evaluate(() => { const c = document.querySelector(".case"), r = c.getBoundingClientRect(), out = [];
         if (r.width > 1921) out.push("case column wider than 1920 px"); if (r.width < innerWidth - 2 && Math.abs(r.left - (innerWidth - r.right)) > 2) out.push("case column not centred");
-        const im = c.querySelector("img"); const px = /@2x/.test(im.currentSrc) ? 2880 : 1440; if (px < r.width * Math.min(devicePixelRatio, 2) * 0.95) out.push(`blurry: ${px} px file shown ${Math.round(r.width)} px wide at ${devicePixelRatio}×`);
+        if (c.classList.contains("case-text")) {   // text version: the widest crop on offer must cover the picture at this screen's density
+          for (const im of c.querySelectorAll(".rf img")) {
+            const w = im.getBoundingClientRect().width; if (!w) continue;
+            const best = Math.max(...(im.getAttribute("srcset") || "").split(",").map((s) => parseInt(s.trim().split(" ")[1]) || 0), +im.getAttribute("width") || 0);
+            if (best < w * Math.min(devicePixelRatio, 2) * 0.8 && best >= 1200) { out.push(`blurry text-version picture: ${best} px for ${Math.round(w)} px at ${devicePixelRatio}×`); break; }
+          }
+        } else {
+          const im = c.querySelector("img"); const px = /@2x/.test(im.currentSrc) ? 2880 : 1440; if (px < r.width * Math.min(devicePixelRatio, 2) * 0.95) out.push(`blurry: ${px} px file shown ${Math.round(r.width)} px wide at ${devicePixelRatio}×`);
+        }
         return out; });
       issues.push(...bad.map((m) => `${name} · case ${cs}: ${m}`));
     }

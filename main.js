@@ -2130,8 +2130,8 @@ else {
   document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = TOUCH ? b.dataset.touch : b.dataset.mouse));
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
-  $("#introGo").addEventListener("click", () => enter(true));
-  $("#introQuiet").addEventListener("click", () => enter(false));
+  $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
+  $("#introSound").addEventListener("click", () => enter(true));
   $("#introGo").focus({ preventScroll: true });
 }
 

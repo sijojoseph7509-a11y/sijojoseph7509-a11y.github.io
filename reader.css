@@ -1,0 +1,166 @@
+/* Text version of the case studies (tools/reader/build.py → work/<slug>/reader.html).
+   Used in two places: inside the Mac window (os.js, phones by default, "Text" button on desktop)
+   and on the standalone pages sijo.work/work/<slug>/. Each project keeps its own fonts and colours. */
+@font-face { font-family: "GS Flex"; src: url(fonts/gsflex-400-700.woff2) format("woff2"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "GS Code"; src: url(fonts/gscode-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Mona"; src: url(fonts/mona-400-900.woff2) format("woff2"); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: "Rozha"; src: url(fonts/rozha-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courierprime-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courierprime-700.woff2) format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courierprime-400i.woff2) format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Lato R"; src: url(fonts/lato-100-latin.woff2) format("woff2"); font-weight: 100 200; font-display: swap; }
+@font-face { font-family: "Lato R"; src: url(fonts/lato-300-latin.woff2) format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Lato R"; src: url(fonts/lato-300i.woff2) format("woff2"); font-weight: 300; font-style: italic; font-display: swap; }
+@font-face { font-family: "Lato R"; src: url(fonts/lato-400.woff2) format("woff2"); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: "Lato R"; src: url(fonts/lato-700.woff2) format("woff2"); font-weight: 600 900; font-display: swap; }
+
+.rd { --f-sans: "GS Flex", system-ui, -apple-system, "Segoe UI", sans-serif; --f-mono: "GS Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-disp: var(--f-sans); --f-type: "Courier Prime", ui-monospace, monospace; --gut: 20px;
+  display: block; margin: 0; font-family: var(--f-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.rd-ekmaati { --f-sans: "Mona", system-ui, -apple-system, sans-serif; --f-disp: "Rozha", Georgia, serif; }
+.rd-syntra { --f-sans: "Lato R", "Lato", system-ui, -apple-system, sans-serif; }
+.rd .f-sans { font-family: var(--f-sans); } .rd .f-mono { font-family: var(--f-mono); } .rd .f-disp { font-family: var(--f-disp); }
+.rd .f-type { font-family: var(--f-type); } .rd .f-word { font-family: var(--f-sans); font-style: italic; }
+.rd .f-ml { font-family: "Noto Sans Malayalam", "Malayalam Sangam MN", "Kohinoor Malayalam", var(--f-sans); }
+.rd .f-dev { font-family: "Kohinoor Devanagari", "Noto Sans Devanagari", "Devanagari Sangam MN", var(--f-sans); }
+.rd .up { text-transform: uppercase; }
+
+/* sections keep the colour field they have in Figma */
+.rs { background: var(--bg); color: var(--fg); padding: clamp(44px, 9vw, 96px) 0; }
+.rs + .rs { padding-top: clamp(40px, 8vw, 88px); }
+.rs-in { box-sizing: border-box; max-width: 760px; margin: 0 auto; padding: 0 var(--gut); display: flex; flex-direction: column; gap: 22px; }
+.rs-photo { padding: 0; }
+.rs-photo .rs-in { max-width: none; padding: 0; }
+
+/* type: Figma sizes mapped to a reading scale */
+.rd .t { margin: 0; line-height: 1.5; overflow-wrap: break-word; hyphens: manual; }
+.rd .t a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.rd .x1 { font-size: clamp(50px, 15vw, 128px); line-height: .94; letter-spacing: -.035em; }
+.rd .x2 { font-size: clamp(38px, 10.5vw, 84px); line-height: .98; letter-spacing: -.028em; }
+.rd .x3 { font-size: clamp(30px, 8vw, 54px); line-height: 1.06; letter-spacing: -.022em; }
+.rd .x4 { font-size: clamp(23px, 6vw, 32px); line-height: 1.2; letter-spacing: -.014em; }
+.rd .x5 { font-size: clamp(19px, 4.9vw, 22px); line-height: 1.32; letter-spacing: -.006em; }
+.rd .b { font-size: 18px; line-height: 1.55; }
+.rd .p { font-size: 16.5px; line-height: 1.6; }
+.rd .s { font-size: 14.5px; line-height: 1.55; }
+.rd .l { font-size: 12.5px; line-height: 1.4; letter-spacing: .08em; text-transform: uppercase; }
+.rd .l + .t:not(.l) { margin-top: -8px; }
+.rd .c { text-align: center; }
+.rd blockquote.t { margin: 0; font-size: clamp(19px, 5vw, 22px); line-height: 1.42; }
+.rk { display: flex; flex-direction: column; gap: 10px; }
+.rk > .x1, .rk > .x2, .rk > .x3 { margin-bottom: 4px; }
+
+/* pictures */
+.rd .rf { margin: 0; }
+.rd .rf img, .rd .rf video { display: block; width: 100%; height: auto; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.rd .rf.fb { margin-left: calc(var(--gut) * -1); margin-right: calc(var(--gut) * -1); }
+.rd .rf.fb figcaption { padding: 0 var(--gut); }
+.rd .rf figcaption { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.rd .rf figcaption .t { font-size: 14.5px; line-height: 1.5; }
+.rd .rf figcaption .x4, .rd .rf figcaption .x5 { font-size: 18px; line-height: 1.3; }
+.rd .rz { display: block; cursor: zoom-in; position: relative; }
+.rd .rz::after { content: ""; position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0, 0, 0, .55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6'/%3E%3Cpath d='M15 15l5 5M10.5 8v5M8 10.5h5'/%3E%3C/svg%3E") center / 16px no-repeat; }
+.rg { display: grid; gap: 22px 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.rg .rf.fb { margin: 0; }
+@media (min-width: 700px) { .rg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rg4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* wide diagrams: on phones they keep a readable size and scroll sideways */
+.rsw { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+@media (max-width: 760px) {
+  .rd .rf.swipe .rsw img { width: max(100%, calc(var(--fw) * .72px)); max-width: none; }
+  .rd .rf.swipe .rsw > .rz { display: inline-block; vertical-align: top; }   /* the link is as wide as its picture; .rsw scrolls */
+  .rd .rf.swipe::after { content: "Swipe sideways to see the whole diagram"; display: block; margin-top: 8px; padding: 0 var(--gut); font-size: 12.5px; opacity: .7; }
+  .rd .rf.swipe .rz::after { display: none; }
+}
+
+/* step numbers, key-value lists */
+.rd .kn { font-size: clamp(34px, 9vw, 48px); line-height: 1; letter-spacing: -.02em; margin-bottom: 2px; }
+.rkv { display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; margin: 0; }
+.rkv > div { display: contents; }
+.rkv dt, .rkv dd { margin: 0; } .rd .rkv .t { font-size: 15.5px; line-height: 1.45; }
+.rd .rt-nh td:first-child .t { font-weight: 600 !important; }
+
+/* numbers */
+.rns { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 26px 20px; }
+.rn { display: flex; flex-direction: column; gap: 6px; }
+.rd .rn .num { font-size: clamp(40px, 11vw, 60px); line-height: 1; letter-spacing: -.035em; margin-bottom: 4px; }
+.rd .rn .t:not(.num) { font-size: 15px; line-height: 1.45; }
+
+/* tables: rows on wide screens, cards on phones */
+.rtw { overflow-x: auto; }
+.rt { width: 100%; border-collapse: collapse; }
+.rt th { text-align: left; font: 400 11.5px/1.3 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; opacity: .8; padding: 0 14px 10px 0; vertical-align: bottom; }
+.rt td { vertical-align: top; padding: 12px 14px 12px 0; border-top: 1px solid color-mix(in srgb, var(--fg) 16%, transparent); }
+.rd .rt td .t { font-size: 15.5px; line-height: 1.45; }
+.rmeta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px 20px; margin: 0; }
+.rmeta dt { font: 400 11.5px/1.3 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; opacity: .8; }
+.rmeta dd { margin: 4px 0 0; } .rd .rmeta dd .t { font-size: 16px; }
+@media (max-width: 640px) {
+  .rt thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .rt, .rt tbody, .rt tr, .rt td { display: block; width: auto; }
+  .rt tr { padding: 14px 0 12px; border-top: 1px solid color-mix(in srgb, var(--fg) 16%, transparent); }
+  .rt td { border: 0; padding: 0; }
+  .rd .rt td:first-child .t { font-size: 17px; font-weight: 600 !important; }
+  .rt td:not(:first-child)::before { content: attr(data-l); display: block; margin: 8px 0 2px; font: 400 11px/1.3 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; opacity: .7; }
+  .rt td:empty { display: none; }
+}
+
+/* cards keep their Figma colour */
+.rpnl { padding: 20px; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; color: var(--fg); }
+.rpnl.ro { border: 1.5px solid color-mix(in srgb, currentColor 28%, transparent); }
+.rpnl .rk { gap: 8px; }
+
+/* a photo with words on it */
+.rph { position: relative; display: grid; overflow: hidden; margin: 0 calc(var(--gut) * -1); min-height: 360px; background: var(--tint); }
+.rs-photo .rph { margin: 0; }
+.rph-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 30%, transparent) 0%, color-mix(in srgb, var(--tint) 86%, transparent) 62%); }
+.rph-in { position: relative; z-index: 1; box-sizing: border-box; width: 100%; max-width: 800px; margin: 0 auto; align-self: end; padding: clamp(150px, 45vw, 340px) var(--gut) clamp(32px, 7vw, 64px); display: flex; flex-direction: column; gap: 16px; }
+
+/* lightbox (inside the Mac window) */
+.rd-lb { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, .92); overflow: auto; touch-action: pinch-zoom pan-x pan-y; display: grid; place-items: center; }
+.rd-lb img { max-width: none; width: min(200vw, 2400px); height: auto; }
+@media (min-width: 900px) { .rd-lb img { width: min(96vw, 2400px); } }
+.rd-lb button { position: fixed; top: 14px; right: 14px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .16); color: #fff; font: 600 20px/1 system-ui; cursor: pointer; }
+
+/* ───── standalone page (sijo.work/work/<slug>/) ───── */
+html:has(body.rp) { background: #0b0b0c; }
+body.rp { margin: 0; background: #0b0b0c; color: #f5f5f7; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+.rp a { color: inherit; }
+.rp-skip { position: absolute; left: -9999px; } .rp-skip:focus { left: 12px; top: 12px; z-index: 10; background: #fff; color: #000; padding: 8px 12px; border-radius: 8px; }
+.rp-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; justify-content: space-between;
+  padding: 12px max(16px, env(safe-area-inset-left)); background: rgba(11, 11, 12, .82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.rp-me { text-decoration: none; font-weight: 650; letter-spacing: -.01em; } .rp-me span { font-weight: 400; color: #a1a1a6; margin-left: 8px; }
+.rp-nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.rp-nav a { text-decoration: none; padding: 6px 12px; border-radius: 999px; font-size: 14px; color: #c7c7cc; white-space: nowrap; }
+.rp-nav a:hover, .rp-nav a[aria-current] { background: rgba(255, 255, 255, .12); color: #fff; }
+.rp-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 10px max(16px, env(safe-area-inset-left)); font-size: 13px; color: #a1a1a6; background: #111113; }
+.rp-meta a { margin-left: auto; color: #6cb4ff; text-decoration: none; }
+.rp-foot { padding: 56px 20px 40px; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; color: #a1a1a6; font-size: 14px; }
+.rp-next span { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.rp-next a { font-size: clamp(28px, 7vw, 44px); font-weight: 650; letter-spacing: -.02em; color: #fff; text-decoration: none; }
+.rp-links { display: flex; flex-wrap: wrap; gap: 10px 20px; } .rp-links a { color: #f5f5f7; }
+.rp-foot p { margin: 0; }
+@media (min-width: 900px) { .rd { --gut: 40px; } }
+
+/* password screen on the standalone pages (gate.js) */
+.rp .gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: #000; transition: opacity .6s; }
+.rp .gate[hidden] { display: none; }
+.unlocked .rp .gate, html.unlocked body.rp .gate { opacity: 0; pointer-events: none; }
+html.locked body.rp { overflow: hidden; }
+.rp .gate-inner { display: grid; justify-items: center; gap: 16px; width: min(320px, 100%); text-align: center; }
+.rp .gate-mark { display: grid; place-items: center; width: 58px; height: 58px; border: 2.5px solid #f5f5f7; border-radius: 50%; font-weight: 700; font-size: 22px; }
+.rp .gate-title { margin: 0; font-size: 24px; letter-spacing: -.02em; }
+.rp .gate-sub { margin: -6px 0 4px; color: #a1a1a6; font-size: 15px; }
+.rp .gate-field { width: 100%; } .rp .gate-field input { box-sizing: border-box; width: 100%; padding: 13px 18px; border: 1px solid #3a3a3c; border-radius: 999px; background: #1c1c1e; color: #f5f5f7; font: inherit; outline: none; }
+.rp .gate-go { padding: 12px 28px; border: 0; border-radius: 999px; background: #0a84ff; color: #fff; font: 600 16px/1 system-ui; cursor: pointer; }
+.rp .gate-msg { min-height: 1.3em; margin: 0; color: #ff6961; font-size: 14px; }
+.rp .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) { .rp .gate { transition: none; } }
+
+/* 404 page */
+.rp-404 { max-width: 560px; margin: 0 auto; padding: 18vh 24px 48px; font-size: 17px; }
+.rp-404-k { margin: 0; color: #a1a1a6; font: 600 14px/1 system-ui; letter-spacing: .1em; }
+.rp-404 h1 { font-size: 36px; letter-spacing: -.02em; margin: 10px 0 16px; }
+.rp-404 a { color: #6cb4ff; } .rp-404 li { margin: 8px 0; }

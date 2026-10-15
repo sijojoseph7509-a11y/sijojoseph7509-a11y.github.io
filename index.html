@@ -8,13 +8,25 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d1d1f">
-  <title>Sijo Joseph · Multidisciplinary Designer</title>
+  <title>Sijo Joseph · Product, UX and AI designer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231d1d1f'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23f5f5f7' stroke-width='3'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Helvetica,Arial,sans-serif' font-weight='700' font-size='24' fill='%23f5f5f7'%3ESJ%3C/text%3E%3C/svg%3E">
-  <meta name="description" content="Sijo Joseph, a multidisciplinary designer from Kerala, based in Bangalore: product, brand, experience and 3D design.">
-  <script src="update.js?v=98"></script>
-  <script src="gate.js?v=98"></script>
-  <link href="fonts/fonts.css?v=98" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=98">
+  <meta name="description" content="Sijo Joseph is a product, UX and AI designer studying M.Des at NID Bengaluru, who also builds with AI coding tools. Case studies: Syntra, Carekin, Backwater Line and Ekmaati.">
+  <link rel="canonical" href="https://sijo.work/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Sijo Joseph">
+  <meta property="og:title" content="Sijo Joseph · Product, UX and AI designer">
+  <meta property="og:description" content="Case studies in product, UX, information design and branding, opened on a 3D desk. Syntra, Carekin, Backwater Line and Ekmaati.">
+  <meta property="og:url" content="https://sijo.work/">
+  <meta property="og:image" content="https://sijo.work/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Sijo Joseph, product, UX and AI designer, with four case study covers">
+  <meta name="twitter:card" content="summary_large_image">
+  <script src="update.js?v=99"></script>
+  <script src="gate.js?v=99"></script>
+  <link href="fonts/fonts.css?v=99" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=99">
+  <link rel="stylesheet" href="reader.css?v=99">
   <script type="importmap">
   {
     "imports": {
@@ -28,8 +40,9 @@
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/controls/OrbitControls.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js">
-  <link rel="modulepreload" href="main.js?v=98">
-  <link rel="modulepreload" href="cat.js?v=98">
+  <link rel="modulepreload" href="main.js?v=99">
+  <link rel="modulepreload" href="cat.js?v=99">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sijo Joseph", "url": "https://sijo.work/", "jobTitle": "Product, UX and AI designer", "alumniOf": {"@type": "CollegeOrUniversity", "name": "National Institute of Design, Bengaluru"}, "address": {"@type": "PostalAddress", "addressLocality": "Bengaluru", "addressCountry": "IN"}, "sameAs": ["https://www.linkedin.com/in/sijodesign", "https://github.com/sijojoseph7509-a11y"], "knowsAbout": ["Product design", "UX design", "Interaction design", "Information design", "Wayfinding", "Brand identity", "AI-assisted prototyping"]}</script>
 </head>
 <body>
   <!-- Password gate (gate.js): covers everything until the password is entered once on this device -->
@@ -77,7 +90,7 @@
       <div class="loader-bar"><i id="loaderBar"></i></div>
       <span class="loader-quote">Good things take time</span>
       <span class="loader-pct" id="loaderPct">assembling desk… 0%</span>
-      <!-- shown when the desk is ready: one tap to enter (this tap is also what lets the browser play music) -->
+      <!-- shown when the desk is ready: one tap to enter. Quiet by default (offices, public transport); "with sound" is the tap that lets the browser start the music -->
       <div class="intro" id="intro" hidden>
         <h1 class="intro-title">Welcome to my desk</h1>
         <ul class="intro-tips">
@@ -85,8 +98,8 @@
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span><b data-touch="Tap" data-mouse="Click">Tap</b> things on the desk. The cat likes it.</span></li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg><span><b data-touch="Tap the laptop" data-mouse="Click the laptop">Tap the laptop</b> to open my portfolio</span></li>
         </ul>
-        <button class="intro-go" id="introGo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Enter</button>
-        <button class="intro-quiet" id="introQuiet">Enter without sound</button>
+        <button class="intro-go" id="introGo">Enter</button>
+        <button class="intro-quiet" id="introSound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Enter with sound</button>
       </div>
     </div>
   </div>
@@ -156,13 +169,26 @@
     </div>
   </div>
 
-  <noscript><p style="color:#fff;padding:24px">This portfolio needs JavaScript to run.</p></noscript>
+  <noscript>
+    <div class="nojs">
+      <p class="nojs-k">Sijo Joseph</p>
+      <h1>Product, UX and AI designer</h1>
+      <p>M.Des at NID Bengaluru. The 3D desk needs JavaScript, so here is the portfolio as plain pages:</p>
+      <ul>
+        <li><a href="work/syntra/">Syntra</a> · interaction design, a perfume-finding kiosk with VR and AR (team project, NID)</li>
+        <li><a href="work/carekin/">Carekin</a> · UX and product design for families sharing an older parent's medicines</li>
+        <li><a href="work/backwater/">Backwater Line</a> · information design and wayfinding for a ferry network</li>
+        <li><a href="work/ekmaati/">Ekmaati</a> · brand identity and packaging for the clay Ganesh idols of Pen</li>
+      </ul>
+      <p><a href="mailto:sijojoseph7509@gmail.com">sijojoseph7509@gmail.com</a> · <a href="https://www.linkedin.com/in/sijodesign">LinkedIn</a></p>
+    </div>
+  </noscript>
 
-  <script src="content.js?v=98"></script>
-  <script src="track.js?v=98"></script>
-  <script src="icons.js?v=98"></script>
-  <script src="os.js?v=98"></script>
-  <script src="music.js?v=98"></script>
-  <script type="module" src="main.js?v=98"></script>
+  <script src="content.js?v=99"></script>
+  <script src="track.js?v=99"></script>
+  <script src="icons.js?v=99"></script>
+  <script src="os.js?v=99"></script>
+  <script src="music.js?v=99"></script>
+  <script type="module" src="main.js?v=99"></script>
 </body>
 </html>

@@ -153,7 +153,8 @@ body { transition: background-color .7s var(--ease); }
   font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 30px rgba(10, 132, 255, .35); transition: transform .2s var(--spring), filter .2s; }
 .intro-go svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .intro-go:hover { filter: brightness(1.08); } .intro-go:active { transform: scale(.96); }
-.intro-quiet { margin-top: -8px; border: 0; background: none; color: #a1a1a6; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.intro-quiet { display: inline-flex; align-items: center; gap: 6px; margin-top: -8px; border: 0; background: none; color: #a1a1a6; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.intro-quiet svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-height: 560px) { .loader-inner { gap: 18px; } .intro { gap: 12px; } .intro-tips { gap: 8px; } .intro-title { font-size: 21px; } }
 
 /* "Tap the laptop" pointer for first-time visitors — positioned over the laptop every frame by main.js */
@@ -776,3 +777,22 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .tile.story p.lede { font-size: 20px; }
   .tile.quote .q { font-size: 28px; }
 }
+
+/* v99: the text version inside the Mac window, and a slimmer window on phones */
+.case.case-text { max-width: none; background: #0b0b0c; }
+.case-loading { margin: 0; padding: 48px 20px; color: var(--t3); font-size: 14px; text-align: center; }
+.fs-view { font-weight: 600; }
+@media (max-width: 760px) {
+  .side-wrap > .lights, .win-bar { display: none; }            /* the tab row already says where you are; the dock's Desk closes */
+  .side-wrap { padding: 8px 8px 6px; }
+  .win-body { padding-top: 10px; }
+  .fs-bar .lights { display: none; }
+  .fs-bar { gap: 6px; }
+  .fs-bar .fs-btn[data-exit-case]:not(.btn) { padding: 0 10px; }
+}
+
+/* no JavaScript: the portfolio as plain links (each case study has its own page, work/<slug>/) */
+.nojs { position: fixed; inset: 0; z-index: 3000; overflow: auto; padding: 48px 24px; background: #0b0b0c; color: #f5f5f7; font: 17px/1.55 system-ui, -apple-system, sans-serif; }
+.nojs > * { max-width: 640px; margin-left: auto; margin-right: auto; }
+.nojs h1 { margin-top: 4px; font-size: 32px; letter-spacing: -.02em; } .nojs-k { margin-bottom: 0; color: #a1a1a6; }
+.nojs ul { padding-left: 20px; } .nojs li { margin: 10px 0; } .nojs a { color: #6cb4ff; }

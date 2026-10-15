@@ -279,15 +279,13 @@
           <button class="fs-btn" data-case="${esc(prev.case.slug)}" aria-label="Previous: ${esc(prev.title)}">‹</button>
           <span>${k + 1} / ${list.length}</span>
           <button class="fs-btn" data-case="${esc(next.case.slug)}" aria-label="Next: ${esc(next.title)}">›</button></nav>` : ""}
+        <button class="fs-btn fs-view" data-case-view aria-pressed="false">Text</button>
         <button class="fs-btn fs-share" data-share aria-label="Copy link to this portfolio">${SHARE_ICON}</button>
         <i class="fs-progress" aria-hidden="true"></i>
       </header>
-      <div class="case">
-      <p class="case-hint">Pinch to zoom in on the details.</p>
-      ${p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(pointer: coarse) 200vw, (min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("")}
+      <div class="case"></div>
       <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
-        <button class="btn alt" data-exit-case>All work</button></div>
-    </div>`;
+        <button class="btn alt" data-exit-case>All work</button></div>`;
     body.scrollTop = 0;
     // a hairline under the bar shows how far into the case study you are
     const prog = body.querySelector(".fs-progress");
@@ -295,23 +293,68 @@
     body._prog = () => { if (!prog.isConnected) return; const max = body.scrollHeight - body.clientHeight; const f = max > 0 ? Math.min(1, body.scrollTop / max) : 0; prog.style.transform = `scaleX(${f})`;
       if (window.SJT && caseSlug) { if (f > 0.5) SJT.once(`case-${caseSlug}-half`); if (f > 0.95) SJT.once(`case-${caseSlug}-end`); } };
     body.addEventListener("scroll", body._prog, { passive: true });
-    // images fade in as they arrive (no pop), over the project's own colour instead of a grey block
-    const imgs = [...body.querySelectorAll(".case img")];
-    $(".case").style.setProperty("--case-bg", p.color || "#1c1c1e");
-    imgs.forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });
-    // then fetch the rest in order, two at a time, so fast scrolling never lands on blank sections
-    let next_ = 2, active = 0;
-    const pump = () => {
-      while (active < 2 && next_ < imgs.length && caseSlug === slug) {
-        const im = imgs[next_++]; if (im.complete) continue;
-        active++; im.loading = "eager";
-        const done = () => { active--; pump(); }; im.addEventListener("load", done, { once: true }); im.addEventListener("error", done, { once: true });
+    fillCase(p, slug, caseView());
+  }
+  // Two ways to read a case study: the original Figma layout (images, with the project's motion layer) or the
+  // text version (work/<slug>/reader.html: real text, readable on a phone). Phones start with the text; the
+  // button in the bar switches, and the choice is remembered.
+  function caseView() {
+    let v = null; try { v = localStorage.getItem("caseView"); } catch (_) {}
+    return v === "text" || v === "layout" ? v : (matchMedia("(max-width: 820px)").matches ? "text" : "layout");
+  }
+  function fillCase(p, slug, view, keepFrac) {
+    let box = $(".case"); if (!box) return;
+    if (box.childElementCount) { const fresh = box.cloneNode(false); box.replaceWith(fresh); box = fresh; }   // the old view's motion layer sees itself removed and stops
+    const btn = body.querySelector("[data-case-view]");
+    if (btn) { btn.textContent = view === "text" ? "Layout" : "Text"; btn.setAttribute("aria-pressed", view === "text" ? "true" : "false");
+      btn.setAttribute("aria-label", view === "text" ? "Show the original layout" : "Show the text version"); }
+    box.className = "case" + (view === "text" ? " case-text" : "");
+    box.style.setProperty("--case-bg", p.color || "#1c1c1e");
+    const restore = () => { if (keepFrac != null) body.scrollTop = keepFrac * (body.scrollHeight - body.clientHeight); };
+    if (view === "text") {
+      box.innerHTML = `<p class="case-loading">Loading…</p>`;
+      fetch(`work/${encodeURIComponent(slug)}/reader.html?v=${BUILD}`).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); }).then((h) => {
+        if (caseSlug !== slug) return;
+        const doc = new DOMParser().parseFromString(h, "text/html");
+        const main = doc.querySelector("main.rd");
+        if (!main) throw new Error("no reader");
+        box.replaceChildren(document.importNode(main, true));
+        restore();
+      }).catch(() => { if (caseSlug === slug) fillCase(p, slug, "layout", keepFrac); });
+      return;
+    }
+    box.innerHTML = p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("");
+    // images fade in as they arrive (no pop), over the project's own colour instead of a grey block; the browser
+    // fetches the rest as the reader nears them (no more downloading the whole case study up front)
+    box.querySelectorAll("img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });
+    requestAnimationFrame(restore);
+    // a case study can bring its own motion layer: an ES module loaded only when it opens
+    const fxFile = /^[\w-]+\.js$/.test(p.case.fx || "") ? p.case.fx : "";   // only a plain local module name
+    if (!fxFile) return;
+    // if the motion layer can't run (blocked, old browser), show the complete stills instead of the bare bases
+    const stills = () => {
+      if (caseSlug !== slug || box.classList.contains("fx-ready") || !p.case.stills) return;
+      box.dataset.stills = "1";
+      const imgs = [...box.querySelectorAll("img")].filter((im) => /\/\d\d\.webp/.test(im.src));
+      for (const n of p.case.stills) {
+        const im = imgs[n - 1]; if (!im) continue;
+        const f = `still/${String(n).padStart(2, "0")}.webp`;
+        im.srcset = `${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w`.replace(/&amp;/g, "&"); im.src = caseImg(slug, f).replace(/&amp;/g, "&");
       }
     };
-    setTimeout(pump, 700);
-    // a case study can bring its own motion layer (Syntra): an ES module loaded only when it opens
-    const fxFile = /^[\w-]+\.js$/.test(p.case.fx || "") ? p.case.fx : "";   // only a plain local module name
-    if (fxFile) import(`./${fxFile}?v=${BUILD}`).then((m) => { if (caseSlug === slug) m.default($(".case"), { slug, v: BUILD, sections: p.case.sections, opts: p.case.fxOpts || {} }); }).catch(() => {});
+    import(`./${fxFile}?v=${BUILD}`).then((m) => { if (caseSlug === slug && box.isConnected && !box.dataset.stills) m.default(box, { slug, v: BUILD, sections: p.case.sections, opts: p.case.fxOpts || {} }); }).catch(stills);
+    setTimeout(stills, 8000);
+  }
+  // a diagram from the text version, full size: pinch or scroll around it, Esc or a tap closes it
+  function openZoom(src, alt) {
+    if (!/^work\/[\w-]+\/m\/[\w.-]+\.webp(\?v=\w+)?$/.test(src || "")) return;
+    const lb = document.createElement("div"); lb.className = "rd-lb"; lb.setAttribute("role", "dialog"); lb.setAttribute("aria-label", "Image, enlarged");
+    lb.innerHTML = `<img src="${esc(src)}" alt="${esc(alt)}"><button type="button" aria-label="Close">✕</button>`;
+    const close = () => { lb.remove(); removeEventListener("keydown", onKey, true); };
+    const onKey = (ev) => { if (ev.key === "Escape") { ev.stopPropagation(); close(); } };
+    lb.addEventListener("click", (ev) => { if (ev.target === lb || ev.target.closest("button")) close(); });
+    addEventListener("keydown", onKey, true);
+    document.body.appendChild(lb); lb.querySelector("button").focus();
   }
   // hovering a project (Work card, Spotlight result, desk folder) starts downloading its first sections
   const warmed = new Set();
@@ -370,6 +413,16 @@
     if (e.target.closest("[data-exit-case]")) { e.preventDefault(); show("work"); sound(); return; }
     if (e.target.closest("[data-share]")) { copyLink(); return; }
     if (e.target.closest("[data-copy-email]")) { copyEmail(); sound(); return; }
+    if (e.target.closest("[data-case-view]") && caseSlug) {   // switch between the original layout and the text version
+      const box = $(".case"), v = box && box.classList.contains("case-text") ? "layout" : "text";
+      try { localStorage.setItem("caseView", v); } catch (_) {}
+      const max = body.scrollHeight - body.clientHeight, frac = max > 0 ? body.scrollTop / max : 0;
+      fillCase(S.projects.find((x) => x.case && x.case.slug === caseSlug), caseSlug, v, frac);
+      if (window.SJT) SJT.event("view-" + v);
+      sound(); return;
+    }
+    const zoom = e.target.closest(".rd a.rz");
+    if (zoom) { e.preventDefault(); openZoom(zoom.getAttribute("href"), (zoom.querySelector("img") || {}).alt || ""); return; }
     const c = e.target.closest("[data-case]");
     if (c) { e.preventDefault(); closeMenu(); closeSpotlight(); openCase(c.dataset.case); sound(); return; }
     const t = e.target.closest("[data-open]");
@@ -599,4 +652,22 @@
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
   window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isCovering, toast, warmCase };
+
+  // If the 3D desk never starts (a browser without module support, a blocked or failed script), open the plain
+  // portfolio instead of leaving a black loading screen. Time spent on the password screen doesn't count.
+  (() => {
+    let waited = 0, failed = false;
+    addEventListener("error", (e) => { if (/main\.js|three|cat\.js/.test(e.filename || "")) failed = true; });
+    const tick = () => {
+      if (window.Desk && Desk.state && Desk.state().started) return;
+      if (!document.documentElement.classList.contains("locked")) waited += 1;
+      if (failed || waited >= 25) {
+        $("#loader") && $("#loader").classList.add("done");
+        if (os.hidden) { open("about"); toast("The 3D desk couldn't start here, so this is the simple version."); }
+        return;
+      }
+      setTimeout(tick, 1000);
+    };
+    setTimeout(tick, 1000);
+  })();
 })();

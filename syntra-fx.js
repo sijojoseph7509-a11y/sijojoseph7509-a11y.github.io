@@ -161,6 +161,7 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
   // everything stops when the case study closes (its DOM is replaced)
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
   mo.observe(caseEl.ownerDocument.body, { childList: true, subtree: true });
+  caseEl.classList.add("fx-ready");   // os.js keeps the complete stills if this never happens
 }
 
 // ── the 360° viewer (three.js, the same build the room uses) ──

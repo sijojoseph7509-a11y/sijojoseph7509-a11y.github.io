@@ -27,9 +27,11 @@ else {
   for (const d of ["object-src 'none'", "base-uri 'self'", "form-action 'none'"]) csp.includes(d) ? ok("CSP: " + d) : bad("CSP: " + d, "missing");
 }
 // 2. No inline scripts other than the import map; no third-party script hosts
-const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter((m) => !/importmap/.test(m[1]));
-inline.length ? bad("no inline scripts", inline.length + " found — move them to a .js file") : ok("no inline scripts (besides the import map)");
-const ext = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1]).host);
+const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter((m) => !/importmap|application\/ld\+json/.test(m[1]));   // JSON-LD is data, never run
+inline.length ? bad("no inline scripts", inline.length + " found — move them to a .js file") : ok("no inline scripts (besides the import map and JSON-LD data)");
+// code and styles only: <script src>, <link rel=stylesheet|modulepreload|preload|icon> (plain links such as LinkedIn or the canonical URL aren't code)
+const ext = [...html.matchAll(/<script[^>]*\bsrc="(https?:\/\/[^"]+)"/g), ...html.matchAll(/<link[^>]*rel="(?:stylesheet|modulepreload|preload|icon)"[^>]*href="(https?:\/\/[^"]+)"/g),
+  ...html.matchAll(/<link[^>]*href="(https?:\/\/[^"]+)"[^>]*rel="(?:stylesheet|modulepreload|preload|icon)"/g)].map((m) => new URL(m[1]).host);
 ext.length ? bad("only first-party code + Google Fonts", "external: " + [...new Set(ext)].join(", ")) : ok("only first-party code + Google Fonts");
 // 3. Vendored three.js matches the recorded hashes (detects tampering / accidental edits)
 const MAN = ".claude/skills/site-security/vendor-hashes.json";
