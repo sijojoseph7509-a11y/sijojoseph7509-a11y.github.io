@@ -432,6 +432,15 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 .win-body p { margin: 0 0 14px; color: var(--t2); }
 .win-body .lead { font-size: 19px; line-height: 1.45; color: var(--t1); font-weight: 500; letter-spacing: -.015em; }
 .sub { font-size: 17px; color: var(--t2); margin: 0 0 32px; }
+.work-filter { display: flex; align-items: center; gap: 8px; margin: -14px 0 28px; }
+.work-filter button { height: 32px; border: 0; border-radius: 999px; background: rgba(120, 120, 128, .14); color: var(--t1, inherit); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s; }
+.work-filter .wf-btn { padding: 0 16px; }
+.work-filter .wf-ico { width: 32px; display: grid; place-items: center; padding: 0; color: var(--t2); }
+.work-filter .wf-ico svg { display: block; }
+.work-filter button:hover { background: rgba(120, 120, 128, .24); }
+.work-filter .wf-btn[aria-pressed="true"] { background: var(--blue); color: #fff; }
+.work-filter button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.works .work-card[hidden] { display: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; padding: 0; list-style: none; }
 .chip { font-size: 13px; font-weight: 500; padding: 6px 13px; border-radius: 999px; background: var(--g-fill); color: var(--t1); box-shadow: inset 0 1px 0 var(--g-hi); }
 

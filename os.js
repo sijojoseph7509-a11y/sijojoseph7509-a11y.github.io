@@ -105,11 +105,17 @@
       html: () => `
         <h1>Selected work</h1>
         <p class="sub">${S.projects.length} case studies across interaction, product, information design and branding.</p>
+        <div class="work-filter" role="group" aria-label="Filter case studies">
+          <button class="wf-ico" data-work-filter="all" aria-label="Show all case studies" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+          <button class="wf-btn" data-work-filter="nid" aria-pressed="false">NID</button>
+          <button class="wf-btn" data-work-filter="self" aria-pressed="false">Self</button>
+        </div>
         <div class="works">${S.projects.map((p) => {
+          const src = /NID/.test(p.status || "") ? "nid" : "self";
           const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p><span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
-          if (!p.case) return `<div class="work-card soon" style="--c:${esc(p.color)}">${info}</div>`;
+          if (!p.case) return `<div class="work-card soon" data-src="${src}" style="--c:${esc(p.color)}">${info}</div>`;
           const [f, h] = p.case.coverSlide || p.case.sections[0];   // a project can give its own cover slide (Syntra)
-          return `<button class="work-card" data-case="${esc(p.case.slug)}" style="--c:${esc(p.color)}" aria-label="Open the ${esc(p.title)} case study">
+          return `<button class="work-card" data-case="${esc(p.case.slug)}" data-src="${src}" style="--c:${esc(p.color)}" aria-label="Open the ${esc(p.title)} case study">
             <span class="wc-img"><img src="${caseImg(p.case.slug, f)}" srcset="${caseImg(p.case.slug, f)} 1440w, ${caseImg(p.case.slug, f, 2)} 2880w" sizes="(max-width: 760px) 92vw, 980px" width="1440" height="${+h}" alt="${esc(p.title)}: cover" decoding="async"></span>
             ${info}</button>`;
         }).join("")}
@@ -412,6 +418,14 @@
     if (e.target.closest("[data-exit-case]")) { e.preventDefault(); show("work"); sound(); return; }
     if (e.target.closest("[data-share]")) { copyLink(); return; }
     if (e.target.closest("[data-copy-email]")) { copyEmail(); sound(); return; }
+    const wf = e.target.closest("[data-work-filter]");
+    if (wf) {   // Work window: NID / Self filter; pressing the active one again (or the icon) shows all
+      let f = wf.dataset.workFilter; if (f !== "all" && wf.getAttribute("aria-pressed") === "true") f = "all";
+      body.querySelectorAll("[data-work-filter]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.workFilter === f ? "true" : "false"));
+      body.querySelectorAll(".works .work-card").forEach((c) => { c.hidden = f !== "all" && c.dataset.src !== f; });
+      if (window.SJT) SJT.event("filter-" + f);
+      return;
+    }
     if (e.target.closest("[data-case-view]") && caseSlug) {   // switch between the original layout and the text version
       const box = $(".case"), v = box && box.classList.contains("case-text") ? "layout" : "text";
       try { localStorage.setItem("caseView", v); } catch (_) {}
