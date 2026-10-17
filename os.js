@@ -279,7 +279,6 @@
           <button class="fs-btn" data-case="${esc(prev.case.slug)}" aria-label="Previous: ${esc(prev.title)}">‹</button>
           <span>${k + 1} / ${list.length}</span>
           <button class="fs-btn" data-case="${esc(next.case.slug)}" aria-label="Next: ${esc(next.title)}">›</button></nav>` : ""}
-        <button class="fs-btn fs-view" data-case-view aria-pressed="false">Text</button>
         <button class="fs-btn fs-share" data-share aria-label="Copy link to this portfolio">${SHARE_ICON}</button>
         <i class="fs-progress" aria-hidden="true"></i>
       </header>
@@ -300,7 +299,7 @@
   // button in the bar switches, and the choice is remembered.
   function caseView() {
     let v = null; try { v = localStorage.getItem("caseView"); } catch (_) {}
-    return v === "text" || v === "layout" ? v : (matchMedia("(max-width: 820px)").matches ? "text" : "layout");
+    return "layout";   // text version retired (v101): the original layout only
   }
   function fillCase(p, slug, view, keepFrac) {
     let box = $(".case"); if (!box) return;
