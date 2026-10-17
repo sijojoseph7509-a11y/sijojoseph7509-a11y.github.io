@@ -4,3 +4,4 @@
 - After pushing, confirm with `git ls-remote origin main` that GitHub has the new commit before saying it is live.
 - Ordinary pushes only. Never force-push or rewrite history without Sijo's explicit go-ahead for that specific change.
 - HANDOVER.md is the full project reference.
+- Version bump also covers the `?v=N` on the `sound.js` / `room-utils.js` imports at the top of `main.js`.

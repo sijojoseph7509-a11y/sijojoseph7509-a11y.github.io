@@ -5,6 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { Sound } from "./sound.js?v=103";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=103";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -57,88 +59,6 @@ try {
 } catch (_) {}
 setProgress(45, "assembling desk…");
 
-/* ───────────────────────── Sound (tiny synth blips + the music) ─────────────────────────
-   Browsers only let a page make sound after a real tap/click/key, and phones are stricter:
-   iOS counts the *end* of a tap (not the touch-down), mutes Web Audio when the silent switch is on,
-   and suspends audio when you switch apps. So: the audio context is only created inside a gesture,
-   every gesture re-tries until audio is really running, and the session is marked as "playback". */
-const Sound = (() => {
-  let ctx = null, muted = false, silentLoop = null;
-  try { muted = localStorage.getItem("muted") === "1"; } catch (_) {}
-  const running = () => ctx && ctx.state === "running";
-  const blip = (freq, dur = 0.06, type = "square", vol = 0.04) => {
-    if (muted || !running()) return;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
-  };
-  // iPhone silent switch: ask for "playback" audio (Safari 17+); older iOS gets the same effect from a silent looping <audio>
-  function playbackSession() {
-    try { if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; } } catch (_) {}
-    if (silentLoop || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
-    const rate = 8000, n = rate / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
-    const str = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-    str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * 2, true);
-    silentLoop = new Audio(URL.createObjectURL(new Blob([buf], { type: "audio/wav" })));
-    silentLoop.loop = true; silentLoop.setAttribute("playsinline", ""); silentLoop.play().catch(() => {});
-  }
-  // call from inside a user gesture: creates/resumes audio and starts the music (unless muted)
-  function unlock() {
-    if (muted) return;
-    playbackSession();
-    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-    const go = () => { if (running() && !muted) window.Music.start(ctx); };
-    if (running()) go(); else ctx.resume().then(go).catch(() => {});
-  }
-  return {
-    unlock,
-    hover: () => blip(880, 0.03, "sine", 0.02),
-    click: () => blip(520, 0.07),
-    boot: () => [262, 330, 392, 523].forEach((f, i) => setTimeout(() => blip(f, 0.14, "triangle", 0.05), i * 110)),
-    purr() {
-      if (muted || !running()) return;
-      const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), t = ctx.currentTime;
-      o.type = "sawtooth"; o.frequency.value = 55;
-      lfo.frequency.value = 24; lg.gain.value = 0.03;
-      lfo.connect(lg).connect(g.gain);
-      g.gain.setValueAtTime(0.035, t); g.gain.linearRampToValueAtTime(0.0001, t + 1.8);
-      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 300;
-      o.connect(f).connect(g).connect(ctx.destination);
-      o.start(t); lfo.start(t); o.stop(t + 1.8); lfo.stop(t + 1.8);
-    },
-    // an original, synthesised meow (no recording): a voiced buzz with pitch rising then falling ("mi-aow"), shaped
-    // by two vocal-tract formants that glide from an "ee" to an "ow", soft attack, a little vibrato
-    meow() {
-      if (muted || !running()) return;
-      const t = ctx.currentTime, d = 0.62 + Math.random() * 0.25, f0 = 520 + Math.random() * 120;
-      const o = ctx.createOscillator(), vib = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), out = ctx.createGain();
-      o.type = "sawtooth";
-      o.frequency.setValueAtTime(f0 * 0.82, t); o.frequency.linearRampToValueAtTime(f0 * 1.18, t + d * 0.3); o.frequency.exponentialRampToValueAtTime(f0 * 0.66, t + d);
-      vib.frequency.value = 6.5; vg.gain.value = 9; vib.connect(vg).connect(o.frequency);
-      const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(); f1.type = f2.type = "bandpass"; f1.Q.value = 6; f2.Q.value = 8;
-      f1.frequency.setValueAtTime(900, t); f1.frequency.linearRampToValueAtTime(1300, t + d * 0.35); f1.frequency.linearRampToValueAtTime(700, t + d);
-      f2.frequency.setValueAtTime(2600, t); f2.frequency.linearRampToValueAtTime(2000, t + d * 0.4); f2.frequency.linearRampToValueAtTime(1100, t + d);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.06); g.gain.setValueAtTime(0.16, t + d * 0.55); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-      out.gain.value = 0.9;
-      o.connect(f1).connect(g); o.connect(f2).connect(g); g.connect(out).connect(ctx.destination);
-      o.start(t); vib.start(t); o.stop(t + d + 0.05); vib.stop(t + d + 0.05);
-    },
-    setMuted(m) {
-      muted = !!m;
-      try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (_) {}
-      if (muted) { window.Music.stop(); if (silentLoop) silentLoop.pause(); } else unlock();
-      $("#soundBtn").classList.toggle("muted", muted);
-      $("#soundBtn").setAttribute("aria-label", muted ? "Turn sound on" : "Mute sound");
-      return muted;
-    },
-    toggle() { return this.setMuted(!muted); },
-    get muted() { return muted; },
-    get state() { return ctx ? ctx.state : "none"; }
-  };
-})();
 window.Sound = Sound;
 $("#soundBtn").classList.toggle("muted", Sound.muted);
 // Every real gesture re-tries until audio is actually running (phones may refuse the first one,
@@ -496,17 +416,6 @@ const FLOOR_Y = -14.8, DADO_Y = FLOOR_Y + 18, CEIL_Y = FLOOR_Y + 55;   // 2.75 m
 const OAT = 0xcdbea5, MULBERRY = 0x664139;
 // A real painted wall, not a flat colour: roller stipple (orange-peel emulsion) as relief, broad soft unevenness in
 // the plaster and paint, faint roller laps, and ambient shadow where the walls meet the floor, ceiling and corners.
-function tileNoise(size, period, rnd) {   // smooth value noise that wraps at the edges (period cells across)
-  const grid = Array.from({ length: period * period }, rnd), out = new Float32Array(size * size);
-  const at = (x, y) => grid[((y % period + period) % period) * period + ((x % period + period) % period)];
-  const sm = (t) => t * t * (3 - 2 * t);
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const fx = (x / size) * period, fy = (y / size) * period, ix = Math.floor(fx), iy = Math.floor(fy), tx = sm(fx - ix), ty = sm(fy - iy);
-    const a = at(ix, iy) + (at(ix + 1, iy) - at(ix, iy)) * tx, b = at(ix, iy + 1) + (at(ix + 1, iy + 1) - at(ix, iy + 1)) * tx;
-    out[y * size + x] = a + (b - a) * ty;
-  }
-  return out;
-}
 function paintTextures() {
   let seed = 23; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const mk = (c, srgb, rep) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.userData.unit = rep; return t; };
@@ -925,11 +834,6 @@ function drawPhone(g, w, h) {
   card(340, 74, "Now playing", window.Music && window.Music.playing ? `♪ ${window.Music.mood}` : "Music off · tap the soundbar");
   card(426, 66, "New message", "Let's work together →");
   g.fillStyle = "#000"; g.beginPath(); g.roundRect(w / 2 - 42, 14, 84, 24, 12); g.fill();
-}
-function wrapText(g, text, x, y, maxW, lh) {
-  let ln = "", yy = y;
-  for (const word of text.split(" ")) { const t = ln ? ln + " " + word : word; if (g.measureText(t).width > maxW && ln) { g.fillText(ln, x, yy); ln = word; yy += lh; } else ln = t; }
-  if (ln) g.fillText(ln, x, yy);
 }
 const phoneScreenTex = canvasTex(512, 1080, drawPhone);
 function redrawPhone() { drawPhone(phoneScreenTex.g, 512, 1080); phoneScreenTex.tex.needsUpdate = true; }
@@ -1454,15 +1358,6 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 const CARD = { w: 6.27, h: 10.34, px: 1400, lift: 1.2 };   // lift = distance off the wall (≈6 cm)
 const cardCanvas = document.createElement("canvas"); cardCanvas.width = CARD.px; cardCanvas.height = Math.round(CARD.px * CARD.h / CARD.w);
 const cardTex = new THREE.CanvasTexture(cardCanvas); cardTex.colorSpace = THREE.SRGBColorSpace; cardTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-function sharpen(img) {   // unsharp mask: the source photo is soft, this brings back edge detail (hair, eyes) without halos
-  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
-  const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0);
-  const src = g.getImageData(0, 0, c.width, c.height);
-  g.filter = "blur(1.6px)"; g.drawImage(img, 0, 0); g.filter = "none";
-  const bl = g.getImageData(0, 0, c.width, c.height), a = src.data, b = bl.data;
-  for (let i = 0; i < a.length; i += 4) for (let k = 0; k < 3; k++) { const d = a[i + k] - b[i + k]; a[i + k] = Math.max(0, Math.min(255, a[i + k] + d * 0.9)); }
-  g.putImageData(src, 0, 0); return c;
-}
 function drawCard(photo) {
   const g = cardCanvas.getContext("2d"), W = cardCanvas.width, H = cardCanvas.height, u = W / 1000, R = 96 * u;
   g.clearRect(0, 0, W, H);
@@ -1549,7 +1444,6 @@ let screenMode = "idle", typed = "", typeTimer = 0;
 const WALL_FOCUS = [0, 0.4];   // landscape photo, Sijo on the left — keep the left edge
 const wallImg = new Image();
 wallImg.src = asset("assets/wallpaper.jpg");
-const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
   const g = screenCanvas.g, W = SCREEN_CW, H = SCREEN_CH;
@@ -1653,14 +1547,6 @@ function typeOnScreen() {
 /* ───────────────────────── Camera moves ───────────────────────── */
 let tween = null;
 // cubic-bezier easing (same curves CSS uses) — Apple-style motion
-function bezier(x1, y1, x2, y2) {
-  const B = (t, a, b) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
-  return (x) => {
-    let lo = 0, hi = 1, t = x;
-    for (let i = 0; i < 22; i++) { t = (lo + hi) / 2; B(t, x1, x2) < x ? (lo = t) : (hi = t); }
-    return B(t, y1, y2);
-  };
-}
 const EASE_IN_OUT = bezier(0.45, 0, 0.15, 1);  // gentle start, long soft landing (camera fly-ins)
 const EASE_APPLE = bezier(0.32, 0.72, 0, 1);    // Apple's standard "out" curve
 // Camera moves glide like a real camera: the look-at point slides, the viewing direction swings along an arc

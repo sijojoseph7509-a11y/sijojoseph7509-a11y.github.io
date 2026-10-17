@@ -11,7 +11,7 @@
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
 | **Status** | Live, **behind a temporary password gate (password: `Shea`, see §23.0)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
-| **Cache-buster** | `?v=94` everywhere in `index.html` **and** `{"build": "94"}` in `version.json` — always the same number (§19) |
+| **Cache-buster** | `?v=N` everywhere in `index.html`, in the two `import` lines at the top of `main.js` (`sound.js`, `room-utils.js`) **and** `{"build": "N"}` in `version.json` — always the same number (§19) |
 
 ---
 
@@ -541,10 +541,17 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 5. **One Piece prints** are third-party art (Sijo's decision) — replace with original art if the portfolio is used commercially.
 6. Old Sasuke mat / Free3D files remain in **git history** (not on the site); purging needs a history rewrite (ask first).
 7. Case studies are fixed 1440 px designs — phones pinch-zoom; real mobile layouts would need phone frames in Figma.
-8. Optional: AAAA DNS records; Open Graph tags + share image; `404.html`; split `main.js` (≈2,050 lines).
+8. ~~Optional: AAAA DNS, Open Graph tags + share image, `404.html`, split `main.js`~~ — all done (v103: `sound.js` and `room-utils.js` split out of `main.js`).
 9. Brand-new domains are sometimes blocked by corporate firewalls for ~30 days — normal; it clears on its own.
 
 ---
+
+### Changes since v6.1 (builds v101–v103)
+- **v101** — case studies show the original layout only; the Text button is gone (`caseView()` always returns "layout"; `work/<slug>/reader.html` files remain but are unused).
+- **Git history purge** — old Sasuke/Naruto desk-mat blobs and the Free3D football (`football.fbx`, its textures, old `football.glb` versions) removed from all history with git-filter-repo and force-pushed. The cat was deliberately kept.
+- **v102** — Work page filter under the subheading: filter icon (shows all) + **NID** (Syntra, Ekmaati) + **Self** (everything else). A project counts as NID when its `status` in `content.js` contains "NID".
+- **v103** — `main.js` split: `sound.js` (the Sound synth) and `room-utils.js` (sharpen, rr, bezier, tileNoise, wrapText). Their `?v=N` in main.js must be bumped with every release.
+- `CLAUDE.md` added: every change is checked, committed and pushed automatically.
 
 ## 24. Decision log
 
