@@ -796,3 +796,5 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .nojs > * { max-width: 640px; margin-left: auto; margin-right: auto; }
 .nojs h1 { margin-top: 4px; font-size: 32px; letter-spacing: -.02em; } .nojs-k { margin-bottom: 0; color: #a1a1a6; }
 .nojs ul { padding-left: 20px; } .nojs li { margin: 10px 0; } .nojs a { color: #6cb4ff; }
+/* the text version's pictures are always visible (the fade-in above is only for the layout's section images) */
+.case.case-text img { opacity: 1; transition: none; background: none; }
