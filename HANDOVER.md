@@ -553,6 +553,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - **v103** — `main.js` split: `sound.js` (the Sound synth) and `room-utils.js` (sharpen, rr, bezier, tileNoise, wrapText). Their `?v=N` in main.js must be bumped with every release.
 - **v104** — performance: quality now steps down unless the desk runs at ≈45 fps (was 25): pixel ratio 1.25 → shadows off → 1× and no shadow map. Software rendering (browser hardware acceleration off: SwiftShader / llvmpipe / Basic Render, ≈3 fps) is detected from the WebGL renderer name; those visitors go straight to the Mac portfolio with a 9 s toast telling them to turn acceleration on. `Desk.state().gpu` shows the GPU name.
 - **v105** — profile card's wall shadow: no longer offset below the card or counter-moving with its drift (it read as a sliding black patch); now a faint static halo right behind it.
+- **v106–v107** — new sj ligature logo across the site (favicon, loader, gate, menu bar, avatar, laptop screen and lid); files in `assets/brand/` (`sj-mark.svg`, `sj-mark-white.svg`). The health check covers the logo.
 - `CLAUDE.md` added: every change is checked, committed and pushed automatically.
 
 ## 24. Decision log
