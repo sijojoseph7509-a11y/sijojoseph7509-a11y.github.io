@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=104";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=104";
+import { Sound } from "./sound.js?v=105";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=105";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1422,8 +1422,9 @@ const profileCard = new THREE.Group(), cardFloat = new THREE.Group();
     transparent: true, roughness: 0.45, clearcoat: 0.45, clearcoatRoughness: 0.25 }));
   face.receiveShadow = false; cardFloat.add(face);
   // soft drop shadow on the wall, offset down and right of the card (the lamp is up and to the left)
-  const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 2.2, CARD.h + 2.2), new THREE.MeshBasicMaterial({ map: cardShadowTex(), color: 0x000000, transparent: true, opacity: 0.6, depthWrite: false }));
-  sh.position.set(0.45, -0.7, -CARD.lift + 0.01); cardFloat.add(sh); profileCard.userData.shadow = sh; }
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w + 1.2, CARD.h + 1.2), new THREE.MeshBasicMaterial({ map: cardShadowTex(), color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }));
+  // v105: a faint halo right behind the card, it no longer slides about below it
+  sh.position.set(0.12, -0.18, -CARD.lift + 0.01); cardFloat.add(sh); profileCard.userData.shadow = sh; }
 cardFloat.position.z = CARD.lift;
 profileCard.add(cardFloat);
 profileCard.position.set(7.4, 11.05, WALL_Z + 0.02);
@@ -1434,8 +1435,7 @@ function stepCard(t) {   // a slow drift, as if it hangs in the air (the shadow 
   const bob = Math.sin(t * 0.8) * 0.07, out = Math.sin(t * 0.55 + 1) * 0.12;
   cardFloat.position.y = bob; cardFloat.position.z = CARD.lift + out;
   cardFloat.rotation.y = Math.sin(t * 0.45) * 0.025; cardFloat.rotation.x = Math.sin(t * 0.6 + 2) * 0.012;
-  const sh = profileCard.userData.shadow; sh.position.y = -0.7 - bob; sh.position.z = -CARD.lift - out + 0.01;
-  sh.scale.setScalar(1 + out * 0.05); sh.material.opacity = 0.6 - out * 0.4;
+  profileCard.userData.shadow.position.z = -CARD.lift - out + 0.01;   // stays flat on the wall; moves with the card, so no sliding patch
 }
 function cardShadowTex() { return canvasTex(256, 384, (g, w, h) => { g.filter = "blur(18px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(44, 44, w - 88, h - 88, 26); g.fill(); }).tex; }
 

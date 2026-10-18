@@ -552,6 +552,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - **v102** — Work page filter under the subheading: filter icon (shows all) + **NID** (Syntra, Ekmaati) + **Self** (everything else). A project counts as NID when its `status` in `content.js` contains "NID".
 - **v103** — `main.js` split: `sound.js` (the Sound synth) and `room-utils.js` (sharpen, rr, bezier, tileNoise, wrapText). Their `?v=N` in main.js must be bumped with every release.
 - **v104** — performance: quality now steps down unless the desk runs at ≈45 fps (was 25): pixel ratio 1.25 → shadows off → 1× and no shadow map. Software rendering (browser hardware acceleration off: SwiftShader / llvmpipe / Basic Render, ≈3 fps) is detected from the WebGL renderer name; those visitors go straight to the Mac portfolio with a 9 s toast telling them to turn acceleration on. `Desk.state().gpu` shows the GPU name.
+- **v105** — profile card's wall shadow: no longer offset below the card or counter-moving with its drift (it read as a sliding black patch); now a faint static halo right behind it.
 - `CLAUDE.md` added: every change is checked, committed and pushed automatically.
 
 ## 24. Decision log
