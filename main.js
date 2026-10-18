@@ -704,18 +704,24 @@ const glow = new THREE.PointLight(0xdcd6ff, 1.2, 9, 2);   // the screen lights t
 glow.position.set(0, 2.2, 1.8);
 scene.add(glow);
 
-// Back of the lid: SJ monogram + a few original stickers (visible when you orbit around)
+const screenLogo = new Image(); screenLogo.src = asset("assets/brand/sj-mark-white.svg");   // drawn in the laptop screen's menu bar
+// Back of the lid: sj logo + a few original stickers (visible when you orbit around)
 function lidSticker(draw, size, x, y, rotZ = 0, glossy = false) {
-  const { tex } = canvasTex(256, 256, draw);
+  const ct = canvasTex(256, 256, draw), { tex } = ct;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: glossy ? 0.15 : 0.45, metalness: glossy ? 0.6 : 0, polygonOffset: true, polygonOffsetFactor: -2 }));
   m.position.set(x, y, -LID_T / 2 - 0.003);
   m.rotation.set(0, Math.PI, rotZ);
   lid.add(m);
+  return ct;
 }
-lidSticker((g) => {
-  g.strokeStyle = "#9da1a7"; g.lineWidth = 8; g.beginPath(); g.arc(128, 128, 96, 0, 7); g.stroke();
-  g.fillStyle = "#9da1a7"; g.font = `700 92px ${UI}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("SJ", 128, 134);
-}, 1.0, 0, LID_H / 2, 0, true);
+// the sj logo (assets/brand/sj-mark-white.svg), etched in the lid's light grey like an engraved logo
+const lidLogo = lidSticker(() => {}, 1.15, 0, LID_H / 2, 0, true);
+new THREE.ImageLoader().load(asset("assets/brand/sj-mark-white.svg"), (img) => {
+  const { g, tex } = lidLogo, k = 196 / Math.max(img.width, img.height), w = img.width * k, h = img.height * k;
+  g.clearRect(0, 0, 256, 256); g.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
+  g.globalCompositeOperation = "source-in"; g.fillStyle = "#9da1a7"; g.fillRect(0, 0, 256, 256); g.globalCompositeOperation = "source-over";
+  tex.needsUpdate = true;
+});
 lidSticker((g) => {
   const px = ["01100110", "11111111", "11111111", "11111111", "01111110", "00111100", "00011000"];
   g.fillStyle = "#fff"; g.fillRect(14, 30, 228, 196);
@@ -1475,7 +1481,8 @@ function drawScreen(t) {
   const mbH = H * NOTCH.h, mbY = mbH / 2, k = H / 760;   // k: the desktop's 760 px-tall screen → this canvas
   g.save(); g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = 4;
   g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "left";
-  g.font = `800 ${13 * k}px ${UI}`; g.fillText("SJ", 22 * k, mbY);
+  if (screenLogo.complete && screenLogo.naturalWidth) { const lh = 15 * k, lw = lh * screenLogo.naturalWidth / screenLogo.naturalHeight; g.drawImage(screenLogo, 22 * k, mbY - lh / 2, lw, lh); }
+  else { g.font = `800 ${13 * k}px ${UI}`; g.fillText("SJ", 22 * k, mbY); }
   g.font = `700 ${13 * k}px ${UI}`; g.fillText("Portfolio", 74 * k, mbY);
   g.font = `400 ${13 * k}px ${UI}`;
   ["File", "Edit", "View", "Go", "Window", "Help"].forEach((m, i) => g.fillText(m, (172 + [0, 50, 102, 158, 202, 262][i]) * k, mbY));

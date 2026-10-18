@@ -190,7 +190,7 @@
   // Sidebar
   $("#sidebar").innerHTML = `<span class="side-hl" aria-hidden="true"></span><h4>Portfolio</h4>` +
     Object.entries(apps).map(([k, a]) => `<button class="side-item" data-open="${k}">${line(k)}${esc(a.title)}</button>`).join("") +
-    `<div class="side-profile"><span class="avatar">SJ</span><div><b>${esc(S.name)}</b><span>${esc(S.location)}</span></div></div>`;
+    `<div class="side-profile"><span class="avatar"><img src="assets/brand/sj-icon.svg" alt=""></span><div><b>${esc(S.name)}</b><span>${esc(S.location)}</span></div></div>`;
 
   // Dock
   $("#dock").innerHTML = Object.entries(apps).map(([k, a]) =>
