@@ -461,10 +461,10 @@
   tbSearch.addEventListener("click", () => openSpotlight());
   tbShare.addEventListener("click", () => copyLink());
 
-  function toast(msg) {
+  function toast(msg, ms = 1800) {
     const t = $("#toast"); t.textContent = msg; t.hidden = false;
     t.style.animation = "none"; void t.offsetWidth; t.style.animation = "";
-    clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.hidden = true), 1800);
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.hidden = true), ms);
   }
   // Bangalore time for the Contact window
   function istNow() { return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date()).toUpperCase(); }

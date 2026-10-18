@@ -274,7 +274,7 @@ button.mb-icon:hover { background: rgba(255, 255, 255, .22); }
 .sp-results li.sel { background: var(--accent); color: #fff; }
 .sp-results li .sp-ico { width: 28px; height: 28px; flex: none; }
 .sp-results li small { margin-left: auto; color: inherit; opacity: .6; font-size: 12px; }
-.toast { position: absolute; z-index: 9; left: 50%; bottom: 112px; transform: translateX(-50%); padding: 9px 16px; border-radius: 999px;
+.toast { position: absolute; z-index: 9; left: 50%; bottom: 112px; transform: translateX(-50%); padding: 9px 16px; border-radius: 18px; max-width: min(560px, calc(100vw - 32px)); width: max-content; text-align: center;
   font-size: 13px; font-weight: 500; color: var(--t1); background: var(--g-win); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
   box-shadow: inset 0 1px 0 var(--g-hi), 0 0 0 .5px var(--g-edge), 0 10px 30px rgba(0, 0, 0, .25); animation: menuIn .2s var(--ease); }
 .card.soon { cursor: default; }

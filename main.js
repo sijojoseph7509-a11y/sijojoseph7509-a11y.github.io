@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=103";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=103";
+import { Sound } from "./sound.js?v=104";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=104";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -84,6 +84,12 @@ try {
   throw err;
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// Software rendering (browser hardware acceleration off, or no GPU driver: SwiftShader / llvmpipe / Microsoft Basic
+// Render) draws 3D on the CPU and crawls even on a gaming laptop. Start at the lightest quality straight away.
+const GPU_NAME = (() => { try { const gl = renderer.getContext(), x = gl.getExtension("WEBGL_debug_renderer_info");
+  return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)); } catch (_) { return ""; } })();
+const SOFTWARE_GL = /swiftshader|llvmpipe|softpipe|basic render|software/i.test(GPU_NAME);
+if (SOFTWARE_GL) renderer.setPixelRatio(1);
 // Some phones drop the GPU context under memory pressure: offer a clean reload instead of a frozen/black desk
 renderer.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); $("#glitch").hidden = false; });
 $("#glitchReload").addEventListener("click", () => location.reload());
@@ -1731,19 +1737,24 @@ function placeCoach() {
 // Only judged once things have settled (≥4 s after the desk appears, not while the camera is flying or models are
 // fading in) — the first seconds include shader compiles and made phones look slow, dropping them to 1× (blurry).
 const perf = { dts: [], step: 0, from: 0 };
+let softwareApplied = false;
 function adaptQuality(dt) {
-  if (perf.step >= 2 || document.hidden || dt > 500 || tween || fading.length) return;   // ignore pauses + busy moments
+  if (SOFTWARE_GL && !softwareApplied) { softwareApplied = true; perf.step = 3; lampLight.castShadow = false; renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); console.info("Software 3D detected (" + GPU_NAME + "): lightest quality"); return; }
+  if (perf.step >= 3 || document.hidden || dt > 500 || tween || fading.length) return;   // ignore pauses + busy moments
   const now = performance.now();
-  if (!perf.from) perf.from = now + 4000;
+  if (!perf.from) perf.from = now + 3000;
   if (now < perf.from) return;
   perf.dts.push(dt);
-  if (perf.dts.length < 120) return;
-  const median = perf.dts.sort((a, b) => a - b)[60];
+  if (perf.dts.length < 90) return;
+  const median = perf.dts.sort((a, b) => a - b)[45];
   perf.dts = [];
-  if (median < 40) { perf.step = 2; return; }   // 25 fps or better — keep full quality, stop measuring
+  // aim for smooth (≈45 fps or better), not just "usable": 25 fps still feels stuck when you drag to look around
+  if (median < 22) { perf.step = 3; return; }
   perf.step++;
-  if (perf.step === 1 && renderer.getPixelRatio() > 1.5) { renderer.setPixelRatio(1.5); renderer.setSize(innerWidth, innerHeight); }   // gentle step: 1.5×, never 1×
-  else { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  const pr = renderer.getPixelRatio();
+  if (perf.step === 1 && pr > 1.25) { renderer.setPixelRatio(1.25); renderer.setSize(innerWidth, innerHeight); }
+  else if (perf.step <= 2) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  else { perf.step = 3; if (pr > 1) { renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); } renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); }
   console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
 }
 
@@ -1989,7 +2000,7 @@ requestAnimationFrame(loop);
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
-  covering: !!window.OS.isCovering?.(), quality: perf.step, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
+  covering: !!window.OS.isCovering?.(), quality: perf.step, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
   toggleDay: () => setNight(dayTarget === 0), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
@@ -2009,6 +2020,11 @@ function enter(withSound) {
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
   document.activeElement?.blur?.();
+  if (SOFTWARE_GL && !deep) {   // no graphics acceleration: the 3D desk would crawl, so open the portfolio itself
+    window.OS.open("about");
+    window.OS.toast("Your browser has graphics acceleration off, so the 3D desk is paused. Turn it on in the browser settings to see it.", 9000);
+    return;
+  }
   coachShow();
 }
 if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
