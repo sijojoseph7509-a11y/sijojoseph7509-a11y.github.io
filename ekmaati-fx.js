@@ -129,7 +129,15 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
       o.material = Array.isArray(o.material) ? o.material.map((m) => M[m.name] || M.m_paper) : (M[o.material.name] || M.m_paper);
     });
     box.add(g.scene);
-    idol = g.scene.getObjectByName("idol") || idol;
+    // the idol: a solid built from the real photo (idolRelief), in place of box.glb's flat two-sided card, whose mirrored
+    // back showed through the cut-out and read as a second head
+    const card = g.scene.getObjectByName("idol");
+    if (card) {
+      card.visible = false;
+      const img = new Image(); img.decoding = "async";
+      img.onload = () => { const r = idolRelief(img); r.position.copy(card.position); card.parent.add(r); idol = r; dirty = true; };
+      img.src = A("tex/idol.webp");
+    }
     // the roof tier and peak, rebuilt here with their own print (box.glb's were a plain block and an oversized white pyramid)
     for (const n of ["roof", "peak"]) { const o = g.scene.getObjectByName(n); if (o) o.visible = false; }
     box.add(temple_top());
@@ -275,6 +283,45 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     mo.observe(document.body, { childList: true, subtree: true });
     caseEl.classList.add("fx-ready");
   }
+}
+
+// The idol as a solid: the photo's outline is inflated into a rounded body (depth grows with the square root of the
+// distance from the edge, as a clay figure rounds off), darker folds sit a little deeper, the photo wraps the front and
+// the back is river clay (the same cut-out, tinted). 0.62 wide, like the card it replaces; the box turns it toward the visitor, so its back is rarely seen.
+function idolRelief(img) {
+  const GW = 170, GH = Math.round(GW * img.height / img.width), IW = 0.62, IH = IW * img.height / img.width;
+  const c = document.createElement("canvas"); c.width = GW; c.height = GH; const x = c.getContext("2d");
+  x.drawImage(img, 0, 0, GW, GH); const px = x.getImageData(0, 0, GW, GH).data;
+  const inside = new Uint8Array(GW * GH), lum = new Float32Array(GW * GH);
+  for (let i = 0; i < GW * GH; i++) { inside[i] = px[i * 4 + 3] > 210 ? 1 : 0;   /* a little inside the cut-out edge, where the photo has a dark fringe */ lum[i] = (px[i * 4] * 0.3 + px[i * 4 + 1] * 0.59 + px[i * 4 + 2] * 0.11) / 255; }
+  // distance to the outline (two-pass chamfer), then a soft blur so the body has no terraces
+  const d = new Float32Array(GW * GH).fill(1e9);
+  for (let i = 0; i < GW * GH; i++) if (!inside[i]) d[i] = 0;
+  const at = (gx, gy) => (gx < 0 || gy < 0 || gx >= GW || gy >= GH ? 0 : d[gy * GW + gx]);
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) { const i = gy * GW + gx; if (d[i]) d[i] = Math.min(d[i], at(gx - 1, gy) + 1, at(gx, gy - 1) + 1, at(gx - 1, gy - 1) + 1.414, at(gx + 1, gy - 1) + 1.414); }
+  for (let gy = GH - 1; gy >= 0; gy--) for (let gx = GW - 1; gx >= 0; gx--) { const i = gy * GW + gx; if (d[i]) d[i] = Math.min(d[i], at(gx + 1, gy) + 1, at(gx, gy + 1) + 1, at(gx + 1, gy + 1) + 1.414, at(gx - 1, gy + 1) + 1.414); }
+  const blur = (a) => { const o = new Float32Array(a.length); for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) { let t = 0, n = 0; for (let k = -2; k <= 2; k++) for (let l = -2; l <= 2; l++) { const X = gx + l, Y = gy + k; if (X >= 0 && Y >= 0 && X < GW && Y < GH) { t += a[Y * GW + X]; n++; } } o[gy * GW + gx] = t / n; } return o; };
+  const dm = blur(d), lm = blur(lum); let max = 0; for (let i = 0; i < dm.length; i++) if (inside[i]) max = Math.max(max, dm[i]);
+  const FRONT = 0.17, BACK = 0.12, cell = IW / (GW - 1);
+  const depth = (i) => (inside[i] ? Math.sqrt(dm[i] / max) : 0);
+  const pos = [], uv = [], idx = [], bpos = [], bidx = [];
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+    const i = gy * GW + gx, X = gx * cell - IW / 2, Y = IH - gy * cell, k = depth(i);
+    pos.push(X, Y, k * FRONT + (inside[i] ? (lm[i] - 0.5) * 0.02 * k : 0)); uv.push(gx / (GW - 1), 1 - gy / (GH - 1));
+    bpos.push(X, Y, -k * BACK);
+  }
+  for (let gy = 0; gy < GH - 1; gy++) for (let gx = 0; gx < GW - 1; gx++) {
+    const a = gy * GW + gx, b = a + 1, cc = a + GW, dd = cc + 1;
+    if (inside[a] + inside[b] + inside[cc] + inside[dd] < 3) continue;   // only cells on the figure
+    idx.push(a, cc, b, b, cc, dd); bidx.push(a, b, cc, b, dd, cc);
+  }
+  const mk = (p, i, u) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3)); if (u) g.setAttribute("uv", new THREE.Float32BufferAttribute(u, 2)); g.setIndex(i); g.computeVertexNormals(); return g; };
+  const map = new THREE.Texture(img); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; map.needsUpdate = true;
+  const grp = new THREE.Group();
+  grp.add(new THREE.Mesh(mk(pos, idx, uv), new THREE.MeshStandardMaterial({ map, roughness: 0.92, alphaTest: 0.5 })));
+  grp.add(new THREE.Mesh(mk(bpos, bidx, uv), new THREE.MeshStandardMaterial({ map, color: 0x5e574c, roughness: 0.95, alphaTest: 0.5 })));   // the photo's own cut-out, tinted to clay, so both halves share one clean outline
+  grp.children.forEach((m) => (m.position.y = -IH / 2));   // centred on the card's own origin
+  return grp;
 }
 
 // The roof tier and peak, as on the real box: a block about half the temple's width with an orange outline, a square at
