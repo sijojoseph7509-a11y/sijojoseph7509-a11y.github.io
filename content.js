@@ -151,7 +151,7 @@ window.SITE = {
       ] } },
     { title: "Ekmaati", tag: "Branding \u00b7 Packaging", color: "#2A1A10", status: "NID Semester 2 project", url: "#",
       summary: "Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen.",
-      case: { slug: "ekmaati", coverSlide: ["fx/cover-slide.webp", 900], cover: "13.webp", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "ekmaati final"
+      case: { slug: "ekmaati", coverSlide: ["fx/cover-slide.webp", 900], cover: "13.webp", fx: "ekmaati-fx.js", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "ekmaati final"
         ["01.webp", 1000, "Ekmaati. Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen. Branding, 2026."],
         ["02.webp", 240, "Snapshot: sole designer for research, naming, identity, packaging and campaign; deliverables include the name, mark, colour, type, temple box, die line and two posters; a real project, prototyped by hand."],
         ["03.webp", 960, "Statement: turning a seasonal commodity into a keepsake, with a name, a mark and a temple-shaped box for the clay gods of Pen."],
