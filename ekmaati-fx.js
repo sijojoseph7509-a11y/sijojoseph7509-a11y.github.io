@@ -105,7 +105,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   // materials by the names given in tools/ekmaati/build_box.py
   const M = {
     m_face: std({ map: tex("t_face"), alphaTest: 0.5 }),
-    m_plinth: std({ map: tex("t_plinth") }), m_roof: std({ map: tex("t_plinth"), color: 0xfff6e8 })   /* same printed border as the plinth; the roof photo was in shadow */,
+    m_plinth: std({ map: tex("t_plinth") }), m_roof: std({ map: tex("t_plinth") })   /* same printed border as the plinth; the roof photo was in shadow */,
     m_paper: std({ color: 0xf5f0e6 }), m_edge: std({ color: 0xe6dccb }), m_inside: std({ color: 0xebe3d4 }),
     m_sun: std({ map: sunburst() }),
     m_idol: std({ map: tex("idol"), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.95 }),
