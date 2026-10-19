@@ -1,7 +1,8 @@
 <!doctype html>
 <!-- Handovo case study, designed at 1440 px. tools/handovo/render.mjs renders each <section> to work/handovo/NN.webp (+ @2x).
-     Facts come from the Handovo repo (~/floor-pilot README + the "Play the day" prototype). Store, staff and numbers in the
-     screens are the prototype's scripted demo (Loom & Co., Koramangala), not a real store's data. -->
+     Facts come from the Handovo repo (floor-pilot: README, src/lib, the privacy notice and the "Play the day" prototype). Store, staff
+     and numbers in the screens are the prototype's scripted demo (Loom & Co., Koramangala), not a real store's data.
+     Statistics in "Context by numbers" are cited to their sources. Illustrations in ill/ are AI-generated in Sijo's style. -->
 <html lang="en"><head><meta charset="utf-8">
 <style>
 @font-face { font-family: Inter; src: url(../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
@@ -22,24 +23,54 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
 .lead { font-size: 26px; line-height: 1.5; max-width: 860px; margin-top: 28px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
 .chip { display: inline-block; font: 600 15px/1 Inter; padding: 8px 14px; border-radius: 999px; }
-.c-handles { background: var(--blue); color: #fff; } .c-asks { background: var(--lime); color: #000; } .c-yours { background: #fff; color: #000; border: 1.5px solid #000; }
+.c-handles { background: var(--blue); color: #fff; } .c-asks { background: var(--lime); color: #000; } .c-yours { background: #fff; color: #000; border: 1.5px solid #000; } .c-off { background: #E2E2EA; color: #55556A; }
 .shot { display: block; width: 100%; border-radius: 22px; box-shadow: 0 40px 80px -30px rgba(10,10,40,.45), 0 0 0 1px rgba(255,255,255,.06); }
 .phone { width: 300px; border-radius: 40px; border: 10px solid #111; box-shadow: 0 30px 60px -20px rgba(0,0,0,.5); display: block; }
 .meta { display: flex; gap: 64px; margin-top: 64px; }
 .meta div span { display: block; font: 500 12px/1 GSCode, monospace; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 10px; }
 .meta div b { font: 500 18px/1.3 Inter; color: #fff; }
 .mark { width: 64px; height: 64px; }
-.num { font: 800 120px/1 Mona; letter-spacing: -.04em; color: var(--blue); }
 .step { display: grid; grid-template-columns: 380px 1fr; gap: 72px; align-items: center; }
-.step .k { font: 500 14px/1 GSCode, monospace; color: var(--blue); letter-spacing: .06em; margin-bottom: 18px; }
-.dark .step .k { color: var(--lime); }
+.step .k, .k { font: 500 14px/1 GSCode, monospace; color: var(--blue); letter-spacing: .06em; margin-bottom: 18px; }
+.dark .k, .blue .k { color: var(--lime); }
 .step h3 { font-size: 40px; line-height: 1.08; margin-bottom: 18px; }
-.rule { display: grid; grid-template-columns: 1fr 150px 150px 150px; align-items: center; border-bottom: 1px solid var(--line); padding: 18px 0; font-size: 19px; }
-.rule .on { text-align: center; } .rule .off { text-align: center; color: #B4B4C0; font-size: 15px; }
 .tbl { width: 100%; border-collapse: collapse; } .tbl td { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.14); font-size: 19px; color: #DADAE6; vertical-align: top; }
 .tbl td:first-child { width: 360px; color: #fff; font-weight: 600; }
 .tag { font: 600 13px/1 Inter; padding: 6px 10px; border-radius: 6px; } .ok { background: var(--lime); color: #000; } .wip { background: #2A2A33; color: #fff; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
+.dark .card { background: #16161D; border-color: #26262F; }
+.card p, .card li { font-size: 17px; line-height: 1.55; }
+.lab { font: 500 12px/1 GSCode, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin-bottom: 10px; }
+.dark .lab { color: #8A8A99; }
+.cap { font-size: 15px; line-height: 1.5; color: var(--mute); margin-top: 14px; }
+.dark .cap { color: #8A8A99; }
+.ill { display: block; width: 100%; border-radius: 18px; border: 1px solid var(--line); }
+.stat b { display: block; font: 800 96px/1 Mona; letter-spacing: -.04em; color: var(--lime); }
+.stat p { font-size: 18px; margin-top: 18px; color: #DADAE6; } .stat .src { font-size: 14px; color: #8A8A99; margin-top: 14px; line-height: 1.5; }
+.mx { width: 100%; border-collapse: collapse; } .mx th, .mx td { padding: 18px 14px; border-bottom: 1px solid var(--line); font-size: 17px; text-align: center; vertical-align: middle; }
+.mx th { font: 600 15px/1.3 Inter; color: var(--mute); } .mx td:first-child, .mx th:first-child { text-align: left; font-weight: 600; width: 300px; }
+.mx tr.us td { background: #EEF0FF; } .mx tr.us td:first-child { color: var(--blue); }
+.y { color: var(--blue); font-weight: 700; } .n { color: #B4B4C0; } .s { color: #8A6D00; }
+.jm { display: grid; grid-template-columns: 170px repeat(5, 1fr); gap: 0; border-top: 1px solid var(--line); }
+.jm > div { padding: 18px 16px; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.5; color: #2A2A33; }
+.jm .rh { font: 500 12px/1.4 GSCode, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--mute); padding-left: 0; }
+.jm .ch { font: 700 19px/1.2 Mona; color: var(--ink); }
+.box { border-radius: 16px; padding: 20px 22px; font-size: 16px; line-height: 1.45; }
+.box b { display: block; font: 700 19px/1.2 Mona; margin-bottom: 6px; }
+.b-dk { background: #16161D; border: 1px solid #2E2E3A; color: #C9C9D6; } .b-dk b { color: #fff; }
+.b-bl { background: var(--blue); color: #E3E5FF; } .b-bl b { color: #fff; }
+.b-lm { background: var(--lime); color: #1A1A1A; } .b-lm b { color: #000; }
+.b-wh { background: #fff; color: #2A2A33; border: 1.5px solid #000; } .b-wh b { color: #000; }
+.b-pp { background: var(--paper); color: #2A2A33; border: 1px solid var(--line); } .b-pp b { color: #000; }
+.arr { font: 300 44px/1 Inter; color: #6B6B78; display: flex; align-items: center; justify-content: center; }
+.dark .arr { color: #6B6B78; }
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 18px; }
+.flow .box { font-size: 15px; } .flow .box b { font-size: 17px; }
+.rr { display: grid; grid-template-columns: 1fr 180px 300px; gap: 24px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.rr p { font-size: 17px; } .rr .t { font-weight: 600; color: var(--ink); font-size: 18px; }
+.q { font: 600 30px/1.35 Mona; color: var(--ink); }
 </style></head>
 <body>
 
@@ -57,8 +88,26 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
   <img class="shot" src="shots/screen03.webp" alt="" style="margin-top:88px; border-radius:22px 22px 0 0; box-shadow:0 -20px 80px rgba(0,0,40,.35)">
 </section>
 
-<!-- 02 problem -->
-<section>
+<!-- 02 snapshot -->
+<section style="padding:72px 120px; border-bottom:1px solid var(--line)">
+  <div class="grid4" style="gap:48px">
+    <div><p class="lab">My role</p><p style="font-size:18px">Designer and builder: research plan, AI behaviour, interaction and visual design, and the working pilot build.</p></div>
+    <div><p class="lab">Surfaces</p><p style="font-size:18px">A web control room for the manager, shift leads and owner. Staff get tasks in chat: a test phone today, WhatsApp next.</p></div>
+    <div><p class="lab">Built with</p><p style="font-size:18px">Figma, Next.js, Postgres on Supabase (Mumbai), Claude with structured output, Vercel.</p></div>
+    <div><p class="lab">The question</p><p style="font-size:18px">How much should an AI agent be allowed to do on a shop floor, and who decides?</p></div>
+  </div>
+</section>
+
+<!-- 03 play the day -->
+<section style="padding-bottom:100px">
+  <p class="eye">The finished design</p>
+  <h2>Two minutes in a 30-person clothing store in Koramangala.</h2>
+  <p class="lead">I built the prototype around one scripted Thursday so anyone can feel the system work: a goal, a plan, a discount, a count that’s off, a sell-out, an urgent customer, the handover and the owner’s digest. The control room is on the left; the phone on the right stands in for each staff member’s Handovo app.</p>
+  <img class="shot" src="shots/tour01.webp" alt="" style="margin-top:72px">
+</section>
+
+<!-- 04 problem -->
+<section style="background:var(--paper)">
   <p class="eye">The problem</p>
   <h2>A store’s day lives in the manager’s head and a noisy WhatsApp group.</h2>
   <div class="grid3" style="margin-top:72px">
@@ -66,12 +115,114 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
     <div><h3>Every small call goes up</h3><p>Discounts, counts that don’t match, a broken rail: each one becomes a call or a message the manager has to chase.</p></div>
     <div><h3>AI can’t just be let loose</h3><p>An agent that messages thirty people needs limits the manager sets, and it must never decide on its own what it is allowed to do.</p></div>
   </div>
-  <div style="margin-top:96px; padding:48px 56px; background:var(--paper); border-radius:24px">
-    <p style="font:600 34px/1.3 Mona; color:var(--ink)">How might a manager say what today is about once, and trust an agent to run the rest, inside rules they control?</p>
+  <div style="margin-top:88px; padding:48px 56px; background:#fff; border-radius:24px">
+    <p class="q">How might a manager say what today is about once, and trust an agent to run the rest, inside rules they control?</p>
   </div>
 </section>
 
-<!-- 03 the idea -->
+<!-- 05 context by numbers -->
+<section class="dark">
+  <p class="eye">Context by numbers</p>
+  <h2>The front line is big, busy and badly connected.</h2>
+  <div class="grid3" style="margin-top:80px; gap:56px">
+    <div class="stat"><b>~8%</b><p>of India’s workforce is employed in retail.</p><p class="src">IBEF, Retail Industry in India</p></div>
+    <div class="stat"><b>63%</b><p>of frontline workers say messages from leadership don’t make it to them.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022 (9,600 frontline workers and managers surveyed)</p></div>
+    <div class="stat"><b>1 in 3</b><p>frontline workers say they don’t have the right technology tools to do their job.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022</p></div>
+  </div>
+  <div style="margin-top:72px; padding-top:48px; border-top:1px solid #26262F; display:grid; grid-template-columns:1fr 1fr; gap:56px">
+    <div class="stat"><b>400M+</b><p>monthly WhatsApp users in India, its largest market, so staff already know the chat.</p><p class="src">WhatsApp, as reported by TechCrunch, July 2019</p></div>
+    <div style="align-self:end"><p style="font-size:20px">Why it matters: the tool staff already open all day is a chat app. Handovo puts the work there instead of asking thirty people to learn a new app.</p></div>
+  </div>
+</section>
+
+<!-- 06 a day in the store, morning -->
+<section>
+  <p class="eye">A Thursday at Loom &amp; Co. · Morning</p>
+  <h2>One goal, said once, reaches everyone.</h2>
+  <div class="grid2" style="margin-top:64px; gap:40px">
+    <div><img class="ill" src="ill/01-huddle.webp" alt=""><p class="k" style="margin-top:22px">01 · Huddle</p><p>The manager tells the morning shift what today is about. Rain is forecast all week.</p></div>
+    <div><img class="ill" src="ill/02-goal.webp" alt=""><p class="k" style="margin-top:22px">02 · The goal</p><p>Instead of repeating it thirty times, she types it once into Handovo, the way she said it.</p></div>
+    <div><img class="ill" src="ill/03-phone.webp" alt=""><p class="k" style="margin-top:22px">03 · The task</p><p>Each person gets only their own task on their phone, in their language, with what to reply.</p></div>
+    <div><img class="ill" src="ill/04-discount.webp" alt=""><p class="k" style="margin-top:22px">04 · A discount</p><p>At billing, a customer wants 15% off a rain jacket. Kavya asks in chat; the call stays with the manager.</p></div>
+  </div>
+  <p class="cap" style="margin-top:40px">AI-generated illustrations in my style. They storyboard the designed scenario; they are not research photos.</p>
+</section>
+
+<!-- 07 a day in the store, afternoon -->
+<section style="padding-top:40px">
+  <p class="eye">A Thursday at Loom &amp; Co. · Midday to close</p>
+  <h2>Small problems get handled. Big ones come up.</h2>
+  <div class="grid2" style="margin-top:64px; gap:40px">
+    <div><img class="ill" src="ill/05-count.webp" alt=""><p class="k" style="margin-top:22px">05 · A count</p><p>Meera counts the white linen shirts. Her number doesn’t match the system, so the gap goes to the manager.</p></div>
+    <div><img class="ill" src="ill/06-restock.webp" alt=""><p class="k" style="margin-top:22px">06 · A restock</p><p>A size of the navy rain jacket sells out. Manoj gets the restock task without anyone asking.</p></div>
+    <div><img class="ill" src="ill/07-customer.webp" alt=""><p class="k" style="margin-top:22px">07 · An upset customer</p><p>Rohit has an angry customer at Footwear. That always reaches the manager, marked urgent.</p></div>
+    <div><img class="ill" src="ill/08-handover.webp" alt=""><p class="k" style="margin-top:22px">08 · Handover</p><p>At shift change, open work moves to the evening team with a note. The owner gets one digest.</p></div>
+  </div>
+  <p class="cap" style="margin-top:40px">AI-generated illustrations in my style. They storyboard the designed scenario; they are not research photos.</p>
+</section>
+
+<!-- 08 research plan -->
+<section style="background:var(--paper)">
+  <p class="eye">Research plan</p>
+  <h2>Five methods, each answering a different question.</h2>
+  <p class="lead">The prototype came from how stores already run. The pilot is where each assumption gets tested, so I planned the research around it.</p>
+  <div class="grid3" style="margin-top:64px; gap:28px">
+    <div class="card"><p class="lab">Shadow a shift</p><h3>Where does the day go off plan?</h3><p>Follow a manager from the huddle to close and log every call, message and interruption.</p></div>
+    <div class="card"><p class="lab">Manager interviews</p><h3>What would you never hand over?</h3><p>Sort real decisions into Handles it, Asks you and Yours only, and hear why.</p></div>
+    <div class="card"><p class="lab">Chat audit, with consent</p><h3>What does the group chat carry?</h3><p>Tag a week of store group messages by type: tasks, questions, blockers, noise.</p></div>
+    <div class="card"><p class="lab">Rehearsal on the test phone</p><h3>Can staff reply without training?</h3><p>Staff play their part of a day in their own language while the manager runs the control room.</p></div>
+    <div class="card"><p class="lab">Pilot logs</p><h3>What still reaches the manager?</h3><p>Four weeks of the Activity log: what the agent handled, what it asked, and what the manager changed.</p></div>
+    <div class="card" style="background:var(--ink); border-color:var(--ink)"><p class="lab" style="color:var(--lime)">Ground rule</p><p style="color:#fff; font-size:19px">No research numbers on this page are invented. Where I haven’t measured yet, I say so.</p></div>
+  </div>
+</section>
+
+<!-- 09 competitive landscape -->
+<section>
+  <p class="eye">Competitive landscape</p>
+  <h2>Stores already have tools. None of them runs the day.</h2>
+  <table class="mx" style="margin-top:64px">
+    <tr><th></th><th>Reaches staff in the chat they use</th><th>Turns one goal into a plan</th><th>Follows up on its own</th><th>Manager sets what AI may do</th><th>Never ranks staff</th></tr>
+    <tr><td>Store WhatsApp group</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td><td class="n">No AI</td><td class="y">Yes</td></tr>
+    <tr><td>Huddle and a paper register</td><td class="n">No</td><td class="s">In the manager’s head</td><td class="n">No</td><td class="n">No AI</td><td class="y">Yes</td></tr>
+    <tr><td>Task and checklist apps</td><td class="n">New app to install</td><td class="n">No</td><td class="s">Reminders only</td><td class="n">No</td><td class="s">Often scores people</td></tr>
+    <tr><td>Workforce management suites</td><td class="n">New app to install</td><td class="s">Rosters, not goals</td><td class="s">Partly</td><td class="n">No</td><td class="s">Often scores people</td></tr>
+    <tr class="us"><td>Handovo</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes, per rule</td><td class="y">Yes, by design</td></tr>
+  </table>
+  <p class="cap" style="margin-top:28px">Categories, not named products: a reading of the kinds of tool a store like this uses today.</p>
+</section>
+
+<!-- 10 proto-personas -->
+<section style="background:var(--paper)">
+  <p class="eye">Proto-personas</p>
+  <h2>Four people, one day, very different jobs.</h2>
+  <div class="grid4" style="margin-top:64px; gap:24px">
+    <div class="card"><p class="lab">Store manager</p><h3>Runs the day</h3><p><b>Needs</b> the plan to reach the floor and only the calls that are really hers.</p><p style="margin-top:12px"><b>Fears</b> an agent that promises a customer something she wouldn’t.</p><p style="margin-top:12px"><b>Uses</b> the control room on a laptop and phone.</p></div>
+    <div class="card"><p class="lab">Shift lead · Priya</p><h3>Keeps a shift moving</h3><p><b>Needs</b> to know who is in, what is late and who needs help.</p><p style="margin-top:12px"><b>Fears</b> being the one who forgot to pass something on.</p><p style="margin-top:12px"><b>Uses</b> chat: asks “status” and gets a summary.</p></div>
+    <div class="card"><p class="lab">Floor staff · Meera</p><h3>Does the work</h3><p><b>Needs</b> to know her own tasks and reply in a word.</p><p style="margin-top:12px"><b>Fears</b> being watched or ranked by a machine.</p><p style="margin-top:12px"><b>Uses</b> WhatsApp, in English; Kavya uses Kannada.</p></div>
+    <div class="card"><p class="lab">Owner</p><h3>Sees the result</h3><p><b>Needs</b> sales against target and what went wrong, once a day.</p><p style="margin-top:12px"><b>Fears</b> finding out about problems a week late.</p><p style="margin-top:12px"><b>Uses</b> the daily digest.</p></div>
+  </div>
+  <p class="cap" style="margin-top:28px">Proto-personas built from the prototype’s cast. They are assumptions for the pilot to test, not research findings. Names are fictional.</p>
+</section>
+
+<!-- 11 journey map -->
+<section>
+  <p class="eye">Journey map · The manager’s day today</p>
+  <h2>The day leaks at every hand-off.</h2>
+  <div style="margin-top:56px; position:relative">
+    <div class="jm">
+      <div class="rh"></div><div class="ch">Huddle</div><div class="ch">Morning floor</div><div class="ch">Midday calls</div><div class="ch">Shift change</div><div class="ch">Close</div>
+      <div class="rh">What happens</div><div>Goal said out loud to whoever is in.</div><div>Tasks given by voice, one by one.</div><div>Discounts, counts and blockers by call or chat.</div><div>Evening lead hears a quick summary.</div><div>Sales and stock typed up for the owner.</div>
+      <div class="rh">Pain</div><div>Late arrivals miss it.</div><div>No one can see who owns what.</div><div>Every small call waits for one person.</div><div>Open work gets lost.</div><div>The report is late and partial.</div>
+      <div class="rh">Feeling</div><div style="grid-column:2 / span 5; padding:0; border-bottom:1px solid var(--line)">
+        <svg viewBox="0 0 1030 170" width="100%" height="170" style="display:block"><path d="M60 40 C 170 40, 210 70, 266 74 S 420 128, 472 124 S 600 96, 678 98 S 820 120, 884 116 S 980 90, 1000 88" fill="none" stroke="#2F3BEA" stroke-width="4"/>
+        <g fill="#2F3BEA"><circle cx="60" cy="40" r="8"/><circle cx="266" cy="74" r="8"/><circle cx="472" cy="124" r="8"/><circle cx="678" cy="98" r="8"/><circle cx="884" cy="116" r="8"/></g>
+        <g font-family="Inter" font-size="14" fill="#6B6B78"><text x="80" y="30">In control</text><text x="420" y="158">Most stretched</text></g></svg></div>
+      <div class="rh" style="color:var(--blue)">With Handovo</div><div><b>One goal</b> becomes a plan for everyone on shift.</div><div><b>Tasks</b> on each phone, with an owner and a time.</div><div><b>Rules</b> decide what reaches her.</div><div><b>Handover</b> moves open work with suggested owners.</div><div><b>Digest</b> writes itself from the day.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 the idea -->
 <section class="dark">
   <p class="eye">The idea</p>
   <h2>One goal in. Tasks out to every phone. The manager decides what the agent may do alone.</h2>
@@ -83,79 +234,226 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
   <p style="margin-top:72px; font-size:22px; max-width:900px">Every rule runs in code after the AI answers. The model only suggests; the engine checks every field and applies the manager’s setting before anything is sent.</p>
 </section>
 
-<!-- 04 play the day intro -->
-<section style="padding-bottom:60px">
-  <p class="eye">Play the day</p>
-  <h2>Two minutes in a 30-person clothing store in Koramangala.</h2>
-  <p class="lead">I built the prototype around one scripted Thursday so anyone can feel the system work: a goal, a plan, a discount, a count that’s off, a sell-out, an urgent customer, the handover and the owner’s digest. The control room is on the left; the phone on the right stands in for each staff member’s Handovo app.</p>
-  <img class="shot" src="shots/tour01.webp" alt="" style="margin-top:72px">
+<!-- 13 system architecture -->
+<section class="dark" style="padding-top:40px">
+  <p class="eye">System architecture</p>
+  <h2>The model reads. The engine decides.</h2>
+  <div style="margin-top:64px; display:grid; grid-template-columns:240px 40px 1fr 40px 260px; gap:0; align-items:stretch">
+    <div style="display:grid; gap:16px; align-content:start">
+      <div class="box b-dk"><b>Staff chat</b>WhatsApp Business Platform, or the test phone for rehearsals</div>
+      <div class="box b-dk"><b>Control room</b>Manager, shift leads and owner log in on the web</div>
+      <div class="box b-dk"><b>Scheduler</b>Runs every 5 minutes: reminders, nudges, handover, digest</div>
+    </div>
+    <div class="arr">→</div>
+    <div style="display:grid; gap:16px; align-content:start">
+      <div class="box b-dk"><b>Channel</b>Checks every webhook signature. Never messages anyone without a number and recorded consent.</div>
+      <div class="box b-dk"><b>Pipeline</b>Every change runs under a lock for that store, so two messages can’t fight over one task.</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <div class="box b-lm"><b>AI: Claude</b>Reads the message and returns structured JSON: intent, task, count, why. A daily cap of 400 calls per store.</div>
+        <div class="box b-bl"><b>Engine</b>Validates every field, then applies the manager’s rule. If the AI fails or refuses, scripted rules take over.</div>
+      </div>
+      <div class="box b-dk"><b>Postgres on Supabase, Mumbai</b>Tasks, stock, decisions, attendance and a full Activity log</div>
+    </div>
+    <div class="arr">→</div>
+    <div style="display:grid; gap:16px; align-content:start">
+      <div class="box b-bl"><b>Handles it</b>Acted on and logged</div>
+      <div class="box b-lm"><b>Asks you</b>A card in Needs you, with a draft and the reason</div>
+      <div class="box b-wh"><b>Yours only</b>Held until the manager acts</div>
+      <div class="box b-dk"><b>Outgoing messages</b>Sent in each person’s language</div>
+    </div>
+  </div>
+  <p class="cap" style="margin-top:48px">From the pilot build: src/lib/channel.ts, pipeline.ts, ai.ts and engine.ts. Staff messages are treated as data, never as instructions to the AI.</p>
 </section>
 
-<!-- 05 goal -->
-<section style="padding-top:60px">
-  <div class="step">
-    <div><p class="k">01 · The goal</p><h3>The manager writes one goal</h3><p>In plain words, the way they’d say it at the morning huddle. No forms. Rain is forecast all week: push rain jackets, count the white linen shirts, keep the fitting rooms tidy.</p></div>
+<!-- 14 routing decision -->
+<section>
+  <p class="eye">How a message is routed</p>
+  <h2>Three settings, one gate, always a reason.</h2>
+  <div style="margin-top:64px; display:grid; grid-template-columns:260px 40px 260px 40px 1fr; align-items:center">
+    <div class="box b-pp"><b>A staff message</b>“Customer wants 15% off the navy rain jacket, the zip is stiff.”</div>
+    <div class="arr">→</div>
+    <div class="box b-pp"><b>Read</b>AI or scripted rules name the intent: <i>price_override</i></div>
+    <div class="arr">→</div>
+    <div style="display:grid; gap:14px">
+      <div class="box b-wh" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Yours only</b><span>The manager acts. The card says which rule sent it.</span></div>
+      <div class="box b-lm" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Asks you</b><span>The agent drafts the action and waits for a tap.</span></div>
+      <div class="box b-bl" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Handles it</b><span>Acts, unless a check fails: then it becomes Asks you.</span></div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:72px; gap:28px">
+    <div class="card"><p class="lab">A check that fails</p><p>A count that is more than 2 units off the system turns Handles it into Asks you, with the money at stake.</p></div>
+    <div class="card"><p class="lab">Always up</p><p>Blocked tasks and upset customers always reach the manager, so someone can clear the way.</p></div>
+    <div class="card"><p class="lab">Locked</p><p>Warnings, performance and pay are Yours only and can’t be changed. Ranking staff isn’t available at all.</p></div>
+  </div>
+</section>
+
+<!-- 15 the rules -->
+<section style="background:var(--paper)">
+  <p class="eye">The rules, and why each default</p>
+  <h2>Low risk runs alone. Money and people don’t.</h2>
+  <div style="margin-top:56px">
+    <div class="rr"><p class="t">Remind staff about overdue tasks</p><span><span class="chip c-handles">Handles it</span></span><p>Low risk; one nudge, then the shift lead</p></div>
+    <div class="rr"><p class="t">Answer staff questions from store policies</p><span><span class="chip c-handles">Handles it</span></span><p>Answers come only from text the manager wrote</p></div>
+    <div class="rr"><p class="t">Create restock tasks when something runs out</p><span><span class="chip c-handles">Handles it</span></span><p>Fast, reversible, internal</p></div>
+    <div class="rr"><p class="t">Update stock after a count</p><span><span class="chip c-handles">Handles it</span></span><p>Gaps over 2 units may mean theft or errors</p></div>
+    <div class="rr"><p class="t">Send the day plan and reassign tasks</p><span><span class="chip c-asks">Asks you</span></span><p>Decides who does what</p></div>
+    <div class="rr"><p class="t">Leave, sick days and shift swaps</p><span><span class="chip c-asks">Asks you</span></span><p>Changes floor coverage</p></div>
+    <div class="rr"><p class="t">Discounts and price overrides</p><span><span class="chip c-yours">Yours only</span></span><p>Money the store gives away</p></div>
+    <div class="rr"><p class="t">Warnings, performance and pay</p><span><span class="chip c-yours">Yours only</span></span><p>Always a conversation between people. Locked.</p></div>
+    <div class="rr" style="border:0"><p class="t">Rank or score individual staff</p><span><span class="chip c-off">Off</span></span><p>Not available, by design</p></div>
+  </div>
+  <p class="cap" style="margin-top:24px">Defaults from the pilot build. The manager can change the first seven at any time on the Rules screen.</p>
+</section>
+
+<!-- 16 goal -->
+<section style="padding-bottom:60px">
+  <p class="eye">Key flows</p>
+  <div class="step" style="margin-top:40px">
+    <div><p class="k">01 · The goal</p><h3>The manager writes one goal</h3><p>In plain words, the way they’d say it at the morning huddle. No forms. Rain is forecast all week: push rain jackets near the entrance, count the white linen shirts, keep the fitting rooms tidy every hour.</p></div>
     <img class="shot" src="shots/screen02.webp" alt="">
   </div>
 </section>
 
-<!-- 06 plan -->
-<section>
+<!-- 17 plan -->
+<section style="padding-top:60px">
   <div class="step">
     <div><p class="k">02 · The plan</p><h3>The agent drafts the tasks</h3><p>Eight tasks, each with an owner picked by role, section, shift and current load, and a line saying why. Sending is set to <b>Asks you</b>, so the plan waits for the manager.</p></div>
     <img class="shot" src="shots/screen03.webp" alt="">
   </div>
 </section>
 
-<!-- 07 staff -->
+<!-- 18 staff -->
 <section class="dark">
   <div class="grid2" style="align-items:center">
-    <div><p class="k" style="font:500 14px/1 GSCode; color:var(--lime); margin-bottom:18px">03 · The floor</p><h3 style="font-size:40px; line-height:1.08">Everyone gets only their own tasks</h3><p>Meera gets one message with her task and what to reply. Staff answer in the chat they already use, in English, Hindi, Kannada or Malayalam.</p></div>
+    <div><p class="k">03 · The floor</p><h3 style="font-size:40px; line-height:1.08">Everyone gets only their own tasks</h3><p>Meera gets one message with her task and what to reply. Staff answer in the chat they already use, in English, Hindi, Kannada or Malayalam. Messages sent after the manager’s tap are marked so.</p></div>
     <div style="display:flex; gap:28px; justify-content:flex-end"><img class="phone" src="shots/phone04.webp" alt=""><img class="phone" src="shots/phone06.webp" alt="" style="margin-top:80px"></div>
   </div>
 </section>
 
-<!-- 08 discount -->
+<!-- 19 tasks -->
 <section>
   <div class="step">
-    <div><p class="k">04 · A decision</p><h3>A discount is the manager’s call</h3><p>Kavya, a cashier, asks for 15% off a rain jacket. Discounts are set to <b>Yours only</b>, so the agent holds the reply and shows why. After approval the answer goes back to Kavya in Kannada, with a few seconds of Undo against a wrong tap.</p></div>
+    <div><p class="k">04 · The day’s work</p><h3>Every task has an owner, a time and a history</h3><p>To do, Waiting for photo, Blocked and Done. A task that needs proof stays open until the photo arrives. Hourly checks repeat on their own.</p></div>
+    <img class="shot" src="shots/screen06.webp" alt="">
+  </div>
+</section>
+
+<!-- 20 discount -->
+<section style="background:var(--paper)">
+  <div class="step">
+    <div><p class="k">05 · A decision</p><h3>A discount is the manager’s call</h3><p>Kavya, a cashier, asks for 15% off a rain jacket. Discounts are set to <b>Yours only</b>, so the agent holds the reply and shows why. After approval the answer goes back to Kavya in Kannada, with a few seconds of Undo against a wrong tap.</p></div>
     <img class="shot" src="shots/screen05.webp" alt="">
   </div>
 </section>
 
-<!-- 09 count -->
-<section style="background:var(--paper)">
-  <div class="step">
-    <div><p class="k">05 · A mismatch</p><h3>A count that doesn’t add up</h3><p>Meera counts 9; the system says 13. A gap over 2 units turns <b>Handles it</b> into <b>Asks you</b>, with the money at stake in plain words.</p></div>
-    <img class="shot" src="shots/screen07.webp" alt="">
-  </div>
-</section>
-
-<!-- 10 sold out + urgent -->
+<!-- 21 count -->
 <section>
-  <div class="grid2">
-    <div><p class="k" style="font:500 14px/1 GSCode; color:var(--blue); margin-bottom:18px">06 · Handled</p><h3 style="font-size:36px">Sold out, handled without asking</h3><p>A size of the navy rain jacket hits zero. Restock is set to <b>Handles it</b>, so Manoj gets the task straight away. Every task keeps its full history.</p><img class="shot" src="shots/screen08.webp" alt="" style="margin-top:40px"></div>
-    <div><p class="k" style="font:500 14px/1 GSCode; color:var(--blue); margin-bottom:18px">07 · Urgent</p><h3 style="font-size:36px">An upset customer always comes up</h3><p>Rohit flags an angry customer at Footwear. That always reaches the manager, marked urgent, with a banner wherever they are in the app.</p><img class="shot" src="shots/screen09.webp" alt="" style="margin-top:40px"></div>
+  <div class="step">
+    <div><p class="k">06 · A mismatch</p><h3>A count that doesn’t add up</h3><p>Meera counts 8 white linen shirts; the system says 12. A gap over 2 units turns <b>Handles it</b> into <b>Asks you</b>, with the money at stake in plain words: 4 pieces, ₹7,596. The manager accepts the count or asks for a recount.</p></div>
+    <div style="position:relative; padding-right:150px; padding-bottom:40px"><img class="shot" src="shots/screen07.webp" alt=""><img class="phone" src="shots/phone07.webp" alt="" style="position:absolute; right:0; bottom:0; width:220px; border-width:8px; border-radius:30px"></div>
   </div>
 </section>
 
-<!-- 11 rules -->
+<!-- 22 sold out + urgent -->
+<section class="dark">
+  <div class="grid2">
+    <div><p class="k">07 · Handled</p><h3 style="font-size:36px">Sold out, handled without asking</h3><p>A size of the navy rain jacket hits zero. Restock is set to <b>Handles it</b>, so Manoj gets the task straight away. Every task keeps its full history.</p><img class="shot" src="shots/screen08.webp" alt="" style="margin-top:40px"></div>
+    <div><p class="k">08 · Urgent</p><h3 style="font-size:36px">An upset customer always comes up</h3><p>Rohit flags an angry customer at Footwear. That always reaches the manager, marked urgent, with a banner wherever they are in the app.</p><img class="shot" src="shots/screen09.webp" alt="" style="margin-top:40px"></div>
+  </div>
+</section>
+
+<!-- 23 blocked -->
+<section>
+  <div class="step">
+    <div><p class="k">09 · A blocker</p><h3>When something is in the way</h3><p>Nisha can’t set up the new arrivals rail: one side has fallen. Blocked tasks always come to the manager, with a suggested person to move the task to and three choices: it’s fixed, move the task, or cancel it.</p></div>
+    <img class="shot" src="shots/screen04.webp" alt="">
+  </div>
+</section>
+
+<!-- 24 rules screen -->
 <section class="dark">
   <div class="step" style="grid-template-columns:420px 1fr">
-    <div><p class="k">08 · The limits</p><h3>The manager sets the limits</h3><p>Every rule has three settings. They run in code after the AI answers, so the model never decides what it’s allowed to do. Each decision card says which rule sent it there.</p></div>
+    <div><p class="k">10 · The limits</p><h3>The manager sets the limits</h3><p>Every rule has three settings. They run in code after the AI answers, so the model never decides what it’s allowed to do. Each decision card says which rule sent it there.</p></div>
     <img class="shot" src="shots/screen10.webp" alt="">
   </div>
 </section>
 
-<!-- 12 handover + digest -->
+<!-- 25 handover + digest -->
 <section>
   <div class="grid2">
-    <div><p class="k" style="font:500 14px/1 GSCode; color:var(--blue); margin-bottom:18px">09 · Handover</p><h3 style="font-size:36px">End of shift</h3><p>Open work moves to the evening shift with a suggested owner for each task, plus a note for the next shift lead.</p><img class="shot" src="shots/screen11.webp" alt="" style="margin-top:40px"></div>
-    <div><p class="k" style="font:500 14px/1 GSCode; color:var(--blue); margin-bottom:18px">10 · Digest</p><h3 style="font-size:36px">One summary for the owner</h3><p>Sales against target and a usual Thursday, then counts only. The digest never names or ranks staff.</p><img class="shot" src="shots/screen12.webp" alt="" style="margin-top:40px"></div>
+    <div><p class="k">11 · Handover</p><h3 style="font-size:36px">End of shift</h3><p>Open work moves to the evening shift with a suggested owner for each task, plus a note for the next shift lead. Evening tasks move to tomorrow morning.</p><img class="shot" src="shots/screen11.webp" alt="" style="margin-top:40px"></div>
+    <div><p class="k">12 · Digest</p><h3 style="font-size:36px">One summary for the owner</h3><p>Sales against target and a usual Thursday, then counts only. The digest never names or ranks staff.</p><img class="shot" src="shots/screen12.webp" alt="" style="margin-top:40px"></div>
   </div>
 </section>
 
-<!-- 13 principles -->
+<!-- 26 time-driven flows -->
+<section style="background:var(--paper)">
+  <p class="eye">Flows nobody has to start</p>
+  <h2>The agent keeps time so the manager doesn’t have to.</h2>
+  <div style="margin-top:64px; display:grid; gap:48px">
+    <div><p class="lab">A missed check-in</p><div class="flow">
+      <div class="box b-pp"><b>Shift starts</b>Staff reply “In” to check in</div>
+      <div class="box b-pp"><b>15 minutes later</b>No check-in yet</div>
+      <div class="box b-bl"><b>Reminder</b>A gentle message to the person</div>
+      <div class="box b-bl"><b>Shift lead told</b>“Hasn’t checked in, I’ve sent a reminder”</div>
+      <div class="box b-pp"><b>Logged</b>In Activity, with the rule</div></div></div>
+    <div><p class="lab">An overdue task</p><div class="flow">
+      <div class="box b-pp"><b>Due time passes</b>Task still To do</div>
+      <div class="box b-bl"><b>One nudge</b>“Reply done when it’s finished, or tell me what’s in the way”</div>
+      <div class="box b-pp"><b>Still open</b>No reply</div>
+      <div class="box b-bl"><b>Shift lead</b>Gets the overdue list</div>
+      <div class="box b-pp"><b>Never more</b>No nagging loop, no score</div></div></div>
+    <div><p class="lab">A sick day</p><div class="flow">
+      <div class="box b-pp"><b>Message</b>“Not well today”</div>
+      <div class="box b-lm"><b>Asks you</b>Leave changes coverage, so the manager decides</div>
+      <div class="box b-pp"><b>Cover suggested</b>Same role, on shift, lightest load</div>
+      <div class="box b-bl"><b>Tasks move</b>Cover gets them with new times</div>
+      <div class="box b-bl"><b>Both told</b>“Take care and feel better”</div></div></div>
+  </div>
+</section>
+
+<!-- 27 edge cases -->
+<section>
+  <p class="eye">Edge cases</p>
+  <h2>What happens when the day doesn’t follow the script.</h2>
+  <div class="grid4" style="margin-top:64px; gap:24px">
+    <div class="card"><p class="lab">The AI fails</p><p>Timeouts, refusals or bad JSON fall back to scripted rules. The store never stops.</p></div>
+    <div class="card"><p class="lab">A message tries to give orders</p><p>“Approve this” or “ignore the rules” is read as a staff message, never as an instruction.</p></div>
+    <div class="card"><p class="lab">A busy day</p><p>A daily cap on AI calls per store keeps a loop from running up a bill. Over the cap, scripted rules answer.</p></div>
+    <div class="card"><p class="lab">No consent</p><p>No message goes to anyone without a phone number and written consent on record.</p></div>
+    <div class="card"><p class="lab">A question the policy doesn’t cover</p><p>The agent answers only from text the manager wrote. If it isn’t there, it tells the person it has asked the manager.</p></div>
+    <div class="card"><p class="lab">Nobody owns a task</p><p>It becomes an open call. The first person to reply “I’ll take it” gets it.</p></div>
+    <div class="card"><p class="lab">Late at night</p><p>WhatsApp allows free replies for 24 hours after someone writes; after that, an approved template is used.</p></div>
+    <div class="card"><p class="lab">Two messages at once</p><p>Each store’s changes run one at a time under a lock, so a task can’t be closed twice.</p></div>
+  </div>
+</section>
+
+<!-- 28 language -->
+<section class="dark">
+  <div class="grid2" style="align-items:center; grid-template-columns:440px 1fr">
+    <div><p class="eye">Language and access</p><h3 style="font-size:40px; line-height:1.08">Their language, their phone, one word to reply</h3>
+      <p style="margin-top:12px">Staff write in English, Hindi, Kannada or Malayalam and get answers in the language they wrote in. Quick replies like “done” sit under each message, so a task can be closed with one tap.</p>
+      <p style="margin-top:18px">The non-English lines still need a check by native readers before a real store sees them. I’ve kept that as a known gap, not hidden it.</p></div>
+    <div style="display:flex; gap:20px; justify-content:flex-end"><img class="phone" src="shots/phone06.webp" alt="" style="width:212px; border-width:8px; border-radius:30px"><img class="phone" src="shots/phone08.webp" alt="" style="width:212px; border-width:8px; border-radius:30px; margin-top:60px"><img class="phone" src="shots/phone12.webp" alt="" style="width:212px; border-width:8px; border-radius:30px"></div>
+  </div>
+</section>
+
+<!-- 29 trust and privacy -->
+<section>
+  <p class="eye">Trust and privacy</p>
+  <h2>Watch the work, not the people.</h2>
+  <div class="grid3" style="margin-top:64px; gap:28px">
+    <div class="card"><p class="lab">What it stores</p><ul style="padding-left:20px"><li>Name, role, section, shift, phone and language</li><li>Check-ins, tasks and when they were done</li><li>Messages to and from the store’s number</li></ul></div>
+    <div class="card"><p class="lab">What it never does</p><ul style="padding-left:20px"><li>No rankings, scores or leaderboards</li><li>No location or phone tracking</li><li>The owner’s digest shows counts, never names</li><li>Photos only confirm a task</li></ul></div>
+    <div class="card"><p class="lab">Staff stay in control</p><ul style="padding-left:20px"><li>Written consent before any message, as India’s DPDP Act asks</li><li>See, correct or delete their data; withdraw any time</li><li>Messages deleted after 90 days; data kept in India</li></ul></div>
+  </div>
+  <div style="margin-top:56px; padding:40px 48px; background:var(--paper); border-radius:20px">
+    <p class="lab">Consent wording, from the staff privacy notice</p>
+    <p style="font-size:21px; color:var(--ink)">“I agree to receive work messages from my store on WhatsApp through Handovo, and for my name, phone number, shift, check-ins, tasks and messages to be stored as described above. I can withdraw this at any time by telling my manager.”</p>
+  </div>
+</section>
+
+<!-- 30 principles -->
 <section style="background:var(--lime)">
   <p class="eye" style="color:#000">Design principles</p>
   <h2>Built so a manager can trust it on day one.</h2>
@@ -167,24 +465,41 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
   </div>
 </section>
 
-<!-- 14 build -->
+<!-- 31 build -->
 <section class="dark">
   <p class="eye">From prototype to pilot</p>
   <h2>A working build for one real store.</h2>
   <table class="tbl" style="margin-top:64px">
     <tr><td>Manager control room</td><td>Today, Needs you, Team, Tasks, Handover, Digest, Stock, Data, Rules, Activity, on a real database</td><td><span class="tag ok">Working</span></td></tr>
+    <tr><td>Logins</td><td>Manager, shift leads and owner</td><td><span class="tag ok">Working</span></td></tr>
     <tr><td>Routing engine</td><td>Handles it / Asks you / Yours only, each with a reason</td><td><span class="tag ok">Working</span></td></tr>
-    <tr><td>Time-driven actions</td><td>Check-in reminders, overdue nudges, shift-lead alerts, handover nudge, digest; a scheduler every 5 minutes</td><td><span class="tag ok">Working</span></td></tr>
+    <tr><td>Time-driven actions</td><td>Check-in reminders, overdue nudges, shift-lead alerts, hourly tasks, handover nudge, digest; a scheduler every 5 minutes</td><td><span class="tag ok">Working</span></td></tr>
     <tr><td>Live AI</td><td>Reading staff messages, drafting plans, “Ask the store”, the digest summary</td><td><span class="tag ok">Working</span></td></tr>
     <tr><td>Languages</td><td>English, Hindi, Kannada and Malayalam</td><td><span class="tag ok">Working</span></td></tr>
+    <tr><td>Excel export</td><td>Six sheets for the owner’s records</td><td><span class="tag ok">Working</span></td></tr>
     <tr><td>WhatsApp Business Platform</td><td>Code ready; waiting on the store’s Meta setup</td><td><span class="tag wip">Phase 2</span></td></tr>
     <tr><td>Billing (POS) feed</td><td>Sales and stock are entered by hand for now</td><td><span class="tag wip">Phase 3</span></td></tr>
   </table>
   <p style="margin-top:48px; font-size:17px; color:#8A8A99">Next.js, Postgres (Supabase), Claude with structured output, Vercel. The test phone lets anyone rehearse a day before WhatsApp is connected.</p>
 </section>
 
-<!-- 15 next -->
+<!-- 32 measurement -->
 <section>
+  <p class="eye">How I’d measure it</p>
+  <h2>Fewer calls up, nothing dropped.</h2>
+  <div class="grid3" style="margin-top:64px; gap:28px">
+    <div class="card"><p class="lab">Manager load</p><h3>Decisions reaching the manager each day</h3><p>Should fall week on week as rules settle, without more problems found late.</p></div>
+    <div class="card"><p class="lab">Plan to floor</p><h3>Time from goal to plan sent</h3><p>From the moment the goal is typed to every task on a phone.</p></div>
+    <div class="card"><p class="lab">Follow-through</p><h3>Tasks done by their due time</h3><p>And how many needed a nudge or reached the shift lead.</p></div>
+    <div class="card"><p class="lab">Handover</p><h3>Open work lost at shift change</h3><p>The target is none: every open task has an owner on the next shift.</p></div>
+    <div class="card"><p class="lab">Trust</p><h3>Rules the manager loosens or tightens</h3><p>Moving a rule to Handles it is the clearest sign of trust.</p></div>
+    <div class="card"><p class="lab">Staff comfort</p><h3>Consent withdrawals and complaints</h3><p>Tracked from day one, alongside the AI fallback rate.</p></div>
+  </div>
+  <p class="cap" style="margin-top:28px">Targets for the four-week pilot, with a baseline from week one. No results yet.</p>
+</section>
+
+<!-- 33 next -->
+<section style="background:var(--paper)">
   <div class="grid2">
     <div><p class="eye">What I’d do next</p><h2 style="font-size:52px">Prove it on the floor.</h2></div>
     <div><ul style="list-style:none">
@@ -196,11 +511,21 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
   </div>
 </section>
 
-<!-- 16 footer -->
+<!-- 34 reflection -->
+<section class="dark">
+  <p class="eye">Reflection</p>
+  <h2>The hard part wasn’t the AI. It was deciding what it may not do.</h2>
+  <div class="grid2" style="margin-top:64px">
+    <p>Getting a model to draft a plan from one sentence was the quick part. Deciding which calls stay with a person, where a check should overrule a setting, and how to say why on every card took most of the project.</p>
+    <p>Designing for AI turned out to be designing limits: three plain settings a manager can read, code that enforces them, and a log that shows what happened. That is what would make a manager trust it on day one.</p>
+  </div>
+</section>
+
+<!-- 35 footer -->
 <section class="blue" style="padding:96px 120px">
   <div style="display:flex; justify-content:space-between; align-items:flex-end">
     <div><img class="mark" src="shots/handovo-mark-reverse.svg" alt=""><p style="font:700 40px/1.1 Mona; color:#fff; margin-top:28px">Handovo</p><p style="margin-top:8px">Product design, AI UX and the working build by Sijo Joseph, 2026.</p></div>
-    <p style="font-size:15px; max-width:420px; text-align:right">The store, staff and figures in the screens are the prototype’s scripted demo, not a real store’s data.</p>
+    <p style="font-size:15px; max-width:440px; text-align:right">The store, staff and figures in the screens are the prototype’s scripted demo, not a real store’s data. Illustrations are AI-generated in my style.</p>
   </div>
 </section>
 </body></html>
