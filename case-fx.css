@@ -1,10 +1,10 @@
-/* Motion layer for Carekin and Backwater Line (case-fx.js) */
+/* Motion layer for Carekin (case-fx.js) */
 .cfx .cfx-sec { position: relative; overflow: hidden; }
 .cfx .cfx-sec > img { position: relative; }
 /* Carekin: calm. Sections settle in slowly, like a page being turned with care */
 .cfx-rise .cfx-sec:not(.cfx-in) > img { opacity: 0; transform: translateY(34px); filter: blur(3px); }
 .cfx-rise .cfx-sec > img { transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.3s cubic-bezier(.2,.7,.2,1), filter 1.1s ease; }
-/* Backwater Line: sections open left to right behind a thin signage-yellow line, like a board being lit */
+/* wipe reveal: sections open left to right behind a thin accent line */
 .cfx-wipe .cfx-sec:not(.cfx-in) > img { clip-path: inset(0 100% 0 0); }
 .cfx-wipe .cfx-sec > img { transition: clip-path 1.15s cubic-bezier(.65,0,.25,1); }
 .cfx-wipe .cfx-sec::after { content: ""; position: absolute; z-index: 3; top: 0; bottom: 0; left: 0; width: 3px; background: var(--cfx-accent, #F2C230);

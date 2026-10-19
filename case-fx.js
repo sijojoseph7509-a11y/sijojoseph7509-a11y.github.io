@@ -1,4 +1,4 @@
-// Motion layer for the Carekin and Backwater Line case studies (loaded by os.js openCase when content.js gives case.fx).
+// Motion layer for the Carekin case study (loaded by os.js openCase when content.js gives case.fx).
 // Each project brings its own tone through case.fxOpts:
 //   reveal  "none" (default, used by both since v92: sections are simply there, so the story reads as one piece),
 //           "rise" (soft settle) or "wipe" (left-to-right)
@@ -47,7 +47,7 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     cleanups.push(() => { vio.disconnect(); vid.pause(); vid.removeAttribute("src"); vid.load(); });
   }
 
-  // drag to compare (Backwater Line: the same jetty by day and after dark)
+  // drag to compare (two images of the same place, e.g. day and night)
   if (opts.compare && secs[opts.compare[0]]) {
     const [i, x, y, w, h, f, la, lb] = opts.compare;
     const box = document.createElement("div"); box.className = "cfx-compare"; box.tabIndex = 0;

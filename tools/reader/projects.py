@@ -16,14 +16,14 @@ PROJECTS = {
     'carekin': dict(slug='carekin', title='Carekin', tag='UX / Product Design', status='Self-initiated project',
                     summary='Medication coordination for families caring for an ageing parent: one schedule, the Carekin app for the organiser and WhatsApp for the helper, so every dose change reaches every carer.',
                     color='#0F3B38', theme='carekin'),
-    'backwater': dict(slug='backwater', title='Backwater Line', tag='Information Design · Wayfinding', status='Self-initiated project',
-                      summary='One map, one naming system and seven sign types for a ferry network on the Kochi backwaters, readable by day and after dark.',
-                      color='#0E0F10', theme='backwater'),
+    'handovo': dict(slug='handovo', title='Handovo', tag='Product Design · AI UX', status='Pilot build for one real store',
+                    summary="An AI operations layer for retail stores: the manager states the day's goal, the agent turns it into tasks on every staff phone, and rules the manager sets decide what it may do alone.",
+                    color='#2F3BEA', theme='handovo'),   # its reader page is built by tools/handovo/reader.py, not from Figma
     'ekmaati': dict(slug='ekmaati', title='Ekmaati', tag='Branding · Packaging', status='NID Semester 2 project',
                     summary='Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen.',
                     color='#2A1A10', theme='ekmaati'),
 }
-ORDER = ['syntra', 'carekin', 'backwater', 'ekmaati']
+ORDER = ['syntra', 'carekin', 'handovo', 'ekmaati']
 
 OVERRIDES = {
     'carekin': {
@@ -35,11 +35,6 @@ OVERRIDES = {
         19: {'overlay': {'file': 'work/carekin/fx/journey-curve@2x.webp', 'x': 80, 'y': 330},
              'figure': [{'x': 20, 'y': 240, 'w': 1400, 'h': 470, 'src': 'desk',
                          'alt': 'Journey map: worry dips at "Dose changed, helper not told" and at "Did anyone give her the pill?", and is calm at the doctor visit, the daily routine and the end.'}]},
-    },
-    'backwater': {
-        0: {'drop': [{'x': 0, 'y': 0, 'w': 1440, 'h': 80}]},
-        36: {'no_table': True},
-        3: {'video': {'x': 440, 'y': 120, 'src': 'work/backwater/fx/day-to-night-540.mp4', 'label': 'Backwater Line film, day to night, 41 seconds'}},
     },
     'ekmaati': {
         6: {'figure': [{'x': 40, 'y': 310, 'w': 1400, 'h': 890, 'src': 'desk',

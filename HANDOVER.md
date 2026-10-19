@@ -64,7 +64,7 @@ analytics, no cookies, no third-party requests (fonts and three.js are self-host
    - A football on the floor (click to kick).
 3. **Click the laptop** → the camera flies into the screen, which zooms out into a full **macOS 27-style desktop** (menu bar with real
    menus, Spotlight, dock, Liquid Glass windows): **About, Work, Skills, Resume, Contact**. Work opens three full-screen case studies
-   (Tidewell, Backwater Line, Ekmaati) exported from Figma at 2×.
+   (Syntra, Carekin, Handovo, Ekmaati); Handovo is rendered from HTML, the rest exported from Figma at 2×.
 4. Original generative **lo-fi music** synthesised live (no audio files) + small UI sounds.
 
 ---
@@ -94,7 +94,7 @@ npx -y http-server@14 . -p 4321 -c-1 -s     # or: python3 -m http.server 4321
 # open http://localhost:4321
 ```
 - Must be served over http(s) (ES modules + model loading break on `file://`).
-- URL parameters: `?open=about|work|skills|resume|contact` boots straight into a window; `?open=case:tidewell|backwater|ekmaati`
+- URL parameters: `?open=about|work|skills|resume|contact` boots straight into a window; `?open=case:syntra|carekin|handovo|ekmaati`
   opens a case study full screen; `?v=N` defeats caches while testing.
 - Text, links, projects, skills: edit **`content.js`** only (§14). Room objects: `main.js` (§8, room-scene skill §20).
 - Publish: bump the version (§19), run the checks (§20), commit, push.
@@ -147,7 +147,7 @@ Browser support: modern Chrome, Safari (macOS/iOS), Edge, Firefox with WebGL2. W
 │   └── football/ football.glb, color.jpg, normal.jpg, arm.jpg   Poly Haven "Football" (CC0)
 ├── work/
 │   ├── tidewell/ 01–39 (.webp 1440 w + @2x.webp 2880 w)
-│   ├── backwater/ 01–38
+│   ├── handovo/ 01–16 (rendered from tools/handovo/case.html)
 │   └── ekmaati/ 01–27
 ├── vendor/three/                  three.js 0.165 build + the addons above
 └── .claude/skills/                project skills (§20): site-qa, site-security, copy-check, room-scene, object-capture
@@ -370,7 +370,7 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 | `links.linkedin`, `links.behance` | generic linkedin.com / behance.net | ✏️ **need Sijo's profile URLs** |
 | `resumeUrl` | `#` | ✏️ add a PDF (e.g. `/resume.pdf`); until then Resume shows "Ask for my résumé" |
 | `about` | four paragraphs from Sijo's interview (Kerala → Bangalore, teens, smart/lazy/adventurous, poster meaning, games/football/bike rides, phonk/Malayalam/Hindi, Shea) | ✅ |
-| `projects` | Tidewell (UX / Product), Backwater Line (Information Design · Wayfinding), Ekmaati (Branding · Packaging, NID Semester 2) with full `case.sections` | ✅ |
+| `projects` | Syntra, Carekin (UX / Product), Handovo (Product Design · AI UX), Ekmaati (Branding · Packaging, NID Semester 2) with full `case.sections` | ✅ |
 | `skills` | Product Design, Brand Strategy, Experience Design, 3D & Motion, Tools | ⚠️ review |
 | `experience` | `[]` (list hidden while empty) | ✏️ add real roles `{ company, role, from, to }` |
 
@@ -378,7 +378,7 @@ Hard-coded copy in `main.js`: profile-card lines (`drawCard`), sticky note, phon
 explorations · sketches · side projects · ideas"), poster text, terminal message, cat bubble, window-view sign text.
 
 ### 14.2 Case studies (Work window)
-- Source (v68): Tidewell `s6WXmDrd36Frlkg1kVsvUg` page **"Tidewell v3"** (frame `30:3`, 39 sections) · Backwater Line `6iuhjuMILOUIsgbqNKq8OG` page **"Backwater Line v3"** (frame `36:3`, 38 sections) · Ekmaati `tkze0DYw6HIb4LdZGvdsht` "ekmaati final", frame **"Desktop - 1"** `1:694` (27 sections, absolutely positioned and slightly overlapping, so slices are cut at each next section's y). Ledgerly removed from the site in v68.
+- Source (v68): Tidewell `s6WXmDrd36Frlkg1kVsvUg` page **"Tidewell v3"** (frame `30:3`, 39 sections) · Ekmaati `tkze0DYw6HIb4LdZGvdsht` "ekmaati final", frame **"Desktop - 1"** `1:694` (27 sections, absolutely positioned and slightly overlapping, so slices are cut at each next section's y). Ledgerly removed from the site in v68.
 - **Export at 2× (Figma quality — never ship 1× only):** on a temporary page, clone the frame into a clipping frame, `rescale(2)` the clone (2880 px wide), and move the clone up so each window < 32,768 px tall shows one chunk (cut at section boundaries); `get_screenshot` the clip with `maxDimension: 32768` (it never upscales, so the 2× rescale is required); delete the temp page afterwards. Slice per section in headless Chrome into `work/<slug>/NN@2x.webp` (2880 w) and `NN.webp` (1440 w), WebP q90. `content.js → projects[].case.sections` = `[file, height, description]`; the description is the image's alt text.
 - Sections are fixed 1440-px compositions (no auto layout inside), so they cannot reflow for phones; phones get the full-width image + pinch-zoom. A true phone layout would need mobile frames designed in Figma.
 - Screen sizes: `.case` stops at 1920 px (1512 px on Retina laptops, the width the 2880-px files fill sharply), centred; the Mac display scales up on big monitors with stepped CSS `zoom` (1.15 / 1.55 / 2 / 2.3), reset to 1 in full-screen case view. `sweep.mjs` now covers 18 devices (phones → 4K/ultrawide) and opens every case study on each.
@@ -386,6 +386,7 @@ explorations · sketches · side projects · ideas"), poster text, terminal mess
 - **Full screen (v2.6):** a case study opens like a full-screen Mac app (`.os-screen.case-fs`): the window fills the Mac screen; menu bar, widget, sidebar and dock are hidden; a sticky `.fs-bar` has window buttons (red/green = back to Work), "‹ All work", title + discipline + status, ‹ n / N › project switching and share. Esc, the back gesture (history entry `{sjCase}`) and ⌘1–5 leave full screen; prev/next replace the history entry.
 - **Syntra (v88, first project):** source = Figma `RFow6mVvYRDVcu5NrMgO7D`, page **"Syntra · Documentation"** (`223:2`, 16 frames in Sijo's own glass/blur Lato style). Exported at 2× **with the moving parts hidden** (16 sections, `work/syntra/01–16`), and the moving parts as layers in `work/syntra/fx/` (cover background + bottles + sharp headline, Meet-Syntra hero, card cover, 7 kiosk loop screens, 10 Poly Haven CC0 panoramas 3072 px, 6 real receipts). `content.js` → `case.fx: "syntra-fx.js"`; `os.js openCase` dynamic-imports it (name must match `^[\w-]+\.js$`). **`syntra-fx.js`** (ES module, imports `./vendor/three/…` directly) wraps each section and adds, in the documentation's 1440-px coordinates: mist reveal on scroll · cover background breathing, bottles drifting, "Let's find your perfume." pulling in and out of focus (also in Reflection) · Meet-Syntra photo Ken Burns · How-it-works flow line drawing itself, dots popping + pinging, knob turning through the six moods at the printed dial angles, slider caps moving, weight bars growing, 162 counting up (Lato Thin, `fonts/lato-*.woff2`, OFL) · the Femme screen playing the real kiosk sequence · the panorama strip as a **live draggable 360° view** with 10 world chips · the six tickets printing one by one, 66 counting up · amber "perfume motes" + a warm lantern under the pointer (both `mix-blend-mode: multiply`, removed when the case closes). Layers exported from Figma screenshots have a #F5F5F5 surround, so they were whitened (×255/245) and blend with multiply. Styles in **`syntra-fx.css`** (injected by the module). Reduced motion: everything static. Re-export: duplicate the frames on a temp page with the animated nodes hidden, `rescale(2)`, `get_screenshot` each, WebP q86 (see Design Portfolio HANDOVER §4.7).
 - **Ekmaati real box (v108, rebuilt v109):** `content.js` → `case.fx: "ekmaati-fx.js"` (+ `ekmaati-fx.css`). **"Peel the arch" sits right after the cover (01)**; **"Made, not rendered"** sits after section 19. The 3D box is a **Blender-built model** `work/ekmaati/fx/box.glb` (66 KB, geometry + UVs only) made by `tools/ekmaati/build_box.py` (`blender -b --factory-startup -P tools/ekmaati/build_box.py -- work/ekmaati/fx/box.glb [preview.png]`): 6 mm board, arches cut through the three temple faces, solid back wall, plinth, roof tier, peak, idol card, and the sleeve as four boards with their origin on the top edge (`tab_front/right/left` peel, `sleeve_back` stays). `ekmaati-fx.js` applies the WebP photo textures (`fx/tex/`) by material name, lights it with RoomEnvironment, and peels a tab about its own top edge (rotation order YXZ). Drag turns it; grab the lower 42 % of a tab (half-moon notch + pulsing ring) and pull up; past ~57° it tears off. Buttons for keyboard users; no WebGL / load error → a still photo. Films: `film-peel/sleeve/temple.mp4`, 720×900 (4:5), cropped from the 4K source and masked every frame with a time-smoothed Apple Vision mask on #F2EFE6 (`tools/ekmaati/vcut.swift <in> <out> 720 [0.8] [x y w h]`; it frees each frame, peak ~1.3 GB, run one at a time). `tools/ekmaati/cut.swift` = photo cut-outs, `frames.swift` = posters.
+- **Handovo (v110, replaces Backwater Line, which is removed from the site, the reader tool and the repo):** source = the Handovo app in `~/floor-pilot` (README + the static "Play the day" prototype `public/demo.html`). `tools/handovo/case.html` is the 1440-px case study (16 sections, brand blue #2F3BEA + lime #D4FF3A, Mona + Inter), using screens in `tools/handovo/shots/` captured from the prototype's 12-step tour at 1440×900 @2× with the tour card hidden (`screenNN`, phone crops `phoneNN`). `node tools/handovo/render.mjs <url of case.html>` (QA_DEPS=puppeteer-core) renders `work/handovo/NN(.webp|@2x.webp)` + `fx/cover-slide` and prints the heights for `content.js`; `python3 tools/handovo/reader.py <build>` writes `work/handovo/reader.html`, `index.html` and `m/` images. To edit: change case.html → render.mjs → reader.py → copy-check → bump. The store, staff and numbers in the screens are the prototype's scripted demo (said in the footer).
 - Work cards and About thumbnails use `case.coverSlide` when a project gives one (Syntra: `fx/cover-slide.webp`, 1440 × 900), otherwise the first section.
 - Desk folders: tab width now shares the edge (`TAB_W`), so 4+ projects never overlap.
 - ⚠️ Testing note (14 Oct 2026): another session had an http-server on 127.0.0.1:4322 serving the `.claude/worktrees/goofy-solomon-8f688e` copy — always check `lsof -iTCP:<port>` or use a fresh port before trusting QA results.
