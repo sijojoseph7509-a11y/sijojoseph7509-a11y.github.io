@@ -6,6 +6,8 @@
 //   2. "Made, not rendered": three films and nine photographs of the prototype, backgrounds removed (Apple Vision,
 //      on device; tools/ekmaati/cut.swift + vcut.swift), on the case study's own paper colour.
 import * as THREE from "./vendor/three/build/three.module.min.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const PAPER = "#F4F0E8", EARTH = "#5A3A1E", GOLD = "#E3A53A";
 
@@ -25,7 +27,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   s1.setAttribute("aria-label", "Interactive model of the Ekmaati temple box");
   s1.innerHTML = `
     <div class="ekx-copy">
-      <p class="ekx-eye">19b · Hold it</p>
+      <p class="ekx-eye">Start here · The final box</p>
       <h2 class="ekx-h"><span class="ekx-serif">Peel the</span><br><b>ARCH</b></h2>
       <p class="ekx-p">The sleeve is one printed sheet with three perforated tabs: front, left and right. Each tab has a half-moon notch at its foot. Hook a finger in, pull up, and the tab tears away along its perforation. Behind it the temple is already standing. The back panel stays on, carrying the care and unboxing steps.</p>
       <ul class="ekx-how">
@@ -37,7 +39,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
       <p class="ekx-note">Built from photographs of the real cardboard prototype.</p>
     </div>
     <div class="ekx-stage"><canvas aria-label="The temple box in 3D. Drag to turn it, pull a tab up by its notch to peel it." role="img"></canvas><p class="ekx-tip">Pull here ↑</p></div>`;
-  after.after(s1);
+  (imgs[0] || after).after(s1);
 
   // ---------- section 2: the real thing ----------
   const films = [
@@ -60,11 +62,11 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   s2.className = "ekx ekx-real";
   s2.setAttribute("aria-label", "Photographs and films of the real Ekmaati box");
   s2.innerHTML = `
-    <div class="ekx-head"><p class="ekx-eye">19c · The real box</p><h2 class="ekx-h"><span class="ekx-serif">Made, not</span> <b>RENDERED</b></h2>
+    <div class="ekx-head"><p class="ekx-eye">19b · The real box</p><h2 class="ekx-h"><span class="ekx-serif">Made, not</span> <b>RENDERED</b></h2>
       <p class="ekx-p">Printed, cut, scored and folded by hand: 350 GSM board, sleeve over temple. Every image here is the prototype itself, with the room taken out.</p></div>
     <div class="ekx-films">${films.map(([f, c], i) => `<figure class="ekx-film${i === 0 ? " big" : ""}"><div class="ekx-vid"><video muted loop playsinline preload="none" poster="${A(f + ".webp")}" aria-label="${c}"></video><button type="button" class="ekx-vb" aria-label="Pause the film">❚❚</button></div><figcaption>${c}</figcaption></figure>`).join("")}</div>
     <div class="ekx-grid">${photos.map(([f, c]) => `<figure class="ekx-ph"><img src="${A("real/" + f + ".webp")}" srcset="${A("real/" + f + ".webp")} 1x, ${A("real/" + f + "@2x.webp")} 2x" alt="${c}" loading="lazy" decoding="async"><figcaption>${c}</figcaption></figure>`).join("")}</div>`;
-  s1.after(s2);
+  after.after(s2);
 
   // films play only while on screen; a visitor's pause wins
   s2.querySelectorAll(".ekx-film").forEach((fig, i) => {
@@ -87,76 +89,64 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" }); }
   catch (_) { stage.classList.add("ekx-nogl"); stage.innerHTML = `<img src="${A("real/temple-34.webp")}" alt="The Ekmaati temple box, sleeve peeled away.">`; s1.querySelector(".ekx-how").hidden = true; s1.querySelector(".ekx-btns").hidden = true; s1.querySelector(".ekx-count").hidden = true; finish(); return; }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.toneMapping = THREE.NeutralToneMapping || THREE.NoToneMapping;
   const scene = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
-  cam.position.set(0, 1.2, 4.8); cam.lookAt(0, 0.82, 0);
+  cam.position.set(0, 1.3, 5.7); cam.lookAt(0, 0.86, 0);
 
-  scene.add(new THREE.HemisphereLight(0xfffaf0, 0xcbbfae, 2.1));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(2.5, 4, 3); scene.add(sun);
+  // soft studio light: an environment for even, paper-like shading plus one key light for form
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; pmrem.dispose();
+  const key = new THREE.DirectionalLight(0xfff4e6, 1.1); key.position.set(2.2, 3.5, 2.8); scene.add(key);
 
   const loader = new THREE.TextureLoader();
-  const tex = (f) => { const t = loader.load(A("tex/" + f + ".webp"), () => (dirty = true)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
-  const mat = (map, o = {}) => new THREE.MeshStandardMaterial({ map, roughness: 0.92, metalness: 0, ...o });
-  const paper = mat(null, { color: 0xf6f2ea });
-
-  // proportions measured from the photographs (sleeve face 975 × 1449 px, square footprint)
-  const Wd = 1.0, H = 1.49, PL = 0.17, BODY = H - PL, h = Wd / 2;
+  const tex = (f) => { const t = loader.load(A("tex/" + f + ".webp"), () => (dirty = true)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false; return t; };
+  const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.88, metalness: 0, envMapIntensity: 0.9, ...o });
+  // materials by the names given in tools/ekmaati/build_box.py
+  const M = {
+    m_face: std({ map: tex("t_face"), alphaTest: 0.5 }),
+    m_plinth: std({ map: tex("t_plinth") }), m_roof: std({ map: tex("t_plinth") })   /* same printed border as the plinth; the roof photo was in shadow */,
+    m_paper: std({ color: 0xf5f0e6 }), m_edge: std({ color: 0xe6dccb }), m_inside: std({ color: 0xebe3d4 }),
+    m_sun: std({ map: sunburst() }),
+    m_idol: std({ map: tex("idol"), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.95 }),
+    m_s_front: std({ map: tex("s_front") }), m_s_left: std({ map: tex("s_left") }), m_s_right: std({ map: tex("s_right") }), m_s_back: std({ map: tex("s_back") }),
+  };
+  const H = 1.49;   // sleeve height in model units (box.glb)
   const box = new THREE.Group(); scene.add(box);
+  let idol = new THREE.Object3D();
+  const tabs = [];
 
   // soft contact shadow
   const sh = document.createElement("canvas"); sh.width = sh.height = 128;
   const sg = sh.getContext("2d"), gr = sg.createRadialGradient(64, 64, 4, 64, 64, 64);
-  gr.addColorStop(0, "rgba(60,40,20,.42)"); gr.addColorStop(1, "rgba(60,40,20,0)"); sg.fillStyle = gr; sg.fillRect(0, 0, 128, 128);
-  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 2.3), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sh), transparent: true, depthWrite: false }));
+  gr.addColorStop(0, "rgba(60,40,20,.45)"); gr.addColorStop(1, "rgba(60,40,20,0)"); sg.fillStyle = gr; sg.fillRect(0, 0, 128, 128);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sh), transparent: true, depthWrite: false }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.001; scene.add(shadow);
 
-  // temple: plinth, four arched faces, ceiling, sunburst back wall, the idol, roof tier and peak
-  const plinthT = tex("t_plinth"), faceT = tex("t_face"), roofT = tex("t_roof");
-  const plinth = new THREE.Mesh(new THREE.BoxGeometry(Wd * 0.985, PL, Wd * 0.985), [mat(plinthT), mat(plinthT), paper, paper, mat(plinthT), mat(plinthT)]);
-  plinth.position.y = PL / 2; box.add(plinth);
-  const faceM = mat(faceT, { alphaTest: 0.5, side: THREE.DoubleSide });
-  const ti = h * 0.97;
-  for (let k = 0; k < 4; k++) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(Wd * 0.97, BODY), faceM);
-    const a = k * Math.PI / 2; f.position.set(Math.sin(a) * ti, PL + BODY / 2, Math.cos(a) * ti); f.rotation.y = a; box.add(f);
-  }
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(Wd * 0.97, Wd * 0.97), paper); ceil.rotation.x = Math.PI / 2; ceil.position.y = H - 0.005; box.add(ceil);
-  const lid = new THREE.Mesh(new THREE.PlaneGeometry(Wd * 0.99, Wd * 0.99), paper); lid.rotation.x = -Math.PI / 2; lid.position.y = H + 0.002; box.add(lid);
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(Wd * 0.9, BODY * 0.92), new THREE.MeshStandardMaterial({ map: sunburst(), roughness: 1 }));
-  back.position.set(0, PL + BODY * 0.48, -ti + 0.12); box.add(back);
-  const idolT = tex("idol");
-  const idol = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62 * 909 / 570), new THREE.MeshStandardMaterial({ map: idolT, transparent: true, alphaTest: 0.35, roughness: 0.95 }));
-  idol.position.set(0, PL + 0.03 + 0.62 * 909 / 570 / 2, 0); box.add(idol);
-  const RW = 0.52, RH = 0.1;
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(RW, RH, RW), [mat(roofT), mat(roofT), paper, paper, mat(roofT), mat(roofT)]);
-  roof.position.y = H + RH / 2; box.add(roof);
-  const peak = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.13, 4, 1), mat(null, { color: 0xf3ede2 }));
-  peak.rotation.y = Math.PI / 4; peak.position.y = H + RH + 0.065; box.add(peak);
-  const tilak = new THREE.Mesh(new THREE.SphereGeometry(0.014, 12, 8), new THREE.MeshBasicMaterial({ color: 0xc0392b })); tilak.position.y = H + RH + 0.135; box.add(tilak);
-
-  // sleeve: back panel fixed, three tabs hinged along their top edge
-  const so = h + 0.012;
-  const sleeveFace = (t) => mat(t, { side: THREE.FrontSide });
-  const inside = mat(null, { color: 0xe9e1d2, side: THREE.BackSide });
-  const tabs = [];
-  [["s_front", 0], ["s_right", Math.PI / 2], ["s_back", Math.PI], ["s_left", -Math.PI / 2]].forEach(([f, ry]) => {
-    const holder = new THREE.Group(); holder.rotation.y = ry; box.add(holder);
-    const pivot = new THREE.Group(); pivot.position.set(0, H, so); holder.add(pivot);
-    const geo = new THREE.PlaneGeometry(Wd + 0.024, H);
-    const panel = new THREE.Group(); panel.position.y = -H / 2; pivot.add(panel);
-    const m1 = new THREE.Mesh(geo, sleeveFace(tex(f))), m2 = new THREE.Mesh(geo, inside);
-    panel.add(m1, m2);
-    if (f === "s_back") return;
-    // the half-moon notch at the foot, and a pulsing ring until the first peel
-    const notch = new THREE.Mesh(new THREE.CircleGeometry(0.075, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x3a2614 }));
-    notch.position.set(0, -H / 2 + 0.002, 0.003); panel.add(notch);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.1, 0.12, 32), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.8, depthTest: false }));
-    ring.position.set(0, -H / 2 + 0.05, 0.006); panel.add(ring);
-    const t = { holder, pivot, panel, face: m1, ring, mats: [m1.material, m2.material, notch.material], ang: 0, vel: 0, state: "on", fall: null };
-    m1.userData.tab = t; m2.userData.tab = t; notch.userData.tab = t;
-    tabs.push(t);
-  });
+  new GLTFLoader().load(A("box.glb"), (g) => {
+    g.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material = Array.isArray(o.material) ? o.material.map((m) => M[m.name] || M.m_paper) : (M[o.material.name] || M.m_paper);
+    });
+    box.add(g.scene);
+    idol = g.scene.getObjectByName("idol") || idol;
+    for (const name of ["tab_front", "tab_right", "tab_left"]) {
+      const m = g.scene.getObjectByName(name); if (!m) continue;
+      m.rotation.order = "YXZ";   // peel about the tab's own top edge, after its turn around the box
+      const own = [];   // each tab fades on its own (a multi-material mesh arrives as a group of meshes)
+      m.traverse((o) => { if (o.isMesh) { o.material = [].concat(o.material).map((x) => x.clone()); if (o.material.length === 1) o.material = o.material[0]; own.push(...[].concat(o.material)); } });
+      const ry = m.rotation.y;
+      // the half-moon notch at the foot, and a pulsing ring until the first peel
+      const notch = new THREE.Mesh(new THREE.CircleGeometry(0.07, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x3a2614 }));
+      notch.position.set(0, -H + 0.001, 0.0035); m.add(notch);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.095, 0.115, 40), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.8, depthTest: false }));
+      ring.position.set(0, -H + 0.06, 0.006); ring.renderOrder = 2; m.add(ring);
+      const t = { mesh: m, pivot: m, ry, home: m.position.clone(), holder: { rotation: { y: ry } }, ring, mats: [...own, notch.material], ang: 0, vel: 0, state: "on", fall: null };
+      m.userData.tab = t; notch.userData.tab = t;
+      tabs.push(t);
+    }
+    status(); dirty = true;
+  }, undefined, (err) => { console.error("ekmaati box", err); stage.classList.add("ekx-nogl"); stage.innerHTML = `<img src="${A("real/temple-34.webp")}" alt="The Ekmaati temple box.">`; });
 
   // ---------- interaction ----------
   let rotY = -0.55, rotX = 0.06, vY = 0, idle = 0, dirty = true;
@@ -165,11 +155,13 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, cam);
-    const live = tabs.filter((t) => t.state === "on").flatMap((t) => t.panel.children);
-    const i = ray.intersectObjects(live, false)[0];
+    const live = tabs.filter((t) => t.state === "on").map((t) => t.mesh);
+    const i = ray.intersectObjects(live, true)[0];
     if (!i) return null;
-    const t = i.object.userData.tab; const uvY = i.uv ? i.uv.y : 0;
-    return uvY < 0.42 ? t : null;   // the lower part of a tab, around the notch, is the grip
+    let o = i.object; while (o && !o.userData.tab) o = o.parent;
+    if (!o) return null;
+    const p = o.userData.tab.mesh.worldToLocal(i.point.clone());
+    return p.y < -H * 0.58 ? o.userData.tab : null;   // the lower part of a tab, around the notch, is the grip
   };
   let drag = null;
   canvas.addEventListener("pointerdown", (e) => {
@@ -206,7 +198,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   function tear(t) {
     t.state = "torn";
     // it tears free along the perforation and drops away from the temple
-    const out = new THREE.Vector3(0, 0, 1).applyQuaternion(t.holder.quaternion);
+    const out = new THREE.Vector3(Math.sin(t.ry), 0, Math.cos(t.ry));
     t.fall = { v: out.multiplyScalar(0.022).add(new THREE.Vector3(0, 0.012, 0)), spin: (Math.random() - 0.5) * 0.05, life: 0 };
     t.mats.forEach((m) => { m.transparent = true; });
     status();
@@ -225,7 +217,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     t.ring.visible = false; t.state = "auto"; idle = 0; dirty = true;
   });
   resetB.addEventListener("click", () => {
-    tabs.forEach((t) => { t.state = "on"; t.ang = 0; t.vel = 0; t.fall = null; t.pivot.position.set(0, H, so); t.pivot.rotation.set(0, 0, 0); t.pivot.visible = true; t.mats.forEach((m) => { m.opacity = 1; m.transparent = false; }); });
+    tabs.forEach((t) => { t.state = "on"; t.ang = 0; t.vel = 0; t.fall = null; t.pivot.position.copy(t.home); t.pivot.rotation.set(0, t.ry, 0); t.pivot.visible = true; t.mats.forEach((m) => { m.opacity = 1; m.transparent = false; }); });
     status(); dirty = true;
   });
 
@@ -236,7 +228,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
     renderer.setSize(w, hh, false);
     cam.aspect = w / hh;
-    cam.position.z = cam.aspect < 0.8 ? 6.6 : 4.8;
+    cam.position.z = cam.aspect < 0.8 ? 7.6 : 5.7;
     cam.updateProjectionMatrix(); dirty = true;
   };
   const ro = new ResizeObserver(resize); ro.observe(stage); resize();
