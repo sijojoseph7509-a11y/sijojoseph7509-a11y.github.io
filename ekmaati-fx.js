@@ -100,12 +100,12 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   const key = new THREE.DirectionalLight(0xfff4e6, 1.1); key.position.set(2.2, 3.5, 2.8); scene.add(key);
 
   const loader = new THREE.TextureLoader();
-  const tex = (f) => { const t = loader.load(A("tex/" + f + ".webp"), () => (dirty = true)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false; return t; };
+  const tex = (f) => { const t = loader.load(A("tex/" + f + ".webp"), () => { renderer.initTexture(t); dirty = true; });   /* upload now, so no face is ever drawn black while it decodes */ t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false; return t; };
   const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.88, metalness: 0, envMapIntensity: 0.9, ...o });
   // materials by the names given in tools/ekmaati/build_box.py
   const M = {
     m_face: std({ map: tex("t_face"), alphaTest: 0.5 }),
-    m_plinth: std({ map: tex("t_plinth") }), m_roof: std({ map: tex("t_plinth") })   /* same printed border as the plinth; the roof photo was in shadow */,
+    m_plinth: std({ map: tex("t_plinth") }), m_roof: std({ map: tex("t_plinth"), color: 0xfff6e8 })   /* same printed border as the plinth; the roof photo was in shadow */,
     m_paper: std({ color: 0xf5f0e6 }), m_edge: std({ color: 0xe6dccb }), m_inside: std({ color: 0xebe3d4 }),
     m_sun: std({ map: sunburst() }),
     m_idol: std({ map: tex("idol"), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.95 }),
@@ -132,16 +132,18 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     idol = g.scene.getObjectByName("idol") || idol;
     for (const name of ["tab_front", "tab_right", "tab_left"]) {
       const m = g.scene.getObjectByName(name); if (!m) continue;
-      m.rotation.order = "YXZ";   // peel about the tab's own top edge, after its turn around the box
+      // a hinge that carries the tab's place on the box; the tab itself only turns about its own top edge
+      const hinge = new THREE.Group(); hinge.position.copy(m.position); hinge.quaternion.copy(m.quaternion);
+      m.parent.add(hinge); hinge.add(m); m.position.set(0, 0, 0); m.quaternion.identity();
       const own = [];   // each tab fades on its own (a multi-material mesh arrives as a group of meshes)
       m.traverse((o) => { if (o.isMesh) { o.material = [].concat(o.material).map((x) => x.clone()); if (o.material.length === 1) o.material = o.material[0]; own.push(...[].concat(o.material)); } });
-      const ry = m.rotation.y;
+      const ry = new THREE.Euler().setFromQuaternion(hinge.quaternion, "YXZ").y;
       // the half-moon notch at the foot, and a pulsing ring until the first peel
       const notch = new THREE.Mesh(new THREE.CircleGeometry(0.07, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x3a2614 }));
       notch.position.set(0, -H + 0.001, 0.0035); m.add(notch);
       const ring = new THREE.Mesh(new THREE.RingGeometry(0.095, 0.115, 40), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.8, depthTest: false }));
       ring.position.set(0, -H + 0.06, 0.006); ring.renderOrder = 2; m.add(ring);
-      const t = { mesh: m, pivot: m, ry, home: m.position.clone(), holder: { rotation: { y: ry } }, ring, mats: [...own, notch.material], ang: 0, vel: 0, state: "on", fall: null };
+      const t = { mesh: m, pivot: m, ry, home: new THREE.Vector3(), holder: { rotation: { y: ry } }, ring, mats: [...own, notch.material], ang: 0, vel: 0, state: "on", fall: null };
       m.userData.tab = t; notch.userData.tab = t;
       tabs.push(t);
     }
@@ -198,7 +200,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   function tear(t) {
     t.state = "torn";
     // it tears free along the perforation and drops away from the temple
-    const out = new THREE.Vector3(Math.sin(t.ry), 0, Math.cos(t.ry));
+    const out = new THREE.Vector3(0, 0, 1);   // in the hinge's own space: straight out from the box
     t.fall = { v: out.multiplyScalar(0.022).add(new THREE.Vector3(0, 0.012, 0)), spin: (Math.random() - 0.5) * 0.05, life: 0 };
     t.mats.forEach((m) => { m.transparent = true; });
     status();
@@ -217,7 +219,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     t.ring.visible = false; t.state = "auto"; idle = 0; dirty = true;
   });
   resetB.addEventListener("click", () => {
-    tabs.forEach((t) => { t.state = "on"; t.ang = 0; t.vel = 0; t.fall = null; t.pivot.position.copy(t.home); t.pivot.rotation.set(0, t.ry, 0); t.pivot.visible = true; t.mats.forEach((m) => { m.opacity = 1; m.transparent = false; }); });
+    tabs.forEach((t) => { t.state = "on"; t.ang = 0; t.vel = 0; t.fall = null; t.pivot.position.copy(t.home); t.pivot.rotation.set(0, 0, 0); t.pivot.visible = true; t.mats.forEach((m) => { m.opacity = 1; m.transparent = false; }); });
     status(); dirty = true;
   });
 
