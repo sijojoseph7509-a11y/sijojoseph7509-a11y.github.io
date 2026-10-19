@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- "At a glance" strips for the Figma-exported case studies: what shipped, what was tested, what was decided. One <section> per
+     project (data-slug), rendered by tools/glance/render.mjs to work/<slug>/glance.webp (+ @2x) and shown by os.js right after
+     the cover (content.js case.glance). Every line comes from the project's own case study; nothing here is new evidence. -->
+<html lang="en"><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: Lato; src: url(../../fonts/lato-300-latin.woff2) format("woff2"); font-weight: 300; }
+@font-face { font-family: Lato; src: url(../../fonts/lato-400.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: Lato; src: url(../../fonts/lato-700.woff2) format("woff2"); font-weight: 700; }
+@font-face { font-family: GSFlex; src: url(../../fonts/gsflex-400-700.woff2) format("woff2"); font-weight: 400 700; }
+@font-face { font-family: GSCode; src: url(../../fonts/gscode-400.woff2) format("woff2"); }
+@font-face { font-family: Rozha; src: url(../../fonts/rozha-400.woff2) format("woff2"); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { width: 1440px; -webkit-font-smoothing: antialiased; }
+section { width: 1440px; padding: 96px 120px; }
+.top { display: grid; grid-template-columns: 360px 1fr; gap: 0; align-items: end; }
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+.col { border-radius: 18px; padding: 32px 30px; }
+.col ul { list-style: none; margin-top: 18px; display: grid; gap: 12px; }
+.col li { font-size: 17px; line-height: 1.5; padding-left: 18px; position: relative; }
+.col li::before { content: ""; position: absolute; left: 0; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .5; }
+.foot { margin-top: 28px; font-size: 14px; line-height: 1.5; }
+
+/* Syntra: warm light, Lato, amber */
+.syntra { background: #FFFFFF; background-image: radial-gradient(900px 420px at 0% 100%, #F6DFC2 0%, rgba(246,223,194,0) 70%); font-family: Lato, sans-serif; color: #5A3A12; }
+.syntra .lab { font: 400 13px/1 Lato; letter-spacing: .14em; text-transform: uppercase; color: #B8732A; }
+.syntra h2 { font: 300 46px/1.15 Lato; color: #A85F12; } .syntra h2 b { font-weight: 700; }
+.syntra .col { background: rgba(255,255,255,.75); border: 1px solid #F0DCC2; }
+.syntra .col h3 { font: 700 22px/1.25 Lato; color: #A85F12; margin-top: 10px; }
+.syntra .col li { color: #6B4A22; } .syntra .foot { color: #B08A5A; font-style: italic; }
+
+/* Carekin: mint, Google Sans Flex, tide teal and coral */
+.carekin { background: #EDF4F2; font-family: GSFlex, sans-serif; color: #12302D; }
+.carekin .lab { font: 400 13px/1 GSCode, monospace; letter-spacing: .08em; text-transform: uppercase; color: #3E5F5B; }
+.carekin h2 { font: 400 46px/1.15 GSFlex; color: #0F3B38; } .carekin h2 b { font-weight: 700; }
+.carekin .col { background: #FFFFFF; border: 1px solid #D5E5E1; }
+.carekin .col h3 { font: 600 22px/1.25 GSFlex; color: #0F3B38; margin-top: 10px; }
+.carekin .col li { color: #2E4A47; } .carekin .col.warn { border: 1.5px dashed #E8957C; background: #FFF8F5; } .carekin .warn .lab { color: #D0654A; }
+.carekin .foot { color: #4E6F6B; }
+
+/* Ekmaati: paper, Rozha display, river earth and sindoor */
+.ekmaati { background: #F4F0E8; font-family: Inter, sans-serif; color: #2A1A10; }
+.ekmaati .lab { font: 600 13px/1 Inter; letter-spacing: .1em; text-transform: uppercase; color: #6E5A48; }
+.ekmaati h2 { font: 400 52px/1.08 Rozha, serif; color: #1E140C; }
+.ekmaati .col { background: #FBF8F2; border: 1px solid #E4DACB; }
+.ekmaati .col h3 { font: 400 26px/1.15 Rozha, serif; color: #6B3E1C; margin-top: 10px; }
+.ekmaati .col li { color: #3D2C1F; } .ekmaati .foot { color: #7A6655; }
+</style></head>
+<body>
+
+<section class="syntra" data-slug="syntra">
+  <div class="top"><p class="lab">At a glance</p><h2>What we built, what happened when <b>people used it</b>, and what we changed.</h2></div>
+  <div class="cols">
+    <div class="col"><p class="lab">Built</p><h3>A working kiosk at our exhibit</h3><ul>
+      <li>A knob and three sliders on an ESP32, 162 settings</li><li>Nine real 360-degree worlds on a Meta Quest 3</li><li>Thermal tickets that come alive in AR</li></ul></div>
+    <div class="col"><p class="lab">Used</p><h3>66 tickets in one day</h3><ul>
+      <li>Visitors at our exhibit on 30 September 2026, many in a VR headset for the first time</li><li>The printer’s log holds 66 tickets from that day</li><li>“It felt like playing, not choosing.”</li></ul></div>
+    <div class="col"><p class="lab">Changed</p><h3>Three fixes from watching them</h3><ul>
+      <li>People walked past the AR ticket: we added a line beside the printer</li><li>Long questions were slow in a dim room: cut to one-liners</li><li>Not everyone knew a “note”: plain families, like woody and fresh</li></ul></div>
+  </div>
+  <p class="foot">Team of three: Utsav Sharma, Sijo Joseph and Rajat Chaple. Quotes paraphrased from testers at the exhibit.</p>
+</section>
+
+<section class="carekin" data-slug="carekin">
+  <div class="top"><p class="lab">At a glance</p><h2>What I designed, <b>what I decided</b>, and what still needs testing.</h2></div>
+  <div class="cols">
+    <div class="col"><p class="lab">Designed</p><h3>One schedule, three surfaces</h3><ul>
+      <li>The Carekin Android app for the organiser and WhatsApp for the helper</li><li>A clickable Figma prototype and a 49-second walkthrough</li><li>Sole designer, two weeks</li></ul></div>
+    <div class="col"><p class="lab">Decided</p><h3>Four ideas let go, three tries at one screen</h3><ul>
+      <li>Rejected push-only alerts, a smart pillbox, a daily call and a shared spreadsheet</li><li>The “What changed” card: a table, then colour only, then one sentence, one photo and who has seen it</li></ul></div>
+    <div class="col warn"><p class="lab">Not tested yet</p><h3>No carers have used it yet</h3><ul>
+      <li>Ideas were judged against three principles, not with users</li><li>The test plan is ready: eight tasks, three roles, five people per role</li><li>Targets to beat: no dose given twice; every carer confirms a change within a day</li></ul></div>
+  </div>
+</section>
+
+<section class="ekmaati" data-slug="ekmaati">
+  <div class="top"><p class="lab">At a glance</p><h2>Made by hand, tried in cardboard, chosen for a reason.</h2></div>
+  <div class="cols">
+    <div class="col"><p class="lab">Made</p><h3>A name, a mark and a box you keep</h3><ul>
+      <li>The temple box, prototyped by hand: it folds from flat sheets with no tape or plastic</li><li>Name, mark, colour, type, die line and two campaign posters</li><li>Shown at the Semester 2 jury at NID</li></ul></div>
+    <div class="col"><p class="lab">Tried</p><h3>Three cardboard boxes first</h3><ul>
+      <li>Three cardboard prototypes before the final box</li><li>Fourteen typefaces before the wordmark</li><li>Cardboard taught more than renders</li></ul></div>
+    <div class="col"><p class="lab">Chose</p><h3>From the decision log</h3><ul>
+      <li>Ekmaati over Penkara and Clay &amp; Shrine: the buyer’s own language</li><li>The box is the temple, over three boxes in one: kept after the festival</li><li>Next: an unboxing test with five people</li></ul></div>
+  </div>
+</section>
+</body></html>

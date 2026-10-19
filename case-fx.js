@@ -1,8 +1,9 @@
-// Motion layer for the Carekin case study (loaded by os.js openCase when content.js gives case.fx).
+// Motion layer for the Carekin and Handovo case studies (loaded by os.js openCase when content.js gives case.fx).
 // Each project brings its own tone through case.fxOpts:
 //   reveal  "none" (default, used by both since v92: sections are simply there, so the story reads as one piece),
 //           "rise" (soft settle) or "wipe" (left-to-right)
-//   videos  [[section, x, y, w, h, file]]: the project film plays in place of its poster while it is on screen
+//   videos  [[section, x, y, w, h, file, radius?]]: the project film plays in place of its poster while it is on screen;
+//           radius (same units) rounds its corners to match a rounded screenshot
 //   compare [section, x, y, w, h, file, leftLabel, rightLabel]: drag to compare (day / night)
 //   draw    [section, x, y, w, h, file, [[x, y], …]]: a line layer that draws itself left to right when seen, with rings on the marked points
 // Coordinates are the Figma documentation's own 1440-px units, so everything lines up at every width.
@@ -29,11 +30,12 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
   cleanups.push(() => io.disconnect());
 
   // films play in place, only while on screen
-  for (const [i, x, y, w, h, f] of opts.videos || []) {
+  for (const [i, x, y, w, h, f, rad] of opts.videos || []) {
     if (!secs[i]) continue;
     const box = document.createElement("div"); box.className = "cfx-video";
     box.innerHTML = `<video muted loop playsinline preload="none" aria-label="Project film"></video><button type="button" class="cfx-vbtn" aria-label="Pause the film">❚❚</button>`;
     place(i, box, x, y, w, h);
+    if (rad) box.style.borderRadius = `${rad / w * 100}% / ${rad / h * 100}%`;
     const vid = box.querySelector("video"), btn = box.querySelector("button");
     vid.src = asset(f);
     let user = false;   // a visitor's pause wins over autoplay

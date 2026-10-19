@@ -1,0 +1,123 @@
+[
+ {
+  "kind": "video",
+  "name": "tour",
+  "i": 3,
+  "x": 120,
+  "y": 587,
+  "w": 1200,
+  "h": 750,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "draw",
+  "name": "journey-curve",
+  "i": 11,
+  "x": 290,
+  "y": 537,
+  "w": 1030,
+  "h": 170,
+  "radius": 0,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "routing",
+  "i": 14,
+  "x": 120,
+  "y": 356,
+  "w": 1200,
+  "h": 289,
+  "radius": 0,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "goal",
+  "i": 16,
+  "x": 572,
+  "y": 173,
+  "w": 748,
+  "h": 468,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "plan",
+  "i": 17,
+  "x": 572,
+  "y": 60,
+  "w": 748,
+  "h": 468,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "discount",
+  "i": 20,
+  "x": 572,
+  "y": 120,
+  "w": 748,
+  "h": 468,
+  "radius": 22,
+  "bg": "rgb(244, 244, 247)"
+ },
+ {
+  "kind": "video",
+  "name": "count",
+  "i": 21,
+  "x": 572,
+  "y": 120,
+  "w": 748,
+  "h": 468,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "soldout",
+  "i": 22,
+  "x": 120,
+  "y": 343,
+  "w": 568,
+  "h": 355,
+  "radius": 22,
+  "bg": "rgb(11, 11, 15)"
+ },
+ {
+  "kind": "video",
+  "name": "urgent",
+  "i": 22,
+  "x": 752,
+  "y": 386,
+  "w": 568,
+  "h": 355,
+  "radius": 22,
+  "bg": "rgb(11, 11, 15)"
+ },
+ {
+  "kind": "video",
+  "name": "handover",
+  "i": 25,
+  "x": 120,
+  "y": 343,
+  "w": 568,
+  "h": 355,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ },
+ {
+  "kind": "video",
+  "name": "digest",
+  "i": 25,
+  "x": 752,
+  "y": 311,
+  "w": 568,
+  "h": 355,
+  "radius": 22,
+  "bg": "rgba(0, 0, 0, 0)"
+ }
+]

@@ -329,6 +329,11 @@
       return;
     }
     box.innerHTML = p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("");
+    // "At a glance" (what shipped, what was tested, what was decided) sits right after the cover. It is a <figure>, so the
+    // motion layers, which count the case's `:scope > img` sections, are unaffected.
+    const g = p.case.glance;
+    if (Array.isArray(g) && /^[\w-]+\.webp$/.test(g[0]) && box.firstElementChild)
+      box.firstElementChild.insertAdjacentHTML("afterend", `<figure class="case-glance"><img src="${caseImg(slug, g[0])}" srcset="${caseImg(slug, g[0])} 1440w, ${caseImg(slug, g[0], 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+g[1]}" alt="${esc(g[2])}" fetchpriority="high" decoding="async"></figure>`);
     // images fade in as they arrive (no pop), over the project's own colour instead of a grey block; the browser
     // fetches the rest as the reader nears them (no more downloading the whole case study up front)
     box.querySelectorAll("img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });

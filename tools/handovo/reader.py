@@ -38,7 +38,7 @@ class P(HTMLParser):
         if s.jm is not None and t == "div": s.start_block("jm"); return
         if t == "div" and "box" in cls.split(): s.start_block("p", ": "); return
         if t == "div" and "stat" in cls.split(): s.start_block("p", " "); return
-        if t == "div" and "rr" in cls.split(): s.start_block("p"); s.buf.append(""); return
+        if t == "div" and ("rr" in cls.split() or "bar" in cls.split()): s.start_block("p"); s.buf.append(""); return
         if t == "tr": s.cells = []; return
         if t in ("td", "th") and s.cells is not None: s.start_block("cell"); return
         if t == "span" and "chip" in cls.split(): s.start_block("eye"); return

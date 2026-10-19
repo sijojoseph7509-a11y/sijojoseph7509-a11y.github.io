@@ -289,6 +289,7 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 @media (min-resolution: 1.5dppx) and (pointer: fine) { .case { max-width: 1512px; } }   /* Retina laptops: never wider than the 2880 px files can fill */
 .case img { display: block; width: 100%; height: auto; background: var(--case-bg, #1c1c1e); opacity: 0; transition: opacity .45s var(--smooth); }
 .case img.in { opacity: 1; }
+.case-glance { margin: 0; }   /* "At a glance" after the cover (content.js case.glance) */
 @media (prefers-reduced-motion: reduce) { .case img { opacity: 1; transition: none; } }
 /* ── Notch (desktop/tablet only — phones have their own) ── */
 .notch { position: absolute; z-index: 20; top: 0; left: 50%; transform: translateX(-50%); width: clamp(64px, 7.4%, 120px); height: 30px;   /* MacBook Air: 7.4% of the width, menu-bar tall */
