@@ -14,6 +14,14 @@
     })
     .catch(() => {});
   check();
+  // If styles.css didn't arrive (a request made mid-publish, a dropped connection), the page shows as bare text.
+  // Reload once with a fresh address; the session flag means it never loops.
+  addEventListener("load", () => {
+    const ok = [...document.styleSheets].some((s) => { try { return /styles\.css/.test(s.href || "") && s.cssRules.length > 0; } catch (_) { return false; } });
+    if (ok) return;
+    try { if (sessionStorage.getItem("cssRetry")) return; sessionStorage.setItem("cssRetry", "1"); } catch (_) { return; }
+    const u = new URL(location.href); u.searchParams.set("r", Date.now().toString(36)); location.replace(u.href);
+  });
   addEventListener("pageshow", (e) => { if (e.persisted) check(); });                       // restored from back/forward cache
   // tab reopened after being away a while (not a quick app switch — never reload mid-interaction)
   let hiddenAt = 0;
