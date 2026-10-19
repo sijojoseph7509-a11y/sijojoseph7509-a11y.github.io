@@ -130,6 +130,9 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     });
     box.add(g.scene);
     idol = g.scene.getObjectByName("idol") || idol;
+    // the roof tier and peak, rebuilt here with their own print (box.glb's were a plain block and an oversized white pyramid)
+    for (const n of ["roof", "peak"]) { const o = g.scene.getObjectByName(n); if (o) o.visible = false; }
+    box.add(temple_top());
     for (const name of ["tab_front", "tab_right", "tab_left"]) {
       const m = g.scene.getObjectByName(name); if (!m) continue;
       // a hinge that carries the tab's place on the box; the tab itself only turns about its own top edge
@@ -272,6 +275,51 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     mo.observe(document.body, { childList: true, subtree: true });
     caseEl.classList.add("fx-ready");
   }
+}
+
+// The roof tier and peak, as on the real box: a block about half the temple's width with an orange outline, a square at
+// each end and a zigzag band on every side, and a small pyramid with an outlined triangle and a zigzag strip on each face.
+const RW = 0.52, RH = 0.13, PS = 0.15, PH = 0.12;   // roof width and height, peak base side and height (sleeve = 1.0 wide)
+function temple_top() {
+  const H = 1.49, g = new THREE.Group();
+  const paper = new THREE.MeshStandardMaterial({ color: 0xece2d0, roughness: 0.9 });
+  const side = new THREE.MeshStandardMaterial({ map: printed(1024, 256, roofSide), roughness: 0.88 });
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(RW, RH, RW), [side, side, paper, paper, side, side]);
+  roof.position.y = H + RH / 2; g.add(roof);
+  // pyramid: four triangles, each with the whole face print (u across the base, v up to the apex)
+  const h = PS / 2, y0 = H + RH, apex = [0, y0 + PH, 0], base = [[-h, y0, h], [h, y0, h], [h, y0, -h], [-h, y0, -h]];
+  const pos = [], uv = [];
+  for (let i = 0; i < 4; i++) { const a = base[i], c = base[(i + 1) % 4]; pos.push(...a, ...c, ...apex); uv.push(0, 0, 1, 0, 0.5, 1); }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); geo.computeVertexNormals();
+  g.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: printed(512, 512, peakFace), roughness: 0.88, side: THREE.DoubleSide })));
+  return g;
+}
+const INK = "#CF7A2C";
+function printed(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"); x.fillStyle = "#F1E8D8"; x.fillRect(0, 0, w, h); x.strokeStyle = INK; x.lineJoin = "round"; draw(x, w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function zigzag(x, x0, x1, y0, y1, n) {
+  x.beginPath(); x.moveTo(x0, y1);
+  for (let i = 0; i < n; i++) { const a = x0 + (x1 - x0) * i / n, b = x0 + (x1 - x0) * (i + 1) / n; x.lineTo((a + b) / 2, y0); x.lineTo(b, y1); }
+  x.stroke();
+}
+function roofSide(x, w, h) {
+  const m = 14; x.lineWidth = 7; x.strokeRect(m, m, w - 2 * m, h - 2 * m);
+  const s = h - 2 * m - 24;   // the end squares
+  for (const x0 of [m + 12, w - m - 12 - s]) { x.lineWidth = 6; x.strokeRect(x0, m + 12, s, s); x.lineWidth = 5; x.strokeRect(x0 + 18, m + 30, s - 36, s - 36); }
+  const l = m + s + 34, r = w - m - s - 34; x.lineWidth = 5;
+  [[0.2, 0.3], [0.5, 0.6], [0.72, 0.8]].forEach(([a, b]) => { x.beginPath(); x.moveTo(l, h * a); x.lineTo(r, h * a); x.moveTo(l, h * b); x.lineTo(r, h * b); x.stroke(); });
+  x.lineWidth = 6; zigzag(x, l, r, h * 0.33, h * 0.47, 22);
+}
+function peakFace(x, w, h) {
+  const pt = (u, v) => [u * w, (1 - v) * h];   // face uv: base along the bottom, apex at the top centre
+  const tri = (k) => { x.beginPath(); x.moveTo(...pt(0.5 - 0.5 * k, 0.02)); x.lineTo(...pt(0.5 + 0.5 * k, 0.02)); x.lineTo(...pt(0.5, 0.02 + 0.96 * k)); x.closePath(); x.stroke(); };
+  x.lineWidth = 16; tri(0.96); x.lineWidth = 11; tri(0.62);
+  x.lineWidth = 11; x.beginPath(); x.moveTo(...pt(0.14, 0.27)); x.lineTo(...pt(0.86, 0.27)); x.stroke();
+  x.lineWidth = 10; zigzag(x, 0.2 * w, 0.8 * w, (1 - 0.24) * h, (1 - 0.09) * h, 6);
 }
 
 // the temple's back wall: a gold sunburst behind the idol, as printed on the real box
