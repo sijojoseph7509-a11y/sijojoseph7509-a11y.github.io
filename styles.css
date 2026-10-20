@@ -699,24 +699,36 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 
 /* each drawing is a strip of frames shown one at a time (a flip-book), so the legs and arms really move */
 .wl-sprite { position: relative; overflow: hidden; }
-.wl-ill .wl-sprite img { width: 400%; max-width: none; height: auto; transform: translateX(-50%); }
+.wl-ill .wl-sprite img { width: 500%; max-width: none; height: auto; transform: translateX(-80%); }   /* at rest: the fifth cell, right foot on the ball */
 .wl-juggle .wl-sprite { aspect-ratio: 395 / 613; }
 
 /* keepy-ups, both feet in turn: left knee, bounce, right knee, bounce; the ball goes foot to foot over his head, he hops between
    touches and drifts side to side */
-/* play, then rest: three touches when the page opens (and again on hover), then he stands balancing the ball on his right foot.
-   main.js adds .go and removes it when the frames finish; one touch every 1.6 s */
-.wl-juggle.go { animation: wlDrift 4.8s ease-in-out 1; }
-.wl-juggle.go .wl-sprite img { animation: wlJFrames 3.2s 1.5 forwards; }
-.wl-juggle.go .wl-sprite { animation: wlHop 3.2s ease-in-out 1.5; }
-.wl-juggle.go .wl-ball { animation: wlFoot 3.2s 1.5 forwards; }
-.wl-juggle.go .wl-spin { animation: wlSpin 1.6s linear 3; }
-.wl-juggle.go .wl-kick-l { animation: wlKickL 3.2s 1.5; } .wl-juggle.go .wl-kick-r { animation: wlKickR 3.2s 1.5; }
-@keyframes wlJFrames { 0% { transform: translateX(0); animation-timing-function: step-end; } 25% { transform: translateX(-25%); animation-timing-function: step-end; }
-  50% { transform: translateX(-50%); animation-timing-function: step-end; } 75%, 100% { transform: translateX(-75%); animation-timing-function: step-end; } }
+/* play, then rest: from the foot-on-ball pose he flicks it up and does four touches, right foot first (each animation starts half a
+   cycle in), then traps it under his right foot again. main.js adds .go and removes it when the frames finish; a touch every 1.6 s.
+   His eyes follow the ball: up as it rises, down to whichever foot it is falling to */
+.wl-juggle.go { animation: wlDrift 6.4s ease-in-out 1; }
+.wl-juggle.go .wl-sprite img { animation: wlJFrames 3.2s -1.6s 2; }
+.wl-juggle.go .wl-sprite { animation: wlHop 3.2s ease-in-out -1.6s 2; }
+.wl-juggle.go .wl-ball { animation: wlFoot 3.2s -1.6s 2; }
+.wl-juggle.go .wl-spin { animation: wlSpin 1.6s linear 4; }
+.wl-juggle.go .wl-kick-l { animation: wlKickL 3.2s -1.6s 2; } .wl-juggle.go .wl-kick-r { animation: wlKickR 3.2s -1.6s 2; }
+.wl-juggle.go .wl-eye-l { animation: wlEyeL 3.2s -1.6s 2; } .wl-juggle.go .wl-eye-r { animation: wlEyeR 3.2s -1.6s 2; }
+.wl-juggle.go .wl-pupil { animation: wlLook 3.2s -1.6s 2; }
+@keyframes wlEyeL { 0% { transform: translate(184px, 54px); animation-timing-function: step-end; } 25% { transform: translate(184px, 61px); animation-timing-function: step-end; }
+  50% { transform: translate(180.5px, 54px); animation-timing-function: step-end; } 75%, 100% { transform: translate(183.5px, 61px); animation-timing-function: step-end; } }
+@keyframes wlEyeR { 0% { transform: translate(213.5px, 54px); animation-timing-function: step-end; } 25% { transform: translate(213.5px, 61px); animation-timing-function: step-end; }
+  50% { transform: translate(210px, 54px); animation-timing-function: step-end; } 75%, 100% { transform: translate(212.5px, 60.5px); animation-timing-function: step-end; } }
+@keyframes wlLook {
+  0% { transform: translate(-2.6px, 2.4px); animation-timing-function: cubic-bezier(.15,.7,.35,1); } 25% { transform: translate(0, -2.6px); animation-timing-function: cubic-bezier(.65,0,.85,.3); }
+  50% { transform: translate(2.6px, 2.4px); animation-timing-function: cubic-bezier(.15,.7,.35,1); } 75% { transform: translate(0, -2.6px); animation-timing-function: cubic-bezier(.65,0,.85,.3); }
+  100% { transform: translate(-2.6px, 2.4px); } }
+@keyframes wlJFrames { 0% { transform: translateX(0); animation-timing-function: step-end; } 25% { transform: translateX(-20%); animation-timing-function: step-end; }
+  50% { transform: translateX(-40%); animation-timing-function: step-end; } 75%, 100% { transform: translateX(-60%); animation-timing-function: step-end; } }
 @keyframes wlHop { 0%, 22% { translate: 0 0; } 33% { translate: 0 -7px; } 46%, 72% { translate: 0 0; } 83% { translate: 0 -7px; } 96%, 100% { translate: 0 0; } }
-@keyframes wlDrift { 0%, 100% { translate: 0 0; } 25% { translate: -10px 0; } 75% { translate: 10px 0; } }
+@keyframes wlDrift { 0%, 100% { translate: 0 0; } 30% { translate: 10px 0; } 70% { translate: -10px 0; } }
 .wl-ball { transform: translate(258px, 488px); }
+.wl-juggle:not(.go) .wl-ball, .wl-juggle:not(.go) .wl-eyes { display: none; }   /* at rest the ball and eyes are part of the drawing */
 @keyframes wlFoot {
   0% { transform: translate(136px, 488px); animation-timing-function: cubic-bezier(.15,.7,.35,1); }
   25% { transform: translate(196px, -36px); animation-timing-function: cubic-bezier(.65,0,.85,.3); }
