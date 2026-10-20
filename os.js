@@ -399,6 +399,8 @@
     $("#winTitle").textContent = app.title;
     if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
+    const nk = Object.keys(apps)[Object.keys(apps).indexOf(current) + 1];   // scroll on past the end to reach the next section
+    if (nk) body.insertAdjacentHTML("beforeend", `<p class="next-hint" data-next="${esc(nk)}"><span>Keep scrolling for ${esc(apps[nk].title)}</span><i></i></p>`);
     body.scrollTop = 0;
     win.hidden = false;
     win.classList.remove("min");
@@ -415,6 +417,24 @@
     });
     placeHighlight(opening);
   }
+  // Scrolling past the end of a section moves on to the next one, like turning a page. Only a deliberate push counts:
+  // the scroll that reaches the end stops there; a new scroll from the end (or a swipe up on a phone) fills the hint's bar,
+  // and one gesture moves one section at most.
+  let over = 0, ty = null, lastWheel = 0, held = false, fromEnd = false;   // held: just paged; fromEnd: this gesture began at the end
+  const atEnd = () => body.scrollTop + body.clientHeight >= body.scrollHeight - 2;
+  const hint = () => body.querySelector(":scope > .next-hint");
+  const pageOn = () => { const h = hint(); over = 0; held = true; if (h) show(h.dataset.next); };
+  body.addEventListener("wheel", (e) => {
+    const now = performance.now(), quiet = now - lastWheel > 300; lastWheel = now;
+    if (held) { if (!quiet) return; held = false; }   // one section per gesture, however long the scroll
+    if (quiet) { over = 0; fromEnd = atEnd(); }        // a new gesture: it counts only if it starts at the end
+    const h = hint();
+    if (!h || !fromEnd || body.classList.contains("case-mode") || e.deltaY <= 0 || !atEnd()) { over = 0; if (h) h.style.setProperty("--p", 0); return; }
+    over += Math.min(60, e.deltaY); h.style.setProperty("--p", Math.min(1, over / 300));
+    if (over >= 300) pageOn();
+  }, { passive: true });
+  body.addEventListener("touchstart", (e) => { ty = atEnd() ? e.touches[0].clientY : null; }, { passive: true });
+  body.addEventListener("touchend", (e) => { if (ty != null && hint() && !body.classList.contains("case-mode") && ty - e.changedTouches[0].clientY > 140 && atEnd()) pageOn(); ty = null; }, { passive: true });
   const closeWindow = () => { win.hidden = true; document.querySelectorAll(".running").forEach((b) => b.classList.remove("running")); };
   const minimize = () => { if (win.hidden) return; win.classList.add("min"); setTimeout(() => { win.hidden = true; win.classList.remove("min"); }, 340); };
   const zoom = () => { resetWindowPlacement(); win.classList.toggle("max"); };

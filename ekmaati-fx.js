@@ -3,7 +3,7 @@
 //   1. "Peel the arch": the final box in 3D, built from photographs of the real prototype. Drag to turn it;
 //      grab a tab by the half-moon notch at its foot and pull up: it tears along the perforation and falls
 //      away, revealing the temple. Front, left and right are tabs; the back panel (care + unboxing text) stays.
-//   2. "Made, not rendered": three films and nine photographs of the prototype, backgrounds removed (Apple Vision,
+//   2. "Made, not rendered": the unboxing film (recorded from the 3D box) and nine photographs of the prototype, backgrounds removed (Apple Vision,
 //      on device; tools/ekmaati/cut.swift + vcut.swift), on the case study's own paper colour.
 import * as THREE from "./vendor/three/build/three.module.min.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -20,6 +20,18 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   const imgs = [...caseEl.querySelectorAll(":scope > img")];
   const after = imgs[18] || imgs[imgs.length - 1];   // 19.webp, "The temple box"
   if (!after) return;
+
+  // ---------- the experience map: its feeling curve draws itself in (layer from tools/ekmaati/slides.mjs) ----------
+  const mapImg = imgs[20];   // 21.webp
+  if (mapImg) {
+    const w = document.createElement("div"); w.className = "ekx-mapw"; mapImg.replaceWith(w); w.appendChild(mapImg);
+    const c = document.createElement("img"); c.className = "ekx-curve"; c.alt = ""; c.setAttribute("aria-hidden", "true"); c.decoding = "async";
+    c.src = A("map-curve.webp"); c.srcset = `${A("map-curve.webp")} 1x, ${A("map-curve@2x.webp")} 2x`;
+    Object.assign(c.style, { left: 120 / 1440 * 100 + "%", top: 560 / 1000 * 100 + "%", width: 1200 / 1440 * 100 + "%" });
+    w.appendChild(c);
+    if (reduce) c.classList.add("on");
+    else { const io = new IntersectionObserver((es) => { if (es[0].isIntersecting) { c.classList.add("on"); io.disconnect(); } }, { threshold: 0.5 }); io.observe(w); cleanups.push(() => io.disconnect()); }
+  }
 
   // ---------- section 1: the box you can peel ----------
   const s1 = document.createElement("section");
@@ -42,10 +54,8 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   (imgs[0] || after).after(s1);
 
   // ---------- section 2: the real thing ----------
-  const films = [
-    ["film-peel", "Unboxing: one hand on the base, the three tabs come away one by one."],
-    ["film-sleeve", "The closed sleeve, all four sides: two illustrated tabs, the front and the back panel."],
-    ["film-temple", "The temple left behind, all the way round."],
+  const films = [   // recorded from the 3D box above by tools/ekmaati/film.mjs
+    ["film-unbox", "The temple opening: the three tabs peel away one by one and the idol is revealed."],
   ];
   const photos = [
     ["sleeve-front", "Front tab: Miniature Ganesh Idols, 6-inch unbaked clay figurine."],
@@ -173,7 +183,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   }, undefined, (err) => { console.error("ekmaati box", err); stage.classList.add("ekx-nogl"); stage.innerHTML = `<img src="${A("real/temple-34.webp")}" alt="The Ekmaati temple box.">`; });
 
   // ---------- interaction ----------
-  let rotY = -0.55, rotX = 0.06, vY = 0, idle = 0, dirty = true;
+  let rotY = -0.55, rotX = 0.06, vY = 0, idle = 0, dirty = true, turnTo = null;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const hit = (e) => {
     const r = canvas.getBoundingClientRect();
@@ -193,6 +203,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     canvas.setPointerCapture(e.pointerId);
     drag = t ? { kind: "peel", t, y0: e.clientY, a0: t.ang } : { kind: "turn", x: e.clientX, y: e.clientY, t: performance.now() };
     if (t) { t.state = "held"; t.ring.visible = false; stage.classList.add("peeling"); }
+    turnTo = null; tabs.forEach((q) => { if (q.state === "queued") q.state = "on"; });   // a visitor's drag wins over "Peel the next tab"
     idle = 0; e.preventDefault();
   });
   canvas.addEventListener("pointermove", (e) => {
@@ -231,16 +242,18 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     const n = tabs.filter((t) => t.state === "torn" || t.state === "gone").length;
     countEl.textContent = n; tip.hidden = n > 0;
     nextB.hidden = n === 3; resetB.hidden = n === 0;
+    if (n === 3 && !s1.classList.contains("ekx-open")) { turnTo = Math.round(rotY / (Math.PI * 2)) * Math.PI * 2 - 0.35; vY = 0; }   // all open: turn to face the idol
     s1.classList.toggle("ekx-open", n === 3);
   }
   nextB.addEventListener("click", () => {
     const t = tabs.find((t) => t.state === "on"); if (!t) return;
     // turn the box so the tab faces the visitor, then peel it
     const want = -t.holder.rotation.y;
-    rotY = want + Math.round((rotY - want) / (Math.PI * 2)) * Math.PI * 2 - 0.35;
-    t.ring.visible = false; t.state = "auto"; idle = 0; dirty = true;
+    turnTo = want + Math.round((rotY - want) / (Math.PI * 2)) * Math.PI * 2 - 0.35;   // eased in the loop, then peeled
+    t.ring.visible = false; t.state = "queued"; idle = 0; vY = 0; dirty = true;
   });
   resetB.addEventListener("click", () => {
+    turnTo = null;
     tabs.forEach((t) => { t.state = "on"; t.ang = 0; t.vel = 0; t.fall = null; t.pivot.position.copy(t.home); t.pivot.rotation.set(0, 0, 0); t.pivot.visible = true; t.mats.forEach((m) => { m.opacity = 1; m.transparent = false; }); });
     status(); dirty = true;
   });
@@ -260,13 +273,14 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     raf = on ? requestAnimationFrame(tick) : 0;
     const dt = Math.min(50, now - last) / 16.67; last = now;
     let moving = false;
-    if (!drag) {
+    if (turnTo != null && !drag) {   // "Peel the next tab": turn to the tab, then peel it
+      const d = turnTo - rotY; rotY += d * Math.min(1, 0.16 * dt); moving = true;
+      if (Math.abs(d) < 0.01) { rotY = turnTo; turnTo = null; tabs.forEach((q) => { if (q.state === "queued") q.state = "auto"; }); }
+    } else if (!drag) {
       if (Math.abs(vY) > 0.0004) { rotY += vY * dt; vY *= Math.pow(0.93, dt); moving = true; }
       else if (!reduce && (idle += dt) > 150) { rotY += 0.0032 * dt; moving = true; }   // after a few still seconds it turns slowly by itself
     }
     box.rotation.set(rotX, rotY, 0);
-    // the idol turns a little toward you, so it never shows its edge
-    idol.rotation.y = Math.max(-1.25, Math.min(1.25, -Math.atan2(Math.sin(rotY), Math.cos(rotY))));
     for (const t of tabs) {
       if (t.state === "on" && t.ang > 0) { t.vel += (-t.ang) * 0.12 * dt; t.vel *= 0.72; t.ang = Math.max(0, t.ang + t.vel * dt); if (t.ang < 0.002) t.ang = 0; moving = true; }
       if (t.state === "auto") { t.ang += 0.035 * dt; if (t.ang > 1.25) tear(t); moving = true; }
@@ -332,7 +346,7 @@ function idolRelief(img) {
   const map = new THREE.Texture(img); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; map.needsUpdate = true;
   const grp = new THREE.Group();
   grp.add(new THREE.Mesh(mk(pos, idx, uv), new THREE.MeshStandardMaterial({ map, bumpMap: map, bumpScale: 2.2, roughness: 0.9, alphaTest: 0.5 })));   // the photo's own light and dark carve the folds
-  grp.add(new THREE.Mesh(mk(bpos, bidx, uv), new THREE.MeshStandardMaterial({ map, color: 0x5e574c, roughness: 0.95, alphaTest: 0.5 })));   // the photo's own cut-out, tinted to clay, so both halves share one clean outline
+  grp.add(new THREE.Mesh(mk(bpos, bidx, uv), new THREE.MeshStandardMaterial({ map, color: 0x9c9382, roughness: 0.95, alphaTest: 0.5 })));   // the photo's own cut-out, tinted to clay, so both halves share one clean outline
   grp.children.forEach((m) => (m.position.y = -IH / 2));   // centred on its own origin
   grp.userData.h = IH;
   return grp;

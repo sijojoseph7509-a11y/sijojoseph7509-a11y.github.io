@@ -146,7 +146,7 @@ window.SITE = {
     { title: "Ekmaati", tag: "Branding \u00b7 Packaging", color: "#2A1A10", status: "NID Semester 2 project", url: "#",
       summary: "Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen.",
       case: { slug: "ekmaati", glance: ["glance.webp", 704, "At a glance: what I made (a temple box prototyped by hand that folds with no tape or plastic, plus the name, mark, colour, type, die line and two posters, shown at the NID Semester 2 jury), three cardboard prototypes and fourteen typefaces tried first, and the main choices from the decision log."], coverSlide: ["fx/cover-slide.webp", 900], cover: "13.webp", fx: "ekmaati-fx.js", sections: [   // [1× image (a 2× "@2x" file sits beside it), height px at 1440 wide, description], exported at 2× from Figma "ekmaati final"
-        ["01.webp", 1000, "Ekmaati. Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen. Branding, 2026."],
+        ["01.webp", 760, "Ekmaati cover: the lockup, Ek maati, one clay (एक माती), and the idea: a name, a mark and a temple-shaped box for the clay Ganesh idols of Pen; the idol goes back to the river, the box stays because it is the temple. The real box with the idol inside, standing on the brand's river lines."],
         ["02.webp", 240, "Snapshot: sole designer for research, naming, identity, packaging and campaign; deliverables include the name, mark, colour, type, temple box, die line and two posters; a real project, prototyped by hand."],
         ["03.webp", 960, "Statement: turning a seasonal commodity into a keepsake, with a name, a mark and a temple-shaped box for the clay gods of Pen."],
         ["04.webp", 529, "The human friction: a family brings home a hand-made river-clay idol in bubble wrap and tape; the missing pieces were a name, an identity and a box."],
@@ -166,7 +166,7 @@ window.SITE = {
         ["18.webp", 891, "Decision log: what was chosen, what was let go and why, for the name, mark, colour, type and box."],
         ["19.webp", 1300, "The temple box: a box that folds from flat sheets into a body, two roof tiers and a peak, with no tape or plastic; 350 GSM board, gold emboss and spot UV."],
         ["20.webp", 4372, "Illustrated narrative, The Festival Errand: a buyer picks a small Pen idol in a temple-shaped box, tears the arch at home, and keeps the temple after immersion."],
-        ["21.webp", 834, "Experience map: the errand mapped from the stall to carrying it home, tearing the arch, the ten days of worship and immersion."],
+        ["21.webp", 1000, "Experience map, the errand mapped: six steps from the stall to the river, what the buyer does and thinks, a feeling curve drawn as a river line from curious and anxious to delight and bittersweet, and the design response at each step. Anticipated, not researched."],
         ["22.webp", 761, "Accessibility and edge cases: Marathi and English at equal weight, measured contrast and no reliance on colour, plus edge cases such as monsoon damp."],
         ["23.webp", 978, "Campaign, Big faith for small places: posters showing a detailed Ganesha on a desk among keyboards, glasses and sticky notes."],
         ["24.webp", 632, "Validation: how I'd know it works, including an unboxing test with five people and whether buyers keep the box as a shrine."],

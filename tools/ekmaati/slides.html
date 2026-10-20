@@ -1,0 +1,137 @@
+<!doctype html>
+<!-- Ekmaati slides rebuilt in HTML (the rest of the case study is the Figma export "ekmaati final"):
+     01 the cover and 21 the experience map. tools/ekmaati/slides.mjs renders each <section data-slide> to work/ekmaati/NN.webp
+     (+ @2x); the feeling curve ([data-fx-draw]) is left out of the still and drawn in by ekmaati-fx.js.
+     Brand: snow #F4F1E9, earth #1D150C, gold #FDB041, robe #764E2C, sindoor #F03F39 (the tilak only). Rozha for display,
+     Mona black caps, Inter for text. River lines follow the brand-asset rules: offset loops around off-canvas centres,
+     40 to 48 px apart, three slow waves, no two rings alike, one step from the background, never behind body text and never
+     touching the idol or the mark. The mark and lockup are cut from the case study's own 2x slides (brand/). -->
+<html lang="en"><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: Mona; src: url(../../fonts/mona-400-900.woff2) format("woff2"); font-weight: 400 900; }
+@font-face { font-family: Rozha; src: url(../../fonts/rozha-400.woff2) format("woff2"); }
+@font-face { font-family: GSCode; src: url(../../fonts/gscode-400.woff2) format("woff2"); }
+:root { --snow: #F4F1E9; --earth: #1D150C; --gold: #FDB041; --robe: #764E2C; --sindoor: #F03F39; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { width: 1440px; font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
+section { position: relative; width: 1440px; overflow: hidden; }
+svg.river { position: absolute; inset: 0; width: 100%; height: 100%; }
+.eye { font: 600 13px/1 Mona, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+
+/* 01 cover */
+.cover { height: 760px; background: var(--snow); color: var(--earth); }
+.cover .lock { position: absolute; left: 120px; top: 72px; width: 150px; }
+.cover .eye { position: absolute; left: 120px; top: 214px; color: var(--robe); }
+.cover h1 { position: absolute; left: 116px; top: 248px; font: 400 168px/.9 Rozha, serif; letter-spacing: -.01em; }
+.cover h1 b { display: block; font: 900 74px/1 Mona, sans-serif; letter-spacing: -.02em; color: var(--robe); margin-top: 14px; }
+.cover .deva { position: absolute; left: 124px; top: 508px; font: 400 30px/1 Rozha, serif; color: var(--robe); }
+.cover .lede { position: absolute; left: 120px; top: 560px; width: 600px; font-size: 20px; line-height: 1.55; color: #3B2A1C; }
+.cover .facts { position: absolute; left: 120px; bottom: 44px; display: flex; gap: 36px; font: 500 13px/1.3 Inter; color: #6E5A48; }
+.cover .facts b { display: block; font: 600 11px/1 Mona; letter-spacing: .14em; text-transform: uppercase; color: var(--robe); margin-bottom: 6px; }
+.cover .box { position: absolute; right: 150px; bottom: 70px; height: 600px; filter: drop-shadow(0 30px 30px rgba(29,21,12,.18)); }
+.cover .ground { position: absolute; right: 70px; bottom: 52px; width: 520px; height: 60px; border-radius: 50%; background: radial-gradient(closest-side, rgba(118,78,44,.22), rgba(118,78,44,0)); }
+
+/* 21 experience map */
+.map { height: 1000px; background: var(--earth); color: var(--snow); padding: 96px 120px 0; }
+.map .eye { color: var(--gold); }
+.map h2 { margin-top: 22px; font: 400 76px/.95 Rozha, serif; }
+.map h2 b { font: 900 76px/.95 Mona, sans-serif; letter-spacing: -.02em; }
+.map .intro { position: absolute; left: 950px; top: 128px; width: 370px; font-size: 17px; line-height: 1.6; color: #CDBFA8; }
+.cols { position: absolute; left: 120px; right: 120px; top: 320px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; }
+.col { padding: 0 18px 0 0; }
+.col .n { font: 500 13px/1 GSCode, monospace; color: var(--gold); }
+.col h3 { margin-top: 10px; font: 700 19px/1.2 Mona, sans-serif; color: var(--snow); min-height: 46px; }
+.col .do { margin-top: 8px; font-size: 14px; line-height: 1.45; color: #B8A88E; min-height: 42px; }
+.col q { display: block; margin-top: 14px; font: italic 400 17px/1.35 Rozha, serif; color: var(--snow); quotes: "\201C" "\201D"; }
+.band { position: absolute; left: 120px; right: 120px; top: 560px; height: 230px; }
+.band .lab { position: absolute; font: 600 12px/1 Mona; letter-spacing: .12em; text-transform: uppercase; color: var(--earth); background: var(--gold); padding: 6px 9px; border-radius: 999px; transform: translate(-50%, -150%); white-space: nowrap; }
+.band .lab.hi { background: var(--snow); }
+.resp { position: absolute; left: 120px; right: 120px; top: 812px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.resp div { background: rgba(118,78,44,.42); border-top: 2px solid var(--gold); border-radius: 0 0 10px 10px; padding: 14px 14px 16px; font-size: 13.5px; line-height: 1.45; color: #EDE4D3; min-height: 112px; }
+.resp div b { display: block; font: 600 10.5px/1 Mona; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.map .foot { position: absolute; left: 120px; bottom: 26px; font: 400 13px/1 GSCode, monospace; color: #8F7F66; }
+.rowlab { position: absolute; left: 120px; font: 600 11px/1 Mona; letter-spacing: .16em; text-transform: uppercase; color: #8F7F66; }
+</style></head>
+<body>
+
+<section class="cover" data-slide="01">
+  <svg class="river" id="r-cover" aria-hidden="true"></svg>
+  <img class="lock" src="brand/lockup.png" alt="">
+  <p class="eye">Branding · Packaging · NID Semester 2 · 2026</p>
+  <h1>Ek maati<b>ONE CLAY</b></h1>
+  <p class="deva">एक माती</p>
+  <p class="lede">A name, a mark and a temple-shaped box for the GI-tagged clay Ganesh idols of Pen. The idol comes from the river and goes back to it. The box stays, because the box is the temple.</p>
+  <div class="facts"><p><b>Craft</b>Pen, Maharashtra · GI 2024</p><p><b>Made</b>Name, mark, type, colour, temple box</p><p><b>Box</b>Folds flat, no tape, no plastic</p></div>
+  <div class="ground"></div>
+  <img class="box" src="../../work/ekmaati/fx/real/temple-34@2x.webp" alt="">
+</section>
+
+<section class="map" data-slide="21">
+  <svg class="river" id="r-map" aria-hidden="true"></svg>
+  <p class="eye">18 · Experience map</p>
+  <h2>The errand, <b>MAPPED</b></h2>
+  <p class="intro">From the stall to the river and back to a desk: what the buyer does, thinks and feels at each step of the festival errand, and what the design does in reply.</p>
+  <div class="cols">
+    <div class="col"><p class="n">01</p><h3>At the stall</h3><p class="do">Picks one idol from a row</p><q>Which one is from Pen?</q></div>
+    <div class="col"><p class="n">02</p><h3>Carrying it home</h3><p class="do">Walks home in rain</p><q>Will it get wet?</q></div>
+    <div class="col"><p class="n">03</p><h3>Tearing the arch</h3><p class="do">Tears along the perforation</p><q>Just tear along the dots?</q></div>
+    <div class="col"><p class="n">04</p><h3>The doorway opens</h3><p class="do">Folds the arched panel down</p><q>Oh.</q></div>
+    <div class="col"><p class="n">05</p><h3>A shrine on the desk</h3><p class="do">Sets it up with a diya</p><q>It fits my desk.</q></div>
+    <div class="col"><p class="n">06</p><h3>Back to the water</h3><p class="do">Dissolves the idol, keeps the temple</p><q>What do I do with the box?</q></div>
+  </div>
+  <div class="band" id="band">
+    <svg data-fx-draw="map-curve" id="curve" viewBox="0 0 1200 230" width="1200" height="230" style="position:absolute;inset:0;overflow:visible"></svg>
+  </div>
+  <div class="resp">
+    <div><b>Design response</b>Mark and name read from 2 m; the maker's story on the side</div>
+    <div><b>Design response</b>350 GSM board; the idol sits on a raised base inside</div>
+    <div><b>Design response</b>Perforation on three sides of the arch; no tape, no tools</div>
+    <div><b>Design response</b>Idol at eye level, tilak first</div>
+    <div><b>Design response</b>Sized for small places; a stable base</div>
+    <div><b>Design response</b>Visarjan guide printed inside the panel; the temple stays</div>
+  </div>
+  <p class="foot">Anticipated, not researched: a designed experience to test with the printed box.</p>
+</section>
+
+<script>
+// River lines: offset loops around an off-canvas centre, gap 40 to 48 px, three slow waves, each ring a little different
+function river(svg, { cx, cy, r0, n, color, width = 1.4, amp = 9, seed = 1, clip }) {
+  const ns = "http://www.w3.org/2000/svg"; let s = seed; const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  if (clip) { const d = document.createElementNS(ns, "defs"); d.innerHTML = clip; svg.appendChild(d); }
+  const g = document.createElementNS(ns, "g"); if (clip) g.setAttribute("clip-path", "url(#" + svg.id + "-clip)"); svg.appendChild(g);
+  let r = r0;
+  for (let k = 0; k < n; k++) {
+    r += 40 + rnd() * 8; const ph = rnd() * 6.28, a2 = amp * (0.7 + rnd() * 0.6), pts = [];
+    for (let t = 0; t <= 720; t++) { const th = t / 720 * Math.PI * 2, rr = r + a2 * Math.sin(3 * th + ph) + a2 * 0.4 * Math.sin(5 * th + ph * 1.7); pts.push((cx + rr * Math.cos(th)).toFixed(1) + "," + (cy + rr * Math.sin(th) * 0.62).toFixed(1)); }
+    const p = document.createElementNS(ns, "path"); p.setAttribute("d", "M" + pts.join("L") + "Z"); p.setAttribute("fill", "none"); p.setAttribute("stroke", color); p.setAttribute("stroke-width", width); g.appendChild(p);
+  }
+}
+// cover: rings from a centre below the right edge; kept clear of the text block on the left
+river(document.getElementById("r-cover"), { cx: 1260, cy: 1180, r0: 330, n: 16, color: "#D9CCB6", seed: 7,
+  clip: '<clipPath id="r-cover-clip"><rect x="760" y="0" width="680" height="760"/></clipPath>' });
+// map: faint rings on earth, top right, away from the columns' text
+river(document.getElementById("r-map"), { cx: 1500, cy: -260, r0: 120, n: 9, color: "#2E2216", seed: 3,
+  clip: '<clipPath id="r-map-clip"><rect x="0" y="0" width="1440" height="300"/></clipPath>' });
+
+// the feeling curve: one river line through six feelings, with offset contours echoing it above and below
+const F = [["curious", .58], ["anxious", .8], ["expectant", .5], ["delight", .1], ["calm", .24], ["bittersweet", .44]];
+const W = 1200, Hh = 230, cx = (i) => (i + 0.5) * W / 6, cy = (v) => 24 + v * (Hh - 48);
+const P = F.map(([, v], i) => [cx(i), cy(v)]);
+const path = (off) => { const q = P.map(([x, y]) => [x, y + off]); let d = `M${-20},${q[0][1]} L${q[0][0]},${q[0][1]}`;
+  for (let i = 0; i < q.length - 1; i++) { const [x0, y0] = q[i], [x1, y1] = q[i + 1], m = (x1 - x0) / 2; d += ` C${x0 + m},${y0} ${x1 - m},${y1} ${x1},${y1}`; }
+  return d + ` L${W + 20},${q[q.length - 1][1]}`; };
+const svg = document.getElementById("curve"), ns = "http://www.w3.org/2000/svg";
+const echo = document.createElementNS(ns, "svg"); echo.setAttribute("viewBox", "0 0 1200 230"); echo.setAttribute("style", "position:absolute;inset:0;overflow:visible"); echo.setAttribute("width", 1200); echo.setAttribute("height", 230);
+document.getElementById("band").prepend(echo);
+for (const off of [-84, -56, -28, 28, 56, 84]) { const p = document.createElementNS(ns, "path"); p.setAttribute("d", path(off)); p.setAttribute("fill", "none"); p.setAttribute("stroke", "#3A2B1C"); p.setAttribute("stroke-width", 1.4); echo.appendChild(p); }
+const main = document.createElementNS(ns, "path"); main.setAttribute("d", path(0)); main.setAttribute("fill", "none"); main.setAttribute("stroke", "#FDB041"); main.setAttribute("stroke-width", 4); main.setAttribute("stroke-linecap", "round"); svg.appendChild(main);
+P.forEach(([x, y], i) => {
+  const c = document.createElementNS(ns, "circle"); c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", i === 3 ? 11 : 7);
+  c.setAttribute("fill", i === 3 ? "#F4F1E9" : "#FDB041"); c.setAttribute("stroke", "#1D150C"); c.setAttribute("stroke-width", 3); svg.appendChild(c);
+  const fo = document.createElementNS(ns, "foreignObject"); fo.setAttribute("x", x - 80); fo.setAttribute("y", y - 46); fo.setAttribute("width", 160); fo.setAttribute("height", 34);
+  fo.innerHTML = `<div xmlns="http://www.w3.org/1999/xhtml" style="text-align:center"><span style="display:inline-block;font:600 12px/1 Mona;letter-spacing:.12em;text-transform:uppercase;color:#1D150C;background:${i === 3 ? "#F4F1E9" : "#FDB041"};padding:6px 9px;border-radius:999px">${F[i][0]}</span></div>`;
+  svg.appendChild(fo);
+});
+</script>
+</body></html>

@@ -37,9 +37,9 @@
 /* 2 · the real box */
 .ekx-real { padding: 6cqw 6.6cqw 7cqw; }
 .ekx-head { max-width: 62cqw; margin-bottom: 3.5cqw; }
-.ekx-films { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 2.2cqw; align-items: end; margin-bottom: 5cqw; }
+.ekx-films { display: grid; grid-template-columns: 1fr; max-width: 62cqw; margin: 0 auto 5cqw; }   /* one film: the unboxing */
 .ekx-film { margin: 0; }
-.ekx-vid { position: relative; aspect-ratio: 4 / 5; border-radius: 1.2cqw; overflow: hidden; background: #F2EFE6; }
+.ekx-vid { position: relative; aspect-ratio: 4 / 3; border-radius: 1.2cqw; overflow: hidden; background: #F2EFE6; }
 .ekx-vid video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .ekx-vb { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(90,58,30,.8); color: #F4F0E8; font-size: 11px; cursor: pointer; }
 .ekx-vb:focus-visible { outline: 3px solid #E3A53A; outline-offset: 2px; }
@@ -58,11 +58,15 @@
   .ekx-stage { height: 120cqw; }
   .ekx-real { padding: 40px 20px 48px; }
   .ekx-head { max-width: none; }
-  .ekx-films { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .ekx-films .big { grid-column: 1 / -1; }
-  .ekx-films .big .ekx-vid { aspect-ratio: 4 / 5; }
+  .ekx-films { max-width: none; }
   .ekx-grid { grid-template-columns: 1fr 1fr; gap: 24px 14px; }
   .ekx-grid .ekx-ph:nth-child(6) { grid-column: 1 / -1; }
   .ekx-ph img, .ekx-grid .ekx-ph:nth-child(n) img { height: 60cqw; }
 }
 @media (prefers-reduced-motion: reduce) { .ekx-tip { animation: none; } .ekx-ph img { transition: none; } }
+
+/* the experience map's feeling curve draws itself in, left to right */
+.ekx-mapw { position: relative; }
+.case .ekx-mapw img.ekx-curve { position: absolute; height: auto; opacity: 1; background: none; clip-path: inset(-10% 100% -10% 0); transition: clip-path 2.6s cubic-bezier(.45,.05,.25,1); pointer-events: none; }
+.case .ekx-mapw img.ekx-curve.on { clip-path: inset(-10% 0 -10% 0); }
+@media (prefers-reduced-motion: reduce) { .case .ekx-mapw img.ekx-curve { transition: none; clip-path: none; } }

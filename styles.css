@@ -810,3 +810,8 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .nojs ul { padding-left: 20px; } .nojs li { margin: 10px 0; } .nojs a { color: #6cb4ff; }
 /* the text version's pictures are always visible (the fade-in above is only for the layout's section images) */
 .case.case-text img { opacity: 1; transition: none; background: none; }
+
+/* "Keep scrolling for …": the end of a Mac section; its bar fills as you scroll on, then the next section opens (os.js) */
+.next-hint { margin: 48px auto 28px; width: min(320px, 80%); text-align: center; font-size: 13px; color: rgba(127,127,127,.95); --p: 0; }
+.next-hint i { display: block; height: 3px; margin-top: 10px; border-radius: 3px; background: rgba(127,127,127,.22); overflow: hidden; position: relative; }
+.next-hint i::after { content: ""; position: absolute; inset: 0; background: #0a7cf5; transform: scaleX(var(--p)); transform-origin: left; transition: transform .15s; }
