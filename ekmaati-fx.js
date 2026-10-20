@@ -135,7 +135,18 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
     if (card) {
       card.visible = false;
       const img = new Image(); img.decoding = "async";
-      img.onload = () => { const r = idolRelief(img); r.position.copy(card.position); card.parent.add(r); idol = r; dirty = true; };
+      img.onload = () => {
+        const r = idolRelief(img); r.position.copy(card.position);
+        r.position.y = 0.17 + r.userData.h / 2 + 0.002;   // seated on the plinth floor (box.glb's card hovered 3 cm above it)
+        card.parent.add(r); idol = r;
+        // a soft contact shadow where the base meets the floor
+        const c = document.createElement("canvas"); c.width = 256; c.height = 128; const x = c.getContext("2d");
+        const gr = x.createRadialGradient(128, 64, 4, 128, 64, 120); gr.addColorStop(0, "rgba(40,28,16,.55)"); gr.addColorStop(1, "rgba(40,28,16,0)");
+        x.setTransform(1, 0, 0, 0.5, 0, 32); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+        const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.39), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+        sh.rotation.x = -Math.PI / 2; sh.position.set(card.position.x, 0.172, card.position.z); card.parent.add(sh);
+        dirty = true;
+      };
       img.src = A("tex/idol.webp");
     }
     // the roof tier and peak, rebuilt here with their own print (box.glb's were a plain block and an oversized white pyramid)
@@ -302,8 +313,10 @@ function idolRelief(img) {
   for (let gy = GH - 1; gy >= 0; gy--) for (let gx = GW - 1; gx >= 0; gx--) { const i = gy * GW + gx; if (d[i]) d[i] = Math.min(d[i], at(gx + 1, gy) + 1, at(gx, gy + 1) + 1, at(gx + 1, gy + 1) + 1.414, at(gx - 1, gy + 1) + 1.414); }
   const blur = (a) => { const o = new Float32Array(a.length); for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) { let t = 0, n = 0; for (let k = -2; k <= 2; k++) for (let l = -2; l <= 2; l++) { const X = gx + l, Y = gy + k; if (X >= 0 && Y >= 0 && X < GW && Y < GH) { t += a[Y * GW + X]; n++; } } o[gy * GW + gx] = t / n; } return o; };
   const dm = blur(d), lm = blur(lum); let max = 0; for (let i = 0; i < dm.length; i++) if (inside[i]) max = Math.max(max, dm[i]);
-  const FRONT = 0.17, BACK = 0.12, cell = IW / (GW - 1);
-  const depth = (i) => (inside[i] ? Math.sqrt(dm[i] / max) : 0);
+  const FRONT = 0.2, BACK = 0.14, cell = IW / (GW - 1);
+  // rounder than a square root (a seated figure, not a cushion), eased to flat in a thin band at the outline so the edge
+  // triangles don't stand on end and catch the light as bristles
+  const depth = (i) => { if (!inside[i]) return 0; const t = dm[i] / max, e = Math.min(1, t / 0.12); return Math.pow(t, 0.42) * e * e * (3 - 2 * e); };
   const pos = [], uv = [], idx = [], bpos = [], bidx = [];
   for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
     const i = gy * GW + gx, X = gx * cell - IW / 2, Y = IH - gy * cell, k = depth(i);
@@ -318,9 +331,10 @@ function idolRelief(img) {
   const mk = (p, i, u) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3)); if (u) g.setAttribute("uv", new THREE.Float32BufferAttribute(u, 2)); g.setIndex(i); g.computeVertexNormals(); return g; };
   const map = new THREE.Texture(img); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; map.needsUpdate = true;
   const grp = new THREE.Group();
-  grp.add(new THREE.Mesh(mk(pos, idx, uv), new THREE.MeshStandardMaterial({ map, roughness: 0.92, alphaTest: 0.5 })));
+  grp.add(new THREE.Mesh(mk(pos, idx, uv), new THREE.MeshStandardMaterial({ map, bumpMap: map, bumpScale: 2.2, roughness: 0.9, alphaTest: 0.5 })));   // the photo's own light and dark carve the folds
   grp.add(new THREE.Mesh(mk(bpos, bidx, uv), new THREE.MeshStandardMaterial({ map, color: 0x5e574c, roughness: 0.95, alphaTest: 0.5 })));   // the photo's own cut-out, tinted to clay, so both halves share one clean outline
-  grp.children.forEach((m) => (m.position.y = -IH / 2));   // centred on the card's own origin
+  grp.children.forEach((m) => (m.position.y = -IH / 2));   // centred on its own origin
+  grp.userData.h = IH;
   return grp;
 }
 
