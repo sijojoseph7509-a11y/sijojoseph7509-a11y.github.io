@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=134";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=134";
+import { Sound } from "./sound.js?v=135";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=135";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2042,6 +2042,14 @@ else {
   $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
   $("#introSound").addEventListener("click", () => enter(true));
   $("#introWork").addEventListener("click", () => { enter(false, "work"); if (!SOFTWARE_GL) setTimeout(() => boot("work"), 900); });   // straight to the projects
+  // the keepy-ups drawing: three touches on arrival, then he rests; hovering plays them again (CSS runs while .go is on)
+  const juggler = document.querySelector(".wl-juggle");
+  if (juggler && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const play = () => juggler.classList.add("go");
+    juggler.addEventListener("animationend", (e) => { if (e.animationName === "wlJFrames") juggler.classList.remove("go"); });
+    juggler.addEventListener("mouseenter", play);
+    setTimeout(play, 500);
+  }
   $("#introGo").focus({ preventScroll: true });
 }
 
