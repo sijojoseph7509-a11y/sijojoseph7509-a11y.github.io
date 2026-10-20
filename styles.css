@@ -675,13 +675,20 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .loader-inner { position: relative; z-index: 3; padding: 52px 60px 46px; border-radius: 34px; background: rgba(12, 12, 14, .72);
   backdrop-filter: blur(24px) saturate(1.2); -webkit-backdrop-filter: blur(24px) saturate(1.2);
   border: 1px solid rgba(255, 255, 255, .09); box-shadow: 0 40px 120px rgba(0, 0, 0, .45); }
-.loader.ready .loader-inner { gap: 26px; padding: 46px 60px 40px; max-width: calc(100vw - 32px); }
-.loader.ready .intro { max-width: 400px; }
-.loader-who { margin: -26px 0 0; padding-left: .4em; font-size: 19px; font-weight: 600; letter-spacing: .4em; text-transform: uppercase; color: #f5f5f7;
-  animation: quoteIn 1.2s var(--ease) both .2s; }
-.loader-rule { display: flex; align-items: center; gap: 10px; margin: -14px 0 -18px; }
+/* the card: one even rhythm, set with explicit spacing (no negative-margin tricks) — logo, a hairline, the greeting, then the welcome */
+.loader .loader-inner, .loader.ready .loader-inner { gap: 0; width: min(440px, calc(100vw - 32px)); padding: 48px 48px 34px; }
+.loader .loader-name img, .loader.ready .loader-name img { height: 68px; }
+.loader-rule { display: flex; align-items: center; gap: 10px; margin: 26px 0 0; }
 .loader-rule i { display: block; width: 40px; height: 1px; background: rgba(255, 255, 255, .22); }
 .loader-rule b { display: block; width: 5px; height: 5px; border-radius: 50%; background: var(--blue); }
+.loader .hello, .loader.ready .hello { margin: 18px 0 0; gap: 6px; }
+.loader .loader-bar { margin-top: 34px; }
+.loader .loader-quote { margin-top: 14px; }
+.loader.ready .intro { margin-top: 34px; gap: 0; max-width: none; width: 100%; }
+.loader.ready .intro-title { margin: 0; font-size: 26px; }
+.loader.ready .intro-tips { margin-top: 22px; gap: 14px; justify-self: center; }
+.loader.ready .intro-go { margin-top: 30px; }
+.loader.ready .intro-quiet { margin-top: 14px; }
 
 /* the drawings: two columns either side of the card, staggered so each has air around it */
 .wl-ill { position: absolute; z-index: 1; pointer-events: none; }
@@ -763,24 +770,23 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .wl-ill img, .wl-ball, .wl-spin, .wl-kick, .wl-tvball, .wl-att, .wl-def, .wl-gk, .wl-goal, .wl-buzz, .wl-effort, .wl-sweat, .wl-reps tspan, .wl-tread, .wl-road, .wl-puff, .wl-dug { animation: none; }
   .wl-ball { transform: translate(550px, 360px); } .wl-tvball { transform: translate(172px, 300px); } .wl-goal, .wl-dug, .wl-reps .r3 { opacity: 1; } .wl-shea { display: none; } }
 @media (max-height: 520px) {
-  .loader.ready .hello { margin-top: -16px; gap: 0; }
-  .loader.ready .hello-en, .loader.ready .loader-rule { display: none; }
   .loader { padding: 10px; }
-  .loader.ready .loader-inner { gap: 10px; padding: 14px 36px 12px; border-radius: 22px; }
-  .loader.ready .loader-name img { height: 40px; }
-  .loader.ready .loader-who { margin-top: -6px; font-size: 13px; }
+  .loader .loader-inner, .loader.ready .loader-inner { padding: 16px 32px 12px; border-radius: 22px; }
+  .loader.ready .loader-name img { height: 38px; }
+  .loader.ready .loader-rule, .loader.ready .hello-en { display: none; }
+  .loader.ready .hello { margin-top: 8px; }
   .loader.ready .hello-ml { font-size: 14px; }
-  .loader.ready .intro { gap: 8px; margin-top: 0; }
+  .loader.ready .intro { margin-top: 12px; }
   .loader.ready .intro-title { font-size: 18px; }
-  .loader.ready .intro-tips { gap: 4px; } .loader.ready .intro-tips li { font-size: 13px; }
+  .loader.ready .intro-tips { margin-top: 10px; gap: 4px; } .loader.ready .intro-tips li { font-size: 13px; }
   .loader.ready .intro-tips svg { width: 20px; height: 20px; }
-  .loader.ready .intro-go { padding: 9px 28px; font-size: 15px; margin-top: 2px; }
-  .loader.ready .intro-quiet { margin-top: -4px; }
+  .loader.ready .intro-go { margin-top: 12px; padding: 9px 28px; font-size: 15px; }
+  .loader.ready .intro-quiet { margin-top: 6px; }
 }
 @media (max-width: 480px) {
   .loader { padding: 16px; }
-  .loader-inner, .loader.ready .loader-inner { padding: 34px 22px 28px; border-radius: 28px; }
-  .loader-who { font-size: 15px; letter-spacing: .32em; padding-left: .32em; }
+  .loader .loader-inner, .loader.ready .loader-inner { padding: 38px 24px 28px; border-radius: 28px; }
+  .loader.ready .intro-title { font-size: 23px; }
   .intro-tips li { font-size: 14px; gap: 12px; }
 }
 
