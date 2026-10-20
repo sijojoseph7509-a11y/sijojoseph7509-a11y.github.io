@@ -65,7 +65,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .ekx-tip { animation: none; } .ekx-ph img { transition: none; } }
 
-/* the experience map's feeling curve draws itself in, left to right */
+/* the research journey and the experience map's feeling curve draw themselves in, left to right */
 .ekx-mapw { position: relative; }
 .case .ekx-mapw img.ekx-curve { position: absolute; height: auto; opacity: 1; background: none; clip-path: inset(-10% 100% -10% 0); transition: clip-path 2.6s cubic-bezier(.45,.05,.25,1); pointer-events: none; }
 .case .ekx-mapw img.ekx-curve.on { clip-path: inset(-10% 0 -10% 0); }

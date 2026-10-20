@@ -19,18 +19,34 @@ section { position: relative; width: 1440px; overflow: hidden; }
 svg.river { position: absolute; inset: 0; width: 100%; height: 100%; }
 .eye { font: 600 13px/1 Mona, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
 
-/* 01 cover */
-.cover { height: 760px; background: var(--snow); color: var(--earth); }
-.cover .lock { position: absolute; left: 120px; top: 72px; width: 150px; }
-.cover .eye { position: absolute; left: 120px; top: 214px; color: var(--robe); }
-.cover h1 { position: absolute; left: 116px; top: 248px; font: 400 168px/.9 Rozha, serif; letter-spacing: -.01em; }
-.cover h1 b { display: block; font: 900 74px/1 Mona, sans-serif; letter-spacing: -.02em; color: var(--robe); margin-top: 14px; }
-.cover .deva { position: absolute; left: 124px; top: 508px; font: 400 30px/1 Rozha, serif; color: var(--robe); }
-.cover .lede { position: absolute; left: 120px; top: 560px; width: 600px; font-size: 20px; line-height: 1.55; color: #3B2A1C; }
-.cover .facts { position: absolute; left: 120px; bottom: 44px; display: flex; gap: 36px; font: 500 13px/1.3 Inter; color: #6E5A48; }
-.cover .facts b { display: block; font: 600 11px/1 Mona; letter-spacing: .14em; text-transform: uppercase; color: var(--robe); margin-bottom: 6px; }
-.cover .box { position: absolute; right: 150px; bottom: 70px; height: 600px; filter: drop-shadow(0 30px 30px rgba(29,21,12,.18)); }
-.cover .ground { position: absolute; right: 70px; bottom: 52px; width: 520px; height: 60px; border-radius: 50%; background: radial-gradient(closest-side, rgba(118,78,44,.22), rgba(118,78,44,0)); }
+/* 01 cover: the mark on earth, river lines rippling out from its base like water */
+.cover { height: 760px; background: var(--earth); color: var(--snow); }
+.cover .mark { position: absolute; left: 820px; top: 70px; height: 560px; }
+.cover .eye { position: absolute; left: 120px; top: 96px; color: var(--gold); }
+.cover h1 { position: absolute; left: 112px; top: 132px; font: 400 196px/.86 Rozha, serif; letter-spacing: -.015em; }
+.cover h1 b { display: block; font: 900 104px/1 Mona, sans-serif; letter-spacing: -.025em; color: var(--gold); margin-top: 18px; }
+.cover .deva { position: absolute; left: 122px; top: 470px; font: 400 40px/1 Rozha, serif; color: #CDBFA8; }
+.cover .lede { position: absolute; left: 120px; top: 540px; width: 560px; font-size: 19px; line-height: 1.55; color: #CDBFA8; }
+.cover .lede b { color: var(--snow); font-weight: 600; }
+.cover .facts { position: absolute; left: 120px; bottom: 44px; display: flex; gap: 40px; font: 500 13px/1.3 Inter; color: #A8977C; }
+.cover .facts b { display: block; font: 600 11px/1 Mona; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+
+/* 07 research: the journey, with Sijo's own handwriting lifted off the paper (brand/hand-*.png) */
+.research { height: 1240px; background: var(--snow); color: var(--earth); padding: 96px 120px 0; }
+.research .eye { color: var(--robe); }
+.research h2 { margin-top: 22px; font: 400 76px/.95 Rozha, serif; }
+.research h2 b { display: block; font: 900 84px/.95 Mona, sans-serif; letter-spacing: -.025em; }
+.research .intro { position: absolute; left: 760px; top: 150px; width: 560px; font-size: 18px; line-height: 1.6; color: #4A3826; }
+.phases { position: absolute; left: 120px; right: 120px; top: 360px; display: grid; grid-template-columns: repeat(4, 1fr); }
+.phases p { font: 600 12px/1 Mona; letter-spacing: .16em; text-transform: uppercase; color: var(--robe); padding-top: 14px; border-top: 1.5px solid #D9CCB6; }
+.axis { position: absolute; left: 52px; font: 600 11px/1 Mona; letter-spacing: .16em; text-transform: uppercase; color: #A8977C; transform: rotate(-90deg); transform-origin: left top; }
+.journey { position: absolute; left: 0; top: 400px; width: 1440px; height: 820px; }
+.journey svg { position: absolute; inset: 0; overflow: visible; }
+.journey .hand { position: absolute; filter: drop-shadow(0 6px 10px rgba(29,21,12,.10)); }
+.stop { position: absolute; width: 230px; }
+.stop h4 { font: 700 17px/1.2 Mona, sans-serif; color: var(--earth); }
+.stop h4 span { font: 500 12px/1 GSCode, monospace; color: var(--robe); margin-right: 6px; }
+.stop p { margin-top: 6px; font: italic 400 13.5px/1.45 GSCode, monospace; color: #8A5A32; }
 
 /* 21 experience map */
 .map { height: 1000px; background: var(--earth); color: var(--snow); padding: 96px 120px 0; }
@@ -57,14 +73,34 @@ svg.river { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 <section class="cover" data-slide="01">
   <svg class="river" id="r-cover" aria-hidden="true"></svg>
-  <img class="lock" src="brand/lockup.png" alt="">
-  <p class="eye">Branding · Packaging · NID Semester 2 · 2026</p>
+  <p class="eye">Ekmaati · Branding · Packaging · 2026</p>
   <h1>Ek maati<b>ONE CLAY</b></h1>
   <p class="deva">एक माती</p>
-  <p class="lede">A name, a mark and a temple-shaped box for the GI-tagged clay Ganesh idols of Pen. The idol comes from the river and goes back to it. The box stays, because the box is the temple.</p>
-  <div class="facts"><p><b>Craft</b>Pen, Maharashtra · GI 2024</p><p><b>Made</b>Name, mark, type, colour, temple box</p><p><b>Box</b>Folds flat, no tape, no plastic</p></div>
-  <div class="ground"></div>
-  <img class="box" src="../../work/ekmaati/fx/real/temple-34@2x.webp" alt="">
+  <p class="lede">A name, a mark and a temple-shaped box for the clay Ganesh idols of Pen. <b>The idol goes back to the river. The box stays, because the box is the temple.</b></p>
+  <div class="facts"><p><b>Craft</b>Pen, Maharashtra · GI 2024</p><p><b>Made</b>Name, mark, type, colour, box</p><p><b>Role</b>Sole designer, NID Semester 2</p></div>
+  <img class="mark" src="brand/mark.png" alt="">
+</section>
+
+<section class="research" data-slide="07">
+  <p class="eye">05 · Research</p>
+  <h2>How I got<b>TO THE CLAY</b></h2>
+  <p class="intro">From chart paper to a temple-shaped box. The line opens up where I explored and narrows where I decided, and the handwriting is mine, straight off the paper at each step.</p>
+  <div class="phases"><p>Research</p><p>Define</p><p>Design</p><p>Make</p></div>
+  <p class="axis" style="top:640px">Explore</p><p class="axis" style="top:1150px">Decide</p>
+  <div class="journey" data-fx-draw="research-journey">
+    <svg viewBox="0 0 1440 820" width="1440" height="820" id="jr"></svg>
+    <img class="hand" src="brand/hand-words.png" alt="" style="left:60px; top:470px; width:300px; transform:rotate(-3deg)">
+    <div class="stop" style="left:322px; top:44px"><h4><span>01</span>Word dump</h4><p>Every word Pen idols carry, on chart paper.</p></div>
+    <img class="hand" src="brand/hand-mindmap.png" alt="" style="left:466px; top:140px; width:300px; transform:rotate(2deg)">
+    <div class="stop" style="left:548px; top:520px; width:200px"><h4><span>02</span>Mind map</h4><p>Narrowed to “maati heritage”.</p></div>
+    <div class="stop" style="left:400px; top:724px; width:236px; text-align:right"><h4><span>03</span>Audience &amp; position</h4><p>Urban 25 to 40. Commodity to keepsake.</p></div>
+    <img class="hand" src="brand/hand-pencil.png" alt="" style="left:730px; top:566px; width:290px; transform:rotate(-2deg)">
+    <div class="stop" style="left:884px; top:34px; width:210px"><h4><span>04</span>Pencil marks</h4><p>Trunks, om, temples, the number one.</p></div>
+    <img class="hand" src="brand/hand-names.png" alt="" style="left:1048px; top:520px; width:186px; transform:rotate(4deg)">
+    <div class="stop" style="left:790px; top:452px; width:210px; text-align:right"><h4><span>05</span>Names</h4><p>Penkara, Clay &amp; Shrine, Ekmaati.</p></div>
+    <div class="stop" style="left:1204px; top:34px; width:200px"><h4><span>06</span>Cardboard ×3</h4><p>Three boxes in one, curtains, temple.</p></div>
+    <div class="stop" style="left:1150px; top:740px; width:230px"><h4><span>07</span>Temple box</h4><p>The packaging becomes the altar.</p></div>
+  </div>
 </section>
 
 <section class="map" data-slide="21">
@@ -96,27 +132,27 @@ svg.river { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 <script>
 // River lines: offset loops around an off-canvas centre, gap 40 to 48 px, three slow waves, each ring a little different
-function river(svg, { cx, cy, r0, n, color, width = 1.4, amp = 9, seed = 1, clip }) {
+function river(svg, { cx, cy, r0, n, color, width = 1.4, amp = 9, seed = 1, clip, squash = 0.62 }) {
   const ns = "http://www.w3.org/2000/svg"; let s = seed; const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
   if (clip) { const d = document.createElementNS(ns, "defs"); d.innerHTML = clip; svg.appendChild(d); }
   const g = document.createElementNS(ns, "g"); if (clip) g.setAttribute("clip-path", "url(#" + svg.id + "-clip)"); svg.appendChild(g);
   let r = r0;
   for (let k = 0; k < n; k++) {
     r += 40 + rnd() * 8; const ph = rnd() * 6.28, a2 = amp * (0.7 + rnd() * 0.6), pts = [];
-    for (let t = 0; t <= 720; t++) { const th = t / 720 * Math.PI * 2, rr = r + a2 * Math.sin(3 * th + ph) + a2 * 0.4 * Math.sin(5 * th + ph * 1.7); pts.push((cx + rr * Math.cos(th)).toFixed(1) + "," + (cy + rr * Math.sin(th) * 0.62).toFixed(1)); }
+    for (let t = 0; t <= 720; t++) { const th = t / 720 * Math.PI * 2, rr = r + a2 * Math.sin(3 * th + ph) + a2 * 0.4 * Math.sin(5 * th + ph * 1.7); pts.push((cx + rr * Math.cos(th)).toFixed(1) + "," + (cy + rr * Math.sin(th) * squash).toFixed(1)); }
     const p = document.createElementNS(ns, "path"); p.setAttribute("d", "M" + pts.join("L") + "Z"); p.setAttribute("fill", "none"); p.setAttribute("stroke", color); p.setAttribute("stroke-width", width); g.appendChild(p);
   }
 }
-// cover: rings from a centre below the right edge; kept clear of the text block on the left
-river(document.getElementById("r-cover"), { cx: 1260, cy: 1180, r0: 330, n: 16, color: "#D9CCB6", seed: 7,
-  clip: '<clipPath id="r-cover-clip"><rect x="760" y="0" width="680" height="760"/></clipPath>' });
+// cover: ripples spreading from the mark's base, as the clay goes back to the water; they start clear of the mark
+river(document.getElementById("r-cover"), { cx: 1105, cy: 700, r0: 120, n: 18, color: "#45331F", seed: 7, squash: 0.16,
+  clip: '<clipPath id="r-cover-clip"><rect x="790" y="646" width="650" height="114"/></clipPath>' });   // only below the mark: water under it, never touching it
 // map: faint rings on earth, top right, away from the columns' text
 river(document.getElementById("r-map"), { cx: 1500, cy: -260, r0: 120, n: 9, color: "#2E2216", seed: 3,
   clip: '<clipPath id="r-map-clip"><rect x="0" y="0" width="1440" height="300"/></clipPath>' });
 
 // the feeling curve: one river line through six feelings, with offset contours echoing it above and below
 const F = [["curious", .58], ["anxious", .8], ["expectant", .5], ["delight", .1], ["calm", .24], ["bittersweet", .44]];
-const W = 1200, Hh = 230, cx = (i) => (i + 0.5) * W / 6, cy = (v) => 24 + v * (Hh - 48);
+const W = 1200, Hh = 230, cx = (i) => (i + 0.5) * W / 6, cy = (v) => 62 + v * (Hh - 84);   // room above the peak for its label
 const P = F.map(([, v], i) => [cx(i), cy(v)]);
 const path = (off) => { const q = P.map(([x, y]) => [x, y + off]); let d = `M${-20},${q[0][1]} L${q[0][0]},${q[0][1]}`;
   for (let i = 0; i < q.length - 1; i++) { const [x0, y0] = q[i], [x1, y1] = q[i + 1], m = (x1 - x0) / 2; d += ` C${x0 + m},${y0} ${x1 - m},${y1} ${x1},${y1}`; }
@@ -133,5 +169,15 @@ P.forEach(([x, y], i) => {
   fo.innerHTML = `<div xmlns="http://www.w3.org/1999/xhtml" style="text-align:center"><span style="display:inline-block;font:600 12px/1 Mona;letter-spacing:.12em;text-transform:uppercase;color:#1D150C;background:${i === 3 ? "#F4F1E9" : "#FDB041"};padding:6px 9px;border-radius:999px">${F[i][0]}</span></div>`;
   svg.appendChild(fo);
 });
+// research journey: a smooth line through the seven stops, explore at the top and decide at the bottom
+(() => {
+  const pts = [[80, 420], [300, 120], [520, 560], [660, 720], [860, 110], [1020, 470], [1180, 110], [1340, 640]], ns = "http://www.w3.org/2000/svg", svg = document.getElementById("jr");
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) { const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`; }
+  const path = document.createElementNS(ns, "path"); path.setAttribute("d", d); path.setAttribute("fill", "none"); path.setAttribute("stroke", "#1D150C"); path.setAttribute("stroke-width", 2.4); svg.appendChild(path);
+  pts.slice(1).forEach(([x, y], i) => { const c = document.createElementNS(ns, "circle"); c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", i === 6 ? 12 : 8);
+    c.setAttribute("fill", i === 6 ? "#1D150C" : "#FDB041"); c.setAttribute("stroke", i === 6 ? "#FDB041" : "#F4F1E9"); c.setAttribute("stroke-width", 3); svg.appendChild(c); });
+})();
 </script>
 </body></html>

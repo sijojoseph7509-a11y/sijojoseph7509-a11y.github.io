@@ -811,7 +811,10 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 /* the text version's pictures are always visible (the fade-in above is only for the layout's section images) */
 .case.case-text img { opacity: 1; transition: none; background: none; }
 
-/* "Keep scrolling for …": the end of a Mac section; its bar fills as you scroll on, then the next section opens (os.js) */
-.next-hint { margin: 48px auto 28px; width: min(320px, 80%); text-align: center; font-size: 13px; color: rgba(127,127,127,.95); --p: 0; }
-.next-hint i { display: block; height: 3px; margin-top: 10px; border-radius: 3px; background: rgba(127,127,127,.22); overflow: hidden; position: relative; }
+/* "Keep scrolling for …": the end of a Mac section; its bar fills as you scroll on, then the next section opens (os.js).
+   It spans the whole window body (whatever layout the section uses) and sits centred under the content. */
+.next-hint { grid-column: 1 / -1; flex-basis: 100%; justify-self: center; align-self: end; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 100%; margin: 36px 0 8px; padding: 18px 0 6px; font-size: 12px; letter-spacing: .02em; color: rgba(127,127,127,.9); --p: 0; }
+.next-hint span::after { content: " ↓"; }
+.next-hint i { display: block; width: 140px; height: 3px; border-radius: 3px; background: rgba(127,127,127,.2); overflow: hidden; position: relative; }
 .next-hint i::after { content: ""; position: absolute; inset: 0; background: #0a7cf5; transform: scaleX(var(--p)); transform-origin: left; transition: transform .15s; }

@@ -21,16 +21,18 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   const after = imgs[18] || imgs[imgs.length - 1];   // 19.webp, "The temple box"
   if (!after) return;
 
-  // ---------- the experience map: its feeling curve draws itself in (layer from tools/ekmaati/slides.mjs) ----------
-  const mapImg = imgs[20];   // 21.webp
-  if (mapImg) {
-    const w = document.createElement("div"); w.className = "ekx-mapw"; mapImg.replaceWith(w); w.appendChild(mapImg);
+  // ---------- self-drawing layers (tools/ekmaati/slides.mjs): the research journey and the map's feeling curve ----------
+  // [section index, layer, x, y, w, h in the slide's 1440-wide units, seconds]
+  for (const [k, f, x, y, w, h, sec] of [[6, "research-journey", 0, 400, 1440, 820, 4.2], [20, "map-curve", 120, 560, 1200, 230, 2.6]]) {
+    const im = imgs[k]; if (!im) continue;
+    const H = +im.getAttribute("height") || 1000;
+    const wrap = document.createElement("div"); wrap.className = "ekx-mapw"; im.replaceWith(wrap); wrap.appendChild(im);
     const c = document.createElement("img"); c.className = "ekx-curve"; c.alt = ""; c.setAttribute("aria-hidden", "true"); c.decoding = "async";
-    c.src = A("map-curve.webp"); c.srcset = `${A("map-curve.webp")} 1x, ${A("map-curve@2x.webp")} 2x`;
-    Object.assign(c.style, { left: 120 / 1440 * 100 + "%", top: 560 / 1000 * 100 + "%", width: 1200 / 1440 * 100 + "%" });
-    w.appendChild(c);
+    c.src = A(f + ".webp"); c.srcset = `${A(f + ".webp")} 1x, ${A(f + "@2x.webp")} 2x`;
+    Object.assign(c.style, { left: x / 1440 * 100 + "%", top: y / H * 100 + "%", width: w / 1440 * 100 + "%", transitionDuration: sec + "s" });
+    wrap.appendChild(c);
     if (reduce) c.classList.add("on");
-    else { const io = new IntersectionObserver((es) => { if (es[0].isIntersecting) { c.classList.add("on"); io.disconnect(); } }, { threshold: 0.5 }); io.observe(w); cleanups.push(() => io.disconnect()); }
+    else { const io = new IntersectionObserver((es) => { if (es[0].isIntersecting) { c.classList.add("on"); io.disconnect(); } }, { threshold: 0.35 }); io.observe(wrap); cleanups.push(() => io.disconnect()); }
   }
 
   // ---------- section 1: the box you can peel ----------
