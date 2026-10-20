@@ -690,20 +690,17 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .loader.ready .intro-go { margin-top: 30px; }
 .loader.ready .intro-quiet { margin-top: 14px; }
 
-/* the drawings: keepy-ups on the left of the card, the shoulder press on the right (flat-colour editorial style) */
+/* the drawing: keepy-ups on the left of the card (flat-colour editorial style) */
 .wl-ill { position: absolute; z-index: 1; pointer-events: none; }
 .wl-ill img, .wl-ill svg { display: block; width: 100%; height: auto; }
 .wl-ill svg { position: absolute; inset: 0; height: 100%; overflow: visible; }
 .wl-ill text { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 700; fill: #161616; }
 .wl-juggle { left: 7vw; top: 50%; height: min(58vh, 600px); aspect-ratio: 395 / 613; transform: translateY(-48%); }
-.wl-lift { right: 9vw; top: 50%; height: min(58vh, 600px); aspect-ratio: 328 / 677; transform: translateY(-48%); }
 
 /* each drawing is a strip of frames shown one at a time (a flip-book), so the legs and arms really move */
 .wl-sprite { position: relative; overflow: hidden; }
 .wl-ill .wl-sprite img { width: 400%; max-width: none; height: auto; animation: wlJFrames 2.2s infinite; }
 .wl-juggle .wl-sprite { aspect-ratio: 395 / 613; animation: wlHop 2.2s ease-in-out infinite; }
-.wl-lift .wl-sprite { aspect-ratio: 328 / 677; }
-.wl-lift .wl-sprite img { width: 300%; animation: wlLFrames 2.4s infinite; }
 
 /* keepy-ups, both feet in turn: left knee, bounce, right knee, bounce; the ball goes foot to foot over his head, he hops between
    touches and drifts side to side */
@@ -724,23 +721,25 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 @keyframes wlKickL { 0%, 7% { opacity: 1; } 11%, 100% { opacity: 0; } }
 @keyframes wlKickR { 0%, 49% { opacity: 0; } 50%, 57% { opacity: 1; } 61%, 100% { opacity: 0; } }
 
-/* shoulder press, one full rep: dumbbells at the shoulders, halfway, locked out overhead, halfway, back down */
-@keyframes wlLFrames { 0% { transform: translateX(0); animation-timing-function: step-end; } 30% { transform: translateX(-33.333%); animation-timing-function: step-end; }
-  40% { transform: translateX(-66.667%); animation-timing-function: step-end; } 68% { transform: translateX(-33.333%); animation-timing-function: step-end; }
-  78%, 100% { transform: translateX(0); animation-timing-function: step-end; } }
-.wl-effort { opacity: 0; animation: wlEffort 2.4s infinite; } @keyframes wlEffort { 0%, 39% { opacity: 0; } 40%, 66% { opacity: 1; } 67%, 100% { opacity: 0; } }
-.wl-sweat { animation: wlSweat 7.2s infinite; } @keyframes wlSweat { 0%, 40% { opacity: 0; transform: none; } 50% { opacity: 1; } 80% { opacity: 1; transform: translateY(26px); } 90%, 100% { opacity: 0; transform: translateY(34px); } }
-.wl-reps { font-size: 64px; }
-.wl-reps tspan { opacity: 0; } .wl-reps .r1 { animation: wlR1 7.2s infinite; } .wl-reps .r2 { animation: wlR2 7.2s infinite; } .wl-reps .r3 { animation: wlR3 7.2s infinite; }
-@keyframes wlR1 { 0%, 12% { opacity: 0; } 14%, 43% { opacity: 1; } 45%, 100% { opacity: 0; } }
-@keyframes wlR2 { 0%, 46% { opacity: 0; } 48%, 76% { opacity: 1; } 78%, 100% { opacity: 0; } }
-@keyframes wlR3 { 0%, 79% { opacity: 0; } 81%, 97% { opacity: 1; } 100% { opacity: 0; } }
+/* bottom centre: a way straight to the projects for visitors who don't want the 3D desk */
+.wl-work { position: absolute; z-index: 3; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); translate: -50% 0;
+  display: inline-flex; align-items: center; gap: 6px; padding: 11px 20px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px;
+  background: rgba(12, 12, 14, .58); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  color: rgba(245, 245, 247, .78); font: 500 14px/1.2 Inter, system-ui, sans-serif; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 12px 30px rgba(10, 30, 80, .28); transition: background .2s, color .2s; animation: quoteIn .8s var(--ease) both .6s; }
+.wl-work b { color: #fff; font-weight: 600; } .wl-work i { font-style: normal; }
+.wl-work span { color: #5aaeff; transition: transform .2s var(--ease); }
+.wl-work:hover { background: rgba(28, 28, 32, .72); color: #fff; } .wl-work:hover span { transform: translateX(3px); }
+.wl-work:focus-visible { outline: 2px solid #5aaeff; outline-offset: 3px; }
+.loader:not(.ready) .wl-work { display: none; }
+@media (max-width: 480px) { .wl-work { font-size: 13px; padding: 10px 16px; } .wl-work i { display: none; } }
+@media (max-height: 520px) { .wl-work { display: none; } }
 
-/* no room for the drawings beside the card on narrower or short screens */
+/* no room for the drawing beside the card on narrower or short screens */
 @media (max-width: 1180px), (max-height: 640px) { .wl-ill { display: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .wl-ill .wl-sprite img, .wl-juggle, .wl-juggle .wl-sprite, .wl-ball, .wl-spin, .wl-kick-l, .wl-kick-r, .wl-effort, .wl-sweat, .wl-reps tspan { animation: none; }
-  .wl-ball { transform: translate(196px, -36px); } .wl-reps .r3 { opacity: 1; } }
+  .wl-ill .wl-sprite img, .wl-juggle, .wl-juggle .wl-sprite, .wl-ball, .wl-spin, .wl-kick-l, .wl-kick-r { animation: none; }
+  .wl-ball { transform: translate(196px, -36px); } }
 @media (max-height: 520px) {
   .loader { padding: 10px; }
   .loader .loader-inner, .loader.ready .loader-inner { padding: 16px 32px 12px; border-radius: 22px; }

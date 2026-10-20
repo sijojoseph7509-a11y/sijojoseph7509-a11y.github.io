@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=133";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=133";
+import { Sound } from "./sound.js?v=134";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=134";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2021,14 +2021,14 @@ setHint(); addEventListener("resize", setHint);
 $("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
 let entered = false;
-function enter(withSound) {
+function enter(withSound, app) {
   if (entered) return;
   entered = true;
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
   document.activeElement?.blur?.();
   if (SOFTWARE_GL && !deep) {   // no graphics acceleration: the 3D desk would crawl, so open the portfolio itself
-    window.OS.open("about");
+    window.OS.open(app || "about");
     window.OS.toast("Your browser has graphics acceleration off, so the 3D desk is paused. Turn it on in the browser settings to see it.", 9000);
     return;
   }
@@ -2041,6 +2041,7 @@ else {
   $("#intro").hidden = false;
   $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
   $("#introSound").addEventListener("click", () => enter(true));
+  $("#introWork").addEventListener("click", () => { enter(false, "work"); if (!SOFTWARE_GL) setTimeout(() => boot("work"), 900); });   // straight to the projects
   $("#introGo").focus({ preventScroll: true });
 }
 
