@@ -668,7 +668,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .tool-ico { width: 54px; height: 54px; border-radius: 14px; } .tool-ico svg { width: 28px; height: 28px; }
 }
 /* ───────── Welcome screen v125: the sky with "talent ain't enough", the dark card over it, and around it Sijo (keepy-ups, a shoulder press,
-   FIFA, the Bullet) and Shea chasing a ball round the screen, all in the red ink of the cloud's handwriting ───────── */
+   FIFA, the Bullet) and Shea chasing a ball round the screen: near-black ink (it reads on both the blue and the cloud), red only on the moving accents ───────── */
 .loader { background: #2f63b0; }
 .loader::before { content: ""; position: fixed; inset: 0; background: #2f63b0 url(assets/welcome/sky.webp) center 50% / cover no-repeat; }
 @media (max-width: 760px) { .loader::before { background-image: url(assets/welcome/sky-sm.webp); } }
@@ -687,14 +687,12 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wl-ill { position: absolute; z-index: 1; pointer-events: none; }
 .wl-ill img, .wl-ill svg { display: block; width: 100%; height: auto; }
 .wl-ill svg { position: absolute; inset: 0; height: 100%; overflow: visible; }
-.wl-ill text { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 700; fill: #CE161E; paint-order: stroke; stroke: rgba(255,255,255,.85); stroke-linejoin: round; }
+.wl-ill text { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 700; fill: #CE161E; paint-order: stroke; stroke: #141414; stroke-linejoin: round; }
 .wl-juggle { left: 5vw; top: 14vh; height: 38vh; aspect-ratio: 707 / 1104; }
 .wl-lift { left: 19.5vw; top: 50vh; height: 36vh; aspect-ratio: 516 / 1148; }
 .wl-fifa { right: 3vw; top: 13vh; width: 25vw; aspect-ratio: 1192 / 729; }
 .wl-bullet { right: 5vw; top: 50vh; width: 21vw; aspect-ratio: 963 / 775; }
 .wl-ill img { animation: wlBoil .5s steps(1) infinite; }
-/* the red lines get a thin white keyline and a soft shadow so they read clearly on the blue sky */
-.wl-ill img, .wl-ill svg, .wl-shea-cat, .wl-shea-ball svg { filter: drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 .6px #fff) drop-shadow(0 3px 8px rgba(10, 30, 80, .28)); }
 @keyframes wlBoil { 0% { translate: 0 0; } 33% { translate: .4px -.3px; } 66% { translate: -.3px .3px; } }
 
 /* keepy-ups: the ball pops off the raised foot and drops back, spinning; he bobs on each touch */
@@ -711,7 +709,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 @keyframes wlRep { 0%, 100% { transform: none; } 45% { transform: translateY(14px) scaleY(.975); } 60% { transform: translateY(-3px); } 72% { transform: none; } }
 .wl-effort { opacity: 0; animation: wlEffort 1.6s infinite; } @keyframes wlEffort { 0%, 52% { opacity: 0; } 58%, 74% { opacity: 1; } 84%, 100% { opacity: 0; } }
 .wl-sweat { animation: wlSweat 4.8s infinite; } @keyframes wlSweat { 0%, 40% { opacity: 0; transform: none; } 50% { opacity: 1; } 80% { opacity: 1; transform: translateY(40px); } 90%, 100% { opacity: 0; transform: translateY(52px); } }
-.wl-reps { font-size: 130px; stroke-width: 10px; }
+.wl-reps { font-size: 130px; stroke-width: 7px; }
 .wl-reps tspan { opacity: 0; } .wl-reps .r1 { animation: wlR1 4.8s infinite; } .wl-reps .r2 { animation: wlR2 4.8s infinite; } .wl-reps .r3 { animation: wlR3 4.8s infinite; }
 @keyframes wlR1 { 0%, 8% { opacity: 0; } 12%, 30% { opacity: 1; } 34%, 100% { opacity: 0; } }
 @keyframes wlR2 { 0%, 41% { opacity: 0; } 45%, 63% { opacity: 1; } 67%, 100% { opacity: 0; } }
@@ -720,7 +718,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 /* FIFA: a little match plays on the TV; the shot goes in, GOAL!, the controller buzzes, he jumps */
 .wl-tvball { animation: wlBall 6s ease-in-out infinite; } .wl-att { animation: wlAtt 6s ease-in-out infinite; }
 .wl-def { animation: wlDef 6s ease-in-out infinite; } .wl-gk { animation: wlGk 6s ease-in-out infinite; }
-.wl-goal { font-size: 116px; stroke-width: 10px; opacity: 0; transform-box: fill-box; transform-origin: center; animation: wlGoal 6s infinite; }
+.wl-goal { font-size: 116px; stroke-width: 7px; opacity: 0; transform-box: fill-box; transform-origin: center; animation: wlGoal 6s infinite; }
 @keyframes wlGoal { 0%, 61% { opacity: 0; scale: .4; } 65% { opacity: 1; scale: 1.18; } 69%, 90% { opacity: 1; scale: 1; } 94%, 100% { opacity: 0; scale: 1; } }
 .wl-buzz { opacity: 0; animation: wlBuzz 6s infinite; } @keyframes wlBuzz { 0%, 61%, 86%, 100% { opacity: 0; } 63%, 67%, 71%, 75%, 79% { opacity: 1; } 65%, 69%, 73%, 77% { opacity: .2; } }
 .wl-fifa img { animation: wlCheer 6s infinite, wlBoil .5s steps(1) infinite; transform-origin: 75% 100%; }
@@ -738,7 +736,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wl-puff { opacity: 0; transform-box: fill-box; transform-origin: center; animation: wlPuff 1.8s ease-out infinite; }
 .wl-puff.p2 { animation-delay: .6s; } .wl-puff.p3 { animation-delay: 1.2s; }
 @keyframes wlPuff { 0% { opacity: .9; transform: translate(0, 0) scale(.5); } 100% { opacity: 0; transform: translate(150px, -60px) scale(1.8); } }
-.wl-dug { font-size: 64px; stroke-width: 8px; opacity: 0; animation: wlDug 3.6s infinite; }
+.wl-dug { font-size: 66px; stroke-width: 5px; opacity: 0; animation: wlDug 3.6s infinite; }
 @keyframes wlDug { 0%, 10% { opacity: 0; transform: translate(0, 10px); } 20%, 60% { opacity: 1; transform: none; } 75%, 100% { opacity: 0; transform: translate(40px, -10px); } }
 
 /* Shea chases a ball round the screen: along the bottom to the right, then back along the top to the left */
