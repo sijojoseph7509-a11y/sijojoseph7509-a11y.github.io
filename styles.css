@@ -696,7 +696,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wl-ill svg { position: absolute; inset: 0; height: 100%; overflow: visible; }
 .wl-ill text { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 700; fill: #161616; }
 .wl-juggle { left: 7vw; top: 50%; height: min(58vh, 600px); aspect-ratio: 700 / 1126; transform: translateY(-48%); }
-.wl-lift { right: 9vw; top: 50%; height: min(58vh, 600px); aspect-ratio: 647 / 1135; transform: translateY(-48%); }
+.wl-lift { right: 9vw; top: 50%; height: min(58vh, 600px); aspect-ratio: 624 / 1106; transform: translateY(-48%); }
 .wl-ill img { animation: wlBoil .5s steps(1) infinite; }
 @keyframes wlBoil { 0% { translate: 0 0; } 33% { translate: .4px -.3px; } 66% { translate: -.3px .3px; } }
 
