@@ -109,6 +109,7 @@ body { transition: background-color .7s var(--ease); }
 /* ───────── Loader (boot screen) ───────── */
 .loader { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: #000; transition: opacity .9s var(--ease); }
 .loader.done { opacity: 0; pointer-events: none; }
+.loader.done .wl-ill { pointer-events: none; }   /* the faded welcome drawings must not block the room (v139) */
 .loader-inner { display: grid; gap: 44px; justify-items: center; }
 .loader-name { display: grid; place-items: center; }   /* the sj logo (assets/brand) */
 .loader-name img { height: 84px; width: auto; display: block; }
