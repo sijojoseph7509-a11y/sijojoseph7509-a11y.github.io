@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=145";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=145";
+import { Sound } from "./sound.js?v=146";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=146";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -88,7 +88,11 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // v143: lowered to 1.5
 // Render) draws 3D on the CPU and crawls even on a gaming laptop. Start at the lightest quality straight away.
 const GPU_NAME = (() => { try { const gl = renderer.getContext(), x = gl.getExtension("WEBGL_debug_renderer_info");
   return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)); } catch (_) { return ""; } })();
-const SOFTWARE_GL = /swiftshader|llvmpipe|softpipe|basic render|software/i.test(GPU_NAME);
+// v146: also ask the browser directly — a context requested with failIfMajorPerformanceCaveat is refused when 3D would be drawn
+// on the CPU. Needed for Brave (and others) that hide the GPU name, where the name check below can't see it.
+const CPU_3D = (() => { try { const c = document.createElement("canvas"), o = { failIfMajorPerformanceCaveat: true };
+  const g = c.getContext("webgl2", o) || c.getContext("webgl", o); if (!g) return true; g.getExtension("WEBGL_lose_context")?.loseContext(); return false; } catch (_) { return false; } })();
+const SOFTWARE_GL = CPU_3D || /swiftshader|llvmpipe|softpipe|basic render|software/i.test(GPU_NAME);
 if (SOFTWARE_GL) renderer.setPixelRatio(1);
 else if (!/apple/i.test(GPU_NAME)) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 // v143: built-in laptop graphics (Intel UHD/Iris/HD, AMD "Radeon Graphics"/Vega, phone GPUs) start on the light settings instead of
@@ -1626,6 +1630,7 @@ function boot(app) {
   hideTooltip();
   $("#hint").style.opacity = 0;
   coachDone();
+  if (STILL) { window.OS.open(app, () => { booting = false; $("#hint").style.opacity = ""; }, screenRect()); return; }   // v146: no flight on the still desk
   const screenWorld = new THREE.Vector3();
   screen.getWorldPosition(screenWorld);
   const v = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect);
@@ -1698,6 +1703,7 @@ renderer.domElement.addEventListener("pointerup", (e) => {
     clearTimeout(tapTimer);
     tapTimer = setTimeout(() => { hovered = null; hideTooltip(); }, 1200);
   }
+  if (STILL) stillUntil = performance.now() + 2500;   // v146: let a reaction (cat, ball, curtains) play on the still desk
   o.userData.hover.onClick();
 });
 let tapTimer = 0;
@@ -1778,7 +1784,7 @@ const perf = { dts: [], step: 0, from: 0 };
 if (LIGHT_GPU) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); }
 let softwareApplied = false;
 function adaptQuality(dt) {
-  if (SOFTWARE_GL && !softwareApplied) { softwareApplied = true; perf.step = 3; lampLight.castShadow = false; renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); console.info("Software 3D detected (" + GPU_NAME + "): lightest quality"); return; }
+  if (SOFTWARE_GL && !softwareApplied) { softwareApplied = true; perf.step = 3; lampLight.castShadow = false; renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); console.info("Software 3D detected (" + GPU_NAME + (CPU_3D ? ", browser reports CPU drawing" : "") + "): lightest quality"); return; }
   if (perf.step >= 4 || document.hidden || dt > 2500 || tween || fading.length) return;   // v143: was 500 ms, which ignored every frame on a very slow GPU so it never lowered quality   // ignore pauses + busy moments
   const now = performance.now();
   if (!perf.from) perf.from = now + 1200;
@@ -1807,10 +1813,12 @@ function adaptQuality(dt) {
 const clock = new THREE.Clock();
 let lastScreen = 0, lastNow = 0;
 let debugCam = null;   // test hook: a fixed camera for screenshots (Desk.debugView)
+let STILL = SOFTWARE_GL, stillUntil = 0;   // v146: the still desk — 3D drawn on the CPU (acceleration off / GPU blocked) is never smooth, so the desk is drawn only when something changes
 let welcomeHold = false;   // v141: the 3D room is paused while the welcome card shows a still of it
 function loop(now) {
   requestAnimationFrame(loop);
   if (welcomeHold) { lastNow = now; return; }
+  if (STILL && !tween && !booting && now > stillUntil) { lastNow = now; return; }   // v146: still desk — draw only around a change
   // the Mac desktop covers the scene: skip rendering it (saves battery; the last frame stays on screen)
   if (window.OS.isCovering?.()) { lastNow = now; return; }   // ?. — a stale cached os.js may not have it
   const t = clock.getElapsedTime();
@@ -2068,13 +2076,18 @@ function applyTier(t) {
   scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); });
   shadowDirty = true;
 }
+if (SOFTWARE_GL) {   // v146: software 3D named as such: lightest settings, compiled here behind the loader
+  applyTier(3);
+  try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
+}
 if (!SOFTWARE_GL && !/apple/i.test(GPU_NAME)) {
   try {
     const gl = renderer.getContext(), px = new Uint8Array(4), sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera); sync();   // warm-up
     const t0 = performance.now();
-    for (let i = 0; i < 6; i++) { renderer.shadowMap.needsUpdate = i % 2 === 0; renderer.render(scene, camera); sync(); }
-    benchMs = (performance.now() - t0) / 6;
+    let n = 0;
+    while (n < 6 && (n < 2 || performance.now() - t0 < 300)) { renderer.shadowMap.needsUpdate = n % 2 === 0; renderer.render(scene, camera); sync(); n++; }   // v146: stop early on a slow device
+    benchMs = (performance.now() - t0) / n;
     const tier = benchMs < 9 ? 0 : benchMs < 16 ? 2 : benchMs < 28 ? 3 : 4;
     console.info("3D test frame: " + benchMs.toFixed(1) + " ms → quality " + Math.max(tier, perf.step));
     if (tier > perf.step) {
@@ -2082,7 +2095,23 @@ if (!SOFTWARE_GL && !/apple/i.test(GPU_NAME)) {
       setProgress(99, "tuning for this device…");
       try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
     }
+    // v146: at the lightest settings, test again; still slower than ~20 fps means the 3D is drawn on the CPU (browser graphics
+    // acceleration off or the GPU blocked — Brave hides the GPU name, so this can't be told from it) → the still desk
+    if (perf.step >= 3) {
+      renderer.render(scene, camera); sync();
+      const t1 = performance.now();
+      for (let i = 0; i < 2; i++) { renderer.render(scene, camera); sync(); }
+      const ms2 = (performance.now() - t1) / 2;
+      console.info("3D test at the lightest quality: " + ms2.toFixed(1) + " ms");
+      if (ms2 > 50) STILL = true;
+    }
   } catch (_) {}
+}
+if (STILL) {   // v146: the still desk: a sharper single frame, no dragging (it would crawl), the room-view button hidden
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1)); renderer.setSize(innerWidth, innerHeight);
+  controls.enabled = false; perf.step = 4;
+  $("#zoomBtn").style.display = "none";
+  console.info("3D is drawn without the graphics card here: showing the still desk");
 }
 // ?perf: a small live readout (fps, slowest frame, GPU, quality) for checking a device that feels slow
 if (new URLSearchParams(location.search).has("perf")) {
@@ -2091,7 +2120,7 @@ if (new URLSearchParams(location.search).has("perf")) {
   document.body.appendChild(el);
   let n = 0, worst = 0, last = performance.now(), prev = last;
   const tick = (now) => { n++; worst = Math.max(worst, now - prev); prev = now;
-    if (now - last > 1000) { el.textContent = `${Math.round(n * 1000 / (now - last))} fps · slowest ${worst.toFixed(0)} ms\nGPU: ${GPU_NAME}\nquality ${perf.step} · ${renderer.getPixelRatio()}× · shadows ${renderer.shadowMap.enabled ? "on" : "off"}${benchMs ? " · test " + benchMs.toFixed(1) + " ms" : ""}`; n = 0; worst = 0; last = now; }
+    if (now - last > 1000) { el.textContent = `${Math.round(n * 1000 / (now - last))} fps · slowest ${worst.toFixed(0)} ms\nGPU: ${GPU_NAME}\nquality ${perf.step}${STILL ? " (still desk)" : ""} · ${renderer.getPixelRatio()}× · shadows ${renderer.shadowMap.enabled ? "on" : "off"}${benchMs ? " · test " + benchMs.toFixed(1) + " ms" : ""}`; n = 0; worst = 0; last = now; }
     requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
 }
@@ -2102,7 +2131,7 @@ requestAnimationFrame(loop);
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
-  covering: !!window.OS.isCovering?.(), quality: perf.step, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
+  covering: !!window.OS.isCovering?.(), quality: perf.step, still: STILL, frames: renderer.info.render.frame, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
   toggleDay: () => setNight(dayTarget === 0), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
@@ -2111,7 +2140,7 @@ window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix],
   screenPos: (label) => { const o = hoverables.find((h) => h.userData.hover.label.includes(label)); if (!o) return null;
     const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return { x: (c.x + 1) / 2 * innerWidth, y: (1 - c.y) / 2 * innerHeight }; },
   offscreen: () => hoverables.filter((o) => { const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).project(camera); return Math.abs(c.x) > 0.98 || Math.abs(c.y) > 0.98 || c.z > 1; }).map((o) => o.userData.hover.label) };
-const setHint = () => { $("#hint").textContent = TOUCH ? "Drag to look around · Tap the laptop to open" : innerWidth < 700 ? "Drag to look around · Click the laptop to open" : "Drag to look around · Click the laptop to open my portfolio"; };
+const setHint = () => { $("#hint").textContent = STILL ? (TOUCH || innerWidth < 700 ? "Tap the laptop to open my portfolio" : "Click the laptop to open my portfolio · turn on graphics acceleration in your browser for the 3D desk") : TOUCH ? "Drag to look around · Tap the laptop to open" : innerWidth < 700 ? "Drag to look around · Click the laptop to open" : "Drag to look around · Click the laptop to open my portfolio"; };
 setHint(); addEventListener("resize", setHint);
 $("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
@@ -2123,12 +2152,8 @@ function enter(withSound, app) {
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
   document.activeElement?.blur?.();
-  if (SOFTWARE_GL && !deep) {   // no graphics acceleration: the 3D desk would crawl, so open the portfolio itself
-    window.OS.open(app || "about");
-    window.OS.toast("Your browser has graphics acceleration off, so the 3D desk is paused. Turn it on in the browser settings to see it.", 9000);
-    return;
-  }
-  moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140: from the blurred room view, glide in to the desk as the blur clears
+  if (STILL) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); controls.update(); stillUntil = performance.now() + 400; }   // v146: no fly-in on the still desk
+  else moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140: from the blurred room view, glide in to the desk as the blur clears
   coachShow();
 }
 if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
@@ -2150,7 +2175,7 @@ else {
   $("#intro").hidden = false;
   $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
   $("#introSound").addEventListener("click", () => enter(true));
-  $("#introWork").addEventListener("click", () => { enter(false, "work"); if (!SOFTWARE_GL) setTimeout(() => boot("work"), 900); });   // straight to the projects
+  $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects
   $("#introGo").focus({ preventScroll: true });
 }
 
