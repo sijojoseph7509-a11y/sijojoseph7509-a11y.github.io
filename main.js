@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=142";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=142";
+import { Sound } from "./sound.js?v=143";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=143";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -83,20 +83,27 @@ try {
   window.OS.toast("3D isn't available in this browser — here's the simple version");
   throw err;
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // v143: lowered to 1.5× below for non-Apple GPUs (most Windows laptops)
 // Software rendering (browser hardware acceleration off, or no GPU driver: SwiftShader / llvmpipe / Microsoft Basic
 // Render) draws 3D on the CPU and crawls even on a gaming laptop. Start at the lightest quality straight away.
 const GPU_NAME = (() => { try { const gl = renderer.getContext(), x = gl.getExtension("WEBGL_debug_renderer_info");
   return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)); } catch (_) { return ""; } })();
 const SOFTWARE_GL = /swiftshader|llvmpipe|softpipe|basic render|software/i.test(GPU_NAME);
 if (SOFTWARE_GL) renderer.setPixelRatio(1);
+else if (!/apple/i.test(GPU_NAME)) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+// v143: built-in laptop graphics (Intel UHD/Iris/HD, AMD "Radeon Graphics"/Vega, phone GPUs) start on the light settings instead of
+// stuttering first and stepping down later: ≤1.25× resolution, plain (not soft) shadows; the lamp's shadow is switched off once it exists
+const LIGHT_GPU = !SOFTWARE_GL && /intel|uhd|iris|hd graphics|radeon\(tm\) graphics|radeon graphics|vega|adreno|mali|powervr/i.test(GPU_NAME) && !/radeon rx|nvidia|geforce|rtx|gtx|arc a/i.test(GPU_NAME);
+if (LIGHT_GPU) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
 // Some phones drop the GPU context under memory pressure: offer a clean reload instead of a frozen/black desk
 renderer.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); $("#glitch").hidden = false; });
 $("#glitchReload").addEventListener("click", () => location.reload());
 $("#glitchSimple").addEventListener("click", (e) => { e.preventDefault(); $("#glitch").hidden = true; window.OS.open("about"); });
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;   // v143: shadow maps are redrawn on a schedule in loop(), not every frame
+let shadowTick = 0, shadowDirty = true, dragging = false;
+renderer.shadowMap.type = LIGHT_GPU ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 $("#stage").appendChild(renderer.domElement);
@@ -1744,25 +1751,27 @@ function placeCoach() {
 // Only judged once things have settled (≥4 s after the desk appears, not while the camera is flying or models are
 // fading in) — the first seconds include shader compiles and made phones look slow, dropping them to 1× (blurry).
 const perf = { dts: [], step: 0, from: 0 };
+if (LIGHT_GPU) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); }
 let softwareApplied = false;
 function adaptQuality(dt) {
   if (SOFTWARE_GL && !softwareApplied) { softwareApplied = true; perf.step = 3; lampLight.castShadow = false; renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); console.info("Software 3D detected (" + GPU_NAME + "): lightest quality"); return; }
-  if (perf.step >= 3 || document.hidden || dt > 500 || tween || fading.length) return;   // ignore pauses + busy moments
+  if (perf.step >= 4 || document.hidden || dt > 2500 || tween || fading.length) return;   // v143: was 500 ms, which ignored every frame on a very slow GPU so it never lowered quality   // ignore pauses + busy moments
   const now = performance.now();
-  if (!perf.from) perf.from = now + 3000;
+  if (!perf.from) perf.from = now + 1200;
   if (now < perf.from) return;
   perf.dts.push(dt);
-  if (perf.dts.length < 90) return;
-  const median = perf.dts.sort((a, b) => a - b)[45];
+  if (perf.dts.length < 40) return;
+  const median = perf.dts.sort((a, b) => a - b)[20];
   perf.dts = [];
   // aim for smooth (≈45 fps or better), not just "usable": 25 fps still feels stuck when you drag to look around
-  if (median < 22) { perf.step = 3; return; }
+  if (median < 19) return;   // v143: smooth (≈50+ fps) — keep watching; a later slowdown still steps down
   perf.step++;
   const pr = renderer.getPixelRatio();
   if (perf.step === 1 && pr > 1.25) { renderer.setPixelRatio(1.25); renderer.setSize(innerWidth, innerHeight); }
   else if (perf.step <= 2) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  else if (perf.step >= 4) { if (pr > 0.8) { renderer.setPixelRatio(0.8); renderer.setSize(innerWidth, innerHeight); } }
   else { perf.step = 3; if (pr > 1) { renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); } renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); }
-  console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
+  shadowDirty = true; console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
 }
 
 const clock = new THREE.Clock();
@@ -1832,10 +1841,13 @@ function loop(now) {
     wiggleObj.rotation.z = Math.sin(wiggleT * 9) * 0.08 * Math.max(0, 1 - wiggleT);
     if (wiggleT > 1) { wiggleObj.rotation.z = 0; wiggleT = -1; }
   }
-  if (now - lastScreen > 33) { drawScreen(t); lastScreen = now; }
+  if (now - lastScreen > (dragging ? 100 : 33)) { drawScreen(t); lastScreen = now; }   // the laptop screen texture: fewer uploads while dragging
   placeCoach();
+  if (shadowDirty || ++shadowTick % (dragging ? 6 : 2) === 0) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   renderer.render(scene, camera);
 }
+controls.addEventListener("start", () => { dragging = true; });
+controls.addEventListener("end", () => { dragging = false; shadowDirty = true; });
 
 addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
@@ -2044,6 +2056,7 @@ else {
   camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update();   // v140: the blurred room behind the welcome card
   // v141: one render of the room, copied small into a 2D canvas and blurred once by CSS — no live blur over a running 3D scene
   try {
+    renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
     const src = renderer.domElement, still = document.createElement("canvas");
     still.width = Math.max(2, Math.round(src.width / 6)); still.height = Math.max(2, Math.round(src.height / 6));
