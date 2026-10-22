@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=140";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=140";
+import { Sound } from "./sound.js?v=141";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=141";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1768,8 +1768,10 @@ function adaptQuality(dt) {
 const clock = new THREE.Clock();
 let lastScreen = 0, lastNow = 0;
 let debugCam = null;   // test hook: a fixed camera for screenshots (Desk.debugView)
+let welcomeHold = false;   // v141: the 3D room is paused while the welcome card shows a still of it
 function loop(now) {
   requestAnimationFrame(loop);
+  if (welcomeHold) { lastNow = now; return; }
   // the Mac desktop covers the scene: skip rendering it (saves battery; the last frame stays on screen)
   if (window.OS.isCovering?.()) { lastNow = now; return; }   // ?. — a stale cached os.js may not have it
   const t = clock.getElapsedTime();
@@ -2024,6 +2026,7 @@ let entered = false;
 function enter(withSound, app) {
   if (entered) return;
   entered = true;
+  welcomeHold = false;
   Sound.setMuted(!withSound);          // this click is the gesture that lets the browser start the music
   $("#loader").classList.add("done");
   document.activeElement?.blur?.();
@@ -2039,6 +2042,16 @@ if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a sha
 else {
   document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = TOUCH ? b.dataset.touch : b.dataset.mouse));
   camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update();   // v140: the blurred room behind the welcome card
+  // v141: one render of the room, copied small into a 2D canvas and blurred once by CSS — no live blur over a running 3D scene
+  try {
+    renderer.render(scene, camera);
+    const src = renderer.domElement, still = document.createElement("canvas");
+    still.width = Math.max(2, Math.round(src.width / 6)); still.height = Math.max(2, Math.round(src.height / 6));
+    still.getContext("2d").drawImage(src, 0, 0, still.width, still.height);
+    still.className = "wl-room"; still.setAttribute("aria-hidden", "true");
+    $("#loader").prepend(still);
+    welcomeHold = true;
+  } catch (_) {}
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
   $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
