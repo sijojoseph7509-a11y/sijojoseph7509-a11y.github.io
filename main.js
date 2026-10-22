@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=151";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=151";
+import { Sound } from "./sound.js?v=152";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=152";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1066,84 +1066,45 @@ const WIN_Y0 = DADO_Y + 1, WIN_Y1 = ROD_Y - 1.5, winH = WIN_Y1 - WIN_Y0, winY = 
 const frameMat = mat(0xe9e3d6, { roughness: 0.6 });
 for (const [w, h, x, y] of [[winW + 1.2, 0.7, winC, WIN_Y1], [winW + 1.2, 0.9, winC, WIN_Y0], [0.7, winH, winC - winW / 2, winY], [0.7, winH, winC + winW / 2, winY],
   [0.35, winH, winC, winY], [winW, 0.35, winC, WIN_Y0 + winH * 0.62]]) { const b = rbox(w, h, 0.6, 0.06, frameMat, 1); b.position.set(x, y, 0.3); corner.add(b); }   // frame + mullions
-// the view outside: the NID Bengaluru campus gate across the road (from Sijo's photos): granite-block gate walls with
-// capped tops, the white sign board, the steel sliding gate, a tree-lined driveway with potted plants, and the white
-// campus building (round balconies, railings) glowing behind the trees. Night is the default; morning on a click.
-const skyTex = (night) => canvasTex(1024, 1384, (g, w, h) => {
-  let sd = 42; const R = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
-  const HZ = h * 0.46, ROAD = h * 0.8, BASE = h * 0.74;   // tree-line, front of the road, foot of the gate walls
-  // sky (mostly hidden by the canopy)
-  const sky = g.createLinearGradient(0, 0, 0, HZ);
-  if (night) { sky.addColorStop(0, "#070b1a"); sky.addColorStop(1, "#1d2741"); } else { sky.addColorStop(0, "#9fc1df"); sky.addColorStop(1, "#d9e2dc"); }
-  g.fillStyle = sky; g.fillRect(0, 0, w, h);
-  if (night) { for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(255,255,255,${0.2 + R() * 0.5})`; g.fillRect(R() * w, R() * HZ * 0.5, 2, 2); } }
-  // the white campus building far back, seen between the trees: round balcony, stacked railings, a stair
-  const white = night ? "#4a4f5c" : "#d9d6cf", whiteShade = night ? "#343843" : "#b6b3ab";
-  g.fillStyle = white; g.fillRect(560, HZ - 150, 360, 210);
-  g.fillStyle = whiteShade; for (let x = 570; x < 920; x += 60) g.fillRect(x, HZ - 150, 14, 210);   // columns
-  g.strokeStyle = night ? "#6d7380" : "#a9a7a0"; g.lineWidth = 2;
-  for (const y of [HZ - 100, HZ - 40]) { g.beginPath(); g.moveTo(560, y); g.lineTo(920, y); g.stroke(); for (let x = 560; x < 920; x += 10) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 18); g.stroke(); } }
-  g.fillStyle = white; g.beginPath(); g.ellipse(600, HZ - 60, 110, 38, 0, 0, Math.PI); g.fill();   // the round balcony
-  g.fillStyle = night ? "#c58a3a" : "#e9a64a"; g.fillRect(800, HZ - 175, 120, 22);   // the orange canopy
-  if (night) for (let k = 0; k < 14; k++) { const x = 570 + R() * 340, y = HZ - 140 + R() * 170; const lg = g.createRadialGradient(x, y, 0, x, y, 26); lg.addColorStop(0, "rgba(255,214,150,.9)"); lg.addColorStop(1, "rgba(255,214,150,0)"); g.fillStyle = lg; g.fillRect(x - 26, y - 26, 52, 52); }
-  // tree canopy over everything (rain trees and gulmohars), with hanging leaves
-  const leaf = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, r, r * 0.7, R() * 3, 0, 7); g.fill(); };
-  const dk = night ? ["#07100a", "#0b170e", "#112014"] : ["#2d4a27", "#3f6533", "#5f8a45"];
-  for (let i = 0; i < 1500; i++) { const x = R() * w, y = R() * (HZ + 60) * (0.4 + 0.6 * Math.abs(x / w - 0.62) * 1.6); if (x > 580 && x < 900 && y > HZ - 170) continue; leaf(x, y, 8 + R() * 22, dk[(R() * 3) | 0]); }
-  if (!night) for (let i = 0; i < 260; i++) leaf(R() * w, R() * HZ * 0.7, 6 + R() * 10, "rgba(200,230,150,.5)");   // sun through the leaves
-  for (const [x, wd] of [[200, 26], [380, 18], [940, 26]]) { g.fillStyle = night ? "#0d0a08" : "#4b3a2c"; g.fillRect(x - wd / 2, HZ - 120, wd, BASE - HZ + 120); g.lineWidth = wd * 0.4; g.strokeStyle = g.fillStyle; g.beginPath(); g.moveTo(x, HZ - 60); g.lineTo(x + (x > 500 ? 70 : -70), HZ - 220); g.stroke(); }
-  // driveway receding through the gate, lined with potted plants
-  const vx = 740, vy = HZ + 30;   // vanishing point
-  g.fillStyle = night ? "#2a2a2c" : "#a9a395"; g.beginPath(); g.moveTo(vx - 30, vy); g.lineTo(vx + 30, vy); g.lineTo(880, BASE); g.lineTo(600, BASE); g.fill();
-  for (let k = 0; k < 16; k++) { const t = k / 16, s = 0.2 + t * 1.1;
-    for (const side of [-1, 1]) { const x = vx + side * (40 + t * 120), y = vy + t * (BASE - vy - 20);
-      g.fillStyle = night ? "#3a2a22" : "#a35b3a"; g.fillRect(x - 9 * s, y - 14 * s, 18 * s, 14 * s);
-      g.fillStyle = night ? "#0f1d12" : "#4e7d3c"; g.beginPath(); g.ellipse(x, y - 22 * s, 16 * s, 13 * s, 0, 0, 7); g.fill(); } }
-  if (night) { const pg = g.createRadialGradient(vx, vy + 60, 0, vx, vy + 60, 230); pg.addColorStop(0, "rgba(255,200,130,.35)"); pg.addColorStop(1, "rgba(255,200,130,0)"); g.fillStyle = pg; g.fillRect(0, 0, w, h); }   // lamps along the drive
-  // granite-block gate walls with concrete caps (left, with the sign; right)
-  const wall = (x0, x1, top) => {
-    g.fillStyle = night ? "#3b3732" : "#8f8778"; g.fillRect(x0, top, x1 - x0, BASE - top);
-    for (let y = top + 10; y < BASE; y += 28) for (let x = x0 + ((y / 28) % 2 ? 0 : 22); x < x1; x += 44) {   // irregular stone blocks
-      const c = night ? 50 + R() * 16 : 120 + R() * 30; g.fillStyle = `rgb(${c + 6},${c + 2},${c - 6})`; g.fillRect(x + 2, y + 2, 40, 24);
-      g.fillStyle = `rgba(0,0,0,${night ? 0.35 : 0.25})`; g.fillRect(x + 2, y + 24, 40, 2); }
-    g.fillStyle = night ? "#55524c" : "#d8d4ca"; g.fillRect(x0 - 8, top - 16, x1 - x0 + 16, 18);   // cap
-  };
-  wall(0, 600, HZ + 10); wall(880, 1024, HZ + 10);
-  g.fillStyle = night ? "#4a4741" : "#e3e0d8"; g.fillRect(150, HZ - 70, 450, 80);   // the overhang above the sign
-  // sign board: white panel with a simple mark, the name in Hindi, English and Kannada
-  const sx = 330, sy = HZ + 70, sw = 230, sh = 250;
-  if (night) { const lg = g.createRadialGradient(sx + sw / 2, sy - 10, 0, sx + sw / 2, sy + 80, 260); lg.addColorStop(0, "rgba(255,240,215,.75)"); lg.addColorStop(1, "rgba(255,240,215,0)"); g.fillStyle = lg; g.fillRect(sx - 120, sy - 120, sw + 240, sh + 260); }
-  g.fillStyle = night ? "#d9d6cf" : "#f4f3ef"; g.fillRect(sx, sy, sw, sh);
-  g.fillStyle = "#8a8a8a"; g.beginPath(); g.arc(sx + sw / 2 - 18, sy + 40, 12, 0, 7); g.fill();
-  g.beginPath(); g.moveTo(sx + sw / 2 - 60, sy + 58); g.lineTo(sx + sw / 2 - 4, sy + 58); g.lineTo(sx + sw / 2 - 4, sy + 116); g.closePath(); g.fill();
-  g.beginPath(); g.arc(sx + sw / 2 + 22, sy + 87, 29, -Math.PI / 2, Math.PI / 2); g.lineTo(sx + sw / 2 + 8, sy + 116); g.lineTo(sx + sw / 2 + 8, sy + 58); g.fill();
-  g.fillStyle = "#3a3a3a"; g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = `600 20px ${UI}`; g.fillText("राष्ट्रीय डिज़ाइन संस्थान", sx + sw / 2, sy + 160);
-  g.font = `800 17px ${UI}`; g.fillText("NATIONAL INSTITUTE OF DESIGN", sx + sw / 2, sy + 186);
-  g.fillStyle = night ? "#c9c6bf" : "#e6e5e1"; g.fillRect(sx + 25, sy + 198, sw - 50, 26); g.fillStyle = "#3a3a3a"; g.font = `500 20px ${UI}`; g.fillText("Bengaluru Campus", sx + sw / 2, sy + 211);
-  g.font = `600 18px ${UI}`; g.fillText("ರಾಷ್ಟ್ರೀಯ ವಿನ್ಯಾಸ ಸಂಸ್ಥೆ", sx + sw / 2, sy + 238);
-  // steel sliding gate, half open
-  g.strokeStyle = night ? "#6b6b70" : "#a3a6aa"; g.lineWidth = 6;
-  g.strokeRect(600, HZ + 120, 70, BASE - HZ - 130); for (let y = HZ + 150; y < BASE - 10; y += 30) { g.beginPath(); g.moveTo(600, y); g.lineTo(670, y); g.stroke(); }
-  g.fillStyle = night ? "#55565b" : "#b9bcc0"; g.beginPath(); g.moveTo(600, HZ + 120); g.lineTo(670, HZ + 120); g.lineTo(670, HZ + 200); g.closePath(); g.fill();
-  // footpath + bollards, then the road under our window
-  g.fillStyle = night ? "#34342f" : "#9e998d"; g.fillRect(0, BASE, w, ROAD - BASE);
-  for (const x of [300, 560]) { g.fillStyle = night ? "#121212" : "#2b2b2b"; g.fillRect(x, BASE - 50, 16, 56); }
-  g.fillStyle = night ? "#17181b" : "#5a5a58"; g.fillRect(0, ROAD, w, h - ROAD);
-  g.fillStyle = night ? "#3e3e40" : "#e8e8e2"; for (let x = 30; x < w; x += 150) g.fillRect(x, ROAD + 120, 80, 8);
-  // street lamp on our side, throwing an orange pool at night
-  g.fillStyle = night ? "#1d1d20" : "#3b3d42"; g.fillRect(250, HZ - 80, 10, ROAD - HZ + 120); g.fillRect(250, HZ - 80, 70, 8);
-  if (night) { const lg = g.createRadialGradient(315, HZ - 70, 0, 315, HZ - 70, 120); lg.addColorStop(0, "rgba(255,180,100,.95)"); lg.addColorStop(1, "rgba(255,180,100,0)"); g.fillStyle = lg; g.fillRect(190, HZ - 190, 250, 250);
-    const pool = g.createRadialGradient(330, ROAD + 60, 0, 330, ROAD + 60, 260); pool.addColorStop(0, "rgba(255,170,90,.35)"); pool.addColorStop(1, "rgba(255,170,90,0)"); g.fillStyle = pool; g.fillRect(0, ROAD - 150, 700, 420); }
-  // glass: slight softness + reflection
-  { const c2 = document.createElement("canvas"); c2.width = w; c2.height = h; const g2 = c2.getContext("2d"); g2.filter = "blur(1.2px)"; g2.drawImage(g.canvas, 0, 0); g.globalAlpha = 0.65; g.drawImage(c2, 0, 0); g.globalAlpha = 1; }
-  { const refl = g.createLinearGradient(0, 0, w, h); refl.addColorStop(0, "rgba(255,255,255,.06)"); refl.addColorStop(0.45, "rgba(255,255,255,0)"); refl.addColorStop(0.55, "rgba(255,255,255,.04)"); refl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = refl; g.fillRect(0, 0, w, h); }
-}).tex;
+// v152: the view outside is a real place, not a drawing: Poly Haven's "Courtyard" and "Courtyard Night" by Greg Zaal
+// (CC0), a home courtyard with painted walls, palms and garage doors, as a matching day and night pair. Each file is a
+// 150° × 90° slice of the 360° photo (assets/window). The glass looks it up by the direction from your eye through each
+// point of the window, so the view shifts with true depth as you look around the room, like a real window; the curtain
+// click cross-fades day ↔ night (uMix). One plane and two small textures: light on every GPU.
 const glassGeo = new THREE.PlaneGeometry(winW - 0.6, winH - 0.6);
-const glassDay = new THREE.Mesh(glassGeo, new THREE.MeshBasicMaterial({ map: skyTex(false), toneMapped: false }));
-const glassNight = new THREE.Mesh(glassGeo, new THREE.MeshBasicMaterial({ map: skyTex(true), transparent: true, opacity: 0, toneMapped: false }));
-glassDay.position.set(winC, winY, 0.2); glassNight.position.set(winC, winY, 0.22);
-corner.add(glassDay, glassNight);
+const blank = new THREE.DataTexture(new Uint8Array([90, 100, 120, 255]), 1, 1); blank.needsUpdate = true;
+const winViewMat = new THREE.ShaderMaterial({
+  uniforms: { uDay: { value: blank }, uNight: { value: blank }, uMix: { value: 0 }, uReady: { value: 0 }, uRot: { value: new THREE.Matrix3() } },
+  vertexShader: "varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+  fragmentShader: `
+    uniform sampler2D uDay, uNight; uniform float uMix, uReady; uniform mat3 uRot; varying vec3 vW;
+    const float PI = 3.14159265, PW = 2.61799388, TH0 = 0.52359878, TH = 1.57079633;   // slice: 150° wide, 30°–120° from straight up
+    void main() {
+      vec3 d = normalize(uRot * normalize(vW - cameraPosition));                       // view direction in the window's space (outside is -z)
+      float u = 1.0 - (atan(d.z, -d.x) + PI * 0.5 + PW * 0.5) / PW;
+      float v = 1.0 - (acos(clamp(d.y, -1.0, 1.0)) - TH0) / TH;
+      vec2 uv = clamp(vec2(u, v), 0.002, 0.998);
+      vec3 c = mix(texture2D(uDay, uv).rgb, texture2D(uNight, uv).rgb * 0.9, uMix);
+      c = mix(mix(vec3(0.62, 0.7, 0.78), vec3(0.06, 0.07, 0.13), uMix), c, uReady);     // a plain sky tone until the photos arrive
+      c *= 1.0 - 0.18 * pow(abs(v - 0.5) * 2.0, 3.0);                                    // a touch darker towards the frame
+      gl_FragColor = vec4(c, 1.0);
+      #include <colorspace_fragment>
+    }`
+});
+const windowView = new THREE.Mesh(glassGeo, winViewMat);
+windowView.position.set(winC, winY, 0.2);
+windowView.onBeforeRender = () => {   // the window's orientation, once (the room never moves)
+  if (windowView.userData.rot) return;
+  corner.updateWorldMatrix(true, false);
+  winViewMat.uniforms.uRot.value.setFromMatrix4(new THREE.Matrix4().extractRotation(corner.matrixWorld).invert());
+  windowView.userData.rot = true;
+};
+corner.add(windowView);
+{ let got = 0; const tl = new THREE.TextureLoader();
+  [["uDay", "assets/window/courtyard-day.webp"], ["uNight", "assets/window/courtyard-night.webp"]].forEach(([k, f]) => tl.load(asset(f), (t) => {
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    winViewMat.uniforms[k].value = t; if (++got === 2) winViewMat.uniforms.uReady.value = 1;
+  })); }
 // curtain: cream linen with maroon ogee medallions and roses, gathered in grommet pleats
 const curtainTex = canvasTex(512, 832, (g, w, h) => {
   g.fillStyle = "#ebe2cf"; g.fillRect(0, 0, w, h);
@@ -1347,7 +1308,7 @@ function applyDay(k) {
   glow.intensity = f(1.2, 3.2);   // the ambient light from the room itself dims at night too
   shaftMat.opacity = f(D.shaft, N.shaft); mixC(shaftMat.color, D.shaftC, N.shaftC, k);
   patchMat.opacity = f(D.patch, N.patch); mixC(patchMat.color, D.patchC, N.patchC, k);
-  glassNight.material.opacity = k;
+  winViewMat.uniforms.uMix.value = k;   // v152: the photo window cross-fades day ↔ night
   for (const c of [curtainL, curtainR]) c.material.emissiveIntensity = (1 - k) * 0.22;   // sunlight glowing through the linen
   projMat.opacity = astroOn ? Math.max(0, k - 0.25) * 1.1 : 0; projWall.material.opacity = projMat.opacity * 0.8;
 }

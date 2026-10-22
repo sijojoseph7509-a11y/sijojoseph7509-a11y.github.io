@@ -40,8 +40,8 @@ window.SITE = {
           // 2× exports of Figma "Syntra · Documentation" (RFow6mVvYRDVcu5NrMgO7D, page 223:2) with the moving parts left out; syntra-fx.js adds them back
         ["01.webp", 2725, "Syntra. An interactive perfume finder. Know the feeling, not the name? Let's find your perfume. Retail Tech module, NID, 2 weeks."],
         ["02.webp", 2330, "Meet Syntra: a kiosk you play like an instrument. A visitor in the VR headset at our exhibit, then four steps: turn, see, step in, take it home."],
-        ["03.webp", 2142, "Choosing a scent is choosing how you'll be remembered. How we went about the process, as layers of a perfume bottle: concept, research, ideation, prototyping, experience."],
-        ["04.webp", 2520, "The problem: shoppers arrive knowing a mood but the store speaks in names and notes. 24 options turn into 3% bought, 6 into 30%; 60% of US perfume users discover scents by trying them in store; the nose tires after 3 to 4 perfumes."],
+        ["03.webp", 1857, "Choosing a scent is choosing how you'll be remembered. How we went about the process, as layers of a perfume bottle: concept, research, ideation, prototyping, experience."],
+        ["04.webp", 2420, "The problem: shoppers arrive knowing a mood but the store speaks in names and notes. 24 options turn into 3% bought, 6 into 30%; 60% of US perfume users discover scents by trying them in store; the nose tires after 3 to 4 perfumes."],
         ["05.webp", 1972, "Current journey map from our store visits: walks in, browse, test, ask staff, decide, and where each step breaks. What shoppers and staff told us."],
         ["06.webp", 2350, "What we heard, again and again: people know the mood, not the notes; too many choices, too few words; the nose gives up before the mind does; nobody is there to translate."],
         ["07.webp", 2700, "Why these choices: physical controls because turning a knob feels like playing; ZARA because it is affordable, wide and focused; VR and AR because people remember a scent as a place."],
@@ -52,7 +52,7 @@ window.SITE = {
         ["12.webp", 3500, "Wires, foam and light: the ESP32 circuit and pin map, the backdrop from foam model to glowing channels, and what changed from first try to final."],
         ["13.webp", 2100, "Putting it in their hands: visitors at our exhibit, what confused them and what we changed, and what testers told us."],
         ["14.webp", 2200, "A scent found, felt and kept: the printed Syntra Manual in eight steps and the kiosk in use at our exhibit."],
-        ["15.webp", 2420, "What we carry forward: what worked, what we'd do next, the team (Utsav Sharma, Sijo Joseph, Rajat Chaple) and the tools. Photo and licence credits, and a note that ZARA is not affiliated."],
+        ["15.webp", 1544, "What we carry forward: what worked, what we'd do next, the team (Utsav Sharma, Sijo Joseph, Rajat Chaple), my part and the tools. Photo and licence credits, and a note that ZARA is not affiliated."],
       ] } },
     { title: "Carekin", tag: "UX / Product Design", color: "#0F3B38", status: "Self-initiated project", url: "#",
       summary: "Medication coordination for families caring for an ageing parent: one schedule, the Carekin app for the organiser and WhatsApp for the helper, so every dose change reaches every carer.",
@@ -185,6 +185,11 @@ window.SITE = {
     items: [
       { title: "Step inside a scent", kind: "VR · Meta Quest 3 · Syntra", case: "syntra",
         media: { type: "pano", src: "work/syntra/fx/pano-lakeside_night.webp", caption: "One of the nine worlds: Lakeside Night (360° photo, Poly Haven, CC0)" },
+        gallery: [   // v152: one image per slide after the overview
+          { type: "photo", src: "work/syntra/fx/meet-hero.webp", caption: "A visitor in the headset at our exhibit" },
+          { type: "pano", src: "work/syntra/fx/pano-symmetrical_garden_02.webp", caption: "Flower garden (360° photo, Poly Haven, CC0)" },
+          { type: "pano", src: "work/syntra/fx/pano-rogland_clear_night.webp", caption: "Milky Way (360° photo, Poly Haven, CC0)" }
+        ],
         summary: "In Syntra, a double press on the perfume kiosk puts you inside your scent: a real 360° world on a Meta Quest 3, with the bottle on an oak plinth and its notes floating around you.",
         how: [
           "Matched each of ZARA's 19 scents to one of nine real 360° worlds, from a flower garden to a starry lake, because people remember a scent as a place.",
@@ -196,6 +201,10 @@ window.SITE = {
         built: ["WebXR", "JavaScript", "Meta Quest 3", "360° photography (Poly Haven)", "ESP32 kiosk"] },
       { title: "A ticket that comes alive", kind: "AR · Phone browser · Syntra", case: "syntra",
         media: { type: "ticket", src: "work/syntra/fx/receipt-140032.webp", caption: "A real ticket from the exhibit: Man Gold, 30 September 2026" },
+        gallery: [
+          { type: "ticket", src: "work/syntra/fx/receipt-164936.webp", caption: "Femme, mood Romantic: its own drawing" },
+          { type: "ticket", src: "work/syntra/fx/receipt-165536.webp", caption: "Vibrant Leather, mood Bold: a different drawing again" }
+        ],
         summary: "A 2-second hold on the kiosk prints your scent on a 58 mm thermal ticket. Point a phone at its drawing and the drawing lifts off the paper.",
         how: [
           "Designed the ticket: the scent, its mood and notes, and a drawing of its own for each result.",

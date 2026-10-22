@@ -56,7 +56,7 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
   layer(0, "sx-under sx-drift", -555, 1598, 1449, 1127, img("cover-bottles.webp"));
   layer(0, "sx-mul sx-focus", 150, 1250, 1140, 180, img("find-text.webp", "Let's find your perfume."));
   // Reflection closes on the same line
-  layer(14, "sx-mul sx-focus", 150, 2141, 1140, 180, img("find-text.webp", "Let's find your perfume."));
+  layer(14, "sx-mul sx-focus", 150, 1265, 1140, 180, img("find-text.webp", "Let's find your perfume."));   // v152: 876 px higher (group photo removed)
 
   // ── 4. Meet Syntra: the kiosk photo, slowly breathing in its light ──
   layer(1, "sx-mul sx-kenburns", 70, 350, 1300, 1000, img("meet-hero.webp", "Syntra at our exhibit: a visitor in the VR headset in front of the lit backdrop and the screen."));

@@ -248,7 +248,7 @@ and the photo assets in §5.
 | **One Piece prints** (left wall) | `assets/wall-prints.webp` on a 16 × 9.06 plane (≈80 × 45 cm) at local x `onLeft(13)`, y −14.8 + 34; each print's edges lift slightly | Click = wiggle |
 | Keyboard (left wall) | 61-key, ≈94 × 32 × 9 cm, real white/black keys (instanced), leaning ≈9° at `onLeft(9)` | — |
 | Window (right wall) | world z 9 → 31, frame + mullions; glass shows `skyTex(night)` cross-faded; half-open rose-print curtains (irregular pleats, sheen, daylight glow) on a black grommet rod | Click curtains/window = morning ↔ night |
-| Window view | **NID Bengaluru campus gate** from Sijo's photos (painted on canvas, not the photos): granite-block gate walls with caps, white sign (Hindi / NATIONAL INSTITUTE OF DESIGN / Bengaluru Campus / Kannada), half-open steel gate, tree-lined drive with potted plants, white campus building (round balcony, railings, orange canopy) behind trees, street lamp, footpath + road. Night: sign lit, campus windows + lamps glow. Keep the sign/gate centred — the curtains hide the sides. | — |
+| Window view | **v152: a real photo**, Poly Haven "Courtyard" (day) and "Courtyard Night" by Greg Zaal (CC0): a home courtyard with painted walls, palms and garage doors. 150° × 90° slices in `assets/window/`, looked up per pixel by view direction in a shader on the glass (`winViewMat` in main.js), so the view has true parallax; the curtain click cross-fades day ↔ night (`uMix`). Replaced the painted NID-gate drawing. | click curtains = day/night |
 | Corner plant | fluted white pedestal with a peace lily, back-right corner | — |
 | Football | size ≈17 cm (`BALL_R` 1.7) on the floor at the desk front; rolls between the desk panels | Click = kick |
 
@@ -432,7 +432,7 @@ explorations · sketches · side projects · ideas"), poster text, terminal mess
 | `assets/wall-prints.webp` | Sijo's photo IMG_5904 of his ten One Piece prints | wall keyed out (flood fill from the border), trimmed, 2048 px | ⚠️ third-party character art (One Piece © Eiichiro Oda / Shueisha), shown at Sijo's explicit request |
 | `assets/wallpaper.jpg` | Sijo's selfie | cropped, a stranger's hand removed, extended with Adobe generative expand | Sijo's ✅ (part AI-generated hillside) |
 | `assets/deskmat*.jpg` | generated in headless Chrome (navy storm, lightning, embers) | — | original ✅ (replaced a Sasuke / Naruto print in v67) |
-| Window view (NID gate) | painted in code from Sijo's two photos (gate, campus) | — | original drawing ✅ (the photos themselves were not used — likely third-party). The NID name/mark is shown descriptively. |
+| Window view (v152) | Poly Haven "Courtyard" + "Courtyard Night" (Greg Zaal), cropped slices in assets/window/ | CC0 | ✅ (the earlier NID-gate drawing is retired) |
 | Poster | Sijo's own typographic poster, redrawn in code | — | Sijo's ✅ |
 | Fonts | Inter, Caveat | self-hosted | SIL OFL ✅ |
 | three.js | vendor | — | MIT ✅ |
@@ -698,6 +698,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - **Shea's voice (v150, assets/sound/)**: real recordings, both CC0 (no attribution required, credited anyway): meow-1, meow-2 and
   purr from Kerzoven's "Cat Purr & Meow" (opengameart.org/content/cat-purr-meow); meow-3 and meow-4 from Joseph Sardin's "Small
   mewing of a cat" (bigsoundbank.com, sound 0098), raised 3 semitones. Trimmed, high-passed and level-matched; see sound.js.
+- **Window view (v152)**: Poly Haven "Courtyard" and "Courtyard Night" by Greg Zaal, CC0 (polyhaven.com/a/courtyard, /a/courtyard_night).
 - **Third-party**: football — Poly Haven, CC0; cat — Free3D (licence unverified, to replace); One Piece print artwork (© Eiichiro Oda /
   Shueisha) shown via Sijo's own photo at his request; fonts — SIL OFL; three.js — MIT.
 - **Not used on purpose**: Apple logos/wallpapers/app icons (SJ monogram + original icons instead), brand logos on the speaker/camera,

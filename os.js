@@ -107,12 +107,14 @@
     work: {
       title: "Work", key: "2",
       html: () => `
-        <h1>Selected work</h1>
-        <p class="sub">${S.projects.length} case studies across interaction, product, information design and branding.</p>
-        <div class="work-filter" role="group" aria-label="Filter case studies">
-          <button class="wf-ico" data-work-filter="all" aria-label="Show all case studies" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
-          <button class="wf-btn" data-work-filter="nid" aria-pressed="false">NID</button>
-          <button class="wf-btn" data-work-filter="self" aria-pressed="false">Self</button>
+        <div class="wk-head">
+          <div><h1>Selected work</h1>
+          <p class="sub">${S.projects.length} case studies across interaction design, UX, AI product design and branding.</p></div>
+          <div class="work-filter seg" role="group" aria-label="Filter case studies">
+            <button class="wf-btn" data-work-filter="all" aria-pressed="true">All</button>
+            <button class="wf-btn" data-work-filter="nid" aria-pressed="false">NID</button>
+            <button class="wf-btn" data-work-filter="self" aria-pressed="false">Self</button>
+          </div>
         </div>
         <div class="works">${S.projects.map((p) => {
           const src = /NID/.test(p.status || "") ? "nid" : "self";
@@ -127,28 +129,35 @@
     },
     ai: {
       title: "AI Lab", key: "3",
+      // v152: each project is a short carousel (dots, arrows, swipe, arrow keys): an overview, then "How I made it" two steps at a
+      // time, each with its own image, and the tools and the case-study link on the last slide
       html: () => {
         const L = S.aiLab || { items: [] }, items = L.items.filter((it) => !it.draft);
         const media = (m) => !m ? "" : m.type === "pano"
           ? `<div class="lab-media pano" role="img" aria-label="${esc(m.caption || "")}"><div class="pano-strip"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"></div><span class="lab-badge">360°</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`
+          : m.type === "photo"
+          ? `<div class="lab-media photo"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><small class="lab-cap">${esc(m.caption || "")}</small></div>`
           : `<div class="lab-media ticket"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><span class="lab-badge">AR</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`;
+        const project = (it) => {
+          const pics = [it.media, ...(it.gallery || [])].filter(Boolean), how = it.how || [], slides = [];
+          slides.push({ m: pics[0], body: `<p class="eyebrow">${esc(it.kind)}</p><h2>${esc(it.title)}</h2><p class="lab-sum">${esc(it.summary)}</p>${how.length ? `<p class="lab-more">How I made it ›</p>` : ""}` });
+          for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
+          const caseTitle = (S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "";
+          if (pics.length > slides.length) slides.push({ m: pics[slides.length], body: `<p class="eyebrow">Built with</p><h2>${esc(it.title)}</h2>` });   // a spare image gets its own closing slide
+          slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}${it.case ? `<button class="btn alt" data-case="${esc(it.case)}">See it in the ${esc(caseTitle)} case study ›</button>` : ""}`;
+          return `<article class="lab-item">
+            <div class="lab-track" tabindex="0" aria-roledescription="carousel" aria-label="${esc(it.title)}">${slides.map((sl, k) => `
+              <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
+            </div>
+            <div class="lab-nav"><button class="lab-arrow" data-lab="-1" aria-label="Previous" disabled>‹</button>
+              <span class="lab-dots">${slides.map((_, k) => `<button class="lab-dot" data-lab-go="${k}" aria-label="Slide ${k + 1}"${k ? "" : ' aria-current="true"'}></button>`).join("")}</span>
+              <button class="lab-arrow" data-lab="1" aria-label="Next">›</button></div>
+          </article>`;
+        };
         return `
         <h1>AI Lab</h1>
         <p class="sub">${esc(L.intro || "")}</p>
-        <div class="lab">${items.map((it, i) => `
-          <article class="lab-item${i % 2 ? " flip" : ""}">
-            ${media(it.media)}
-            <div class="lab-txt">
-              <p class="eyebrow">${esc(it.kind)}</p>
-              <h2>${esc(it.title)}</h2>
-              <p class="lab-sum">${esc(it.summary)}</p>
-              ${it.how && it.how.length ? `<h3>How I made it</h3><ol class="lab-steps">${it.how.map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` : ""}
-              ${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}
-              ${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}
-              ${it.case ? `<button class="btn alt" data-case="${esc(it.case)}">See it in the ${esc((S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "")} case study ›</button>` : ""}
-            </div>
-          </article>`).join("")}
-        </div>`;
+        <div class="lab">${items.map(project).join("")}</div>`;
       }
     },
     skills: {
@@ -416,6 +425,15 @@
     morphWindow(() => { screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs"); });
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
+  // AI Lab carousels: the dots, the arrows' disabled state and the active slide follow the scroll (swipe, trackpad, keys)
+  function labTrack(tr) {
+    const item = tr.closest(".lab-item"), dots = [...item.querySelectorAll(".lab-dot")], [prev, next] = item.querySelectorAll(".lab-arrow");
+    const sync = () => { const k = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth));
+      dots.forEach((d, j) => d.toggleAttribute("aria-current", j === k)); [...tr.children].forEach((sl, j) => sl.classList.toggle("on", j === k));
+      prev.disabled = k === 0; next.disabled = k === tr.children.length - 1; };
+    tr.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
+    tr.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); tr.scrollBy({ left: (e.key === "ArrowRight" ? 1 : -1) * tr.clientWidth, behavior: reducedMotion ? "auto" : "smooth" }); } });
+  }
   let opening = false, shownKey = null;
   // v148: the toolbar frosts (blur + hairline) once content scrolls beneath it, like a macOS window, so nothing reads through the title
   body.addEventListener("scroll", () => win.classList.toggle("scrolled", body.scrollTop > 6), { passive: true });
@@ -439,6 +457,7 @@
     $("#winTitle").textContent = app.title;
     if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
+    body.querySelectorAll(".lab-track").forEach(labTrack);
     body.querySelectorAll(".work-card img, .ab-proj img, .lab-media img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else { im.addEventListener("load", () => im.classList.add("in"), { once: true }); im.addEventListener("error", () => im.classList.add("in"), { once: true }); } });
     const nk = Object.keys(apps)[Object.keys(apps).indexOf(current) + 1];   // scroll on past the end to reach the next section
     if (nk) body.insertAdjacentHTML("beforeend", `<p class="next-hint" data-next="${esc(nk)}"><span>Keep scrolling for ${esc(apps[nk].title)}</span><i></i></p>`);
@@ -495,6 +514,12 @@
       body.querySelectorAll(".works .work-card").forEach((c) => { c.hidden = f !== "all" && c.dataset.src !== f; });
       if (window.SJT) SJT.event("filter-" + f);
       return;
+    }
+    const la = e.target.closest("[data-lab], [data-lab-go]");
+    if (la) {   // AI Lab carousel
+      const tr = la.closest(".lab-item").querySelector(".lab-track"), n = tr.children.length, cur = Math.round(tr.scrollLeft / tr.clientWidth);
+      const to = la.dataset.labGo != null ? +la.dataset.labGo : Math.max(0, Math.min(n - 1, cur + +la.dataset.lab));
+      tr.scrollTo({ left: to * tr.clientWidth, behavior: reducedMotion ? "auto" : "smooth" }); sound(); return;
     }
     if (e.target.closest("[data-case-view]") && caseSlug) {   // switch between the original layout and the text version
       const box = $(".case"), v = box && box.classList.contains("case-text") ? "layout" : "text";
