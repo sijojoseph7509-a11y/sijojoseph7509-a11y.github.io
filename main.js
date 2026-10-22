@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=143";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=143";
+import { Sound } from "./sound.js?v=144";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=144";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1643,8 +1643,16 @@ function pick(e) {
   }
   return null;
 }
+// v144: hover hit-testing runs at most once per frame (Windows mice send up to 1000 moves a second, and testing the
+// animated cat moves every vertex of her body), and never while a button is held (that's a drag, not a hover)
+let moveEvt = null, moveQueued = false;
 renderer.domElement.addEventListener("pointermove", (e) => {
   if (booting || tween || e.pointerType === "touch") return;   // a moving finger is a drag — no hover states on touch
+  if (e.buttons) { if (hovered) { hovered = null; hideTooltip(); } return; }
+  moveEvt = e;
+  if (!moveQueued) { moveQueued = true; requestAnimationFrame(() => { moveQueued = false; if (moveEvt && !booting && !tween) hoverAt(moveEvt); }); }
+});
+function hoverAt(e) {
   const o = pick(e);
   if (o !== hovered) {
     hovered = o;
@@ -1657,7 +1665,7 @@ renderer.domElement.addEventListener("pointermove", (e) => {
     tip.classList.add("show");
     $("#stage").classList.add("pointer");
   } else hideTooltip();
-});
+}
 renderer.domElement.addEventListener("pointerdown", (e) => (downAt = [e.clientX, e.clientY]));
 renderer.domElement.addEventListener("pointerup", (e) => {
   if (!downAt || booting) return;
@@ -1795,6 +1803,7 @@ function loop(now) {
   stepCard(t);
   stepCat(now, dt);
   if (tween) tween(now);
+  controls.dampingFactor = 1 - Math.pow(1 - 0.08, f);   // v144: the same glide at 30, 60 or 144 fps (fixed 0.08 felt sluggish at low frame rates)
   if (!debugCam) { controls.update(); keepInsideRoom(); }
 
   // hover lift / scale
@@ -1930,6 +1939,13 @@ async function loadCat() {
   shea.update(1 / 60);
   reveal(shea.holder);
   cat = interactive(shea.holder, "Shea says: pet me?", petCat);
+  // v144: hit-test Shea with her bounding box, not her skinned mesh (that moves every vertex on each test and stalled weak CPUs)
+  { const box = new THREE.Box3(), at = new THREE.Vector3();
+    shea.holder.traverse((m) => { if (m.isMesh) m.raycast = function (rc, out) {
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      box.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld);
+      if (rc.ray.intersectBox(box, at)) out.push({ distance: rc.ray.origin.distanceTo(at), point: at.clone(), object: m });
+    }; }); }
 }
 // where she looks while resting: mostly the laptop, sometimes the visitor, now and then the phone or the window
 function catIdleLook(t, attention) {
