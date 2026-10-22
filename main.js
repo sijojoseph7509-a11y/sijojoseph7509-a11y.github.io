@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=144";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=144";
+import { Sound } from "./sound.js?v=145";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=145";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1463,9 +1463,27 @@ let screenMode = "idle", typed = "", typeTimer = 0;
 const WALL_FOCUS = [0, 0.4];   // landscape photo, Sijo on the left — keep the left edge
 const wallImg = new Image();
 wallImg.src = asset("assets/wallpaper.jpg");
+// v145: the pulsing "Click to open" button is a small plane over the screen whose opacity pulses (nearly free), so the
+// 1600×1024 screen canvas is redrawn and re-uploaded only when something on it changes — re-uploading it 30×/s made the
+// desk stutter on Windows, where canvas→WebGL uploads are slow
+const screenBtnTex = canvasTex(560, 136, () => {});
+function drawScreenBtn() {
+  const g = screenBtnTex.g; g.setTransform(4, 0, 0, 4, 0, 0); g.clearRect(0, 0, 140, 34);
+  g.fillStyle = "#0a84ff"; rr(g, 0, 0, 140, 34, 17); g.fill();
+  g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText(TOUCH ? "Tap to open" : "Click to open", 70, 18);
+  screenBtnTex.tex.needsUpdate = true;
+}
+drawScreenBtn();
+const screenBtn = new THREE.Mesh(new THREE.PlaneGeometry(140 / SCREEN_CW * SCREEN_W, 34 / SCREEN_CH * SCREEN_H),
+  new THREE.MeshBasicMaterial({ map: screenBtnTex.tex, transparent: true, toneMapped: false, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+screenBtn.visible = false; screen.add(screenBtn);
+function placeScreenBtn(x, y) { screenBtn.position.set((x / SCREEN_CW - 0.5) * SCREEN_W, (0.5 - (y + 17) / SCREEN_CH) * SCREEN_H, 0.002); screenBtn.visible = true; }
+let screenSig = "";
+document.fonts?.ready.then(() => { screenSig = ""; drawScreenBtn(); });
 const DOCK_COLORS = [["#64d2ff", "#0a84ff"], ["#ffd60a", "#ff9f0a"], ["#bf5af2", "#5e5ce6"], ["#8e8e93", "#48484a"], ["#30d158", "#00a86b"]];
 function drawScreen(t) {
   const g = screenCanvas.g, W = SCREEN_CW, H = SCREEN_CH;
+  screenBtn.visible = false;
   g.setTransform(SCREEN_PX, 0, 0, SCREEN_PX, 0, 0);
   // Wallpaper: Sijo's photo (cover-cropped, keeping him in frame); the original colour blobs until it has loaded
   if (wallImg.complete && wallImg.naturalWidth) {
@@ -1526,9 +1544,7 @@ function drawScreen(t) {
     g.textAlign = "center"; g.fillStyle = ink;
     g.font = `700 32px ${UI}`; g.fillText(`Hi, I'm ${S.name.split(" ")[0]}.`, cx, by + 84);
     g.font = `400 14px ${UI}`; g.fillStyle = ink2; g.fillText(S.title, cx, by + 114);
-    const pulse = 0.85 + Math.sin(t * 3) * 0.15;
-    g.globalAlpha = pulse; g.fillStyle = "#0a84ff"; rr(g, cx - 70, by + 138, 140, 34, 17); g.fill(); g.globalAlpha = 1;
-    g.fillStyle = "#fff"; g.font = `600 14px ${UI}`; g.fillText(TOUCH ? "Tap to open" : "Click to open", cx, by + 156);
+    placeScreenBtn(cx, by + 138);   // v145: the pulsing button is the screenBtn overlay
   } else if (screenMode === "typing") {
     const bw = 440, bh = 170, bx = W - bw - 44, by = 130;
     glass(bx, by, bw, bh, 22, "rgba(28,28,30,0.92)");
@@ -1773,6 +1789,12 @@ function adaptQuality(dt) {
   perf.dts = [];
   // aim for smooth (≈45 fps or better), not just "usable": 25 fps still feels stuck when you drag to look around
   if (median < 19) return;   // v143: smooth (≈50+ fps) — keep watching; a later slowdown still steps down
+  if (!/apple/i.test(GPU_NAME)) {   // v145: off Apple only the resolution changes during use — switching shadows rebuilds every shader, which froze Windows for seconds
+    const cur = renderer.getPixelRatio(), next = [1.25, 1, 0.85, 0.7].find((p) => p < cur - 0.01);
+    if (next === undefined) { perf.step = 4; return; }
+    renderer.setPixelRatio(next); renderer.setSize(innerWidth, innerHeight); perf.step = Math.max(perf.step, 1);
+    console.info("Lowered 3D resolution for smoother performance (" + next + "×)"); return;
+  }
   perf.step++;
   const pr = renderer.getPixelRatio();
   if (perf.step === 1 && pr > 1.25) { renderer.setPixelRatio(1.25); renderer.setSize(innerWidth, innerHeight); }
@@ -1850,7 +1872,10 @@ function loop(now) {
     wiggleObj.rotation.z = Math.sin(wiggleT * 9) * 0.08 * Math.max(0, 1 - wiggleT);
     if (wiggleT > 1) { wiggleObj.rotation.z = 0; wiggleT = -1; }
   }
-  if (now - lastScreen > (dragging ? 100 : 33)) { drawScreen(t); lastScreen = now; }   // the laptop screen texture: fewer uploads while dragging
+  // v145: redraw the laptop screen only when what it shows changes (mode, typed text, caret, the minute, images loaded)
+  const sig = screenMode + typed + (screenMode === "typing" ? Math.floor(t * 3) % 2 : "") + "|" + Math.floor(Date.now() / 60000) + "|" + (wallImg.complete ? "w" : Math.floor(t * 4)) + (screenLogo.complete ? "l" : "");
+  if (sig !== screenSig && now - lastScreen > 33) { drawScreen(t); lastScreen = now; screenSig = sig; }
+  if (screenBtn.visible) screenBtn.material.opacity = 0.85 + Math.sin(t * 3) * 0.15;
   placeCoach();
   if (shadowDirty || ++shadowTick % (dragging ? 6 : 2) === 0) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   renderer.render(scene, camera);
@@ -2030,6 +2055,46 @@ drawScreen(0);
 setProgress(98, "warming up…");
 // compile shaders without freezing the page (uses parallel compilation where the GPU driver supports it)
 try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
+// v145: upload every texture now, behind the loading screen, instead of the first time it comes into view (that stalled drags on Windows)
+try { const seen = new Set(); scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) for (const k in m) { const v = m[k]; if (v && v.isTexture && !seen.has(v)) { seen.add(v); renderer.initTexture(v); } } }); } catch (_) {}
+// v145: off Apple, time a few real frames (each waited for on the GPU) and pick the quality once, here — not by stuttering at the desk
+let benchMs = null;
+function applyTier(t) {
+  perf.step = t;
+  if (t >= 2) { lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1.25)); }
+  if (t >= 3) { renderer.shadowMap.enabled = false; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1)); }
+  if (t >= 4) renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 0.8));
+  renderer.setSize(innerWidth, innerHeight);
+  scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); });
+  shadowDirty = true;
+}
+if (!SOFTWARE_GL && !/apple/i.test(GPU_NAME)) {
+  try {
+    const gl = renderer.getContext(), px = new Uint8Array(4), sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera); sync();   // warm-up
+    const t0 = performance.now();
+    for (let i = 0; i < 6; i++) { renderer.shadowMap.needsUpdate = i % 2 === 0; renderer.render(scene, camera); sync(); }
+    benchMs = (performance.now() - t0) / 6;
+    const tier = benchMs < 9 ? 0 : benchMs < 16 ? 2 : benchMs < 28 ? 3 : 4;
+    console.info("3D test frame: " + benchMs.toFixed(1) + " ms → quality " + Math.max(tier, perf.step));
+    if (tier > perf.step) {
+      applyTier(tier);
+      setProgress(99, "tuning for this device…");
+      try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
+    }
+  } catch (_) {}
+}
+// ?perf: a small live readout (fps, slowest frame, GPU, quality) for checking a device that feels slow
+if (new URLSearchParams(location.search).has("perf")) {
+  const el = document.createElement("div");
+  el.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;color:#7CFC8A;background:rgba(0,0,0,.78);padding:6px 9px;border-radius:7px;pointer-events:none;white-space:pre";
+  document.body.appendChild(el);
+  let n = 0, worst = 0, last = performance.now(), prev = last;
+  const tick = (now) => { n++; worst = Math.max(worst, now - prev); prev = now;
+    if (now - last > 1000) { el.textContent = `${Math.round(n * 1000 / (now - last))} fps · slowest ${worst.toFixed(0)} ms\nGPU: ${GPU_NAME}\nquality ${perf.step} · ${renderer.getPixelRatio()}× · shadows ${renderer.shadowMap.enabled ? "on" : "off"}${benchMs ? " · test " + benchMs.toFixed(1) + " ms" : ""}`; n = 0; worst = 0; last = now; }
+    requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
 setProgress(100, "ready");
 started = true;
 requestAnimationFrame(loop);
@@ -2037,7 +2102,7 @@ requestAnimationFrame(loop);
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
-  covering: !!window.OS.isCovering?.(), quality: perf.step, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
+  covering: !!window.OS.isCovering?.(), quality: perf.step, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
   toggleDay: () => setNight(dayTarget === 0), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
