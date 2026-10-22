@@ -967,3 +967,5 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .lab-media.pano .pano-strip, .lab-media.ticket img, .spotlight:not([hidden]) > *, .win-body.swap-in > *, .win-body.swap-in .works > *, .win-body.swap-in .lab > * { animation: none; }
   .win.closing { animation-duration: .01s; }
 }
+/* v151: Resume window */
+.rs-actions { margin: -8px 0 8px; } .rs-actions .btn svg { margin-right: 2px; }

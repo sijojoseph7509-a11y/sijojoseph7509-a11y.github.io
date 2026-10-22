@@ -10,13 +10,13 @@ window.SITE = {
   focus: "Product, UX & AI designer",             // the role he is going for: said first, everywhere
   also: "Vibe coder",                             // second line of the role: he designs and builds with AI coding agents
   roleLines: ["Product & UX designer", "AI designer & vibe coder"],   // v148: the About "Role" tile, balanced over two lines
-  education: "M.Des design student, NID Bengaluru",
+  education: "M.Des in Design for Retail Experience, NID Bengaluru",
   seeking: "Open to product, UX and AI design roles.",
   roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",
   analytics: "",                                 // ✏️ GoatCounter code (the "sijo" in sijo.goatcounter.com); empty = no counting. See track.js
-  resumeUrl: "#",                                // ✏️ link to your PDF
+  resumeUrl: "assets/Sijo_Joseph_Resume.pdf",     // v151: the one-page resume (a copy of the PDF in ~/Downloads); replace the file to update it
   links: {
     mail: "mailto:sijojoseph7509@gmail.com",
     linkedin: "https://www.linkedin.com/in/sijodesign",
@@ -229,5 +229,12 @@ window.SITE = {
     { name: "Gemini", icon: "googlegemini" }, { name: "Higgsfield", icon: null }
   ],
 
-  experience: []   // ✏️ add real roles: { company, role, from, to } — the Resume window hides the list while it's empty
+  experience: [    // the Resume window lists these; the full details are in the PDF
+    { company: "Vero Moda India", role: "Senior Store Visual Merchandiser", from: "Oct 2024", to: "Jul 2025" },
+    { company: "Marks & Spencer", role: "Visual Merchandiser", from: "Jun 2022", to: "Feb 2024" }
+  ],
+  studies: [
+    { school: "National Institute of Design (NID), Bengaluru", degree: "Master of Design (M.Des), Design for Retail Experience", from: "2025", to: "2027 (expected)" },
+    { school: "Amity University Mumbai", degree: "Bachelor's in Fashion Design", from: "2018", to: "2022" }
+  ]
 };

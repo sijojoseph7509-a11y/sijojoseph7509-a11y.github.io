@@ -4,7 +4,8 @@
   const S = window.SITE;
   const $ = (s) => document.querySelector(s);
   // Security: links from content.js may only be web or email links — never "javascript:" or other schemes
-  const safeUrl = (u) => (/^(https?:\/\/|mailto:)/i.test(String(u || "").trim()) ? String(u).trim() : "#");
+  // (v151: plus one exact local shape, a PDF in this site's assets/ folder, for the resume download)
+  const safeUrl = (u) => (/^(https?:\/\/|mailto:)/i.test(String(u || "").trim()) || /^assets\/[\w-]+\.pdf$/.test(String(u || "").trim()) ? String(u).trim() : "#");
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   const MOD = isMac ? "⌘" : "Ctrl+";
@@ -81,7 +82,7 @@
             <div class="btn-row">
               <button class="btn" data-open="work">See my work</button>
               <button class="btn alt" data-open="contact">Get in touch</button>
-              ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn alt" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Resume</a>` : `<button class="btn alt" data-open="resume">Resume</button>`}
+              <button class="btn alt" data-open="resume">Resume</button>
             </div>
           </div>
         </section>
@@ -168,13 +169,18 @@
     },
     resume: {
       title: "Resume", key: "5",
-      html: () => `
-        <h1>Experience</h1>
-        <p class="sub">${S.experience.length ? "Where I've worked and what I did there." : "My full work history is on my résumé. Ask and I'll send it over."}</p>
-        ${S.experience.length ? `<ul class="list">${S.experience.map((e) => `
-          <li><div><b>${esc(e.company)}</b><span>${esc(e.role)}</span></div><span class="yr">${esc(e.from)} – ${esc(e.to)}</span></li>`).join("")}
-        </ul>` : ""}
-        ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Download résumé</a>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}`
+      html: () => {
+        const has = S.resumeUrl && S.resumeUrl !== "#";
+        const row = (a, b, from, to) => `<li><div><b>${esc(a)}</b><span>${esc(b)}</span></div><span class="yr">${esc(from)} – ${esc(to)}</span></li>`;
+        return `
+        <h1>Résumé</h1>
+        <p class="sub">${has ? "One page: education, skills, design projects and experience. Download it, or open it to read here." : "My full work history is on my résumé. Ask and I'll send it over."}</p>
+        ${has ? `<div class="btn-row rs-actions">
+          <a class="btn" href="${esc(safeUrl(S.resumeUrl))}" download="Sijo_Joseph_Resume.pdf"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download PDF</a>
+          <a class="btn alt" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Open in a new tab</a></div>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}
+        ${S.experience.length ? `<h2 class="sec">Experience</h2><ul class="list">${S.experience.map((e) => row(e.role, e.company, e.from, e.to)).join("")}</ul>` : ""}
+        ${(S.studies || []).length ? `<h2 class="sec">Education</h2><ul class="list">${S.studies.map((e) => row(e.degree, e.school, e.from, e.to)).join("")}</ul>` : ""}`;
+      }
     },
     contact: {
       title: "Contact", key: "6",
