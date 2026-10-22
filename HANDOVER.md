@@ -54,7 +54,7 @@ analytics, no cookies, no third-party requests (fonts and three.js are self-host
 2. **The 3D room** — a recreation of Sijo's Bengaluru room, built in Three.js at real-world scale, **always at night on arrival**:
    - Oat-painted plaster walls with real texture and corner shading, glazed Mulberry floor tiles with grout.
    - A black desk with the **MacBook Pro 14" (M5, Space Black)**, **Shea** the ginger cat, a soundbar, an astronaut galaxy light,
-     a rubber plant in a mango-yellow pot, a 1 L green bottle, the "Personal explorations" sketchbook, an iPhone, the lightning desk
+     a rubber plant in a mango-yellow pot, a 1 L green bottle, the "AI Lab" sketchbook (opens the AI Lab, v153), an iPhone, the lightning desk
      mat and the **My Projects** folders (one tab per case study).
    - Back wall: Sijo's own A1 typographic poster, the woven wire-cage pendant lamp, a **profile card** (frosted-photo UI card) and a
      modular switch board with a charger whose cable lies on the floor.
@@ -232,7 +232,7 @@ and the photo assets in §5.
 | **Astronaut galaxy light** | ≈26 cm | (−7.4, 0, −2.2), rot 0.3; moon-rock base, suit, backpack, cable, full oval visor; head (`astroHead`) **tilts ≈35° up** while projecting (`stepAstro`) | Click = projection on/off. At night projects a nebula + stars on ceiling and back wall (`projCeil`, `projWall`). |
 | Rubber plant | pot ≈10 cm | (−4.95, 0, −1.95) ×0.9; mango-yellow pot #ffb21a; three stems leaning into the room, pointed glossy leaves, lighter new leaves on top | Click = wiggle |
 | Water bottle (1 L) | 10.4 × 26 cm | (−8.4, 0, 5.2) front-left corner; translucent ribbed green (no `transmission`) | — |
-| "Personal explorations" sketchbook | ≈12 × 8 cm | (−6.9, 0.01, 2.1) ×1.3 on a darker book; illustrated cover, elastic band, pencil | Click → About |
+| "AI Lab" sketchbook (v153; was "Personal explorations") | ≈12 × 8 cm | (−6.9, 0.01, 2.1) ×1.3 on a darker book; cover with the AI Lab flask badge, title and "VR worlds · AR keepsake · a game", elastic band, pencil | Click → AI Lab |
 | **My Projects** folders | ≈18 × 13.5 cm | front-right stack (group ×0.576 at (2.2, 0.02, 2.0)); one folder per project, coloured index tab with the project name, cover label "My Projects" | Click a folder → that case study |
 | iPhone | 147.6 × 71.6 mm | (−4.3, 0.06, 4.5) on the mat; lock screen with date/time + "Let's work together →" | Click → Contact |
 | Desk mat | 57 × 19 cm (11.4 × 3.8) | (−3.1, 0.04, 4.6); original lightning artwork (`assets/deskmat*.jpg`) | — |
@@ -375,7 +375,7 @@ Opens from the menu-bar icon, toolbar search or ⌘K. Indexes sections, project 
 | `experience` | `[]` (list hidden while empty) | ✏️ add real roles `{ company, role, from, to }` |
 
 Hard-coded copy in `main.js`: profile-card lines (`drawCard`), sticky note, phone lock screen, sketchbook cover ("Personal
-explorations · sketches · side projects · ideas"), poster text, terminal message, cat bubble, window-view sign text.
+AI Lab · VR worlds · AR keepsake · a game", v153), poster text, terminal message, cat bubble, window-view sign text.
 
 ### 14.2 Case studies (Work window)
 - Source (v68): Tidewell `s6WXmDrd36Frlkg1kVsvUg` page **"Tidewell v3"** (frame `30:3`, 39 sections) · Ekmaati `tkze0DYw6HIb4LdZGvdsht` "ekmaati final", frame **"Desktop - 1"** `1:694` (27 sections, absolutely positioned and slightly overlapping, so slices are cut at each next section's y). Ledgerly removed from the site in v68.

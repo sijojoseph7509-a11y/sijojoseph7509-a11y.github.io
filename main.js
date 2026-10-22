@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=152";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=152";
+import { Sound } from "./sound.js?v=153";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=153";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -927,14 +927,19 @@ const under = rbox(1.9, 0.3, 1.4, 0.04, mat(0x3a3a3c, { roughness: 0.7 }));
 under.position.y = 0.15; under.rotation.y = 0.06;
 const underPages = rbox(1.82, 0.24, 1.3, 0.02, mat(0xfaf7f0, { roughness: 0.9 }));
 underPages.position.set(0.05, 0.15, 0); underPages.rotation.y = 0.06;
-const hobbyCover = canvasTex(512, 384, (g, w, h) => {
-  g.fillStyle = "#e9e2d2"; g.fillRect(0, 0, w, h);
-  // little illustrated scene: mountains, sun, a winding path
-  g.fillStyle = "#f2b45a"; g.beginPath(); g.arc(w * 0.72, h * 0.34, 34, 0, 7); g.fill();
-  g.fillStyle = "#6f8f7a"; g.beginPath(); g.moveTo(40, h * 0.7); g.lineTo(170, h * 0.3); g.lineTo(300, h * 0.7); g.fill();
-  g.fillStyle = "#3f5f7a"; g.beginPath(); g.moveTo(190, h * 0.7); g.lineTo(320, h * 0.38); g.lineTo(470, h * 0.7); g.fill();
-  g.strokeStyle = "#1d1d1f"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(80, h * 0.72); g.bezierCurveTo(200, h * 0.78, 260, h * 0.64, 430, h * 0.74); g.stroke();
-  g.fillStyle = "#1d1d1f"; g.font = `700 40px ${UI}`; g.font = `700 36px ${UI}`; g.fillText("Personal explorations", 40, h * 0.86); g.font = `400 24px ${UI}`; g.fillText("sketches · side projects · ideas", 40, h * 0.95);
+const hobbyCover = canvasTex(512, 384, (g, w, h) => {   // v153: the sketchbook is the AI Lab (it opens that section)
+  g.fillStyle = "#ece5d6"; g.fillRect(0, 0, w, h);
+  // the AI Lab app icon: a coral squircle with a white flask, and two sparkles beside it
+  const bx = 40, by = 34, bs = 150, gr = g.createLinearGradient(0, by, 0, by + bs); gr.addColorStop(0, "#ff8a5c"); gr.addColorStop(1, "#ff3d7f");
+  g.fillStyle = gr; rr(g, bx, by, bs, bs, 38); g.fill();
+  g.save(); g.translate(bx + bs / 2, by + bs / 2); g.scale(5.2, 5.2); g.translate(-12, -12);
+  g.fillStyle = "#fff"; g.fill(new Path2D("M9.6 3.2h4.8v1.5h-.9v4.2l4.8 8.3c.9 1.6-.2 3.6-2 3.6H7.7c-1.8 0-2.9-2-2-3.6l4.8-8.3V4.7h-.9z"));
+  g.fillStyle = "rgba(255,61,127,.55)"; g.beginPath(); g.arc(10.4, 17.7, 1.05, 0, 7); g.fill(); g.beginPath(); g.arc(13.7, 16.9, 0.75, 0, 7); g.fill();
+  g.restore();
+  const spark = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y); g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y); g.quadraticCurveTo(x, y, x, y - r); g.fill(); };
+  g.fillStyle = "#ff5a6e"; spark(236, 70, 26); g.fillStyle = "#f2a33a"; spark(282, 128, 14);
+  g.fillStyle = "#1d1d1f"; g.font = `800 76px ${UI}`; g.fillText("AI Lab", 40, h * 0.8);
+  g.fillStyle = "#5d5a55"; g.font = `500 25px ${UI}`; g.fillText("VR worlds · AR keepsake · a game", 40, h * 0.93);
 });
 const hobby = new THREE.Group();
 const hobbyBoard = rbox(1.75, 0.08, 1.3, 0.03, new THREE.MeshStandardMaterial({ color: 0xe9e2d2, roughness: 0.85 }));
@@ -949,8 +954,8 @@ const sp1 = mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), mat(0xffd60a));
 const sp2 = mesh(new THREE.ConeGeometry(0.04, 0.13, 6), mat(0xf1d3a8));
 sp2.position.y = 0.66;
 sketchPencil.add(sp1, sp2);
-sketchPencil.rotation.set(0, 0, Math.PI / 2); sketchPencil.rotation.y = 0.5;
-sketchPencil.position.set(-0.2, 0.1, 0.25);
+sketchPencil.rotation.set(0, 0, Math.PI / 2); sketchPencil.rotation.y = 0.06;
+sketchPencil.position.set(0.55, 0.1, -0.5);   // v153: along the top edge, so the AI Lab title stays readable
 hobby.add(hobbyBoard, hobbyPages, hobbyFace, elastic, sketchPencil);
 hobby.position.y = 0.48; hobby.rotation.y = -0.12;
 books.add(under, underPages, hobby);
@@ -958,7 +963,7 @@ books.scale.setScalar(1.3);
 books.position.set(-6.9, 0.01, 2.1);
 books.rotation.y = 0.25;
 scene.add(books);
-interactive(books, "Personal explorations", () => { Sound.click(); boot("about"); }, 0.1);
+interactive(books, "AI Lab: VR, AR and a game", () => { Sound.click(); boot("ai"); }, 0.1);   // v153: opens the AI Lab
 
 
 // 6. Soundbar behind Shea (Sijo's black bar speaker, ≈40 × 7 × 7 cm): mesh front, four buttons on top, curved feet.
