@@ -74,18 +74,18 @@ await check("Phone: loads with all models and no errors", async () => {
   await sleep(1000); clean(p); await p.ctx.close();
 });
 
-await check("Welcome screen: 'Enter with sound' starts the music and shows the laptop pointer", async () => {
+await check("Welcome screen: Enter (the default) starts the music and shows the laptop pointer", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
   expect(await p.$eval("#intro", (e) => !e.hidden), "welcome screen not shown");
-  await p.click("#introSound"); await sleep(800);
+  await p.click("#introGo"); await sleep(800);
   const s = await p.evaluate(() => Desk.state());
   expect(s.audio === "running" && s.music, "music not playing: " + s.audio);
   expect(await p.$eval("#coach", (e) => !e.hidden), "laptop pointer not shown"); clean(p); await p.ctx.close();
 });
 
-await check("Welcome screen: Enter (the default) stays silent", async () => {
+await check("Welcome screen: 'Enter without sound' stays silent", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
-  await p.click("#introGo"); await sleep(600);
+  await p.click("#introSound"); await sleep(600);
   const s = await p.evaluate(() => Desk.state());
   expect(!s.music && (await p.$eval("#soundBtn", (b) => b.classList.contains("muted"))), "sound still on"); await p.ctx.close();
 });
@@ -190,12 +190,16 @@ for (const [w, h] of [[320, 568], [360, 780], [430, 932]]) {
   await check(`Phone ${w}×${h}: dock, clock and top menu fit`, async () => {
     const p = await page({ mobile: true }); await p.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await p.goto(BASE + "?open=about&qa=" + Date.now()); await ready(p); await p.waitForFunction(() => OS.isOpen()); await sleep(800);
-    const off = await p.$$eval("#dock .dock-item", (els) => els.filter((e) => { const r = e.getBoundingClientRect(), d = e.parentElement.getBoundingClientRect(); return r.left < d.left - 0.5 || r.right > d.right + 0.5 || r.right > innerWidth; }).length);
+    const off = await p.$$eval("#dock .dock-item", (els) => els.filter((e) => e.offsetParent).filter((e) => { const r = e.getBoundingClientRect(), d = e.parentElement.getBoundingClientRect(); return r.left < d.left - 0.5 || r.right > d.right + 0.5 || r.right > innerWidth; }).length);
     expect(off === 0, off + " dock icon(s) cut off");
-    const names = await p.$$eval("#dock .name", (els) => els.map((e) => { const r = e.getBoundingClientRect(), d = e.closest(".dock").getBoundingClientRect();
+    const names = await p.$$eval("#dock .name", (els) => els.filter((e) => e.offsetParent).map((e) => { const r = e.getBoundingClientRect(), d = e.closest(".dock").getBoundingClientRect();
       return { t: e.textContent, ok: getComputedStyle(e).opacity === "1" && r.width > 0 && r.left >= d.left - 1 && r.right <= d.right + 1 && e.scrollWidth <= e.clientWidth + 1 }; }));
     const bad = names.filter((n) => !n.ok).map((n) => n.t);
-    expect(names.length === 8 && bad.length === 0, "dock names hidden or cut off: " + bad.join(", "));
+    // v148: neighbouring names must not touch (at 320 px "Resume" and "Contact" used to run together)
+    const touching = await p.$$eval("#dock .name", (els) => { const r = els.filter((e) => e.offsetParent).map((e) => { const range = document.createRange(); range.selectNodeContents(e); return [e.textContent, range.getBoundingClientRect()]; });
+      return r.slice(1).filter(([, b], i) => b.left < r[i][1].right + 2).map(([t], i) => r[i][0] + "|" + t); });
+    expect(touching.length === 0, "dock names touch: " + touching.join(", "));
+    expect(names.length === (await p.$$eval("#dock .dock-item", (e) => e.filter((x) => x.offsetParent).length)) && names.length >= 6 && bad.length === 0, "dock names hidden or cut off: " + bad.join(", "));
     const clear = await p.evaluate(() => document.getElementById("win").getBoundingClientRect().bottom <= document.getElementById("dock").getBoundingClientRect().top);
     expect(clear, "window runs behind the dock");
     await p.evaluate(() => OS.close()); await p.waitForFunction(() => !OS.isOpen()); await sleep(1400);
@@ -244,8 +248,10 @@ await check("Desktop UI: menus, Spotlight search, shortcuts, share", async () =>
   await p.waitForSelector("#spotlight:not([hidden])");
   await p.type("#spInput", "blend"); await p.keyboard.press("Enter");
   await p.waitForFunction(() => document.querySelector("#winTitle").textContent === "Skills");
-  await p.keyboard.down(mod); await p.keyboard.press("5"); await p.keyboard.up(mod);
+  await p.keyboard.down(mod); await p.keyboard.press("6"); await p.keyboard.up(mod);   // v148: AI Lab is ⌘3, so Contact is ⌘6
   await p.waitForFunction(() => document.querySelector("#winTitle").textContent === "Contact");
+  await p.keyboard.down(mod); await p.keyboard.press("3"); await p.keyboard.up(mod);
+  await p.waitForFunction(() => document.querySelector("#winTitle").textContent === "AI Lab" && document.querySelectorAll(".lab-item").length >= 2);
   expect(await p.$$eval(".card[href='#']", (a) => a.length) === 0, "placeholder project card is a link");
   clean(p); await p.ctx.close();
 });

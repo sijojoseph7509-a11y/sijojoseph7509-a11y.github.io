@@ -9,6 +9,7 @@ window.SITE = {
   title: "Product, UX & AI Designer",
   focus: "Product, UX & AI designer",             // the role he is going for: said first, everywhere
   also: "Vibe coder",                             // second line of the role: he designs and builds with AI coding agents
+  roleLines: ["Product & UX designer", "AI designer & vibe coder"],   // v148: the About "Role" tile, balanced over two lines
   education: "M.Des design student, NID Bengaluru",
   seeking: "Open to product, UX and AI design roles.",
   roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
@@ -25,7 +26,7 @@ window.SITE = {
 
   about: [   // Sijo's own answers (interview, Oct 2026)
     "I'm Sijo, a multidisciplinary designer from Kerala, now based in Bangalore.",
-    "I knew in my teens that I wanted a creative career, and design is where it led me. My friends would describe me as smart, lazy and adventurous. Lazy in the useful way: I look for the simplest path to a good outcome, and I never skip the process to get there.",
+    "I knew in my teens that I wanted a creative career, and design is where it led me. Along the way I've learned to use AI as a tool, not a shortcut: it makes my work faster and more efficient, while every project still follows my process, from research and framing to prototyping and testing.",
     "The poster on my wall says \"to begin an era\". It's my reminder that I'm meant to make something that matters, something that starts a new chapter.",
     "Away from the desk it's video games, football and long bike rides, with a playlist of phonk, Malayalam and Hindi songs. Shea, my cat, is usually close by."
   ],
@@ -175,6 +176,39 @@ window.SITE = {
         ["27.webp", 997, "Footer: Ekmaati, branding and packaging, Semester 2 jury at NID, 2026, with role and credits."]
       ] } }
   ],
+
+  // AI Lab (v148): things he designed and built himself, and how. Facts for Syntra come from its case study (work/syntra,
+  // section 10, 11 and 15: WebXR on Meta Quest 3, MindAR, 66 tickets). `ai`: what AI did in the build (✏️ Sijo to fill in;
+  // the line is hidden while empty). `draft: true` keeps an entry off the site until it has its details.
+  aiLab: {
+    intro: "Experiments where I design and build the thing myself: virtual worlds, an AR keepsake and a game. Each one shows how it was made.",
+    items: [
+      { title: "Step inside a scent", kind: "VR · Meta Quest 3 · Syntra", case: "syntra",
+        media: { type: "pano", src: "work/syntra/fx/pano-lakeside_night.webp", caption: "One of the nine worlds: Lakeside Night (360° photo, Poly Haven, CC0)" },
+        summary: "In Syntra, a double press on the perfume kiosk puts you inside your scent: a real 360° world on a Meta Quest 3, with the bottle on an oak plinth and its notes floating around you.",
+        how: [
+          "Matched each of ZARA's 19 scents to one of nine real 360° worlds, from a flower garden to a starry lake, because people remember a scent as a place.",
+          "Placed the bottle on an oak plinth in the middle of each world, with its top, heart and base notes floating around the visitor.",
+          "Built it for the headset's browser with WebXR and JavaScript, triggered from the kiosk with a double press.",
+          "Mirrored the same world on the kiosk screen, so the queue could watch what the visitor was seeing."
+        ],
+        ai: "",
+        built: ["WebXR", "JavaScript", "Meta Quest 3", "360° photography (Poly Haven)", "ESP32 kiosk"] },
+      { title: "A ticket that comes alive", kind: "AR · Phone browser · Syntra", case: "syntra",
+        media: { type: "ticket", src: "work/syntra/fx/receipt-140032.webp", caption: "A real ticket from the exhibit: Man Gold, 30 September 2026" },
+        summary: "A 2-second hold on the kiosk prints your scent on a 58 mm thermal ticket. Point a phone at its drawing and the drawing lifts off the paper.",
+        how: [
+          "Designed the ticket: the scent, its mood and notes, and a drawing of its own for each result.",
+          "Made the drawing the AR marker, using MindAR image tracking in the phone's browser, so there is nothing to install.",
+          "Kept it to two steps printed on the ticket itself: scan the code, then point the phone at the drawing.",
+          "Printed 66 tickets for visitors at our exhibit on 30 September 2026."
+        ],
+        ai: "",
+        built: ["MindAR", "JavaScript", "58 mm thermal printer", "QR code"] },
+      { title: "Mumbai Local", kind: "Game", draft: true,   // ✏️ hidden until Sijo sends what it is, how he made it and media
+        media: null, summary: "", how: [], ai: "", built: [] }
+    ]
+  },
 
   // Disciplines (Product Design first: it's the role he's going for) + the tools he uses (logos in icons.js)
   skills: [

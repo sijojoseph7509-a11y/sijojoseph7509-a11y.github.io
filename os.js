@@ -14,6 +14,7 @@
     about:   '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c.8-3.6 4-6 8-6s7.2 2.4 8 6" />',
     work:    '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>',
     skills:  '<path d="M12 3l2.4 5.4L20 9l-4.3 3.9L17 19l-5-3-5 3 1.3-6.1L4 9l5.6-.6z"/>',
+    ai:      '<path d="M9.5 3.5h5M10.5 3.5v5.4L5.8 17c-.9 1.6.2 3.5 2 3.5h8.4c1.8 0 2.9-1.9 2-3.5l-4.7-8.1V3.5"/><path d="M7.4 14.6h9.2"/>',
     resume:  '<path d="M7 3h7l5 5v11.5A1.5 1.5 0 0 1 17.5 21h-10A1.5 1.5 0 0 1 6 19.5v-15A1.5 1.5 0 0 1 7.5 3zM14 3v5h5M9 13h6M9 17h6"/>',
     contact: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>'
   };
@@ -25,6 +26,7 @@
     about:   '<circle cx="12" cy="8.6" r="3.9" fill="#fff"/><path d="M4.6 19.6c.8-3.7 3.8-5.9 7.4-5.9s6.6 2.2 7.4 5.9c.1.5-.3.9-.8.9H5.4c-.5 0-.9-.4-.8-.9z" fill="#fff"/>',
     work:    '<path d="M9 6.6V5.4c0-.9.7-1.6 1.6-1.6h2.8c.9 0 1.6.7 1.6 1.6v1.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><rect x="3.2" y="6.6" width="17.6" height="12.8" rx="2.4" fill="#fff"/><path d="M3.2 11.6h17.6" stroke="rgba(214,120,0,.35)" stroke-width="1.1"/>',
     skills:  '<path d="M10.2 3.6l1.7 4.9 4.9 1.7-4.9 1.7-1.7 4.9-1.7-4.9-4.9-1.7 4.9-1.7z" fill="#fff"/><path d="M17.4 13.6l.85 2.35 2.35.85-2.35.85-.85 2.35-.85-2.35-2.35-.85 2.35-.85z" fill="#fff" opacity=".9"/>',
+    ai:      '<path d="M9.6 3.2h4.8v1.5h-.9v4.2l4.8 8.3c.9 1.6-.2 3.6-2 3.6H7.7c-1.8 0-2.9-2-2-3.6l4.8-8.3V4.7h-.9z" fill="#fff"/><path d="M7.2 15.4h9.6" stroke="rgba(255,61,127,.35)" stroke-width="1.2"/><circle cx="10.4" cy="17.7" r="1.05" fill="rgba(255,61,127,.55)"/><circle cx="13.7" cy="16.9" r=".75" fill="rgba(255,61,127,.55)"/>',
     resume:  '<path d="M7 3h6.6L18 7.4v12.2c0 .8-.6 1.4-1.4 1.4H7c-.8 0-1.4-.6-1.4-1.4V4.4C5.6 3.6 6.2 3 7 3z" fill="#fff" stroke="#c7c7cc" stroke-width=".8"/><path d="M13.6 3v3.6c0 .5.4.8.8.8H18" fill="none" stroke="#c7c7cc" stroke-width=".8"/><path d="M8.4 11.2h7.2M8.4 14h7.2M8.4 16.8h4.6" stroke="#0a84ff" stroke-width="1.3" stroke-linecap="round"/>',
     contact: '<rect x="3.2" y="5.6" width="17.6" height="12.8" rx="2.2" fill="#fff"/><path d="M4.4 7.2l7.6 5.6 7.6-5.6" fill="none" stroke="#1f8cf9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
     linkedin:'<path d="M6.3 9.5h2.8V18H6.3zM7.7 5.3a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zM10.8 9.5h2.7v1.2c.4-.7 1.4-1.4 2.8-1.4 3 0 3.5 1.9 3.5 4.4V18H17v-3.8c0-.9 0-2.1-1.3-2.1s-1.5 1-1.5 2V18h-3.4z" fill="#fff"/>',
@@ -36,6 +38,7 @@
     about:   "linear-gradient(180deg,#54a8ff,#0a7cf5)",
     work:    "linear-gradient(180deg,#ffbf47,#ff9a0a)",
     skills:  "linear-gradient(180deg,#c784ff,#9b4dff)",
+    ai:      "linear-gradient(180deg,#ff8a5c,#ff3d7f)",
     resume:  "linear-gradient(180deg,#ffffff,#eceef2)",
     contact: "linear-gradient(180deg,#5cc8ff,#1a8cff)",
     linkedin:"linear-gradient(180deg,#1f7fd6,#0a66c2)",
@@ -71,7 +74,7 @@
             <h1>Hi, I'm ${first}.</h1>
             <p class="lead">${esc(S.education)}. ${esc(S.seeking)}</p>
             <dl class="ab-facts">
-              <div><dt>Role</dt><dd>${esc(S.focus)}${S.also ? "<br>" + esc(S.also) : ""}</dd></div>
+              <div class="role"><dt>Role</dt><dd>${(S.roleLines || [S.focus, S.also].filter(Boolean)).map(esc).join("<br>")}</dd></div>
               <div><dt>Studying</dt><dd>${esc(S.education)}</dd></div>
               <div><dt>Based in</dt><dd>${esc(S.location)}</dd></div>
             </dl>
@@ -121,8 +124,34 @@
         }).join("")}
         </div>`
     },
+    ai: {
+      title: "AI Lab", key: "3",
+      html: () => {
+        const L = S.aiLab || { items: [] }, items = L.items.filter((it) => !it.draft);
+        const media = (m) => !m ? "" : m.type === "pano"
+          ? `<div class="lab-media pano" role="img" aria-label="${esc(m.caption || "")}"><div class="pano-strip"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"></div><span class="lab-badge">360°</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`
+          : `<div class="lab-media ticket"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><span class="lab-badge">AR</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`;
+        return `
+        <h1>AI Lab</h1>
+        <p class="sub">${esc(L.intro || "")}</p>
+        <div class="lab">${items.map((it, i) => `
+          <article class="lab-item${i % 2 ? " flip" : ""}">
+            ${media(it.media)}
+            <div class="lab-txt">
+              <p class="eyebrow">${esc(it.kind)}</p>
+              <h2>${esc(it.title)}</h2>
+              <p class="lab-sum">${esc(it.summary)}</p>
+              ${it.how && it.how.length ? `<h3>How I made it</h3><ol class="lab-steps">${it.how.map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` : ""}
+              ${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}
+              ${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}
+              ${it.case ? `<button class="btn alt" data-case="${esc(it.case)}">See it in the ${esc((S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "")} case study ›</button>` : ""}
+            </div>
+          </article>`).join("")}
+        </div>`;
+      }
+    },
     skills: {
-      title: "Skills", key: "3",
+      title: "Skills", key: "4",
       html: () => `
         <h1>What I do</h1>
         <p class="sub">${esc(S.focus)} and ${esc((S.also || "").toLowerCase())}, with a multidisciplinary toolkit behind it.</p>
@@ -138,7 +167,7 @@
         <ul class="tool-grid">${(S.tools || []).map((t) => `<li>${toolIcon(t)}<span>${esc(t.name)}</span></li>`).join("")}</ul>`
     },
     resume: {
-      title: "Resume", key: "4",
+      title: "Resume", key: "5",
       html: () => `
         <h1>Experience</h1>
         <p class="sub">${S.experience.length ? "Where I've worked and what I did there." : "My full work history is on my résumé. Ask and I'll send it over."}</p>
@@ -148,7 +177,7 @@
         ${S.resumeUrl && S.resumeUrl !== "#" ? `<a class="btn" href="${esc(safeUrl(S.resumeUrl))}" target="_blank" rel="noopener">Download résumé</a>` : `<button class="btn alt" data-open="contact">Ask for my résumé</button>`}`
     },
     contact: {
-      title: "Contact", key: "5",
+      title: "Contact", key: "6",
       html: () => {
         const gh = window.TOOL_ICONS && window.TOOL_ICONS.github;
         const ghIcon = gh ? `<span class="app" style="background:linear-gradient(180deg,#3a3a3e,#1c1c1e)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="${esc(gh.path)}"/></svg></span>` : appIcon("desk");
@@ -196,8 +225,8 @@
   $("#dock").innerHTML = Object.entries(apps).map(([k, a]) =>
       `<button class="dock-item" data-open="${k}" aria-label="${esc(a.title)}">${appIcon(k)}<span class="name">${esc(a.title)}</span></button>`).join("") +
     `<span class="dock-sep"></span>` +
-    `<a class="dock-item" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
-    `<a class="dock-item" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
+    `<a class="dock-item ext" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
+    `<a class="dock-item ext" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
     `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Desk</span></button>`;
 
   // Full screen: the dock slides up when the mouse reaches the bottom edge, and hides again when it leaves
@@ -381,7 +410,9 @@
     morphWindow(() => { screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs"); });
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
-  let opening = false;
+  let opening = false, shownKey = null;
+  // v148: the toolbar frosts (blur + hairline) once content scrolls beneath it, like a macOS window, so nothing reads through the title
+  body.addEventListener("scroll", () => win.classList.toggle("scrolled", body.scrollTop > 6), { passive: true });
   function placeHighlight(instant) {   // the sidebar selection glides between items, like Finder
     const hl = $(".side-hl"), on = $(".side-item.active");
     if (!hl || !on || innerWidth < 761) return;
@@ -396,14 +427,18 @@
     const app = apps[key] || apps.about;
     current = key in apps ? key : "about";
     const switching = !win.hidden && !os.hidden && body.childElementCount > 0 && !opening;
+    const order = Object.keys(apps), dir = Math.sign(order.indexOf(current) - order.indexOf(shownKey || current)) || 1;   // v148: down the list → from below
+    shownKey = current;
+    body.style.setProperty("--dir", dir);
     $("#winTitle").textContent = app.title;
     if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
+    body.querySelectorAll(".work-card img, .ab-proj img, .lab-media img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else { im.addEventListener("load", () => im.classList.add("in"), { once: true }); im.addEventListener("error", () => im.classList.add("in"), { once: true }); } });
     const nk = Object.keys(apps)[Object.keys(apps).indexOf(current) + 1];   // scroll on past the end to reach the next section
     if (nk) body.insertAdjacentHTML("beforeend", `<p class="next-hint" data-next="${esc(nk)}"><span>Keep scrolling for ${esc(apps[nk].title)}</span><i></i></p>`);
-    body.scrollTop = 0;
+    body.scrollTop = 0; win.classList.remove("scrolled");
     win.hidden = false;
-    win.classList.remove("min");
+    win.classList.remove("min", "closing");
     if (switching) {   // switching tabs: the window stays put, the new page settles in (no window pop)
       for (const el of [body, $("#winTitle")]) { el.classList.remove("swap-in"); void el.offsetWidth; el.classList.add("swap-in"); }
     } else {
@@ -435,7 +470,11 @@
   }, { passive: true });
   body.addEventListener("touchstart", (e) => { ty = atEnd() ? e.touches[0].clientY : null; }, { passive: true });
   body.addEventListener("touchend", (e) => { if (ty != null && hint() && !body.classList.contains("case-mode") && ty - e.changedTouches[0].clientY > 140 && atEnd()) pageOn(); ty = null; }, { passive: true });
-  const closeWindow = () => { win.hidden = true; document.querySelectorAll(".running").forEach((b) => b.classList.remove("running")); };
+  const closeWindow = () => {   // v148: a quick fade-and-settle, like macOS, instead of vanishing
+    const done = () => { if (!win.classList.contains("closing")) return; win.classList.remove("closing"); win.hidden = true; document.querySelectorAll(".running").forEach((b) => b.classList.remove("running")); };
+    if (win.hidden) return; if (reducedMotion || !win.animate) return done();
+    win.classList.add("closing"); setTimeout(done, 200);
+  };
   const minimize = () => { if (win.hidden) return; win.classList.add("min"); setTimeout(() => { win.hidden = true; win.classList.remove("min"); }, 340); };
   const zoom = () => { resetWindowPlacement(); win.classList.toggle("max"); };
 
@@ -565,6 +604,7 @@
   const index = [
     ...Object.entries(apps).map(([k, a]) => ({ label: a.title, hint: "Section", icon: k, run: () => show(k) })),
     ...S.projects.map((p) => ({ label: p.title, hint: p.tag, icon: "work", run: () => (p.case ? openCase(p.case.slug) : show("work")) })),
+    ...((S.aiLab && S.aiLab.items) || []).filter((it) => !it.draft).map((it) => ({ label: it.title, hint: "AI Lab · " + it.kind, icon: "ai", run: () => show("ai") })),
     ...S.skills.flatMap((g) => g.items.map((i) => ({ label: i, hint: g.group, icon: "skills", run: () => show("skills") }))),
     { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (location.href = safeUrl(S.links.mail)) },
     { label: "Back to desk", hint: "Close the Mac", icon: "desk", run: () => close() }

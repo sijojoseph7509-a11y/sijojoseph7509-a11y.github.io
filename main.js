@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=147";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=147";
+import { Sound } from "./sound.js?v=148";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=148";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2173,8 +2173,8 @@ else {
   } catch (_) {}
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
-  $("#introGo").addEventListener("click", () => enter(false));      // quiet by default
-  $("#introSound").addEventListener("click", () => enter(true));
+  $("#introGo").addEventListener("click", () => enter(true));        // v148: Enter starts with sound
+  $("#introSound").addEventListener("click", () => enter(false));    // "Enter without sound"
   $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects
   $("#introGo").focus({ preventScroll: true });
 }

@@ -537,7 +537,8 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
   .win-body h1 { font-size: 28px; }
   .cards { grid-template-columns: 1fr; }
   .dock { gap: 3px; padding: 5px 6px; height: auto; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: calc(100% - 16px); border-radius: 22px; }
-  .dock-item { width: min(42px, calc((100vw - 58px) / 8)); }   /* 8 icons always fit, even at 320 px */
+  .dock-item { width: min(42px, calc((100vw - 58px) / 7)); }   /* v148: 7 icons on phones (LinkedIn and Behance live in Contact), bigger taps */
+  .dock-item.ext, .dock-sep { display: none; }
   .dock-item .app { width: 100%; height: auto; aspect-ratio: 1; }
   .dock-item .name { margin-top: 5px; font-size: min(9.5px, 2.55vw); letter-spacing: -.03em; max-width: none; overflow: visible; text-overflow: clip; }   /* whole names, even at 320 px */
   .dock-item.running::after { top: calc(100% - 15px); }
@@ -886,3 +887,83 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wl-room { z-index: 1; animation: wlRoomIn .6s var(--ease) both; }
 @keyframes wlRoomIn { from { opacity: 0; } }
 .loader.ready.done .loader-inner { transform: scale(.96); opacity: 0; transition: transform .6s var(--ease), opacity .5s var(--ease); }
+
+/* ───────── v148: desktop polish ───────── */
+/* Page switches: the new page settles in from the side of the sidebar it came from (down the list → from below), opacity and
+   transform only (no blur filter: cheap on every GPU) */
+.win-body.swap-in > * { animation: settle2 .42s var(--smooth) both; }
+.win-title.swap-in { animation: settle2 .3s var(--smooth) both; }
+@keyframes settle2 { from { opacity: 0; transform: translateY(calc(var(--dir, 1) * 12px)); } }
+/* cards arrive one after another */
+.win-body.swap-in .works > *, .win-body.swap-in .lab > * { animation: settle2 .5s var(--smooth) both; }
+.win-body.swap-in .works > :nth-child(2), .win-body.swap-in .lab > :nth-child(2) { animation-delay: .05s; }
+.win-body.swap-in .works > :nth-child(3), .win-body.swap-in .lab > :nth-child(3) { animation-delay: .1s; }
+.win-body.swap-in .works > :nth-child(n+4) { animation-delay: .14s; }
+/* images fade in as they arrive instead of popping */
+.work-card img, .ab-proj img, .lab-media img { opacity: 0; transition: opacity .45s var(--smooth), transform .8s var(--smooth), filter .5s var(--smooth); }
+.work-card img.in, .ab-proj img.in, .lab-media img.in { opacity: 1; }
+
+/* the toolbar frosts once content scrolls under it (fixes text and images reading through the title) */
+.win-bar::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--g-win); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 .5px 0 var(--sep); opacity: 0; transition: opacity .25s var(--smooth); pointer-events: none; }
+.win.scrolled .win-bar { background: transparent; }
+.win.scrolled .win-bar::before { opacity: 1; }
+
+/* closing a window: a quick fade and settle */
+.win.closing { animation: winClose .2s cubic-bezier(.4, 0, 1, 1) forwards; pointer-events: none; }
+@keyframes winClose { to { opacity: 0; scale: .96; } }   /* the scale property composes with each layout's own transform */
+
+/* tactile presses */
+.work-card:active { transform: translateY(-2px) scale(.985); transition-duration: .12s; }
+.tb-btn { transition: background .2s, transform .2s var(--spring); } .tb-btn:hover { background: var(--g-fill); } .tb-btn:active { transform: scale(.92); }
+
+/* Spotlight drops in */
+.spotlight:not([hidden]) > * { animation: spIn .28s var(--spring) both; }
+@keyframes spIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } }
+
+/* Work: two projects per row */
+.works { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.work-card { border-radius: 22px; }
+.wc-info { padding: 16px 18px; border-radius: 0 0 22px 22px; }
+.wc-info b { font-size: 19px; margin: 2px 0 4px; }
+.wc-info p { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 760px) { .works { grid-template-columns: 1fr; gap: 18px; } }
+
+/* About: Role gets its own row so its two lines sit evenly; Studying and Based in share the row below */
+.ab-facts { grid-template-columns: 1fr 1fr; }
+.ab-facts .role { grid-column: 1 / -1; }
+.ab-facts .role dd { font-size: 15px; }
+/* About › Selected work: 2 × 2, like the Work page */
+.ab-work { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+/* AI Lab */
+.lab { display: grid; gap: 26px; }
+.lab-item { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 0; border-radius: 26px; overflow: hidden; background: var(--card);
+  box-shadow: inset 0 1px 0 var(--g-hi), 0 0 0 .5px var(--g-edge), 0 16px 44px rgba(0, 0, 0, .08); }
+.lab-item.flip .lab-media { order: 2; }
+.lab-media { position: relative; min-height: 360px; overflow: hidden; background: #101418; }
+.lab-media.pano .pano-strip { position: absolute; inset: 0 auto 0 0; display: flex; height: 100%; width: max-content; animation: panoPan 70s linear infinite; will-change: transform; }
+.lab-media.pano .pano-strip img { height: 100%; width: auto; max-width: none; display: block; }
+@keyframes panoPan { to { transform: translateX(-50%); } }   /* two copies of the 360° photo side by side: a seamless loop */
+.lab-media.ticket { display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 20%, #f3e7d8, #d9c3a4); }
+.lab-media.ticket img { width: min(44%, 220px); height: auto; transform: rotate(-4deg); filter: drop-shadow(0 18px 30px rgba(60, 40, 10, .35)); animation: ticketFloat 6s ease-in-out infinite; }
+@keyframes ticketFloat { 50% { transform: rotate(-3deg) translateY(-6px); } }
+.lab-badge { position: absolute; left: 16px; top: 16px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #fff;
+  background: rgba(0, 0, 0, .45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.lab-cap { position: absolute; left: 16px; right: 16px; bottom: 14px; font-size: 12px; color: rgba(255, 255, 255, .85); text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
+.lab-media.ticket .lab-cap { color: #5a4325; text-shadow: none; }
+.lab-txt { padding: 28px 30px 30px; }
+.lab-txt h2 { font-family: var(--display); font-size: 26px; letter-spacing: -.02em; margin: 0 0 8px; color: var(--t1); }
+.lab-sum { color: var(--t1) !important; font-size: 15.5px; }
+.lab-txt h3 { margin: 18px 0 8px !important; text-transform: uppercase; letter-spacing: .05em; font-size: 12px !important; }
+.lab-steps { margin: 0 0 18px; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
+.lab-steps li { counter-increment: st; position: relative; padding-left: 34px; font-size: 14px; line-height: 1.45; color: var(--t2); }
+.lab-steps li::before { content: counter(st); position: absolute; left: 0; top: -1px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; color: #fff; background: linear-gradient(180deg, #ff8a5c, #ff3d7f); }
+.lab-ai { padding: 12px 14px; border-radius: 14px; background: rgba(255, 61, 127, .08); font-size: 14px; }
+.lab-ai b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #ff3d7f; margin-bottom: 2px; }
+@media (max-width: 1000px) { .lab-item, .lab-item.flip { grid-template-columns: 1fr; } .lab-item.flip .lab-media { order: 0; } .lab-media { min-height: 260px; } }
+@media (prefers-reduced-motion: reduce) {
+  .lab-media.pano .pano-strip, .lab-media.ticket img, .spotlight:not([hidden]) > *, .win-body.swap-in > *, .win-body.swap-in .works > *, .win-body.swap-in .lab > * { animation: none; }
+  .win.closing { animation-duration: .01s; }
+}
