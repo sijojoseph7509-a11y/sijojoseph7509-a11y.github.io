@@ -105,7 +105,7 @@ for (const mobile of [false, true]) {
     const p = await page({ mobile }); await p.goto(BASE + "?qa=" + Date.now()); await ready(p);
     await p.waitForFunction(() => { const s = Desk.state(); return s.cat && s.ball && !s.catBusy; }, { timeout: 30000 }); await sleep(600);   // Shea walks in and jumps onto the desk first
     const SIDE = /the (sun|night) in|One Piece prints/;   // side walls: drag to look at them
-    const home = await p.evaluate((side) => Desk.offscreen().filter((l) => !/Kick|About me/.test(l) && !new RegExp(side).test(l)), SIDE.source);   // close-up: ball + wall lettering may be out of frame
+    const home = await p.evaluate((side) => Desk.offscreen().filter((l) => !/Kick|Keepy|About me/.test(l) && !new RegExp(side).test(l)), SIDE.source);   // close-up: ball + wall lettering may be out of frame
     expect(home.length === 0, "off-screen in the desk close-up: " + home.join(", "));
     await p.click("#zoomBtn"); await sleep(1400);
     const room = await p.evaluate((side) => Desk.offscreen().filter((l) => !new RegExp(side).test(l)), SIDE.source);
@@ -136,6 +136,21 @@ await check("Zooming in (scroll) from anywhere heads for the laptop", async () =
   const off = Math.hypot(s.at.x / s.w - 0.5, s.at.y / s.h - 0.5);
   expect(off < 0.15, "laptop is " + (off * 100).toFixed(0) + "% away from the centre after zooming in"); await p.ctx.close();
   return "laptop " + (off * 100).toFixed(0) + "% from centre";
+});
+
+await check("Keepy-ups: a press on the ball kicks it (the camera stays put) and a second kick as it falls counts", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(600);
+  await p.click("#zoomBtn"); await sleep(1500);   // the ball is on the floor: the room view shows it
+  let g = await p.evaluate(() => Desk.game()); expect(g && g.onScreen, "ball not on screen in the room view");
+  const cam = await p.evaluate(() => JSON.stringify(Desk.state().cam));
+  await p.mouse.move(g.x + g.r * 0.3, g.y); await p.mouse.down(); await p.mouse.move(g.x + 60, g.y - 40); await p.mouse.up();
+  g = await p.evaluate(() => Desk.game()); expect(g.airborne && g.keepy === 1, "first press did not kick the ball");
+  expect(cam === await p.evaluate(() => JSON.stringify(Desk.state().cam)), "pressing the ball moved the camera");
+  await p.waitForFunction(() => { const s = Desk.game(); return s.vy < 0 && s.h < 5; }, { polling: 16, timeout: 4000 });
+  g = await p.evaluate(() => Desk.game()); await p.mouse.click(g.x, g.y);
+  g = await p.evaluate(() => Desk.game()); expect(g.keepy === 2, "second kick did not count (" + g.keepy + ")");
+  await p.waitForFunction(() => !Desk.game().airborne, { polling: 50, timeout: 6000 });
+  expect(await p.$eval("#gamePill", (e) => /keepy-up/.test(e.textContent)), "no score shown after the round"); clean(p); await p.ctx.close();
 });
 
 await check("Window: day ↔ night switch changes the room's light and back", async () => {

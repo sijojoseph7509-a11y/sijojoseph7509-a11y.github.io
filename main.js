@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=148";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=148";
+import { Sound } from "./sound.js?v=149";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=149";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1854,17 +1854,25 @@ function loop(now) {
     h.material.opacity = Math.max(0, 1 - d.life / 1.4);
     if (d.life > 1.4) { scene.remove(h); h.material.dispose(); hearts.splice(i, 1); }
   }
-  if (ball && airborne) {
-    ballVY -= 0.03 * f;                                   // gravity (≈ 1 s in the air per touch)
+  if (ball && (airborne || bouncing)) {   // v149: floaty arcade gravity while in play; a couple of small bounces when it lands
+    ballVY -= (airborne ? ballG : 0.03) * f;
     ball.position.y += ballVY * f;
     ball.position.z += (ballZ - ball.position.z) * Math.min(1, 0.12 * f);
-    ball.children[0].rotation.x += 0.08 * f;
-    if (ball.position.y <= ballY0) {                      // it landed: the round ends
-      ball.position.y = ballY0; airborne = false; ballVY = 0;
-      const best = keepy > keepyBest; if (best) { keepyBest = keepy; try { localStorage.setItem("keepy", keepyBest); } catch (_) {} }
-      gamePill(`${keepy} keepy-up${keepy === 1 ? "" : "s"}`, best && keepy > 1 ? "New best!" : `Best ${keepyBest} · click to try again`);
-      clearTimeout(gamePillT); gamePillT = setTimeout(() => $("#gamePill") && $("#gamePill").classList.remove("on"), 3200);
-      ballZ = 6.2; ballVX *= 0.5;
+    ball.children[0].rotation.x += (airborne ? 0.08 : 0.04) * f;
+    if (STILL) stillUntil = performance.now() + 300;     // the still desk keeps drawing while the ball is moving
+    if (ball.position.y <= ballY0 && airborne && !landAt) landAt = performance.now();
+    if (ball.position.y <= ballY0 && airborne && performance.now() - landAt < 150) { ball.position.y = ballY0; ballVY = Math.min(ballVY, 0); }   // a moment's grace: a scoop off the floor still saves it
+    else if (ball.position.y <= ballY0) {
+      ball.position.y = ballY0;
+      if (airborne) {                                     // it touched the floor: the round ends
+        airborne = false;
+        const best = keepy > keepyBest; if (best) { keepyBest = keepy; try { localStorage.setItem("keepy", keepyBest); } catch (_) {} }
+        gamePill(`${keepy} keepy-up${keepy === 1 ? "" : "s"}`, best && keepy > 1 ? "New best!" : `Best ${keepyBest} · tap the ball to go again`);
+        clearTimeout(gamePillT); gamePillT = setTimeout(() => $("#gamePill") && $("#gamePill").classList.remove("on"), 3600);
+        ballZ = 6.2; ballVX *= 0.5; Sound.land();
+      }
+      landAt = 0;
+      if (ballVY < -0.09) { ballVY = -ballVY * 0.38; bouncing = true; } else { ballVY = 0; bouncing = false; }
     }
   } else if (ball && Math.abs(ball.position.z - ballZ) > 0.01) ball.position.z += (ballZ - ball.position.z) * Math.min(1, 0.05 * f);
   if (ball && Math.abs(ballVX) > 0.001) {
@@ -2006,17 +2014,48 @@ function catShadowFollow() {
 
 // Ball on the marble floor — click to kick it
 let gamePillT = 0;
-let ball = null, ballVX = 0, ballVY = 0, ballY0 = 0, ballZ = 6.2, keepy = 0, keepyBest = 0, airborne = false;
+let ball = null, ballVX = 0, ballVY = 0, ballY0 = 0, ballZ = 6.2, keepy = 0, keepyBest = 0, airborne = false, bouncing = false, lastKickAt = 0, landAt = 0;
 try { keepyBest = +localStorage.getItem("keepy") || 0; } catch (_) {}
-// Keepy-up: click the ball to pop it up, click it again before it lands. Each touch counts; your best is kept on this device.
-function kickUp() {
+// Keepy-ups (v149): press on the ball to kick it up; kick it again as it comes down, before it touches the floor. It rises to
+// about the same height every time (so it stays in view) but gravity grows a little with each touch, so it gets quicker.
+// Where you strike it steers it: hit its left side and it drifts right. Each touch counts; the best is kept on this device.
+const G0 = 0.0105, RISE = 8.5;   // ≈ 85 cm up and ≈ 1.4 s in the air at the start
+let ballG = G0;
+const MILESTONE = { 5: "Nice!", 10: "On fire", 25: "Freestyler", 50: "Unreal", 100: "Legend" };
+function kickUp(hit) {
   if (!ball) return;
-  Sound.click();
-  if (!airborne) { keepy = 0; airborne = true; ballZ = 8.9; }   // first touch: it comes out from under the desk edge
-  keepy++;
-  ballVY = 0.92 + Math.random() * 0.12; ballVX = (Math.random() - 0.5) * 0.12;
-  gamePill(`Keepy-ups <b>${keepy}</b>`, keepyBest ? `Best ${keepyBest}` : "Click it again before it lands");
+  const now = performance.now();
+  if ((airborne && ballVY > 0.06) || now - lastKickAt < 160) return;   // still rising: wait for it to come down
+  lastKickAt = now;
+  if (!airborne) { keepy = 0; airborne = true; ballZ = 8.9; ballG = G0; }   // first touch: it comes out from under the desk edge
+  bouncing = false; landAt = 0; keepy++;
+  ballG = Math.min(G0 * 1.6, G0 * Math.pow(1.025, keepy - 1));
+  ballVY = Math.sqrt(2 * ballG * RISE * Math.max(0.72, 1 - Math.max(0, keepy - 20) * 0.01) * (0.93 + Math.random() * 0.1));   // past 20 touches it rises a little less
+  const off = hit && isFinite(hit.dx) ? Math.max(-1.2, Math.min(1.2, hit.dx)) : 0;
+  ballVX = -off * 0.07 + (Math.random() - 0.5) * Math.min(0.05, 0.008 + keepy * 0.002);
+  Sound.kick(keepy); if (MILESTONE[keepy]) Sound.ding();
+  if (STILL) stillUntil = now + 2000;
+  gamePill(`Keepy-ups <b>${keepy}</b>`, MILESTONE[keepy] || (keepy === 1 ? "Kick it again as it comes down" : keepyBest ? `Best ${keepyBest}` : "Keep it up"));
 }
+// the ball is hit if the press lands on or near it on screen (a generous circle: it's moving), and the press then kicks
+// instead of starting a drag, so the camera doesn't swing away mid-game
+const _bw = new THREE.Vector3(), _bs = new THREE.Vector3(), _br = new THREE.Vector3();
+function ballHit(e) {
+  if (!ball) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ball.getWorldPosition(_bw); _bs.copy(_bw).project(camera); if (Math.abs(_bs.z) > 1) return null;
+  _br.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(BALL_R).add(_bw).project(camera);
+  const sx = r.left + (_bs.x + 1) / 2 * r.width, sy = r.top + (1 - _bs.y) / 2 * r.height, pr = Math.abs(_br.x - _bs.x) / 2 * r.width;
+  const dx = e.clientX - sx, dy = e.clientY - sy;
+  return Math.hypot(dx, dy) <= Math.max(pr * 1.7, 30) ? { dx: dx / Math.max(pr, 8), sx, sy, pr } : null;
+}
+renderer.domElement.addEventListener("pointerdown", (e) => {
+  if (booting || e.button > 0) return;
+  const h = ballHit(e); if (!h) return;
+  e.stopImmediatePropagation();   // a kick, not the start of a camera drag or a click on something behind it
+  downAt = null; hideTooltip();
+  kickUp(h);
+}, { capture: true });
 function gamePill(main, sub) {
   const el = $("#gamePill"); if (!el) return;
   el.innerHTML = `<span>${main}</span><small>${sub}</small>`; el.classList.add("on");
@@ -2043,7 +2082,7 @@ async function loadBall() {
   ball.position.set(-4.5, floor.position.y + BALL_R, 6.2); // on the floor at the front of the desk (under the desk front), in view
   reveal(ball);
   ballY0 = ball.position.y;
-  interactive(ball, "Kick it up ⚽ keepy-up", kickUp);
+  interactive(ball, "Keepy-ups: tap the ball", () => kickUp());
 }
 
 
@@ -2130,6 +2169,9 @@ requestAnimationFrame(loop);
 // read-only status for automated checks (.claude/skills/site-qa) and debugging in the console: Desk.state()
 window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix], debugView: (pos, target) => { debugCam = true; camera.position.set(...pos); camera.lookAt(...target); camera.zoom = 1; camera.updateProjectionMatrix(); },
   boxes: () => Object.fromEntries([["cat", cat], ["folders", projectFiles], ["speaker", speaker], ["laptop", laptop], ["astro", astro], ["bottle", bottle], ["books", books], ["plant", plant], ["phone", phone]].filter(([, o]) => o).map(([k, o]) => { const b = new THREE.Box3().setFromObject(o); return [k, [b.min.x, b.min.z, b.max.x, b.max.z, b.max.y].map((v) => +v.toFixed(2))]; })),
+  game: () => { if (!ball) return null; ball.getWorldPosition(_bw); _bs.copy(_bw).project(camera);
+    const r = renderer.domElement.getBoundingClientRect(); _br.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(BALL_R).add(_bw).project(camera);
+    return { airborne, keepy, best: keepyBest, h: +(ball.position.y - ballY0).toFixed(2), vy: +ballVY.toFixed(3), x: r.left + (_bs.x + 1) / 2 * r.width, y: r.top + (1 - _bs.y) / 2 * r.height, r: Math.abs(_br.x - _bs.x) / 2 * r.width, onScreen: Math.abs(_bs.x) < 1 && Math.abs(_bs.y) < 1 }; },
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
   covering: !!window.OS.isCovering?.(), quality: perf.step, still: STILL, frames: renderer.info.render.frame, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,

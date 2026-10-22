@@ -10,13 +10,25 @@ export const Sound = (() => {
   let ctx = null, muted = false, silentLoop = null;
   try { muted = localStorage.getItem("muted") === "1"; } catch (_) {}
   const running = () => ctx && ctx.state === "running";
-  const blip = (freq, dur = 0.06, type = "square", vol = 0.04) => {
-    if (muted || !running()) return;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+  // v149: soft, rounded UI sounds (sine partials with a quick attack, through a gentle filter) instead of square-wave beeps
+  let ui = null;
+  const uiOut = () => { if (!ui) { ui = ctx.createGain(); const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000; ui.connect(lp).connect(ctx.destination); } return ui; };
+  const ok = () => !muted && running();
+  const ping = (freq, dur, vol, t = ctx.currentTime, type = "sine", attack = 0.003) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(uiOut()); o.start(t); o.stop(t + dur + 0.02);
+  };
+  const thud = (f0, f1, dur, vol, t = ctx.currentTime) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(uiOut()); o.start(t); o.stop(t + dur + 0.02);
+  };
+  const slap = (freq, vol, dur = 0.05, t = ctx.currentTime) => {   // a short filtered noise burst: leather, a tap
+    const n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const s = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = b; bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = 0.9; g.gain.value = vol;
+    s.connect(bp).connect(g).connect(uiOut()); s.start(t);
   };
   // iPhone silent switch: ask for "playback" audio (Safari 17+); older iOS gets the same effect from a silent looping <audio>
   function playbackSession() {
@@ -39,9 +51,14 @@ export const Sound = (() => {
   }
   return {
     unlock,
-    hover: () => blip(880, 0.03, "sine", 0.02),
-    click: () => blip(520, 0.07),
-    boot: () => [262, 330, 392, 523].forEach((f, i) => setTimeout(() => blip(f, 0.14, "triangle", 0.05), i * 110)),
+    hover: () => { if (ok()) ping(2200, 0.03, 0.01); },
+    click: () => { if (ok()) { ping(1300, 0.06, 0.045); ping(2600, 0.025, 0.012); slap(4200, 0.05, 0.012); } },   // a soft, glassy tap
+    // a warm startup chord, softly rolled (F# major, like a Mac waking up)
+    boot: () => { if (!ok()) return; const t = ctx.currentTime; [92.5, 185, 277.2, 370, 466.2, 554.4].forEach((f, i) => { ping(f, 2.8, 0.03, t + i * 0.012, "sine", 0.02); ping(f * 2, 1.2, 0.006, t + i * 0.012, "triangle", 0.03); }); },
+    // keepy-ups: a leather thump that climbs a little with the streak; a softer bump when it lands; a ding at milestones
+    kick: (n = 0) => { if (!ok()) return; const k = Math.pow(2, Math.min(n, 16) / 28); thud(190 * k, 85 * k, 0.16, 0.32); slap(1100 * k, 0.28); },
+    land: () => { if (ok()) { thud(120, 60, 0.18, 0.18); slap(700, 0.12, 0.04); } },
+    ding: () => { if (!ok()) return; const t = ctx.currentTime; ping(1318.5, 0.9, 0.035, t); ping(1975.5, 0.9, 0.025, t + 0.09); },
     purr() {
       if (muted || !running()) return;
       const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), t = ctx.currentTime;

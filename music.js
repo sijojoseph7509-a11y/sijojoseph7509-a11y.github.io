@@ -1,230 +1,344 @@
-// Original generative music, synthesised live with the Web Audio API.
-// No samples or recordings are used — every note is generated here, so there are no copyright issues.
-// Four moods from Sijo's own playlist taste (phonk, Malayalam and Hindi songs), plus the original desk lo-fi.
-// The soundbar on the desk switches between them; window.Music.mood / .moods expose the current one (the phone shows it).
+// Original generative music, synthesised live with the Web Audio API (v149 rebuild).
+// No samples or recordings: every note and drum is generated here, so there are no copyright issues and nothing to download.
+// Four moods from Sijo's own playlist taste (lo-fi, phonk, Malayalam and Hindi songs). The soundbar on the desk switches
+// between them; window.Music.mood / .moods expose the current one (the phone and the speaker light show it).
+//
+// How it sounds good: real chord progressions and ragas, voiced like a player would; instruments built the way the real
+// ones make sound (FM electric piano, 808 with saturation, tuned tabla and mridangam, breathy flute with vibrato, tanpura);
+// swing and small timing/velocity variations; phrases that answer each other; a 16 to 32-bar arrangement with intros,
+// drops and breakdowns; a shared mix (room reverb, tape wobble, glue compression, limiter) and the kick ducking the keys.
+// window.Music._engine(ctx, out) builds the same engine on any context (the site-music skill renders it offline to check it).
 (() => {
   const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
-  let ctx = null, master = null, bus = null, timer = null, nextTime = 0, step = 0, bar = 0, noise = null, crackle = null, current = 0;
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const chance = (p) => Math.random() < p;
+  const vary = (v, amt = 0.12) => v * (1 - amt / 2 + Math.random() * amt);
+
+  function createEngine(ctx, out) {
+    const SR = ctx.sampleRate, live = typeof OfflineAudioContext === "undefined" || !(ctx instanceof OfflineAudioContext);
+    const G = (v = 1) => { const g = ctx.createGain(); g.gain.value = v; return g; };
+    const F = (type, freq, q = 0.7) => { const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; return f; };
+    const O = (type, freq) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq; return o; };
+    const noiseBuf = (() => { const b = ctx.createBuffer(1, SR * 2, SR), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; })();
+    const noise = (t, dur, offset = Math.random()) => { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.start(t, offset); s.stop(t + dur); return s; };
+    // a gain envelope: silence → peak in `a` → exponential decay to nothing over `d` seconds
+    const env = (g, t, a, peak, d) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.setTargetAtTime(0, t + a, d / 4); };
+    const shaper = (drive) => { const w = ctx.createWaveShaper(), n = 1024, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(x * drive) / Math.tanh(drive); } w.curve = c; return w; };
+
+    /* ── The mix: every mood plays into fxIn ── */
+    const fxIn = G(1), hp = F("highpass", 30), tone = F("lowpass", 9000, 0.3);
+    const wow = ctx.createDelay(0.05); wow.delayTime.value = 0.012;   // tape wobble: the delay time drifts a hair
+    const wowLfo = O("sine", 0.5), wowAmt = G(0.00028); wowLfo.connect(wowAmt).connect(wow.delayTime); wowLfo.start();
+    const glue = ctx.createDynamicsCompressor(); glue.threshold.value = -20; glue.knee.value = 12; glue.ratio.value = 2.5; glue.attack.value = 0.02; glue.release.value = 0.25;
+    const limit = ctx.createDynamicsCompressor(); limit.threshold.value = -4; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.12;
+    const master = G(0.9);
+    fxIn.connect(hp).connect(tone).connect(wow).connect(glue).connect(limit).connect(master).connect(out);
+    // a small, warm room: decaying noise that gets darker as it fades
+    const rev = ctx.createConvolver();
+    rev.buffer = (() => { const len = Math.floor(SR * 2.4), b = ctx.createBuffer(2, len, SR);
+      for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); let lp = 0;
+        for (let i = 0; i < len; i++) { const k = i / len; lp += ((Math.random() * 2 - 1) - lp) * (0.5 - 0.42 * k); d[i] = i < SR * 0.014 ? 0 : lp * Math.pow(1 - k, 2.4); } }
+      return b; })();
+    const revOut = G(0.3); rev.connect(revOut).connect(hp);
+
+    /* ── A mood's bus: instrument groups, reverb sends and the kick ducking ── */
+    function makeBus() {
+      const bus = G(0), send = G(1), duck = G(1), stops = [];
+      bus.connect(fxIn); send.connect(rev); duck.connect(bus);
+      const group = (dest, revAmt, extra) => { const g = G(1); let x = g; if (extra) x = x.connect(extra); x.connect(dest); if (revAmt) g.connect(G(revAmt)).connect(send); return g; };
+      // electric piano: a little stereo tremolo, like a Rhodes suitcase amp
+      const trem = ctx.createStereoPanner(), tl = O("sine", 4.2), tg = G(0.32); tl.connect(tg).connect(trem.pan); tl.start(); stops.push(tl); trem.connect(duck);
+      const keys = group(trem, 0.28, F("lowpass", 3800));
+      const lead = group(duck, 0.45), pad = group(duck, 0.6), drums = group(bus, 0.1), bass = group(bus, 0), bed = group(bus, 0.15);
+      return { bus, send, duck, keys, lead, pad, drums, bass, bed, stops };
+    }
+    const pump = (B, t, depth = 0.32) => { const g = B.duck.gain; g.setValueAtTime(1, t); g.linearRampToValueAtTime(1 - depth, t + 0.01); g.setTargetAtTime(1, t + 0.03, 0.09); };
+
+    /* ── Instruments ── */
+    function ep(B, n, t, dur, vel = 0.8) {   // electric piano: 1:1 FM gives the bark when struck, mellowing as it rings; plus a tine ping
+      const f = midi(n), car = O("sine", f), mod = O("sine", f), mg = G(0), g = G(0), tine = O("sine", Math.min(f * 7, 9000)), tg = G(0);
+      const idx = f * (0.7 + 1.5 * vel);
+      mg.gain.setValueAtTime(idx, t); mg.gain.setTargetAtTime(idx * 0.12, t, 0.3);
+      mod.connect(mg).connect(car.frequency);
+      const peak = 0.1 * vel * (n > 76 ? 0.7 : 1);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.005); g.gain.setTargetAtTime(peak * 0.3, t + 0.005, 0.35); g.gain.setTargetAtTime(0, t + dur, 0.15);
+      env(tg, t, 0.002, 0.018 * vel, 0.07);
+      car.connect(g).connect(B.keys); tine.connect(tg).connect(B.keys);
+      const end = t + dur + 1; car.start(t); mod.start(t); car.stop(end); mod.stop(end); tine.start(t); tine.stop(t + 0.15);
+    }
+    function bell(B, n, t, vel = 0.7, decay = 1.6) {   // glockenspiel-like: inharmonic partials of a struck bar
+      const f = midi(n);
+      [[1, 1], [2.76, 0.32], [5.4, 0.1]].forEach(([r, a]) => { const o = O("sine", f * r), g = G(0); env(g, t, 0.002, 0.05 * vel * a, decay / r); o.connect(g).connect(B.lead); o.start(t); o.stop(t + decay * 1.5); });
+    }
+    function pad(B, notes, t, dur, lvl = 0.022, cutoff = 1100) {   // warm pad: two detuned saws per note, slow swell
+      notes.forEach((n) => { const f = F("lowpass", cutoff, 0.5), g = G(0);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(lvl, t + Math.min(0.8, dur * 0.4)); g.gain.setTargetAtTime(0, t + dur, 0.35);
+        [-7, 7].forEach((det) => { const o = O("sawtooth", midi(n)); o.detune.value = det + (Math.random() * 4 - 2); o.connect(f); o.start(t); o.stop(t + dur + 1.6); });
+        f.connect(g).connect(B.pad); });
+    }
+    function bass(B, n, t, dur, vel = 0.8) {   // round finger bass: sine with a little triangle bite
+      const f = midi(n), o = O("sine", f), o2 = O("triangle", f), g2 = G(0.25), lp = F("lowpass", 700), g = G(0);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.32 * vel, t + 0.01); g.gain.setTargetAtTime(0.22 * vel, t + 0.01, 0.2); g.gain.setTargetAtTime(0, t + dur, 0.05);
+      o.connect(g); o2.connect(g2).connect(g); g.connect(lp).connect(B.bass);
+      [o, o2].forEach((x) => { x.start(t); x.stop(t + dur + 0.4); });
+    }
+    function b808(B, n, t, dur, glideTo = 0, vel = 0.9) {   // 808: a pitched-down punch, a long sine tail, saturated so it reads on laptop speakers
+      const f = midi(n), o = O("sine", f * 2), sh = shaper(2.2), lp = F("lowpass", 1600), g = G(0);
+      o.frequency.setValueAtTime(f * 2, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.03);
+      if (glideTo) o.frequency.exponentialRampToValueAtTime(midi(glideTo), t + dur * 0.9);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.42 * vel, t + 0.004); g.gain.setTargetAtTime(0.26 * vel, t + 0.004, 0.25); g.gain.setTargetAtTime(0, t + dur, 0.06);
+      o.connect(g).connect(sh).connect(lp).connect(B.bass); o.start(t); o.stop(t + dur + 0.5);
+    }
+    function kick(B, t, vel = 0.9, duck = 0.32) {
+      const o = O("sine", 150), g = G(0), c = F("highpass", 3500), cg = G(0);
+      o.frequency.setValueAtTime(155, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.12);
+      env(g, t, 0.002, 0.95 * vel, 0.38); env(cg, t, 0.001, 0.12 * vel, 0.012);
+      o.connect(g).connect(B.drums); noise(t, 0.03).connect(c).connect(cg).connect(B.drums);
+      o.start(t); o.stop(t + 0.5); if (duck) pump(B, t, duck);
+    }
+    function snare(B, t, vel = 0.8, bright = 1) {   // brushed boom-bap snare: noise crack + a short tuned body
+      const bp = F("bandpass", 1800 * bright, 0.7), g = G(0), body = O("triangle", 185), bg = G(0);
+      body.frequency.setValueAtTime(190, t); body.frequency.exponentialRampToValueAtTime(150, t + 0.08);
+      env(g, t, 0.002, 0.34 * vel, 0.2); env(bg, t, 0.002, 0.2 * vel, 0.1);
+      noise(t, 0.35).connect(bp).connect(g).connect(B.drums); body.connect(bg).connect(B.drums); body.start(t); body.stop(t + 0.2);
+    }
+    function rim(B, t, vel = 0.6) { const o = O("square", 820), bp = F("bandpass", 1700, 3), g = G(0); env(g, t, 0.001, 0.12 * vel, 0.03); o.connect(bp).connect(g).connect(B.drums); o.start(t); o.stop(t + 0.08); }
+    function hat(B, t, vel = 0.5, open = false) {
+      const hpf = F("highpass", 7200), g = G(0); env(g, t, 0.001, 0.13 * vel, open ? 0.32 : 0.04);
+      noise(t, open ? 0.6 : 0.1).connect(hpf).connect(g).connect(B.drums);
+    }
+    function clap(B, t, vel = 0.9) {   // three quick bursts then a tail, like hands
+      const bp = F("bandpass", 1350, 1.1), g = G(0);
+      g.gain.setValueAtTime(0, t); [0, 0.011, 0.022].forEach((d) => { g.gain.setValueAtTime(0.42 * vel, t + d); g.gain.setTargetAtTime(0.05, t + d + 0.001, 0.003); });
+      g.gain.setValueAtTime(0.3 * vel, t + 0.03); g.gain.setTargetAtTime(0, t + 0.03, 0.05);
+      noise(t, 0.4).connect(bp).connect(g).connect(B.drums);
+    }
+    function cowbell(B, n, t, vel = 0.8) {   // the 808 cowbell: two square waves a fifth-and-a-bit apart through a bandpass
+      const f = midi(n), bp = F("bandpass", Math.max(1400, f * 1.6), 1.2), g = G(0);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16 * vel, t + 0.001); g.gain.setTargetAtTime(0.05 * vel, t + 0.001, 0.02); g.gain.setTargetAtTime(0, t + 0.04, 0.08);
+      [1, 1.482].forEach((r) => { const o = O("square", f * r); o.connect(bp); o.start(t); o.stop(t + 0.5); });
+      bp.connect(g).connect(B.lead);
+    }
+    function flute(B, n, t, dur, prev = 0, vel = 0.8) {   // bansuri: soft tone, breath, vibrato that blooms on long notes, glides between notes
+      const f = midi(n), o = O("sine", f), o2 = O("triangle", f), g2 = G(0.12), lp = F("lowpass", 2600), g = G(0);
+      if (prev) { o.frequency.setValueAtTime(midi(prev), t); o.frequency.exponentialRampToValueAtTime(f, t + 0.08); o2.frequency.setValueAtTime(midi(prev), t); o2.frequency.exponentialRampToValueAtTime(f, t + 0.08); }
+      const vib = O("sine", 5.2), vg = G(0); vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(dur > 0.4 ? 14 : 4, t + Math.min(0.6, dur)); vib.connect(vg); vg.connect(o.detune); vg.connect(o2.detune);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07 * vel, t + 0.07); g.gain.setTargetAtTime(0.055 * vel, t + 0.07, 0.3); g.gain.setTargetAtTime(0, t + dur, 0.08);
+      const br = F("bandpass", f * 2, 1.5), bg = G(0); env(bg, t, 0.03, 0.012 * vel, 0.25); noise(t, dur + 0.3).connect(br).connect(bg).connect(B.lead);
+      o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(B.lead);
+      const end = t + dur + 0.5; [o, o2, vib].forEach((x) => { x.start(t); x.stop(end); });
+    }
+    function harmonium(B, notes, t, dur, lvl = 0.03) {   // reeds: saw + square through a soft filter, the bellows breathing slowly
+      const lp = F("lowpass", 1500, 0.6), g = G(0), bel = O("sine", 2.6), bg = G(lvl * 0.12);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(lvl, t + 0.1); g.gain.setTargetAtTime(0, t + dur, 0.12);
+      bel.connect(bg).connect(g.gain); bel.start(t); bel.stop(t + dur + 0.8);
+      notes.forEach((n) => { const a = O("sawtooth", midi(n)), b = O("square", midi(n) * 1.003), bgn = G(0.45); a.connect(lp); b.connect(bgn).connect(lp); [a, b].forEach((x) => { x.start(t); x.stop(t + dur + 0.8); }); });
+      lp.connect(g).connect(B.pad);
+    }
+    function tanpura(B, n, t, lvl = 0.03) {   // a plucked drone string with the buzzing jawari shimmer
+      const f = midi(n), o = O("sawtooth", f), bp = F("bandpass", 1200, 3), lp = F("lowpass", 2400), g = G(0);
+      bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 2.2);
+      env(g, t, 0.02, lvl, 3.4); o.connect(bp).connect(lp).connect(g).connect(B.pad); o.start(t); o.stop(t + 4);
+    }
+    // tuned drums: tabla (dayan rings, bayan bends up), mridangam
+    function membrane(B, f, t, dur, lvl, partials = [[1, 1]], bend = 1) {
+      partials.forEach(([r, a]) => { const o = O("sine", f * r), g = G(0); o.frequency.setValueAtTime(f * r, t); o.frequency.exponentialRampToValueAtTime(f * r * bend, t + dur * 0.6); env(g, t, 0.002, lvl * a, dur / r); o.connect(g).connect(B.drums); o.start(t); o.stop(t + dur * 1.5); });
+      const c = F("bandpass", 3000, 1), cg = G(0); env(cg, t, 0.001, lvl * 0.25, 0.012); noise(t, 0.03).connect(c).connect(cg).connect(B.drums);
+    }
+    const tabla = {
+      na: (B, t, v = 0.8) => membrane(B, 392, t, 0.45, 0.14 * v, [[1, 1], [2, 0.45], [3, 0.2]], 0.985),
+      tin: (B, t, v = 0.6) => membrane(B, 392, t, 0.09, 0.1 * v, [[1, 1], [2, 0.3]]),
+      ge: (B, t, v = 0.8) => membrane(B, 82, t, 0.55, 0.3 * v, [[1, 1]], 1.35),
+      ka: (B, t, v = 0.6) => membrane(B, 150, t, 0.05, 0.14 * v, [[1, 1]]),
+    };
+    const mridangam = {
+      tham: (B, t, v = 0.8) => membrane(B, 104, t, 0.7, 0.3 * v, [[1, 1], [2, 0.2]], 0.97),
+      nam: (B, t, v = 0.7) => membrane(B, 440, t, 0.38, 0.11 * v, [[1, 1], [2, 0.5], [3, 0.3]], 0.99),
+      dhi: (B, t, v = 0.7) => membrane(B, 293, t, 0.3, 0.12 * v, [[1, 1], [2, 0.35]], 0.98),
+      ki: (B, t, v = 0.5) => membrane(B, 520, t, 0.06, 0.08 * v),
+    };
+    function templeBell(B, t) { [[1, 1], [2.01, 0.5], [2.76, 0.35], [4.07, 0.18], [5.4, 0.1]].forEach(([r, a]) => { const o = O("sine", 587 * r), g = G(0); env(g, t, 0.003, 0.03 * a, 5 / Math.sqrt(r)); o.connect(g).connect(B.bed); o.start(t); o.stop(t + 7); }); }
+    function cricket(B, t) {   // a burst of quick chirps, somewhere to the side
+      const o = O("sine", 4300 + Math.random() * 500), g = G(0), p = ctx.createStereoPanner(); p.pan.value = Math.random() * 1.6 - 0.8;
+      const k = 5 + Math.floor(Math.random() * 6); for (let i = 0; i < k; i++) { g.gain.setValueAtTime(0.006, t + i * 0.034); g.gain.setValueAtTime(0, t + i * 0.034 + 0.016); }
+      o.connect(g).connect(p).connect(B.bed); o.start(t); o.stop(t + k * 0.034 + 0.05);
+    }
+    function drop(B, t) { const o = O("sine", 1800 + Math.random() * 2600), g = G(0), p = ctx.createStereoPanner(); p.pan.value = Math.random() * 2 - 1; o.frequency.exponentialRampToValueAtTime(o.frequency.value * 0.6, t + 0.02); env(g, t, 0.001, 0.008, 0.025); o.connect(g).connect(p).connect(B.bed); o.start(t); o.stop(t + 0.06); }
+    function thunder(B, t) { const lp = F("lowpass", 140), g = G(0); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.35, t + 1.4); g.gain.setTargetAtTime(0, t + 1.6, 1.2); noise(t, 7).connect(lp).connect(g).connect(B.bed); }
+    // looping beds that sit under a whole mood
+    function vinylBed(B) {
+      const len = SR * 4, b = ctx.createBuffer(1, len, SR), d = b.getChannelData(0); let lp = 0;
+      for (let i = 0; i < len; i++) { lp += ((Math.random() * 2 - 1) - lp) * 0.08; d[i] = lp * 0.25 + (Math.random() < 0.0005 ? (Math.random() * 2 - 1) * 0.6 : 0); }
+      const s = ctx.createBufferSource(); s.buffer = b; s.loop = true; s.connect(F("bandpass", 2400, 0.5)).connect(G(0.07)).connect(B.bed); s.start(); return s;
+    }
+    function rainBed(B) { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.connect(F("highpass", 500)).connect(F("lowpass", 3800, 0.4)).connect(G(0.045)).connect(B.bed); s.start(); return s; }
+
+    /* ── Melody: two-bar phrases that move mostly by step, land on chord tones, and get answered ── */
+    const RHYTHMS = [[0, 3, 6, 10, 12], [0, 4, 7, 10], [2, 4, 8, 11, 14], [0, 6, 8, 12, 14], [0, 2, 4, 10], [0, 3, 8, 12], [4, 6, 10, 12, 15]];
+    function phrase(pools, density = 0.8) {   // pools: the notes allowed in each of the two bars
+      const ev = []; let i = Math.floor(pools[0].length / 2);
+      for (let b = 0; b < 2; b++) {
+        const pool = pools[b], r = pick(RHYTHMS).filter((s, k) => k === 0 || chance(density));
+        r.forEach((s) => { i = Math.max(0, Math.min(pool.length - 1, i + pick([-2, -1, -1, 0, 1, 1, 2]))); ev.push({ s: b * 16 + s, n: pool[i], i, pool }); });
+      }
+      ev.forEach((e, k) => { const nx = ev[k + 1] ? ev[k + 1].s : 32; e.d = Math.max(1, Math.min(8, nx - e.s)); });
+      return ev;
+    }
+    // the answer: same shape, but the last note steps down to a lower note of the same chord, so it resolves in key
+    const answer = (p) => p.map((e, k) => (k === p.length - 1 ? { ...e, n: e.pool[Math.max(0, e.i - pick([1, 2]))] } : e));
+
+    /* ── The moods ── */
+    const LOFI = {   // 78 BPM, ii–V–I–VI in C with rootless jazz voicings, boom-bap drums, Rhodes, a glockenspiel melody, vinyl
+      name: "Desk lo-fi", bpm: 78, swing: 0.17, level: 0.5,
+      chords: [{ r: 38, v: [53, 57, 60, 64], m: [69, 72, 74, 76, 77, 81] },   // Dm9
+               { r: 43, v: [53, 59, 64, 69], m: [67, 71, 74, 76, 77, 79] },   // G13
+               { r: 36, v: [52, 55, 59, 62], m: [67, 71, 72, 74, 76, 79] },   // Cmaj9
+               { r: 33, v: [55, 61, 65, 70], m: [69, 70, 73, 76, 77, 79] }],  // A7(b9 b13)
+      init(B, S) { S.beds = [vinylBed(B)]; },
+      step(B, s, bar, t, sp, S) {
+        const c = this.chords[bar % 4], sec = bar % 32, full = sec >= 4 && sec < 28, brk = sec >= 28;
+        if (s === 0 && bar % 8 === 0) { const a = phrase([this.chords[0].m, this.chords[1].m], 0.75), b = phrase([this.chords[2].m, this.chords[3].m], 0.7); S.mel = [a, b, answer(a), answer(b)]; }
+        // keys: the chord on one, a light push on the and-of-two, the chord again late in the bar
+        if (s === 0) c.v.forEach((n) => ep(B, n, t + Math.random() * 0.012, sp * 7, vary(0.72)));
+        if (s === 6 && chance(0.6)) c.v.slice(2).forEach((n) => ep(B, n, t, sp * 2, vary(0.42)));
+        if (s === 10 && (sec < 4 || chance(0.75))) c.v.forEach((n) => ep(B, n, t + Math.random() * 0.01, sp * 4, vary(0.5)));
+        if (sec >= 2) { if (s % 2 === 0) hat(B, t, s % 4 === 0 ? 0.55 : 0.36); else if (chance(0.25)) hat(B, t, 0.18); if (s === 14 && bar % 2 === 1) hat(B, t, 0.3, true); }
+        if (full || brk) { if (s === 0) bass(B, c.r, t, sp * 6); if (s === 7 && chance(0.5)) bass(B, c.r, t, sp * 2, 0.6); if (s === 10) bass(B, c.r + 7, t, sp * 3, 0.7); if (s === 14 && chance(0.6)) bass(B, this.chords[(bar + 1) % 4].r + pick([-1, 2]), t, sp * 2, 0.6); }
+        if (full) {
+          if (s === 0 || s === 10 || (s === 7 && chance(0.4)) || (s === 15 && chance(0.15))) kick(B, t, s === 0 ? 0.95 : 0.75);
+          if (s === 4 || s === 12) snare(B, t + 0.012, vary(0.8)); else if ((s === 15 || s === 9) && chance(0.15)) snare(B, t, 0.22);
+          if (sec === 27 && s >= 12) snare(B, t, 0.3 + (s - 12) * 0.12);   // a little fill into the breakdown
+        } else if (brk && (s === 4 || s === 12)) rim(B, t);
+        if (sec >= 8 && sec < 28 && S.mel) { const p = S.mel[Math.floor((bar % 8) / 2)], ps = (bar % 2) * 16 + s; p.forEach((e) => { if (e.s === ps && chance(0.9)) bell(B, e.n, t, vary(0.75), 1.4); }); }
+      }
+    };
+    const PHONK = {   // 140 BPM half-time, C# Phrygian: 808 cowbell riff, sliding saturated 808, clap on three, rolling hats
+      name: "Night-drive phonk", bpm: 140, swing: 0, level: 0.15,
+      bell: [[[0, 73], [3, 73], [6, 76], [8, 74], [10, 73], [12, 68], [14, 73]], [[0, 73], [3, 73], [6, 76], [8, 78], [10, 80], [12, 78], [14, 76]],
+             [[0, 73], [3, 73], [6, 76], [8, 74], [10, 73], [12, 68], [14, 73]], [[0, 73], [3, 76], [6, 78], [8, 76], [10, 74], [12, 73], [14, 69]]],
+      b808: [[[0, 37, 5], [6, 37, 2], [8, 37, 4, 35], [12, 37, 4]], [[0, 33, 6], [8, 35, 4], [12, 37, 4, 49]]],
+      pads: [[61, 64, 68], [57, 61, 64], [59, 63, 66], [56, 60, 63]],
+      init() {},
+      step(B, s, bar, t, sp) {
+        const sec = bar % 16, intro = sec < 2, gap = (sec === 7 || sec === 15) && s >= 12;
+        if (s === 0 && bar % 2 === 0) pad(B, this.pads[(bar / 2) % 4], t, sp * 32, 0.014, 900);
+        this.bell[bar % 4].forEach(([st, n]) => { if (st === s) cowbell(B, n, t, st === 0 ? 0.95 : 0.75); });
+        if (intro || gap) return;
+        this.b808[bar % 2].forEach(([st, n, len, g]) => { if (st === s) b808(B, n, t, sp * len, g || 0); });
+        if ((bar % 2 === 0 && (s === 0 || s === 6)) || (bar % 2 === 1 && (s === 0 || s === 8 || s === 11))) kick(B, t, 0.9, 0.45);
+        if (s === 8) { clap(B, t); snare(B, t, 0.5, 1.4); }
+        const roll = bar % 2 === 1 && s >= 12;
+        if (roll) { hat(B, t, 0.42); hat(B, t + sp / 2, 0.32); if (s === 15) hat(B, t + sp * 0.75, 0.28); }
+        else hat(B, t, s % 4 === 0 ? 0.5 : s % 2 === 0 ? 0.38 : 0.24, s === 14 && bar % 4 === 3);
+      }
+    };
+    const KERALA = {   // 72 BPM, raga Mohanam on D (D E F# A B): tanpura, bansuri, mridangam, soft strings, crickets, a far temple bell
+      name: "Kerala evening", bpm: 72, swing: 0, level: 1.9,
+      chords: [[62, 66, 69, 76], [59, 62, 66, 69], [55, 59, 62, 66], [57, 62, 64, 69]],
+      scale: [62, 64, 66, 69, 71, 74, 76, 78, 81],
+      init() {},
+      step(B, s, bar, t, sp, S) {
+        const sec = bar % 16;
+        if (s % 4 === 0) tanpura(B, [57, 62, 62, 50][s / 4], t, 0.026);
+        if (s === 0 && bar % 2 === 0) pad(B, this.chords[(bar / 2) % 4], t, sp * 32, 0.012, 1400);
+        if (s % 4 === 2 && chance(0.35)) cricket(B, t);
+        if (s === 0 && bar % 8 === 4) templeBell(B, t);
+        if (s === 0 && bar % 4 === 0) { const a = phrase([this.scale, this.scale], 0.55); S.mel = [a, answer(a)]; S.prev = 0; }
+        if (sec >= 4 && S.mel) {
+          const p = S.mel[Math.floor((bar % 4) / 2)], ps = (bar % 2) * 16 + s;
+          p.forEach((e) => { if (e.s === ps && chance(0.85)) { flute(B, e.n, t, sp * Math.max(2, e.d) * 1.1, chance(0.5) ? S.prev : 0, vary(0.8)); S.prev = e.n; } });
+        }
+        if (sec >= 4 && !(sec >= 12 && sec < 14)) {   // eight-beat cycle on the mridangam
+          if (s === 0) mridangam.tham(B, t); if (s === 4 || s === 10) mridangam.nam(B, t); if (s === 6 || s === 12) mridangam.dhi(B, t);
+          if (s === 8) mridangam.tham(B, t, 0.55); if (s === 14 || (s === 2 && chance(0.5)) || (s === 13 && chance(0.4))) mridangam.ki(B, t);
+        }
+      }
+    };
+    const CHAI = {   // 84 BPM, G minor (Kafi colour): harmonium, bansuri, tabla in keherwa, a soft kick and bass, monsoon rain
+      name: "Monsoon chai", bpm: 84, swing: 0.14, level: 0.5,
+      chords: [{ r: 43, v: [58, 62, 65, 69], m: [67, 70, 72, 74, 77, 79] },   // Gm9
+               { r: 39, v: [55, 58, 62, 63], m: [67, 70, 74, 75, 79] },       // Ebmaj7
+               { r: 36, v: [51, 55, 58, 62], m: [67, 70, 72, 74, 75, 79] },   // Cm9
+               { r: 38, v: [54, 57, 60, 63], m: [66, 69, 72, 74, 75, 78] }],  // D7(b9)
+      init(B, S) { S.beds = [rainBed(B)]; },
+      step(B, s, bar, t, sp, S) {
+        const c = this.chords[bar % 4], sec = bar % 16;
+        if (s === 0) harmonium(B, c.v, t, sp * 15.5, 0.026);
+        if (chance(0.22)) drop(B, t + Math.random() * sp);
+        if (s === 0 && bar % 32 === 20 && chance(0.7)) thunder(B, t);
+        if (s === 0 && bar % 8 === 0) { const a = phrase([this.chords[0].m, this.chords[1].m], 0.7), b = phrase([this.chords[2].m, this.chords[3].m], 0.65); S.mel = [a, b, answer(a), answer(b)]; S.prev = 0; }
+        if (sec >= 8 && S.mel) { const p = S.mel[Math.floor((bar % 8) / 2)], ps = (bar % 2) * 16 + s; p.forEach((e) => { if (e.s === ps && chance(0.85)) { flute(B, e.n, t, sp * Math.max(2, e.d), chance(0.4) ? S.prev : 0, vary(0.75)); S.prev = e.n; } }); }
+        if (sec < 4) return;
+        if (s === 0) bass(B, c.r, t, sp * 7, 0.75); if (s === 10) bass(B, c.r + 7, t, sp * 4, 0.6);
+        if (s === 0 || s === 10) kick(B, t, 0.6, 0.18);
+        // keherwa: dha ge na ti | na ka dhi na
+        if (s === 0 || s === 12) { tabla.na(B, t); tabla.ge(B, t, s === 0 ? 0.9 : 0.6); }
+        if (s === 2) tabla.ge(B, t, 0.7); if (s === 4 || s === 8 || s === 14) tabla.na(B, t, 0.7); if (s === 6) tabla.tin(B, t); if (s === 10) tabla.ka(B, t);
+        if (s % 2 === 1 && chance(0.18)) tabla.tin(B, t, 0.35);
+      }
+    };
+    const MOODS = [LOFI, PHONK, KERALA, CHAI];
+
+    /* ── Playing: one mood at a time; switching cross-fades ── */
+    let cur = null;
+    function startMood(i, at) {
+      const m = MOODS[i], B = makeBus(), S = {};
+      B.bus.gain.setValueAtTime(0, at); B.bus.gain.linearRampToValueAtTime(m.level || 1, at + 1.8);   // each mood's level keeps all four equally loud
+      m.init(B, S);
+      cur = { m, B, S, step: 0, bar: 0, next: at };
+      return cur;
+    }
+    function endMood(c, at) {
+      if (!c) return;
+      c.B.bus.gain.cancelScheduledValues(at); c.B.bus.gain.setValueAtTime(c.B.bus.gain.value, at); c.B.bus.gain.setTargetAtTime(0, at, 0.3);
+      c.B.send.gain.setTargetAtTime(0, at, 0.3);
+      [...c.B.stops, ...(c.S.beds || [])].forEach((x) => { try { x.stop(at + 2.5); } catch (_) {} });
+      if (live) setTimeout(() => { try { c.B.bus.disconnect(); c.B.send.disconnect(); } catch (_) {} }, (at - ctx.currentTime + 3) * 1000);
+      if (cur === c) cur = null;
+    }
+    function schedule(until) {
+      const c = cur; if (!c) return;
+      const sp = 60 / c.m.bpm / 4;
+      while (c.next < until) {
+        const s = c.step % 16, t = c.next + (s % 2 ? c.m.swing * sp : 0);
+        try { c.m.step(c.B, s, c.bar, t, sp, c.S); } catch (e) { if (!c.err) { c.err = 1; console.error("Music:", e); } }
+        c.next += sp; if (++c.step % 16 === 0) c.bar++;
+      }
+    }
+    return { startMood, endMood, schedule, master, moods: MOODS.map((m) => m.name), get current() { return cur; } };
+  }
+
+  /* ── window.Music: the same API the desk and the phone use ── */
+  let ctx = null, eng = null, timer = null, current = 0;
   const listeners = new Set();
-
-  function makeNoise() {
-    const b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    return b;
-  }
-  function env(g, t, a, peak, dec, sus = 0.0001) {
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + a);
-    g.gain.exponentialRampToValueAtTime(Math.max(sus, 0.0001), t + a + dec);
-  }
-  function tone(type, freq, t, dur, peak, attack, cutoff, detune = 0, glideTo = 0, q = 0.7) {
-    const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
-    o.type = type; o.frequency.setValueAtTime(freq, t); o.detune.value = detune;
-    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + Math.min(dur, 0.25));
-    f.type = "lowpass"; f.frequency.value = cutoff; f.Q.value = q;
-    env(g, t, attack, peak, dur);
-    o.connect(f).connect(g).connect(bus);
-    o.start(t); o.stop(t + attack + dur + 0.05);
-    return o;
-  }
-  function hit(t, freq, q, peak, dur, type = "bandpass") {
-    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    s.buffer = noise; f.type = type; f.frequency.value = freq; f.Q.value = q;
-    env(g, t, 0.002, peak, dur);
-    s.connect(f).connect(g).connect(bus);
-    s.start(t, Math.random()); s.stop(t + dur + 0.05);
-  }
-  function drum(t, from, to, peak, dur) {   // a tuned drum: a sine that slides in pitch
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur * 0.6);
-    env(g, t, 0.003, peak, dur);
-    o.connect(g).connect(bus); o.start(t); o.stop(t + dur + 0.05);
-  }
-  const rnd = (a) => a[Math.floor(Math.random() * a.length)];
-
-  // ── 1. Desk lo-fi (the original loop): 76 BPM, Fmaj7 · Em7 · Dm9 · Cmaj7(add9), swung eighths ──
-  const LOFI = (() => {
-    const BPM = 76, BEAT = 60 / BPM, BAR = BEAT * 4, STEP = BEAT / 2, SWING = 0.12;
-    const CHORDS = [{ bass: 41, notes: [53, 57, 60, 64] }, { bass: 40, notes: [52, 55, 59, 62] }, { bass: 38, notes: [53, 57, 60, 64, 62] }, { bass: 36, notes: [52, 55, 59, 62] }];
-    const MOTIFS = [[72, null, 69, null, 67, 69, null, null], [76, null, 74, 72, null, 69, null, null], [69, 72, null, 74, null, null, 72, null], [null, 67, 69, null, 72, null, 69, 67], [74, null, null, 72, 69, null, 67, null]];
-    let motif = MOTIFS[0];
-    const keys = (n, t, vel = 1) => { tone("sine", midi(n), t, 1.1, 0.05 * vel, 0.006, 2600); tone("triangle", midi(n) * 2, t, 0.35, 0.008 * vel, 0.004, 3200); };
-    return {
-      name: "Desk lo-fi", step: STEP, per: 8, crackle: true,
-      play(t, s8, barN) {
-        const chord = CHORDS[barN % 4], tt = t + (s8 % 2 ? SWING * STEP : 0);
-        if (s8 === 0) {
-          chord.notes.forEach((n, i) => { tone("triangle", midi(n), t, BAR * 0.95, 0.022, 0.6, 900, i % 2 ? 6 : -6); tone("sine", midi(n + 12), t, BAR * 0.8, 0.008, 0.8, 1400); });
-          motif = rnd(MOTIFS); tone("sine", midi(chord.bass), t, BEAT * 1.6, 0.11, 0.015, 300);
-        }
-        if (s8 === 5) tone("sine", midi(chord.bass + (Math.random() < 0.5 ? 7 : 12)), tt, BEAT * 0.9, 0.11, 0.015, 300);
-        if (s8 === 0 || (s8 === 5 && Math.random() < 0.7)) drum(tt, 110, 42, 0.22, 0.3);
-        if (s8 === 2 || s8 === 6) { hit(tt, 1800, 0.8, 0.05, 0.18); tone("triangle", 190, tt, 0.08, 0.02, 0.002, 800); }
-        if (Math.random() < 0.9) hit(tt, 8000, 1.2, s8 === 7 ? 0.016 : 0.011, s8 === 7 ? 0.12 : 0.035, "highpass");
-        const n = motif[s8];
-        if (n && barN % 8 !== 7 && Math.random() < 0.85) keys(n, tt, 0.7 + Math.random() * 0.3);
-        if (s8 === 3 && Math.random() < 0.5) chord.notes.slice(1, 3).forEach((m) => keys(m, tt, 0.35));
-      }
-    };
-  })();
-
-  // ── 2. Night-drive phonk: 128 BPM, C# Phrygian, cowbell riff, sliding 808, rolling hats ──
-  const PHONK = (() => {
-    const BPM = 128, STEP = 60 / BPM / 4;   // sixteenths
-    const ROOT = 37;                          // C#2
-    const BELL = [[73, 0], [76, 2], [74, 4], [73, 6], [69, 8], [73, 10], [76, 11], [78, 12], [76, 14]];
-    const BASS = [[0, 0, 4], [6, -2, 2], [8, 0, 3], [11, 3, 2], [14, -2, 2]];   // [step, semitones, length in steps]
-    const bell = (n, t, v) => {   // cowbell: two square partials through a bandpass, very short
-      for (const r of [1, 1.48]) { const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter(); o.type = "square"; o.frequency.value = midi(n) * r;
-        f.type = "bandpass"; f.frequency.value = midi(n) * 1.6; f.Q.value = 3; env(g, t, 0.002, 0.03 * v, 0.22); o.connect(f).connect(g).connect(bus); o.start(t); o.stop(t + 0.3); }
-    };
-    return {
-      name: "Night-drive phonk", step: STEP, per: 16,
-      play(t, s, barN) {
-        if (s === 0 || s === 10 || (s === 7 && barN % 2)) drum(t, 140, 38, 0.32, 0.35);                 // hard kick
-        if (s === 8) { hit(t, 1500, 0.9, 0.09, 0.16); hit(t, 3200, 1.4, 0.04, 0.08); }                   // clap
-        const roll = barN % 4 === 3 && s >= 12;
-        if (roll || s % 2 === 0) hit(t, 9500, 1.5, roll ? 0.012 : 0.015, 0.03, "highpass");              // hats, rolling at the end of a phrase
-        if (roll) hit(t + STEP / 2, 9500, 1.5, 0.01, 0.025, "highpass");
-        for (const [st, semi, len] of BASS) if (st === s) {
-          const f0 = midi(ROOT + semi + (barN % 4 === 2 && st === 8 ? 5 : 0));
-          tone("sine", f0, t, len * STEP * 1.1, 0.2, 0.004, 500, 0, st === 14 ? f0 * 0.75 : 0);          // 808, the last note slides down
-          tone("triangle", f0 * 2, t, len * STEP * 0.5, 0.03, 0.004, 900);
-        }
-        for (const [n, st] of BELL) if (st === s && barN % 8 !== 7) bell(n + (barN % 4 === 1 && st > 8 ? -2 : 0), t, 0.8 + Math.random() * 0.3);
-        if (s === 0 && barN % 2 === 0) [61, 64, 68].forEach((n) => tone("sawtooth", midi(n), t, STEP * 30, 0.006, 0.5, 700, n % 2 ? 9 : -9));   // dark pad
-      }
-    };
-  })();
-
-  // ── 3. Kerala evening: raga Mohanam over a tanpura drone, veena-like plucks with a little slide,
-  //       mridangam-style strokes in Adi talam (4 + 2 + 2) ──
-  const KERALA = (() => {
-    const BPM = 84, STEP = 60 / BPM / 2;     // eighths
-    const SA = 50;                           // D3 as Sa
-    const SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
-    const PHRASES = [[0, 2, 4, 3, 2, null, 4, 5], [5, null, 4, 3, 4, 2, null, 1], [2, 3, 4, null, 5, 6, 5, 4], [3, null, 2, 1, 0, null, null, 0]];
-    let phrase = PHRASES[0];
-    const pluck = (n, t, bend) => {
-      const o = tone("sawtooth", midi(n), t, 0.9, 0.03, 0.004, 1800, 0, 0, 2);
-      if (bend) { o.frequency.setValueAtTime(midi(n - 1), t); o.frequency.exponentialRampToValueAtTime(midi(n), t + 0.12); }
-      tone("sine", midi(n + 12), t, 0.5, 0.008, 0.003, 4000);
-    };
-    const thom = (t) => drum(t, 95, 60, 0.18, 0.45);
-    const ta = (t) => { drum(t, 520, 380, 0.05, 0.09); hit(t, 2600, 2, 0.03, 0.05); };
-    return {
-      name: "Kerala evening", step: STEP, per: 8,
-      play(t, s8, barN) {
-        if (s8 === 0) {   // tanpura: Pa, Sa', Sa', Sa
-          [SA - 12 + 7, SA, SA, SA - 12].forEach((n, i) => tone("sawtooth", midi(n), t + i * STEP * 2, STEP * 9, 0.012, 0.25, 1100, 4));
-          phrase = rnd(PHRASES);
-        }
-        const p = phrase[s8];
-        if (p !== null && p !== undefined && barN % 4 !== 3 && Math.random() < 0.9) pluck(SA + 12 + SCALE[p], t, Math.random() < 0.35);
-        if (s8 === 0 || s8 === 4 || s8 === 6) thom(t);
-        if (s8 === 2 || s8 === 3 || s8 === 5 || s8 === 7) ta(t);
-        if (Math.random() < 0.25) ta(t + STEP / 2);
-      }
-    };
-  })();
-
-  // ── 4. Monsoon chai: harmonium chords in D minor, a breathy flute, tabla-style keherwa ──
-  const CHAI = (() => {
-    const BPM = 90, STEP = 60 / BPM / 2;
-    const CH = [[50, 53, 57], [48, 52, 55], [46, 50, 53], [48, 52, 55, 58]];   // Dm · C · Bb · C7
-    const MEL = [[74, null, 72, 69, null, 72, 74, null], [77, null, 76, 74, 72, null, 69, null], [69, 72, null, 74, null, 72, 69, 67], [65, null, 67, 69, null, null, 72, null]];
-    let mel = MEL[0];
-    const harmonium = (notes, t, len) => notes.forEach((n, i) => { tone("sawtooth", midi(n), t, len, 0.009, 0.15, 1300, i % 2 ? 7 : -7); tone("square", midi(n + 12), t, len, 0.003, 0.2, 1600); });
-    const flute = (n, t) => {
-      const o = tone("sine", midi(n), t, STEP * 1.8, 0.04, 0.05, 3000);
-      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 5.5; lg.gain.value = 6; lfo.connect(lg).connect(o.detune); lfo.start(t); lfo.stop(t + STEP * 2);
-      hit(t, 2200, 0.6, 0.006, STEP * 1.2);   // breath
-    };
-    const ge = (t) => drum(t, 70, 95, 0.16, 0.4);                                    // bayan, bends up
-    const na = (t) => { drum(t, 880, 820, 0.05, 0.16); hit(t, 4000, 3, 0.012, 0.04); };
-    const tin = (t) => drum(t, 660, 640, 0.03, 0.08);
-    return {
-      name: "Monsoon chai", step: STEP, per: 8,
-      play(t, s8, barN) {
-        const c = CH[barN % 4];
-        if (s8 === 0) { harmonium(c, t, STEP * 7.5); mel = rnd(MEL); tone("sine", midi(c[0] - 12), t, STEP * 3, 0.08, 0.02, 300); }
-        if (s8 === 4) tone("sine", midi(c[0] - 12 + 7), t, STEP * 3, 0.06, 0.02, 300);
-        const m = mel[s8]; if (m && barN % 4 !== 3 && Math.random() < 0.85) flute(m, t);
-        if (s8 === 0 || s8 === 6) { ge(t); na(t); }   // keherwa: dha ge na ti | na ka dhi na
-        if (s8 === 1 || s8 === 4) ge(t);
-        if (s8 === 2 || s8 === 5 || s8 === 7) na(t);
-        if (s8 === 3) tin(t);
-      }
-    };
-  })();
-
-  const MOODS = [LOFI, PHONK, KERALA, CHAI];
-
-  function startCrackle() {   // warm vinyl texture (lo-fi only)
-    const len = ctx.sampleRate * 4, b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * 0.02 + (Math.random() < 0.0006 ? (Math.random() * 2 - 1) * 0.5 : 0);
-    const src = ctx.createBufferSource(); src.buffer = b; src.loop = true;
-    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2500; f.Q.value = 0.6;
-    const g = ctx.createGain(); g.gain.value = 0.12;
-    src.connect(f).connect(g).connect(master); src.start();
-    return src;
-  }
-  function tick() {
-    const m = MOODS[current];
-    while (nextTime < ctx.currentTime + 0.25) { m.play(nextTime, step % m.per, bar); nextTime += m.step; if (++step % m.per === 0) bar++; }
-  }
-  // each mood plays into its own bus, so switching cross-fades instead of cutting
-  function newBus() {
-    const g = ctx.createGain(); g.gain.value = 0.0001; g.connect(master);
-    g.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 1.2);
-    return g;
-  }
   const notify = () => listeners.forEach((f) => { try { f(); } catch (_) {} });
-
+  const tick = () => { if (eng) eng.schedule(ctx.currentTime + (document.hidden ? 1.5 : 0.2)); };   // background tabs tick rarely: look further ahead
   window.Music = {
     start(audioCtx) {
       if (timer) return;
-      ctx = audioCtx;
+      if (ctx !== audioCtx) { ctx = audioCtx; eng = createEngine(ctx, ctx.destination); }
       if (ctx.state === "suspended") ctx.resume();
-      noise = noise || makeNoise();
-      master = ctx.createGain();
-      master.gain.value = 0.0001;
-      const comp = ctx.createDynamicsCompressor(), warm = ctx.createBiquadFilter();
-      warm.type = "lowpass"; warm.frequency.value = 5200;
-      master.connect(warm).connect(comp).connect(ctx.destination);
-      master.gain.exponentialRampToValueAtTime(0.55, ctx.currentTime + 2.5);   // gentle fade-in
-      bus = newBus();
-      if (MOODS[current].crackle) crackle = startCrackle();
-      nextTime = ctx.currentTime + 0.1; step = 0; bar = 0;
-      timer = setInterval(tick, 40);
+      eng.master.gain.cancelScheduledValues(ctx.currentTime); eng.master.gain.setValueAtTime(0.9, ctx.currentTime);
+      eng.startMood(current, ctx.currentTime + 0.1);
+      timer = setInterval(tick, 25); tick();
       notify();
     },
     stop() {
       if (!timer) return;
       clearInterval(timer); timer = null;
-      const m = master, c = crackle; crackle = null;
-      m.gain.cancelScheduledValues(ctx.currentTime);
-      m.gain.setValueAtTime(m.gain.value, ctx.currentTime);
-      m.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-      setTimeout(() => { try { c && c.stop(); m.disconnect(); } catch (_) {} }, 900);
+      eng.endMood(eng.current, ctx.currentTime);
       notify();
     },
-    // the soundbar: next mood, cross-fading the old one out
-    next() {
-      current = (current + 1) % MOODS.length;
-      if (timer) {
-        const old = bus; old.gain.cancelScheduledValues(ctx.currentTime); old.gain.setValueAtTime(Math.max(old.gain.value, 0.0001), ctx.currentTime);
-        old.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.9); setTimeout(() => { try { old.disconnect(); } catch (_) {} }, 1200);
-        bus = newBus(); nextTime = ctx.currentTime + 0.12; step = 0; bar = 0;
-        if (MOODS[current].crackle && !crackle) crackle = startCrackle();
-        if (!MOODS[current].crackle && crackle) { const c = crackle; crackle = null; try { c.stop(ctx.currentTime + 0.6); } catch (_) {} }
-      }
+    next() {   // the soundbar: the next mood, cross-fading the old one out
+      current = (current + 1) % 4;
+      if (timer) { eng.endMood(eng.current, ctx.currentTime); eng.startMood(current, ctx.currentTime + 0.15); tick(); }
       notify();
-      return MOODS[current].name;
+      return this.mood;
     },
-    get mood() { return MOODS[current].name; },
-    get moods() { return MOODS.map((m) => m.name); },
+    get mood() { return ["Desk lo-fi", "Night-drive phonk", "Kerala evening", "Monsoon chai"][current]; },
+    get moods() { return ["Desk lo-fi", "Night-drive phonk", "Kerala evening", "Monsoon chai"]; },
     onChange(f) { listeners.add(f); return () => listeners.delete(f); },
-    get playing() { return !!timer; }
+    get playing() { return !!timer; },
+    _engine: createEngine
   };
 })();
