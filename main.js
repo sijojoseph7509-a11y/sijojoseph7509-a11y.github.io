@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=139";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=139";
+import { Sound } from "./sound.js?v=140";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=140";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2032,11 +2032,13 @@ function enter(withSound, app) {
     window.OS.toast("Your browser has graphics acceleration off, so the 3D desk is paused. Turn it on in the browser settings to see it.", 9000);
     return;
   }
+  moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140: from the blurred room view, glide in to the desk as the blur clears
   coachShow();
 }
 if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
 else {
   document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = TOUCH ? b.dataset.touch : b.dataset.mouse));
+  camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update();   // v140: the blurred room behind the welcome card
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
   $("#introGo").addEventListener("click", () => enter(false));      // quiet by default

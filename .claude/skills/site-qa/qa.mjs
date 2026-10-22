@@ -34,6 +34,7 @@ async function ready(p, ms = 60000, enter = true) {
   await p.waitForFunction(() => window.Desk && Desk.state().started, { timeout: ms, polling: 100 });
   if (enter && await p.$eval("#intro", (e) => !e.hidden).catch(() => false)) {
     await p.click("#introGo"); await p.waitForFunction(() => document.getElementById("loader").classList.contains("done"));
+    await sleep(2400);   // v140: Enter flies the camera from the blurred room view to the desk (2.2 s)
   }
 }
 async function check(name, fn) {

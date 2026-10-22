@@ -918,3 +918,10 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .next-hint span::after { content: " ↓"; }
 .next-hint i { display: block; width: 140px; height: 3px; border-radius: 3px; background: rgba(127,127,127,.2); overflow: hidden; position: relative; }
 .next-hint i::after { content: ""; position: absolute; inset: 0; background: #0a7cf5; transform: scaleX(var(--p)); transform-origin: left; transition: transform .15s; }
+
+/* ───────── Welcome v140: the live room, blurred, behind the card; Enter clears the blur while the camera flies to the desk ───────── */
+.loader.ready { background: rgba(8, 8, 10, .28); backdrop-filter: blur(18px) saturate(1.1); -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  transition: opacity 1.4s var(--ease), backdrop-filter 1.4s var(--ease), -webkit-backdrop-filter 1.4s var(--ease), background-color 1.4s var(--ease); }
+.loader.ready::before, .loader.ready .wl-ill { display: none; }
+.loader.ready.done { background: rgba(8, 8, 10, 0); backdrop-filter: blur(0) saturate(1); -webkit-backdrop-filter: blur(0) saturate(1); }
+.loader.ready.done .loader-inner { transform: scale(.96); opacity: 0; transition: transform .6s var(--ease), opacity .5s var(--ease); }
