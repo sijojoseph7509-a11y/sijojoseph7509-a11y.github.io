@@ -14,6 +14,27 @@ export const Sound = (() => {
   let ui = null;
   const uiOut = () => { if (!ui) { ui = ctx.createGain(); const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000; ui.connect(lp).connect(ctx.destination); } return ui; };
   const ok = () => !muted && running();
+  // v150: Shea's voice is a real cat. Four short meows and a purr, recorded by Kerzoven (OpenGameArt, CC0) and Joseph
+  // Sardin (BigSoundBank "Small mewing of a cat", CC0): trimmed, cleaned of hum, level-matched; two meows raised 3 semitones
+  // so every clip sits in a female cat's range. They load on the first tap that turns sound on (68 KB); until then, or in a
+  // browser that can't decode them, the synthesised voice below stands in.
+  const BUILD = (() => { try { return new URL(import.meta.url).searchParams.get("v") || "dev"; } catch (_) { return "dev"; } })();
+  const MEOWS = ["meow-2", "meow-1", "meow-2", "meow-1", "meow-4", "meow-3"];   // the two highest come up most often
+  const clips = {}; let clipsLoading = null, lastMeow = "";
+  function loadClips() {
+    if (clipsLoading || !ctx) return;
+    clipsLoading = Promise.all(["meow-1", "meow-2", "meow-3", "meow-4", "purr"].map((n) =>
+      fetch(`assets/sound/${n}.m4a?v=${BUILD}`).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then((a) => new Promise((res, rej) => ctx.decodeAudioData(a, res, rej))).then((b) => { clips[n] = b; }).catch(() => {})));
+  }
+  function playClip(name, vol, rate = 1, fadeIn = 0, fadeOut = 0) {
+    const b = clips[name]; if (!b) return false;
+    const t = ctx.currentTime, s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; s.playbackRate.value = rate;
+    const d = b.duration / rate;
+    g.gain.setValueAtTime(fadeIn ? 0 : vol, t); if (fadeIn) g.gain.linearRampToValueAtTime(vol, t + fadeIn);
+    if (fadeOut) { g.gain.setValueAtTime(vol, t + Math.max(fadeIn, d - fadeOut)); g.gain.linearRampToValueAtTime(0, t + d); }
+    s.connect(g).connect(uiOut()); s.start(t); return true;
+  }
   const ping = (freq, dur, vol, t = ctx.currentTime, type = "sine", attack = 0.003) => {
     const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = freq;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -46,6 +67,7 @@ export const Sound = (() => {
     if (muted) return;
     playbackSession();
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    loadClips();
     const go = () => { if (running() && !muted) window.Music.start(ctx); };
     if (running()) go(); else ctx.resume().then(go).catch(() => {});
   }
@@ -61,6 +83,7 @@ export const Sound = (() => {
     ding: () => { if (!ok()) return; const t = ctx.currentTime; ping(1318.5, 0.9, 0.035, t); ping(1975.5, 0.9, 0.025, t + 0.09); },
     purr() {
       if (muted || !running()) return;
+      if (playClip("purr", 0.5, 0.98 + Math.random() * 0.06, 0.25, 0.7)) return;   // the real purr
       const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), t = ctx.currentTime;
       o.type = "sawtooth"; o.frequency.value = 55;
       lfo.frequency.value = 24; lg.gain.value = 0.03;
@@ -74,6 +97,8 @@ export const Sound = (() => {
     // by two vocal-tract formants that glide from an "ee" to an "ow", soft attack, a little vibrato
     meow() {
       if (muted || !running()) return;
+      { let n = MEOWS[Math.floor(Math.random() * MEOWS.length)]; if (n === lastMeow) n = MEOWS[(MEOWS.indexOf(n) + 1) % MEOWS.length]; lastMeow = n;
+        if (playClip(n, 0.42, 0.96 + Math.random() * 0.1)) return; }   // a real meow, a touch different each time
       const t = ctx.currentTime, d = 0.62 + Math.random() * 0.25, f0 = 520 + Math.random() * 120;
       const o = ctx.createOscillator(), vib = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), out = ctx.createGain();
       o.type = "sawtooth";

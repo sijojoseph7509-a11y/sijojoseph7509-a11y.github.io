@@ -694,7 +694,10 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 
 - **Sijo's own**: poster, photos (profile, wallpaper, prints photo), case-study content, the room itself.
 - **Original, made for this site**: all procedural geometry and textures (walls, tiles, desk, props, astronaut, soundbar, window
-  view, curtains), desk-mat art, profile-card design, icons, music and sounds.
+  view, curtains), desk-mat art, profile-card design, icons, the generative music (music.js) and the UI sounds.
+- **Shea's voice (v150, assets/sound/)**: real recordings, both CC0 (no attribution required, credited anyway): meow-1, meow-2 and
+  purr from Kerzoven's "Cat Purr & Meow" (opengameart.org/content/cat-purr-meow); meow-3 and meow-4 from Joseph Sardin's "Small
+  mewing of a cat" (bigsoundbank.com, sound 0098), raised 3 semitones. Trimmed, high-passed and level-matched; see sound.js.
 - **Third-party**: football — Poly Haven, CC0; cat — Free3D (licence unverified, to replace); One Piece print artwork (© Eiichiro Oda /
   Shueisha) shown via Sijo's own photo at his request; fonts — SIL OFL; three.js — MIT.
 - **Not used on purpose**: Apple logos/wallpapers/app icons (SJ monogram + original icons instead), brand logos on the speaker/camera,
