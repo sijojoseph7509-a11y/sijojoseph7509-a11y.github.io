@@ -769,7 +769,7 @@
   // true while the desktop fully covers the 3D scene (the zoom-out/zoom-in animations still need it rendered)
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
-  window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isCovering, toast, warmCase };
+  window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isClosing: () => closing, isCovering, toast, warmCase };
 
   // If the 3D desk never starts (a browser without module support, a blocked or failed script), open the plain
   // portfolio instead of leaving a black loading screen. Time spent on the password screen doesn't count.

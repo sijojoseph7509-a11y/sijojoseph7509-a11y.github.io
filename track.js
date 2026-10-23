@@ -51,7 +51,7 @@
     const t = e.target.closest && e.target.closest("a, button");
     if (!t) return;
     const href = t.getAttribute("href") || "";
-    if (t.id === "introGo" || t.id === "introQuiet") SJT.once("enter-desk");
+    if (t.id === "introGo" || t.id === "introSound") SJT.once("enter-desk");   // v158: introQuiet was renamed introSound
     else if (/linkedin\.com/.test(href)) SJT.event("click-linkedin");
     else if (/behance\.net/.test(href)) SJT.event("click-behance");
     else if (/github\.com/.test(href)) SJT.event("click-github");

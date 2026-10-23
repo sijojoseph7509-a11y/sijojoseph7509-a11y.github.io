@@ -209,7 +209,7 @@ function startVR(host, urls, reduce, touch) {
     camera.lookAt(target); renderer.render(scene, camera);
   }
   requestAnimationFrame(tick);
-  return () => { alive = false; ro.disconnect(); io.disconnect(); Object.values(cache).forEach((t) => t.dispose()); geo.dispose(); matl.dispose(); renderer.dispose(); };
+  return () => { alive = false; ro.disconnect(); io.disconnect(); Object.values(cache).forEach((t) => t.dispose()); geo.dispose(); matl.dispose(); renderer.dispose(); renderer.forceContextLoss(); };   // v158: hand the WebGL context back now, not at garbage collection (browsers cap live contexts at ~16 and drop the oldest: the room's)
 }
 
 // ── perfume motes: a few warm specks rising slowly, like mist caught in light ──

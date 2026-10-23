@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=157";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=157";
+import { Sound } from "./sound.js?v=158";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=158";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1593,8 +1593,9 @@ function screenRect() {
   const l = Math.min(...xs), t = Math.min(...ys);
   return { left: l, top: t, width: Math.max(...xs) - l, height: Math.max(...ys) - t };
 }
+let returning = false, pendingBoot = null;   // v158: a nav click while the camera flies back from the Mac waits for it, instead of being dropped
 function boot(app) {
-  if (booting) return;
+  if (booting) { if (returning || window.OS.isClosing?.()) pendingBoot = app || "about"; return; }   // ?. : a stale cached os.js may lack it
   booting = true;
   Sound.boot();
   hideTooltip();
@@ -1611,8 +1612,11 @@ function boot(app) {
   moveCamera(screenWorld.clone().addScaledVector(normal, d), screenWorld, 1, 1250, () => {
     // hand-off: the desktop grows out of exactly where the laptop screen is on your display
     window.OS.open(app, () => {
-      setRoomView(false);
-      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => { booting = false; setZoomLimits(); $("#hint").style.opacity = ""; }, EASE_APPLE);
+      setRoomView(false); returning = true;
+      moveCamera(HOME.pos, HOME.target, HOME.zoom, 1150, () => {
+        booting = false; returning = false; setZoomLimits(); $("#hint").style.opacity = "";
+        if (pendingBoot) { const a = pendingBoot; pendingBoot = null; boot(a); }
+      }, EASE_APPLE);
     }, screenRect());
   });
 }

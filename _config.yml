@@ -1,0 +1,8 @@
+# GitHub Pages (Jekyll) settings. The site itself is plain static files; this only keeps internal working files
+# in the repository but off the public website (sijo.work/HANDOVER.md etc. return 404).
+exclude:
+  - HANDOVER.md
+  - CLAUDE.md
+  - tools
+  - .claude
+  - .gitignore

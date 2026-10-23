@@ -146,6 +146,28 @@ await check("Keepy-ups: a press on the ball kicks it (the camera stays put) and 
   expect(await p.$eval("#gamePill", (e) => /keepy-up/.test(e.textContent)), "no score shown after the round"); clean(p); await p.ctx.close();
 });
 
+await check("Top-bar click while the camera flies back from the Mac still opens it (v158)", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(600);
+  await p.evaluate(() => document.querySelector("[data-boot=work]").click()); await p.waitForFunction(() => OS.isOpen(), { timeout: 8000 }); await sleep(2500);
+  await p.keyboard.press("Escape"); await sleep(300);
+  await p.evaluate(() => document.querySelector("[data-boot=resume]").click());
+  await p.waitForFunction(() => OS.isOpen() && document.getElementById("winTitle").textContent === "Resume", { timeout: 9000 }).catch(() => {});
+  expect(await p.evaluate(() => OS.isOpen() && document.getElementById("winTitle").textContent === "Resume"), "the click during the return flight was dropped");
+  clean(p); await p.ctx.close();
+});
+
+await check("Standalone case-study pages load with no failed requests or errors (v158)", async () => {
+  const bad = [];
+  for (const slug of ["handovo", "syntra", "carekin", "ekmaati"]) {
+    const p = await page(); p.on("response", (r) => { if (r.status() >= 400) bad.push(slug + ": " + r.status() + " " + r.url().replace(BASE, "/")); });
+    await p.goto(BASE + "work/" + slug + "/", { waitUntil: "networkidle2", timeout: 60000 });
+    if (await p.$("#gate, script[src*=gate]")) bad.push(slug + ": leftover password gate");
+    if (await p.$('a[href*="claude.ai/artifact"]')) bad.push(slug + ": private claude.ai artifact link");
+    await p.ctx.close();
+  }
+  expect(bad.length === 0, bad.slice(0, 3).join(" | "));
+});
+
 await check("Window: day ↔ night switch changes the room's light and back", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p); await sleep(500);
   const a = await p.evaluate(() => Desk.state().night);

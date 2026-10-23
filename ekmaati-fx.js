@@ -301,7 +301,7 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   };
   const vio = new IntersectionObserver((es) => { on = es[0].isIntersecting; if (on && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }, { rootMargin: "100px" });
   vio.observe(stage);
-  cleanups.push(() => { vio.disconnect(); ro.disconnect(); cancelAnimationFrame(raf); on = false; scene.traverse((o) => { o.geometry?.dispose?.(); [].concat(o.material || []).forEach((m) => { m.map?.dispose?.(); m.dispose?.(); }); }); renderer.dispose(); });
+  cleanups.push(() => { vio.disconnect(); ro.disconnect(); cancelAnimationFrame(raf); on = false; scene.traverse((o) => { o.geometry?.dispose?.(); [].concat(o.material || []).forEach((m) => { m.map?.dispose?.(); m.dispose?.(); }); }); renderer.dispose(); renderer.forceContextLoss(); });   // v158: release the WebGL context at once
   status();
   finish();
 
