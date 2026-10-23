@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <!-- Security: only this site's own scripts may run (+ the import map below, by hash). If you edit the import map,
        update its sha256 here — the site-security skill does it: .claude/skills/site-security/ -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ubcWAwNhdVeBfiRtLCSZVQ4g28MLL98xiQn5MsM8j8w=' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.goatcounter.com; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ubcWAwNhdVeBfiRtLCSZVQ4g28MLL98xiQn5MsM8j8w=' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.goatcounter.com; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src https://mumbailocalgame.github.io; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d1d1f">
@@ -24,10 +24,9 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Sijo Joseph, product, UX and AI designer, with four case study covers">
   <meta name="twitter:card" content="summary_large_image">
-  <script src="update.js?v=159"></script>
-  <link href="fonts/fonts.css?v=159" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=159">
-  <link rel="stylesheet" href="reader.css?v=159">
+  <script src="update.js?v=161" defer></script>
+  <link href="fonts/fonts.css?v=161" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=161" fetchpriority="high">
   <script type="importmap">
   {
     "imports": {
@@ -37,14 +36,14 @@
   }
   </script>
   <!-- (after the import map, which must come first) fetch the 3D engine in parallel straight away; the models are fetched by main.js once the engine has arrived, so on slow connections they never compete with it -->
-  <link rel="modulepreload" href="vendor/three/build/three.module.min.js">
-  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
-  <link rel="modulepreload" href="vendor/three/examples/jsm/controls/OrbitControls.js">
-  <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js">
-  <link rel="modulepreload" href="main.js?v=159">
-  <link rel="modulepreload" href="sound.js?v=159">
-  <link rel="modulepreload" href="room-utils.js?v=159">
-  <link rel="modulepreload" href="cat.js?v=159">
+  <link rel="modulepreload" href="vendor/three/build/three.module.min.js" fetchpriority="low">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js" fetchpriority="low">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/controls/OrbitControls.js" fetchpriority="low">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js" fetchpriority="low">
+  <link rel="modulepreload" href="main.js?v=161" fetchpriority="low">
+  <link rel="modulepreload" href="sound.js?v=161" fetchpriority="low">
+  <link rel="modulepreload" href="room-utils.js?v=161" fetchpriority="low">
+  <link rel="modulepreload" href="cat.js?v=161" fetchpriority="low">
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sijo Joseph", "url": "https://sijo.work/", "jobTitle": "Product, UX and AI designer", "alumniOf": {"@type": "CollegeOrUniversity", "name": "National Institute of Design, Bengaluru"}, "address": {"@type": "PostalAddress", "addressLocality": "Bengaluru", "addressCountry": "IN"}, "sameAs": ["https://www.linkedin.com/in/sijodesign", "https://github.com/sijojoseph7509-a11y"], "knowsAbout": ["Product design", "UX design", "Interaction design", "Information design", "Wayfinding", "Brand identity", "AI-assisted prototyping"]}</script>
 </head>
 <body>
@@ -179,11 +178,11 @@
     </div>
   </noscript>
 
-  <script src="content.js?v=159"></script>
-  <script src="track.js?v=159"></script>
-  <script src="icons.js?v=159"></script>
-  <script src="os.js?v=159"></script>
-  <script src="music.js?v=159"></script>
-  <script type="module" src="main.js?v=159"></script>
+  <script src="content.js?v=161"></script>
+  <script src="track.js?v=161"></script>
+  <script src="icons.js?v=161"></script>
+  <script src="os.js?v=161"></script>
+  <script src="music.js?v=161"></script>
+  <script type="module" src="main.js?v=161"></script>
 </body>
 </html>

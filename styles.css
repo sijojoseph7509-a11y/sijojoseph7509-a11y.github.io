@@ -684,7 +684,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wl-work span { color: #5aaeff; transition: transform .2s var(--ease); }
 .wl-work:hover { background: rgba(28, 28, 32, .72); color: #fff; } .wl-work:hover span { transform: translateX(3px); }
 .wl-work:focus-visible { outline: 2px solid #5aaeff; outline-offset: 3px; }
-.loader:not(.ready) .wl-work { display: none; }
+/* v160: the skip link shows from the first paint, so the work is one click away however slow the 3D desk is to load */
 @media (max-width: 480px) { .wl-work { font-size: 13px; padding: 10px 16px; } .wl-work i { display: none; } }
 @media (max-height: 520px) { .wl-work { display: none; } }
 
@@ -1013,3 +1013,17 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .lab-track { flex: 1 1 auto; }
 .lab-slide .lab-media { min-height: 400px; }
 .lab-case { align-self: flex-start; margin: 6px 0 4px; }
+
+/* v160: AI Lab, phone screenshots and the playable game */
+.lab-media.phone { display: grid; place-items: center; background: linear-gradient(160deg, #f6e7c8, #e3b65c); }
+.lab-media.phone img { height: 88%; max-height: 380px; width: auto; border-radius: 22px; box-shadow: 0 0 0 6px #141414, 0 22px 50px rgba(60, 35, 0, .35); }
+.lab-media.phone .lab-cap { color: #4b3100; text-shadow: none; }
+.lab-media.play { background: #141414; }
+.lab-media.play > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: brightness(.72); }
+.lab-play { position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px 14px 20px;
+  border: 0; border-radius: 999px; background: #ffb340; color: #141414; font: 700 18px/1 var(--font, -apple-system, sans-serif); cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .45); transition: transform .25s var(--spring), filter .2s; }
+.lab-play svg { width: 22px; height: 22px; fill: currentColor; }
+.lab-play:hover { transform: scale(1.05); filter: brightness(1.05); } .lab-play:active { transform: scale(.97); }
+.lab-media.playing { padding: 0; }
+.lab-media.playing iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #141414; }

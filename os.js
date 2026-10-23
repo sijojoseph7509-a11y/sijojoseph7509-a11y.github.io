@@ -135,6 +135,8 @@
         const L = S.aiLab || { items: [] }, items = L.items.filter((it) => !it.draft);
         const media = (m) => !m ? "" : m.type === "pano"
           ? `<div class="lab-media pano" role="img" aria-label="${esc(m.caption || "")}"><div class="pano-strip"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"><img src="${esc(m.src)}?v=${BUILD}" alt="" loading="lazy" decoding="async"></div><span class="lab-badge">360°</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`
+          : m.type === "phone"
+          ? `<div class="lab-media phone"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><small class="lab-cap">${esc(m.caption || "")}</small></div>`
           : m.type === "photo"
           ? `<div class="lab-media photo"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><small class="lab-cap">${esc(m.caption || "")}</small></div>`
           : `<div class="lab-media ticket"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><span class="lab-badge">AR</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`;
@@ -143,13 +145,19 @@
           const caseTitle = (S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "";
           const caseBtn = it.case ? `<button class="btn alt lab-case" data-case="${esc(it.case)}">See it in the ${esc(caseTitle)} case study ›</button>` : "";
           // v159: the case-study link sits on the first slide of every project
-          slides.push({ m: pics[0], body: `<p class="eyebrow">${esc(it.kind)}</p><h2>${esc(it.title)}</h2><p class="lab-sum">${esc(it.summary)}</p>${caseBtn}${how.length ? `<p class="lab-more">How I made it ›</p>` : ""}` });
+          // v160: a playable project's first slide is the live game (loaded only when someone presses Play, sandboxed)
+          const playMedia = it.play && /^https:\/\/[\w.-]+\.github\.io\//.test(it.play.src)
+            ? `<div class="lab-media play" data-play="${esc(it.play.src)}"><img src="${esc(it.play.poster)}?v=${BUILD}" alt="" loading="lazy" decoding="async">
+                <button class="lab-play" type="button" aria-label="Play ${esc(it.title)} here"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>
+                <small class="lab-cap">${esc(it.play.caption || "")}</small></div>` : "";
+          const linkBtn = it.link && /^https:\/\//.test(it.link.href) ? `<a class="btn alt lab-case" href="${esc(safeUrl(it.link.href))}" target="_blank" rel="noopener">${esc(it.link.label)}</a>` : "";
+          slides.push({ m: pics[0], mediaHtml: playMedia, body: `<p class="eyebrow">${esc(it.kind)}</p><h2>${esc(it.title)}</h2><p class="lab-sum">${esc(it.summary)}</p>${caseBtn}${linkBtn}${how.length ? `<p class="lab-more">How I made it ›</p>` : ""}` });
           for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
           if (pics.length > slides.length) slides.push({ m: pics[slides.length], body: `<p class="eyebrow">Built with</p><h2>${esc(it.title)}</h2>` });   // a spare image gets its own closing slide
           slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}`;
-          return `<article class="lab-item">
+          return `<article class="lab-item"${it.play ? ` data-poster="${esc(it.play.poster)}?v=${BUILD}"` : ""}>
             <div class="lab-track" tabindex="0" aria-roledescription="carousel" aria-label="${esc(it.title)}">${slides.map((sl, k) => `
-              <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
+              <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${sl.mediaHtml || media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
             </div>
             <div class="lab-nav"><button class="lab-arrow" data-lab="-1" aria-label="Previous" disabled>‹</button>
               <span class="lab-dots">${slides.map((_, k) => `<button class="lab-dot" data-lab-go="${k}" aria-label="Slide ${k + 1}"${k ? "" : ' aria-current="true"'}></button>`).join("")}</span>
@@ -438,10 +446,17 @@
     if (!fromHistory) { try { if (history.state && history.state.sjCase) { skipPop = true; history.back(); } } catch (_) {} }
   }
   // AI Lab carousels: the dots, the arrows' disabled state and the active slide follow the scroll (swipe, trackpad, keys)
+  function unloadGame(box) {   // v160: back to the poster, the game stops (and the desk music returns to its level)
+    const src = box.dataset.play, poster = box.closest(".lab-item").dataset.poster;
+    box.classList.remove("playing");
+    box.innerHTML = `<img src="${esc(poster)}" alt=""><button class="lab-play" type="button" aria-label="Play again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>`;
+    window.Music?.duck?.(0.45);
+  }
   function labTrack(tr) {
     const item = tr.closest(".lab-item"), dots = [...item.querySelectorAll(".lab-dot")], [prev, next] = item.querySelectorAll(".lab-arrow");
     const sync = () => { const k = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth));
       dots.forEach((d, j) => d.toggleAttribute("aria-current", j === k)); [...tr.children].forEach((sl, j) => sl.classList.toggle("on", j === k));
+      if (k !== 0) { const live = tr.querySelector(".lab-media.playing"); if (live) { const it = live.closest(".lab-item"); unloadGame(live); } }
       prev.disabled = k === 0; next.disabled = k === tr.children.length - 1; };
     tr.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
     tr.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); tr.scrollBy({ left: (e.key === "ArrowRight" ? 1 : -1) * tr.clientWidth, behavior: reducedMotion ? "auto" : "smooth" }); } });
@@ -462,6 +477,7 @@
     showNow(key, fromHistory);
   }
   function showNow(key, fromHistory) {
+    body.querySelectorAll(".lab-media.playing").forEach(unloadGame);   // v160: leaving the AI Lab stops the game
     exitCase(fromHistory);
     if (!os.hidden || opening) window.Music?.duck?.(0.45);   // v159: in the Mac: quieter than at the desk
     body.classList.remove("case-mode");
@@ -531,6 +547,17 @@
       body.querySelectorAll(".works .work-card").forEach((c) => { c.hidden = f !== "all" && c.dataset.src !== f; });
       if (window.SJT) SJT.event("filter-" + f);
       return;
+    }
+    const pl = e.target.closest(".lab-play");
+    if (pl) {
+      const box = pl.closest("[data-play]"), src = box && box.dataset.play;
+      if (!src || !/^https:\/\/mumbailocalgame\.github\.io\//.test(src)) return;
+      const f = document.createElement("iframe");
+      f.src = src; f.title = "Mumbai Local Straphanger, playable"; f.allow = "autoplay; fullscreen; vibrate";
+      f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox");
+      f.referrerPolicy = "no-referrer"; f.setAttribute("allowfullscreen", "");
+      box.classList.add("playing"); box.replaceChildren(f); f.focus();
+      window.Music?.duck?.(0); if (window.SJT) SJT.event("play-mumbai-local"); sound(); return;
     }
     const la = e.target.closest("[data-lab], [data-lab-go]");
     if (la) {   // AI Lab carousel
@@ -758,6 +785,7 @@
     if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.go(history.state.sjCase ? -2 : -1); } } catch (_) {} }
     caseSlug = null; screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
     closeMenu(); closeSpotlight();
+    body.querySelectorAll(".lab-media.playing").forEach((b) => b.replaceChildren());   // v160: the game stops with the Mac
     window.Music?.duck?.(1);   // v159: back at the desk: the music comes back up
     const finish = () => {
       os.hidden = true; closing = false;
@@ -779,6 +807,17 @@
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
   window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isClosing: () => closing, isCovering, toast, warmCase };
+
+  // v160: "Skip the desk, see my projects" works from the first second, before the 3D desk has loaded (on a slow laptop that can
+  // take a while): it opens the portfolio straight away, and the desk finishes loading behind it (main.js sees __skippedDesk).
+  const skip = document.getElementById("introWork");
+  if (skip) skip.addEventListener("click", (e) => {
+    if (window.Desk && Desk.state && Desk.state().started) return;   // the desk is ready: main.js flies into the laptop instead
+    e.stopImmediatePropagation(); window.__skippedDesk = true;
+    const ld = document.getElementById("loader"); if (ld) ld.classList.add("done");
+    // closed before the desk is ready: the loading card comes back until it is (main.js then lets you in)
+    open("work", () => { if (!(window.Desk && Desk.state && Desk.state().started) && ld) ld.classList.remove("done"); });
+  });
 
   // If the 3D desk never starts (a browser without module support, a blocked or failed script), open the plain
   // portfolio instead of leaving a black loading screen. Time spent on the password screen doesn't count.

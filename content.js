@@ -185,8 +185,28 @@ window.SITE = {
   // section 10, 11 and 15: WebXR on Meta Quest 3, MindAR, 66 tickets). `ai`: what AI did in the build (✏️ Sijo to fill in;
   // the line is hidden while empty). `draft: true` keeps an entry off the site until it has its details.
   aiLab: {
-    intro: "Experiments where I design and build the thing myself: virtual worlds, an AR keepsake and a game. Each one shows how it was made.",
+    intro: "Things I design and build myself: a game you can play right here, virtual worlds and an AR keepsake. Each one shows how it was made.",
     items: [
+      { title: "Mumbai Local Straphanger", kind: "Game · Phone browser · Self-initiated",   // v160: playable on its first slide
+        play: { src: "https://mumbailocalgame.github.io/", poster: "work/mumbai-local/tutorial.jpg",
+          caption: "Hold the left or right half to lean (arrow keys on a computer)" },
+        media: { type: "phone", src: "work/mumbai-local/tutorial.jpg", caption: "The 10-second tutorial ride: hold to lean against the sway" },
+        gallery: [
+          { type: "phone", src: "work/mumbai-local/ride.jpg", caption: "Peak hour: the grip gauge, the sway arrow and the next stop" },
+          { type: "phone", src: "work/mumbai-local/sway.jpg", caption: "Near the edge: the commuter loses his footing" }
+        ],
+        summary: "A balance game for phones, built for a game design challenge. It's peak hour on a Mumbai local, and one overhead strap is all that keeps you on your feet: hold the left or right half of the screen to lean against the sway.",
+        how: [
+          "Built the game around one moment every Mumbai commuter knows: the train jerks, your feet slide, and a single strap keeps you off a stranger's lap.",
+          "Designed the clutch save: each jerk is telegraphed 0.6 s ahead; at the edge time slows and your body glows red, and pulling back freezes the frame while the crowd cheers.",
+          "Made decisions part of the world: at stations a chai-wala or a newspaper vendor reaches in from each edge, and you lean toward the one you want.",
+          "Wrote all 340 strings in English, Hindi and Marathi, including station boards, share cards and announcements spoken by the phone's own voice.",
+          "Designed for access: a colour-blind safe gauge, one-thumb mode, larger text, reduced motion, an assist mode and a break nudge after 20 minutes.",
+          "Tested it with scripted touch tests on phone screens from 360 × 640 to 430 × 932, and tuned difficulty with a simulated novice player. Playtests with real commuters come next."
+        ],
+        ai: "The illustrations were generated with Figma AI in a Mario Miranda-inspired ink style and cut into a moving rig by the project's own script. The Hindi and Marathi text was written with machine help, with a review sheet ready for native speakers.",
+        built: ["HTML canvas", "JavaScript", "Web Audio", "Speech synthesis", "Figma AI", "English · हिंदी · मराठी"],
+        link: { href: "https://mumbailocalgame.github.io/press/", label: "Trailer and 24-page design doc ›" } },
       { title: "Step inside a scent", kind: "VR · Meta Quest 3 · Syntra", case: "syntra",
         media: { type: "pano", src: "work/syntra/fx/pano-lakeside_night.webp", caption: "One of the nine worlds: Lakeside Night (360° photo, Poly Haven, CC0)" },
         gallery: [   // v152: one image per slide after the overview
@@ -217,9 +237,7 @@ window.SITE = {
           "Printed 66 tickets for visitors at our exhibit on 30 September 2026."
         ],
         ai: "",
-        built: ["MindAR", "JavaScript", "58 mm thermal printer", "QR code"] },
-      { title: "Mumbai Local", kind: "Game", draft: true,   // ✏️ hidden until Sijo sends what it is, how he made it and media
-        media: null, summary: "", how: [], ai: "", built: [] }
+        built: ["MindAR", "JavaScript", "58 mm thermal printer", "QR code"] }
     ]
   },
 

@@ -736,3 +736,12 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - Removed: the role/problem/result band (v154) from all case studies.
 - AI Lab: equal card heights; "See it in the … case study" on the first slide.
 - Welcome: Enter is silent again (main button); "Enter with sound" is the link. Music master halved; `Music.duck()` in the Mac / case study.
+
+### v160–161: faster start, Mumbai Local in the AI Lab
+- Load: shader warm-up capped at 1.5 s (was 4 s) and skipped, with texture pre-upload, where 3D is drawn on the CPU (the still desk), which
+  also skips the live welcome snapshot (the embedded blurred picture is the same view). update.js deferred, styles.css high priority, reader.css
+  no longer loaded on the main page, modulepreloads low priority. "Skip the desk, see my projects" shows from the first paint and works before
+  the desk is ready (os.js opens Work; main.js sees `__skippedDesk`). Measured, CPU-drawn 3D on fast Wi-Fi: welcome 10.0 s → 1.0 s.
+- AI Lab: "Mumbai Local Straphanger" (mumbailocalgame.github.io, Sijo's own) first. Slide 1 is the game, loaded only on Play, in a sandboxed
+  iframe (CSP `frame-src https://mumbailocalgame.github.io`); it unloads on another slide, section or closing the Mac, and ducks the music.
+  Facts from the game's press/SUBMISSION.md; screenshots in work/mumbai-local/.

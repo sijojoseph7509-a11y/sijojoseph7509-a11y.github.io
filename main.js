@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=159";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=159";
+import { Sound } from "./sound.js?v=161";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=161";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2081,9 +2081,11 @@ await Promise.race([models, new Promise((r) => setTimeout(r, Math.max(0, 5000 - 
 drawScreen(0);
 setProgress(98, "warming up…");
 // compile shaders without freezing the page (uses parallel compilation where the GPU driver supports it)
-try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
+// v160: shader warm-up capped at 1.5 s (was 4 s), and skipped where 3D is drawn on the CPU: there it took 4.5 s+ on a fast Mac
+// and 15-20 s on an ordinary laptop, all before the welcome card appeared; that desk only ever draws still frames anyway
+if (!SOFTWARE_GL) try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 1500))]); } catch (_) {}
 // v145: upload every texture now, behind the loading screen, instead of the first time it comes into view (that stalled drags on Windows)
-try { const seen = new Set(); scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) for (const k in m) { const v = m[k]; if (v && v.isTexture && !seen.has(v)) { seen.add(v); renderer.initTexture(v); } } }); } catch (_) {}
+if (!SOFTWARE_GL) try { const seen = new Set(); scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) for (const k in m) { const v = m[k]; if (v && v.isTexture && !seen.has(v)) { seen.add(v); renderer.initTexture(v); } } }); } catch (_) {}
 // v145: off Apple, time a few real frames (each waited for on the GPU) and pick the quality once, here — not by stuttering at the desk
 let benchMs = null;
 function applyTier(t) {
@@ -2097,10 +2099,7 @@ function applyTier(t) {
   scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); });
   shadowDirty = true;
 }
-if (SOFTWARE_GL) {   // v146: software 3D named as such: lightest settings, compiled here behind the loader
-  applyTier(3);
-  try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
-}
+if (SOFTWARE_GL) applyTier(3);   // v146: software 3D named as such: lightest settings (v160: no warm-up wait)
 if (!SOFTWARE_GL) {   // v159: every GPU (Apple too) gets the one-time test, so shadows are settled at load, not mid-use
   try {
     const gl = renderer.getContext(), px = new Uint8Array(4), sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
@@ -2114,7 +2113,7 @@ if (!SOFTWARE_GL) {   // v159: every GPU (Apple too) gets the one-time test, so 
     if (tier > perf.step) {
       applyTier(tier);
       setProgress(99, "tuning for this device…");
-      try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
+      try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 1500))]); } catch (_) {}
     }
     // v146: at the lightest settings, test again; still slower than ~20 fps means the 3D is drawn on the CPU (browser graphics
     // acceleration off or the GPU blocked — Brave hides the GPU name, so this can't be told from it) → the still desk
@@ -2180,12 +2179,14 @@ function enter(withSound, app) {
   else moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140: from the blurred room view, glide in to the desk as the blur clears
   coachShow();
 }
-if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
+if (window.__skippedDesk) { camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update(); enter(false); }   // v160: "Skip the desk" was used before the desk was ready: the Mac is already open
+else if (deep) { enter(!Sound.muted); setTimeout(() => boot(deep), 900); }   // a shared link straight to a section
 else {
   document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = TOUCH ? b.dataset.touch : b.dataset.mouse));
   camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update();   // v140: the blurred room behind the welcome card
   // v141: one render of the room, copied small into a 2D canvas and blurred once by CSS — no live blur over a running 3D scene
-  try {
+  // (v160: not on the still desk, where one CPU-drawn frame takes seconds; the embedded blurred picture is the same view)
+  if (!STILL) try {
     renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
     const src = renderer.domElement, still = document.createElement("canvas");
