@@ -556,24 +556,6 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 /* the "Designer" widget only shows on a clear desktop — there's never room beside an open window */
 .os-screen:has(#win:not([hidden])) .widget { display: none; }
 
-/* Password gate (gate.js) — same black + SJ ring as the loader, above everything */
-.gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: safe center; padding: 24px; overflow-y: auto; background: #000; transition: opacity .6s var(--ease); }
-.gate[hidden] { display: none; }
-.unlocked .gate { opacity: 0; pointer-events: none; }
-.locked body { overflow: hidden; }
-.gate-inner { display: grid; justify-items: center; gap: 18px; width: min(320px, 100%); text-align: center; animation: quoteIn .6s var(--ease) both; }
-.gate-inner .loader-name { margin-bottom: 8px; }
-.gate-inner .loader-name img { height: 64px; }
-.gate-title { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: #f5f5f7; }
-.gate-sub { margin: -8px 0 6px; font-size: 15px; color: #a1a1a6; }
-.gate-field { width: 100%; }
-.gate-field input { box-sizing: border-box; width: 100%; padding: 13px 18px; border: 1px solid #3a3a3c; border-radius: 999px; background: #1c1c1e; color: #f5f5f7;
-  font: 500 17px/1.2 var(--font); text-align: center; outline: none; transition: border-color .2s; }
-.gate-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10, 132, 255, .3); }
-.gate-go { margin-top: 0; }
-.gate-msg { min-height: 1.3em; margin: -4px 0 0; font-size: 14px; color: #ff6961; }
-.gate.shake .gate-inner { animation: gateShake .4s var(--ease); }
-@keyframes gateShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .gate, .gate-inner { transition: none; animation: none; } }
 
@@ -1003,3 +985,25 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .lab-arrow:disabled { opacity: .3; cursor: default; }
 @media (max-width: 1000px) { .lab-slide { grid-template-columns: 1fr; } .lab-slide .lab-media { min-height: 240px; } }
 .lab-media.photo { background: #fff; } .lab-media.photo img { transform: scale(1.12); }   /* the exported photo carries a white border: crop it out */
+
+/* ───────── v154: portfolio-review fixes ───────── */
+/* welcome card: name first, then the role */
+.loader.ready .intro-title { margin: 0; font-size: 28px; }
+.intro-role { margin: 6px 0 0; font-size: 15px; color: #a1a1a6; text-align: center; }
+/* Work cards: what it is and one result, always visible (no hover needed, nothing hidden behind a blur) */
+.work-card { display: flex; flex-direction: column; }
+.work-card .wc-info { position: static; opacity: 1; transform: none; border-radius: 0; flex: 1; display: flex; flex-direction: column;
+  background: rgba(20, 20, 24, .94); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+.work-card .wc-info p { -webkit-line-clamp: 2; }
+.work-card .wc-info .more { margin-top: auto; padding-top: 4px; }
+.wc-result { display: block !important; margin: 0 0 10px !important; font-size: 13px !important; color: #fff !important; -webkit-line-clamp: unset !important; }
+.wc-result span { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #0d2a17; background: #7ee0a1; }
+.work-card:hover img, .work-card:focus-visible img { filter: none; transform: scale(1.03); }
+/* case studies: role, problem and result before anything else */
+.case-brief { --bg: #1c1c1e; --fg: #fff; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 34px max(28px, calc((100% - 1180px) / 2)) 38px;
+  background: var(--bg); color: var(--fg); }
+.case-brief div { min-width: 0; }
+.case-brief small { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.case-brief p { margin: 0 !important; font-size: 16px; line-height: 1.5; color: inherit !important; }
+.case-brief .res p { font-weight: 600; }
+@media (max-width: 760px) { .case-brief { grid-template-columns: 1fr; gap: 16px; padding: 24px 22px 26px; } .case-brief p { font-size: 15px; } }

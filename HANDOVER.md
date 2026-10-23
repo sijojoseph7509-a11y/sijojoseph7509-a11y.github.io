@@ -9,7 +9,7 @@
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
 | **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
-| **Status** | Live, **behind a temporary password gate (password: `Shea`, see §23.0)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Status** | Live and **public (v154: the temporary password gate and gate.js were removed after a portfolio review)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
 | **Cache-buster** | `?v=N` everywhere in `index.html`, in the two `import` lines at the top of `main.js` (`sound.js`, `room-utils.js`) **and** `{"build": "N"}` in `version.json` — always the same number (§19) |
 
@@ -80,7 +80,7 @@ analytics, no cookies, no third-party requests (fonts and three.js are self-host
 | GoDaddy DNS records (set 8 Oct 2026) | `A @ 185.199.108.153` · `A @ 185.199.109.153` · `A @ 185.199.110.153` · `A @ 185.199.111.153` · `CNAME www → sijojoseph7509-a11y.github.io` (TTL 1 h). Leave GoDaddy's `NS`, `SOA`, `_domainconnect` and `_dmarc` records alone. The old "Parked" A record and forwarding were removed. |
 | GoDaddy IPv6 records (added 11 Oct 2026) | `AAAA @` → `2606:50c0:8000::153`, `…8001::153`, `…8002::153`, `…8003::153`. **Required:** on IPv6-only networks (Jio/Airtel mobile data, many hotspots in India) the bare domain was unreachable (`DNS_PROBE_POSSIBLE`) without them, and www.sijo.work redirected there too. Verified over IPv6: HTTPS 200, valid certificate, HTTP→HTTPS 301. |
 | Moving the domain elsewhere later | Replace the A/CNAME records with the new host's, then clear the custom domain in Pages settings and delete `CNAME`. Moving back = restore the records above. |
-| Third-party services at runtime | **None.** `localStorage`: `muted`, `gate`, `keepy` (keepy-up best). `sessionStorage`: `updatedTo` (self-update guard). |
+| Third-party services at runtime | **None.** `localStorage`: `muted`, `keepy` (`gate` is no longer used, v154) (keepy-up best). `sessionStorage`: `updatedTo` (self-update guard). |
 | Working copy | The project was built in a Claude session "scratch" folder (deleted with the session). **GitHub is the source of truth** — clone it to work elsewhere. |
 
 ---
@@ -704,3 +704,8 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - **Not used on purpose**: Apple logos/wallpapers/app icons (SJ monogram + original icons instead), brand logos on the speaker/camera,
   the NID web photos, the reference portfolio's assets.
 - Trademarks (Apple, MacBook, macOS, LinkedIn, Behance, NID, Portronics) are referenced descriptively only.
+
+### v154: portfolio-review fixes (pd-portfolio-review / UXfolio 2026)
+- Password gate removed (gate.js, its markup and styles); QA now checks a first-time visitor reaches the welcome card, which names Sijo and his role.
+- Projects ordered Handovo, Syntra, Carekin, Ekmaati. Each project has `result` (shown on its Work card, no hover needed) and `brief` {role, problem, result} (a band at the top of its case study, built in os.js `fillCase`).
+- `links.behance` is empty until there is a real profile; the dock icon and Contact tile are hidden while it is.

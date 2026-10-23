@@ -52,19 +52,12 @@ await check("Desktop: loads with real cat, ball and no errors", async () => {
   return JSON.stringify(s);
 });
 
-await check("Password gate: blocks a new visitor, wrong password refused, right one unlocks and is remembered", async () => {
-  const p = await page({ locked: true }); await p.goto(BASE + "?qa=" + Date.now());
-  await p.waitForSelector("#gate:not([hidden]) input", { timeout: 10000 });
-  const covers = await p.evaluate(() => { const r = document.getElementById("gate").getBoundingClientRect(); return r.width >= innerWidth && r.height >= innerHeight; });
-  expect(covers, "gate does not cover the screen");
-  await p.keyboard.press("Escape"); await p.type("#gate input", "wrong"); await p.keyboard.press("Enter"); await sleep(400);
-  expect(await p.$eval(".gate-msg", (e) => e.textContent.length > 0), "no message for a wrong password");
-  expect(await p.evaluate(() => document.documentElement.classList.contains("locked")), "wrong password unlocked the site");
-  await p.$eval("#gate input", (e) => (e.value = "")); await p.type("#gate input", " SHEA "); await p.keyboard.press("Enter");
-  await p.waitForFunction(() => document.getElementById("gate").hidden, { timeout: 5000 });
-  await ready(p);
-  await p.goto(BASE + "?qa=" + Date.now());
-  expect(await p.evaluate(() => document.documentElement.classList.contains("unlocked") && document.getElementById("gate").hidden), "password not remembered after a reload");
+await check("Open to everyone: a first-time visitor (nothing stored) reaches the welcome card, which names Sijo and his role", async () => {
+  const p = await page({ locked: true }); await p.goto(BASE + "?qa=" + Date.now());   // v154: the password gate is gone
+  await p.waitForFunction(() => document.getElementById("intro") && !document.getElementById("intro").hidden, { timeout: 60000 });
+  expect(!(await p.$("#gate")), "a password gate is still on the page");
+  const t = await p.$eval("#intro", (e) => e.innerText);
+  expect(/Sijo Joseph/.test(t) && /designer/i.test(t), "the welcome card doesn't say who this is: " + t.slice(0, 80));
   clean(p); await p.ctx.close();
 });
 

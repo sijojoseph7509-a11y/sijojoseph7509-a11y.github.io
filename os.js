@@ -118,7 +118,7 @@
         </div>
         <div class="works">${S.projects.map((p) => {
           const src = /NID/.test(p.status || "") ? "nid" : "self";
-          const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p><span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
+          const info = `<div class="wc-info"><small>${esc(p.tag)}${p.status ? " · " + esc(p.status) : ""}</small><b>${esc(p.title)}</b><p>${esc(p.summary)}</p>${p.result ? `<p class="wc-result"><span>Result</span>${esc(p.result)}</p>` : ""}<span class="more">${p.case ? "View case study ›" : "Case study coming soon"}</span></div>`;
           if (!p.case) return `<div class="work-card soon" data-src="${src}" style="--c:${esc(p.color)}">${info}</div>`;
           const [f, h] = p.case.coverSlide || p.case.sections[0];   // a project can give its own cover slide (Syntra)
           return `<button class="work-card" data-case="${esc(p.case.slug)}" data-src="${src}" style="--c:${esc(p.color)}" aria-label="Open the ${esc(p.title)} case study">
@@ -215,7 +215,7 @@
           </div>
           <div class="ct-grid">
             ${tile(S.links.linkedin, appIcon("linkedin"), "LinkedIn", "Work history and recommendations", true)}
-            ${tile(S.links.behance, appIcon("behance"), "Behance", "More projects and visual work", true)}
+            ${S.links.behance ? tile(S.links.behance, appIcon("behance"), "Behance", "More projects and visual work", true) : ""}
             ${tile(S.links.github, ghIcon, "GitHub", "Code, including this website", true)}
             ${S.resumeUrl && S.resumeUrl !== "#" ? tile(S.resumeUrl, appIcon("resume"), "Résumé", "Download the PDF", true) : `<button class="ct-tile" type="button" data-open="resume"><span class="ct-ico">${appIcon("resume")}</span><span class="ct-txt"><b>Résumé</b><small>Experience and education</small></span><span class="ct-go" aria-hidden="true">›</span></button>`}
           </div>
@@ -241,7 +241,7 @@
       `<button class="dock-item" data-open="${k}" aria-label="${esc(a.title)}">${appIcon(k)}<span class="name">${esc(a.title)}</span></button>`).join("") +
     `<span class="dock-sep"></span>` +
     `<a class="dock-item ext" href="${esc(safeUrl(S.links.linkedin))}" target="_blank" rel="noopener" aria-label="LinkedIn">${appIcon("linkedin")}<span class="name">LinkedIn</span></a>` +
-    `<a class="dock-item ext" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` +
+    (S.links.behance ? `<a class="dock-item ext" href="${esc(safeUrl(S.links.behance))}" target="_blank" rel="noopener" aria-label="Behance">${appIcon("behance")}<span class="name">Behance</span></a>` : "") +
     `<button class="dock-item" data-desk aria-label="Back to desk">${appIcon("desk")}<span class="name">Desk</span></button>`;
 
   // Full screen: the dock slides up when the mouse reaches the bottom edge, and hides again when it leaves
@@ -380,6 +380,15 @@
       box.firstElementChild.insertAdjacentHTML("afterend", `<figure class="case-glance"><img src="${caseImg(slug, g[0])}" srcset="${caseImg(slug, g[0])} 1440w, ${caseImg(slug, g[0], 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+g[1]}" alt="${esc(g[2])}" fetchpriority="high" decoding="async"></figure>`);
     // images fade in as they arrive (no pop), over the project's own colour instead of a grey block; the browser
     // fetches the rest as the reader nears them (no more downloading the whole case study up front)
+    // v154: role, problem and result come first, so a reviewer has the whole story in the first screen
+    const br = p.case.brief || p.brief;
+    if (br) {
+      const hex = (p.color || "#1c1c1e").replace("#", ""), rgb = [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16) / 255), lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+      const el = document.createElement("section"); el.className = "case-brief"; el.setAttribute("aria-label", "In brief");
+      el.style.setProperty("--bg", p.color || "#1c1c1e"); el.style.setProperty("--fg", lum > 0.6 ? "#4a2f12" : "#ffffff");
+      el.innerHTML = `<div><small>My role</small><p>${esc(br.role)}</p></div><div><small>Problem</small><p>${esc(br.problem)}</p></div><div class="res"><small>Result</small><p>${esc(br.result)}</p></div>`;
+      box.prepend(el);
+    }
     box.querySelectorAll("img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });
     requestAnimationFrame(restore);
     // a case study can bring its own motion layer: an ES module loaded only when it opens
