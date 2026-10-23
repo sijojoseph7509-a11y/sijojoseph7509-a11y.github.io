@@ -717,3 +717,11 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 
 ### v157: window view
 - One photo for day and night, chosen by Sijo from six rendered options: Poly Haven "Residential Garden" (Greg Zaal, Rico Cilliers, CC0), slice centred 95° left of the image centre, `assets/window/gated-community.webp`. Night = the same photo graded in the shader (`winViewMat`, uMix). The courtyard photos are removed.
+
+### v158: code audit (23 Oct 2026)
+- `_config.yml` excludes HANDOVER.md, CLAUDE.md, tools/, .claude and .gitignore from the published site (they 404 on sijo.work; the repo itself is still public on GitHub).
+- Standalone pages work/<slug>/index.html: dead password gate (gate.js + form) removed; Syntra's group photo and its crops removed; the "Look around all ten worlds in 360°" link now opens /?open=case:syntra (the claude.ai artifact it pointed to is private: "Page not found" for visitors).
+- boot(): a top-bar or laptop click made while the Mac closes or the camera flies back is queued (pendingBoot) and runs when the camera lands; before, it was silently dropped for ~1.8 s.
+- syntra-fx.js / ekmaati-fx.js call renderer.forceContextLoss() on close, so repeated case opens can't exhaust the browser's ~16 live WebGL contexts and kill the room's.
+- QA: 39 checks (+ return-flight click, + standalone pages with no failed requests, gate or private links).
+- Known and fine: cat.glb is unused but kept on Sijo's instruction (do not change the cat model).
