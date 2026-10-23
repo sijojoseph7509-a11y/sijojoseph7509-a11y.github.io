@@ -753,3 +753,10 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 
 ### v163: hand cursors removed
 - Sijo didn't like the skin-tone hand cursors (v162): the desk is back to the standard grab / grabbing / pointer cursors and assets/cursor/ is deleted.
+
+### v164: sharper Mac, AI Lab switcher
+- Wallpaper: `assets/wallpaper.webp` (3840 px, from IMG_7101) for the Mac desktop; `assets/wallpaper-sm.jpg` (1400 px) for the laptop
+  screen texture. Night on the Mac is an inset box-shadow overlay, no longer brightness filters on the whole screen (they softened the UI).
+- AI Lab: tabs (thumbnail, `tab` or title, kind) above one project at a time. On ≥1001 px the card height fits the visible window
+  (`sizeLab()` sets `--lab-h`, 440–700 px) and the game plays in a phone frame: a 360 × 780 iframe scaled by `--ps`, with "Open full size".
+  Narrower screens: Play opens the game in a new tab.

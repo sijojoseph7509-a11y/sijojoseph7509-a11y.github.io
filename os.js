@@ -140,14 +140,16 @@
           : m.type === "photo"
           ? `<div class="lab-media photo"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><small class="lab-cap">${esc(m.caption || "")}</small></div>`
           : `<div class="lab-media ticket"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><span class="lab-badge">AR</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`;
-        const project = (it) => {
+        const project = (it, i) => {
           const pics = [it.media, ...(it.gallery || [])].filter(Boolean), how = it.how || [], slides = [];
           const caseTitle = (S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "";
           const caseBtn = it.case ? `<button class="btn alt lab-case" data-case="${esc(it.case)}">See it in the ${esc(caseTitle)} case study ›</button>` : "";
           // v159: the case-study link sits on the first slide of every project
           // v160: a playable project's first slide is the live game (loaded only when someone presses Play, sandboxed)
+          // v164: the game sits in a phone frame sized to the card; Play swaps the poster for the live game at the same size
           const playMedia = it.play && /^https:\/\/[\w.-]+\.github\.io\//.test(it.play.src)
-            ? `<div class="lab-media play" data-play="${esc(it.play.src)}"><img src="${esc(it.play.poster)}?v=${BUILD}" alt="" loading="lazy" decoding="async">
+            ? `<div class="lab-media play" data-play="${esc(it.play.src)}" data-poster="${esc(it.play.poster)}?v=${BUILD}">
+                <div class="lab-phone"><img src="${esc(it.play.poster)}?v=${BUILD}" alt="" loading="lazy" decoding="async"></div>
                 <button class="lab-play" type="button" aria-label="Play ${esc(it.title)} here"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>
                 <small class="lab-cap">${esc(it.play.caption || "")}</small></div>` : "";
           const linkBtn = it.link && /^https:\/\//.test(it.link.href) ? `<a class="btn alt lab-case" href="${esc(safeUrl(it.link.href))}" target="_blank" rel="noopener">${esc(it.link.label)}</a>` : "";
@@ -155,7 +157,7 @@
           for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
           if (pics.length > slides.length) slides.push({ m: pics[slides.length], body: `<p class="eyebrow">Built with</p><h2>${esc(it.title)}</h2>` });   // a spare image gets its own closing slide
           slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}`;
-          return `<article class="lab-item"${it.play ? ` data-poster="${esc(it.play.poster)}?v=${BUILD}"` : ""}>
+          return `<article class="lab-item" id="lab-${i}"${i ? " hidden" : ""} role="tabpanel" aria-labelledby="labtab-${i}">
             <div class="lab-track" tabindex="0" aria-roledescription="carousel" aria-label="${esc(it.title)}">${slides.map((sl, k) => `
               <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${sl.mediaHtml || media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
             </div>
@@ -164,9 +166,15 @@
               <button class="lab-arrow" data-lab="1" aria-label="Next">›</button></div>
           </article>`;
         };
+        // v164: a switcher of projects (thumbnail, name, kind) above one stage at a time, sized to the window
+        const thumb = (it) => (it.play && it.play.poster) || (it.media && it.media.src) || "";
         return `
         <h1>AI Lab</h1>
         <p class="sub">${esc(L.intro || "")}</p>
+        <div class="lab-tabs" role="tablist" aria-label="AI Lab projects">${items.map((it, i) => `
+          <button class="lab-tab" id="labtab-${i}" role="tab" data-lab-tab="${i}" aria-controls="lab-${i}" aria-selected="${i ? "false" : "true"}">
+            <img src="${esc(thumb(it))}?v=${BUILD}" alt="" loading="lazy" decoding="async"><span><b>${esc(it.tab || it.title)}</b><small>${esc(it.kind.split(" · ")[0])}</small></span></button>`).join("")}
+        </div>
         <div class="lab">${items.map(project).join("")}</div>`;
       }
     },
@@ -237,7 +245,7 @@
   const os = $("#os"), win = $("#win"), body = $("#winBody"), screen = $("#osScreen");
   // wallpaper URL carries the release number (os.js?v=N) so a replaced photo is never served stale from cache
   const BUILD = (document.currentScript && new URL(document.currentScript.src).searchParams.get("v")) || "dev";
-  screen.style.setProperty("--wallpaper", `url("assets/wallpaper.jpg?v=${BUILD}")`);
+  screen.style.setProperty("--wallpaper", `url("assets/wallpaper.webp?v=${BUILD}")`);
   let onClose = () => {}, current = "about";
   const sound = () => window.Sound && window.Sound.click();
 
@@ -447,11 +455,20 @@
   }
   // AI Lab carousels: the dots, the arrows' disabled state and the active slide follow the scroll (swipe, trackpad, keys)
   function unloadGame(box) {   // v160: back to the poster, the game stops (and the desk music returns to its level)
-    const src = box.dataset.play, poster = box.closest(".lab-item").dataset.poster;
+    const poster = box.dataset.poster;
     box.classList.remove("playing");
-    box.innerHTML = `<img src="${esc(poster)}" alt=""><button class="lab-play" type="button" aria-label="Play again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>`;
+    const ph = box.querySelector(".lab-phone"); if (ph) ph.innerHTML = `<img src="${esc(poster)}" alt="">`;
+    const full = box.querySelector(".lab-full");
+    if (full) full.outerHTML = `<button class="lab-play" type="button" aria-label="Play again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>`;
     window.Music?.duck?.(0.45);
   }
+  function sizeLab() {   // v164: the AI Lab card fits the visible window, so the game is never cut off top or bottom
+    const lab = body.querySelector(".lab"); if (!lab) return;
+    const h = Math.round(Math.max(440, Math.min(700, body.clientHeight - 92)));
+    lab.style.setProperty("--lab-h", h + "px");
+    lab.style.setProperty("--ps", ((h - 52 - 44) / 780).toFixed(4));   // phone frame scale: 360 × 780 game, inside the card minus the dots row
+  }
+  addEventListener("resize", () => { if (current === "ai") sizeLab(); });
   function labTrack(tr) {
     const item = tr.closest(".lab-item"), dots = [...item.querySelectorAll(".lab-dot")], [prev, next] = item.querySelectorAll(".lab-arrow");
     const sync = () => { const k = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth));
@@ -490,7 +507,7 @@
     $("#winTitle").textContent = app.title;
     if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
-    body.querySelectorAll(".lab-track").forEach(labTrack);
+    body.querySelectorAll(".lab-track").forEach(labTrack); sizeLab();
     body.querySelectorAll(".work-card img, .ab-proj img, .lab-media img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else { im.addEventListener("load", () => im.classList.add("in"), { once: true }); im.addEventListener("error", () => im.classList.add("in"), { once: true }); } });
     const nk = Object.keys(apps)[Object.keys(apps).indexOf(current) + 1];   // scroll on past the end to reach the next section
     if (nk) body.insertAdjacentHTML("beforeend", `<p class="next-hint" data-next="${esc(nk)}"><span>Keep scrolling for ${esc(apps[nk].title)}</span><i></i></p>`);
@@ -548,15 +565,27 @@
       if (window.SJT) SJT.event("filter-" + f);
       return;
     }
+    const tb = e.target.closest("[data-lab-tab]");
+    if (tb) {
+      body.querySelectorAll(".lab-media.playing").forEach(unloadGame);
+      const k = tb.dataset.labTab;
+      body.querySelectorAll("[data-lab-tab]").forEach((b) => b.setAttribute("aria-selected", String(b === tb)));
+      body.querySelectorAll(".lab-item").forEach((it) => { it.hidden = it.id !== "lab-" + k; });
+      const tr = body.querySelector("#lab-" + k + " .lab-track"); if (tr) tr.scrollLeft = 0;
+      sound(); return;
+    }
     const pl = e.target.closest(".lab-play");
     if (pl) {
       const box = pl.closest("[data-play]"), src = box && box.dataset.play;
       if (!src || !/^https:\/\/mumbailocalgame\.github\.io\//.test(src)) return;
+      if (innerWidth < 760) { window.open(src, "_blank", "noopener"); return; }   // v164: on a phone, the game gets the whole screen
       const f = document.createElement("iframe");
       f.src = src; f.title = "Mumbai Local Straphanger, playable"; f.allow = "autoplay; fullscreen; vibrate";
       f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox");
       f.referrerPolicy = "no-referrer"; f.setAttribute("allowfullscreen", "");
-      box.classList.add("playing"); box.replaceChildren(f); f.focus();
+      const full = document.createElement("a"); full.className = "lab-full"; full.href = src; full.target = "_blank"; full.rel = "noopener"; full.textContent = "Open full size ↗";
+      box.classList.add("playing"); box.querySelector(".lab-phone").replaceChildren(f); pl.replaceWith(full); f.focus();
+      const card = box.closest(".lab-item"); body.scrollTo({ top: card.offsetTop - 70, behavior: reducedMotion ? "auto" : "smooth" });   // the whole card in view
       window.Music?.duck?.(0); if (window.SJT) SJT.event("play-mumbai-local"); sound(); return;
     }
     const la = e.target.closest("[data-lab], [data-lab-go]");

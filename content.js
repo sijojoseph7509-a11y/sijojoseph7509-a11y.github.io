@@ -187,7 +187,7 @@ window.SITE = {
   aiLab: {
     intro: "Things I design and build myself: a game you can play right here, virtual worlds and an AR keepsake. Each one shows how it was made.",
     items: [
-      { title: "Mumbai Local Straphanger", kind: "Game · Phone browser · Self-initiated",   // v160: playable on its first slide
+      { title: "Mumbai Local Straphanger", tab: "Mumbai Local", kind: "Game · Phone browser · Self-initiated",   // v160: playable on its first slide
         play: { src: "https://mumbailocalgame.github.io/", poster: "work/mumbai-local/tutorial.jpg",
           caption: "Hold the left or right half to lean (arrow keys on a computer)" },
         media: { type: "phone", src: "work/mumbai-local/tutorial.jpg", caption: "The 10-second tutorial ride: hold to lean against the sway" },

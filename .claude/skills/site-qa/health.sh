@@ -22,7 +22,7 @@ exp=$(whois $D 2>/dev/null | grep -m1 -i "Registry Expiry Date" | awk '{print $4
 if [ -n "$exp" ]; then dd=$(( ($(date -j -f "%Y-%m-%d" "$exp" +%s) - $(date +%s)) / 86400 )); [ $dd -gt 45 ] && ok "domain registered for $dd more days (until $exp)" || bad "domain expires in $dd days ($exp): renew at GoDaddy"; else bad "could not read domain expiry"; fi
 b=$(curl -s --max-time 15 "https://$D/version.json?t=$RANDOM" | grep -o '[0-9]\+'); [ -n "$b" ] && ok "live build v$b" || bad "version.json not reachable"
 case=$(grep -o 'slug: "[a-z]*"' content.js | head -1 | cut -d'"' -f2)
-for f in main.js cat.js os.js content.js models/cat/shea.glb assets/profile.jpg assets/wallpaper.jpg assets/brand/favicon.svg assets/brand/sj-mark-on-dark.svg work/$case/01.webp; do
+for f in main.js cat.js os.js content.js models/cat/shea.glb assets/profile.jpg assets/wallpaper.webp assets/brand/favicon.svg assets/brand/sj-mark-on-dark.svg work/$case/01.webp; do
   c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "https://$D/$f?v=$b"); [ "$c" = 200 ] || bad "$f: $c"
 done; [ $FAIL = 0 ] && ok "key files load (code, model, photos, logo, first case study: $case)"
 exit $FAIL

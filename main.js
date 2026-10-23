@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=163";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=163";
+import { Sound } from "./sound.js?v=164";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=164";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1438,7 +1438,7 @@ let screenMode = "idle", typed = "", typeTimer = 0;
 // laptop wallpaper: Sijo's photo. WALL_FOCUS = which part of the photo to keep when cropping (0–1 across, 0–1 down)
 const WALL_FOCUS = [1, 0.3];   // v155: the amphitheatre photo, Sijo just left of centre; keep the right edge so he sits left of the window
 const wallImg = new Image();
-wallImg.src = asset("assets/wallpaper.jpg");
+wallImg.src = asset("assets/wallpaper-sm.jpg");   // v164: the laptop screen needs only 1400 px; the Mac desktop uses the 3840 px original
 // v145: the pulsing "Click to open" button is a small plane over the screen whose opacity pulses (nearly free), so the
 // 1600×1024 screen canvas is redrawn and re-uploaded only when something on it changes — re-uploading it 30×/s made the
 // desk stutter on Windows, where canvas→WebGL uploads are slow
