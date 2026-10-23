@@ -750,3 +750,6 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - The 3D desk uses Sijo's own hand cursors (assets/cursor/open.svg, fist.svg, point.svg; 32 px SVG, skin #b5785a sampled from his photo,
   dark-brown outline, thin white edge): open hand to look around, fist while dragging, pointing finger over clickable things
   (`.stage`, `.stage:active`, `.stage.pointer` in styles.css), each falling back to the standard cursor. The Mac windows keep normal cursors.
+
+### v163: hand cursors removed
+- Sijo didn't like the skin-tone hand cursors (v162): the desk is back to the standard grab / grabbing / pointer cursors and assets/cursor/ is deleted.
