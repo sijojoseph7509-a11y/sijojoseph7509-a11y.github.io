@@ -698,7 +698,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - **Shea's voice (v150, assets/sound/)**: real recordings, both CC0 (no attribution required, credited anyway): meow-1, meow-2 and
   purr from Kerzoven's "Cat Purr & Meow" (opengameart.org/content/cat-purr-meow); meow-3 and meow-4 from Joseph Sardin's "Small
   mewing of a cat" (bigsoundbank.com, sound 0098), raised 3 semitones. Trimmed, high-passed and level-matched; see sound.js.
-- **Window view (v152)**: Poly Haven "Courtyard" and "Courtyard Night" by Greg Zaal, CC0 (polyhaven.com/a/courtyard, /a/courtyard_night).
+- **Window view (v157)**: Poly Haven "Residential Garden" by Greg Zaal and Rico Cilliers, CC0 (polyhaven.com/a/residential_garden): one photo for day and night (night is a shader grade).
 - **Third-party**: football — Poly Haven, CC0; cat — Free3D (licence unverified, to replace); One Piece print artwork (© Eiichiro Oda /
   Shueisha) shown via Sijo's own photo at his request; fonts — SIL OFL; three.js — MIT.
 - **Not used on purpose**: Apple logos/wallpapers/app icons (SJ monogram + original icons instead), brand logos on the speaker/camera,
@@ -714,3 +714,6 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - `assets/wallpaper.jpg` (2200 px): the Mac desktop (`--wall-pos 46% 30%`, phones 47% 30%) and the laptop screen on the desk (`WALL_FOCUS [1, 0.3]`, the "Hi, I'm Sijo" panel narrowed to 360 px at the right so he stays clear of it).
 - `assets/card-photo.jpg` (1000 × 1418, head to hands): the profile card on the wall. `assets/profile.jpg` feeds the About portrait (v156: IMG_7035, studio, 1200 × 1500, head to above the knees).
 - `assets/away.jpg`: the previous wallpaper, kept for About's "Away from the desk" tile.
+
+### v157: window view
+- One photo for day and night, chosen by Sijo from six rendered options: Poly Haven "Residential Garden" (Greg Zaal, Rico Cilliers, CC0), slice centred 95° left of the image centre, `assets/window/gated-community.webp`. Night = the same photo graded in the shader (`winViewMat`, uMix). The courtyard photos are removed.

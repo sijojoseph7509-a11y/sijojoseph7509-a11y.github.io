@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=156";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=156";
+import { Sound } from "./sound.js?v=157";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=157";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1071,25 +1071,30 @@ const WIN_Y0 = DADO_Y + 1, WIN_Y1 = ROD_Y - 1.5, winH = WIN_Y1 - WIN_Y0, winY = 
 const frameMat = mat(0xe9e3d6, { roughness: 0.6 });
 for (const [w, h, x, y] of [[winW + 1.2, 0.7, winC, WIN_Y1], [winW + 1.2, 0.9, winC, WIN_Y0], [0.7, winH, winC - winW / 2, winY], [0.7, winH, winC + winW / 2, winY],
   [0.35, winH, winC, winY], [winW, 0.35, winC, WIN_Y0 + winH * 0.62]]) { const b = rbox(w, h, 0.6, 0.06, frameMat, 1); b.position.set(x, y, 0.3); corner.add(b); }   // frame + mullions
-// v152: the view outside is a real place, not a drawing: Poly Haven's "Courtyard" and "Courtyard Night" by Greg Zaal
-// (CC0), a home courtyard with painted walls, palms and garage doors, as a matching day and night pair. Each file is a
-// 150° × 90° slice of the 360° photo (assets/window). The glass looks it up by the direction from your eye through each
-// point of the window, so the view shifts with true depth as you look around the room, like a real window; the curtain
-// click cross-fades day ↔ night (uMix). One plane and two small textures: light on every GPU.
+// v157: the view outside is one real photo for day and night: Poly Haven's "Residential Garden" by Greg Zaal and Rico
+// Cilliers (CC0), apartment blocks around a lawn and a gazebo, chosen by Sijo. assets/window/gated-community.webp is a
+// 150° × 90° slice of the 360° photo. The glass looks it up by the direction from your eye through each point of the
+// window, so the view shifts with true depth as you look around; at night the same photo is graded to moonlight (uMix).
 const glassGeo = new THREE.PlaneGeometry(winW - 0.6, winH - 0.6);
 const blank = new THREE.DataTexture(new Uint8Array([90, 100, 120, 255]), 1, 1); blank.needsUpdate = true;
 const winViewMat = new THREE.ShaderMaterial({
-  uniforms: { uDay: { value: blank }, uNight: { value: blank }, uMix: { value: 0 }, uReady: { value: 0 }, uRot: { value: new THREE.Matrix3() } },
+  uniforms: { uView: { value: blank }, uMix: { value: 0 }, uReady: { value: 0 }, uRot: { value: new THREE.Matrix3() } },
   vertexShader: "varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
   fragmentShader: `
-    uniform sampler2D uDay, uNight; uniform float uMix, uReady; uniform mat3 uRot; varying vec3 vW;
+    uniform sampler2D uView; uniform float uMix, uReady; uniform mat3 uRot; varying vec3 vW;
     const float PI = 3.14159265, PW = 2.61799388, TH0 = 0.52359878, TH = 1.57079633;   // slice: 150° wide, 30°–120° from straight up
     void main() {
       vec3 d = normalize(uRot * normalize(vW - cameraPosition));                       // view direction in the window's space (outside is -z)
       float u = 1.0 - (atan(d.z, -d.x) + PI * 0.5 + PW * 0.5) / PW;
       float v = 1.0 - (acos(clamp(d.y, -1.0, 1.0)) - TH0) / TH;
       vec2 uv = clamp(vec2(u, v), 0.002, 0.998);
-      vec3 c = mix(texture2D(uDay, uv).rgb, texture2D(uNight, uv).rgb * 0.9, uMix);
+      vec3 day = texture2D(uView, uv).rgb;
+      // night: the same photo graded to moonlight (in display space, as previewed): desaturated, cooler and darker, the sky deep navy
+      vec3 s = pow(day, vec3(1.0 / 2.2)); float l = dot(s, vec3(.299, .587, .114));
+      vec3 n = pow(mix(vec3(l), s, .55), vec3(1.25)) * vec3(.46, .52, .78);
+      float sky = smoothstep(.55, .85, l) * (1.0 - smoothstep(.3, .52, 1.0 - v));
+      n = mix(n, mix(vec3(.035, .05, .13), vec3(.11, .14, .27), smoothstep(.0, .5, 1.0 - v)), sky);
+      vec3 c = mix(day, pow(n, vec3(2.2)), uMix);
       c = mix(mix(vec3(0.62, 0.7, 0.78), vec3(0.06, 0.07, 0.13), uMix), c, uReady);     // a plain sky tone until the photos arrive
       c *= 1.0 - 0.18 * pow(abs(v - 0.5) * 2.0, 3.0);                                    // a touch darker towards the frame
       gl_FragColor = vec4(c, 1.0);
@@ -1105,11 +1110,10 @@ windowView.onBeforeRender = () => {   // the window's orientation, once (the roo
   windowView.userData.rot = true;
 };
 corner.add(windowView);
-{ let got = 0; const tl = new THREE.TextureLoader();
-  [["uDay", "assets/window/courtyard-day.webp"], ["uNight", "assets/window/courtyard-night.webp"]].forEach(([k, f]) => tl.load(asset(f), (t) => {
-    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    winViewMat.uniforms[k].value = t; if (++got === 2) winViewMat.uniforms.uReady.value = 1;
-  })); }
+new THREE.TextureLoader().load(asset("assets/window/gated-community.webp"), (t) => {
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  winViewMat.uniforms.uView.value = t; winViewMat.uniforms.uReady.value = 1;
+});
 // curtain: cream linen with maroon ogee medallions and roses, gathered in grommet pleats
 const curtainTex = canvasTex(512, 832, (g, w, h) => {
   g.fillStyle = "#ebe2cf"; g.fillRect(0, 0, w, h);
@@ -1313,7 +1317,7 @@ function applyDay(k) {
   glow.intensity = f(1.2, 3.2);   // the ambient light from the room itself dims at night too
   shaftMat.opacity = f(D.shaft, N.shaft); mixC(shaftMat.color, D.shaftC, N.shaftC, k);
   patchMat.opacity = f(D.patch, N.patch); mixC(patchMat.color, D.patchC, N.patchC, k);
-  winViewMat.uniforms.uMix.value = k;   // v152: the photo window cross-fades day ↔ night
+  winViewMat.uniforms.uMix.value = k;   // v157: the window photo grades from day to moonlit night
   for (const c of [curtainL, curtainR]) c.material.emissiveIntensity = (1 - k) * 0.22;   // sunlight glowing through the linen
   projMat.opacity = astroOn ? Math.max(0, k - 0.25) * 1.1 : 0; projWall.material.opacity = projMat.opacity * 0.8;
 }
