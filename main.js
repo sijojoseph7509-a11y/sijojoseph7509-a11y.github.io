@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=164";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=164";
+import { Sound } from "./sound.js?v=165";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=165";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -388,7 +388,7 @@ charger.position.set(CXM + 2.4, shelfTop + 0.4, TABLE.z + 1.8);
 scene.add(kb2, charger);
 
 
-// Desk mat — original storm/lightning artwork made for this site (assets/deskmat.jpg, 3:1). The procedural blue-violet
+// Desk mat — original storm/lightning artwork made for this site (assets/deskmat.webp, 3:1). The procedural blue-violet
 // design below is only a placeholder while the photo loads.
 const deskMatTex = canvasTex(2048, 680, (g, w, h) => {
   const lg = g.createLinearGradient(0, 0, w, h);
@@ -409,7 +409,7 @@ const deskMatFace = new THREE.Mesh(new THREE.PlaneGeometry(MAT.w - 0.06, MAT.d -
 deskMatFace.rotation.x = -Math.PI / 2; deskMatFace.position.y = 0.031; deskMatFace.receiveShadow = true;
 deskMat.add(deskMatFace);
 scene.add(deskMat);
-new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.jpg" : "assets/deskmat.jpg"), (t) => {
+new THREE.TextureLoader().load(asset(TOUCH ? "assets/deskmat-phone.webp" : "assets/deskmat.webp"), (t) => {
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();   // stays crisp at the low, grazing camera angle
   deskMatFace.material.map = t; deskMatFace.material.needsUpdate = true;
@@ -1347,7 +1347,7 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Profile card: a floating UI card in the "frosted photo" style, hovering a few cm off the back wall right of the poster:
-// full-bleed photo (assets/card-photo.jpg, v155), progressive blur + dark glass at the bottom, white name with a verified seal,
+// full-bleed photo (assets/card-photo.webp, v155), progressive blur + dark glass at the bottom, white name with a verified seal,
 // a short line about Sijo, two stats and a white pill button. Rounded corners, lit from within like a screen, a thin
 // glass rim, a soft drop shadow on the wall behind it, and a slow drift so it reads as UI, not a print.
 const CARD = { w: 6.27, h: 10.34, px: 1400, lift: 1.2 };   // lift = distance off the wall (≈6 cm)
@@ -1404,7 +1404,7 @@ function drawCard(photo) {
   cardTex.needsUpdate = true;
 }
 drawCard(null);
-new THREE.ImageLoader().load(asset("assets/card-photo.jpg"), (img) => drawCard(sharpen(img)));   // v155: Sijo at the NID amphitheatre (IMG_7101)
+new THREE.ImageLoader().load(asset("assets/card-photo.webp"), (img) => drawCard(sharpen(img)));   // v155: Sijo at the NID amphitheatre (IMG_7101)
 const profileCard = new THREE.Group(), cardFloat = new THREE.Group();
 { // the card glows a little like a screen, so it stays crisp and readable at night instead of looking like printed paper
   const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshPhysicalMaterial({ map: cardTex, emissiveMap: cardTex, emissive: 0xffffff, emissiveIntensity: 0.42,

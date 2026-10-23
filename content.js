@@ -12,6 +12,7 @@ window.SITE = {
   roleLines: ["Product & UX designer", "AI designer & vibe coder"],   // v148: the About "Role" tile, balanced over two lines
   education: "M.Des in Design for Retail Experience, NID Bengaluru",
   seeking: "Open to product, UX and AI design roles.",
+  tagline: "Real people, real stakes, a process I don't skip. That's how a messy problem becomes a design that feels obvious.",   // v165: Sijo's pick (About lead)
   roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",

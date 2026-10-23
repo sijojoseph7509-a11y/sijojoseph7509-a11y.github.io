@@ -73,7 +73,7 @@
           <div class="ab-intro">
             <p class="eyebrow">${esc(S.focus)}${S.also ? " · " + esc(S.also) : ""}</p>
             <h1>Hi, I'm ${first}.</h1>
-            <p class="lead">${esc(S.education)}. ${esc(S.seeking)}</p>
+            <p class="lead">${esc(S.tagline || S.education + ". " + S.seeking)}</p>
             <dl class="ab-facts">
               <div class="role"><dt>Role</dt><dd>${(S.roleLines || [S.focus, S.also].filter(Boolean)).map(esc).join("<br>")}</dd></div>
               <div><dt>Studying</dt><dd>${esc(S.education)}</dd></div>
