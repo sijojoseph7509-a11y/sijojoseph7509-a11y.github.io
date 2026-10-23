@@ -95,7 +95,7 @@
         </div>
         <div class="bento">
           <div class="tile story"><small>About me</small><p class="lede">${esc(S.about[0] || "")}</p>${S.about[1] ? `<p>${esc(S.about[1])}</p>` : ""}</div>
-          <div class="tile photo" style="background-image:url('${esc(`assets/wallpaper.jpg?v=${BUILD}`)}')"><div class="cap"><small>Away from the desk</small><p>${esc((S.about[3] || "").replace(/^Away from the desk,? it's\s*/i, "").replace(/^./, (c) => c.toUpperCase()))}</p></div></div>
+          <div class="tile photo" style="background-image:url('${esc(`assets/away.jpg?v=${BUILD}`)}')"><div class="cap"><small>Away from the desk</small><p>${esc((S.about[3] || "").replace(/^Away from the desk,? it's\s*/i, "").replace(/^./, (c) => c.toUpperCase()))}</p></div></div>
           <div class="tile quote"><small>On my wall</small>${(() => { const t = S.about[2] || "", m = t.match(/"([^"]+)"/), rest = m ? t.slice(t.indexOf(".", m.index + m[0].length) + 1).trim() : t;
             return (m ? `<p class="q">“${esc(m[1])}”</p>` : "") + `<p>${esc(rest)}</p>`; })()}</div>
           <button class="tile skills-tile" data-open="skills"><small>What I do</small>

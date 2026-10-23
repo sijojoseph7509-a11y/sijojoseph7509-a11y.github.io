@@ -709,3 +709,8 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - Password gate removed (gate.js, its markup and styles); QA now checks a first-time visitor reaches the welcome card, which names Sijo and his role.
 - Projects ordered Handovo, Syntra, Carekin, Ekmaati. Each project has `result` (shown on its Work card, no hover needed) and `brief` {role, problem, result} (a band at the top of its case study, built in os.js `fillCase`).
 - `links.behance` is empty until there is a real profile; the dock icon and Contact tile are hidden while it is.
+
+### v155: new photo (IMG_7101, the NID amphitheatre steps)
+- `assets/wallpaper.jpg` (2200 px): the Mac desktop (`--wall-pos 46% 30%`, phones 47% 30%) and the laptop screen on the desk (`WALL_FOCUS [1, 0.3]`, the "Hi, I'm Sijo" panel narrowed to 360 px at the right so he stays clear of it).
+- `assets/card-photo.jpg` (1000 × 1418, head to hands): the profile card on the wall. `assets/profile.jpg` still feeds the About portrait.
+- `assets/away.jpg`: the previous wallpaper, kept for About's "Away from the desk" tile.

@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=154";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=154";
+import { Sound } from "./sound.js?v=155";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=155";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1341,7 +1341,7 @@ setNight(true, true);   // every visit starts at night (Sijo's favourite look); 
 
 /* ───────────────────────── Wall lettering ───────────────────────── */
 // Profile card: a floating UI card in the "frosted photo" style, hovering a few cm off the back wall right of the poster:
-// full-bleed photo (assets/profile.jpg), progressive blur + dark glass at the bottom, white name with a verified seal,
+// full-bleed photo (assets/card-photo.jpg, v155), progressive blur + dark glass at the bottom, white name with a verified seal,
 // a short line about Sijo, two stats and a white pill button. Rounded corners, lit from within like a screen, a thin
 // glass rim, a soft drop shadow on the wall behind it, and a slow drift so it reads as UI, not a print.
 const CARD = { w: 6.27, h: 10.34, px: 1400, lift: 1.2 };   // lift = distance off the wall (≈6 cm)
@@ -1398,7 +1398,7 @@ function drawCard(photo) {
   cardTex.needsUpdate = true;
 }
 drawCard(null);
-new THREE.ImageLoader().load(asset("assets/profile.jpg"), (img) => drawCard(sharpen(img)));
+new THREE.ImageLoader().load(asset("assets/card-photo.jpg"), (img) => drawCard(sharpen(img)));   // v155: Sijo at the NID amphitheatre (IMG_7101)
 const profileCard = new THREE.Group(), cardFloat = new THREE.Group();
 { // the card glows a little like a screen, so it stays crisp and readable at night instead of looking like printed paper
   const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshPhysicalMaterial({ map: cardTex, emissiveMap: cardTex, emissive: 0xffffff, emissiveIntensity: 0.42,
@@ -1430,7 +1430,7 @@ window.OS.setDark(false);   // the desktop uses the light glass look
 /* ───────────────────────── Live screen (macOS-style desktop) ───────────────────────── */
 let screenMode = "idle", typed = "", typeTimer = 0;
 // laptop wallpaper: Sijo's photo. WALL_FOCUS = which part of the photo to keep when cropping (0–1 across, 0–1 down)
-const WALL_FOCUS = [0, 0.4];   // landscape photo, Sijo on the left — keep the left edge
+const WALL_FOCUS = [1, 0.3];   // v155: the amphitheatre photo, Sijo just left of centre; keep the right edge so he sits left of the window
 const wallImg = new Image();
 wallImg.src = asset("assets/wallpaper.jpg");
 // v145: the pulsing "Click to open" button is a small plane over the screen whose opacity pulses (nearly free), so the
@@ -1505,7 +1505,7 @@ function drawScreen(t) {
   const ink = dark ? "#f5f5f7" : "#1d1d1f", ink2 = dark ? "#aeaeb2" : "#6e6e73";
   // Centre window — glass, larger corners, sidebar to the edge, controls on the sidebar
   if (screenMode === "idle") {
-    const bw = 400, bh = 210, bx = W - bw - 44, by = 116;   // right of centre, so Sijo in the wallpaper photo stays visible
+    const bw = 360, bh = 210, bx = W - bw - 24, by = 116;   // v155: narrower and further right, so Sijo in the wallpaper stays clear of it
     glass(bx, by, bw, bh, 22, dark ? "rgba(34,34,38,0.88)" : "rgba(250,250,252,0.9)");
     g.fillStyle = dark ? "rgba(70,70,78,0.55)" : "rgba(228,228,236,0.75)"; rr(g, bx + 6, by + 6, 92, bh - 12, 16); g.fill();
     ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(bx + 22 + i * 17, by + 24, 5.5, 0, 7); g.fill(); });
