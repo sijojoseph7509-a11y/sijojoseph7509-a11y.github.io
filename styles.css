@@ -31,7 +31,7 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid rgba(10, 132, 255, .6); outline-offset: 2px; }
 
 /* ───────── Desk stage ───────── */
-.stage { position: fixed; inset: 0; cursor: url(assets/cursor/open.svg) 16 16, grab; touch-action: none; }   /* cursor-hand preview: Sijo's skin tone */
+.stage { position: fixed; inset: 0; cursor: url(assets/cursor/open.svg) 16 16, grab; touch-action: none; }   /* v162: hand cursors in Sijo's skin tone (assets/cursor) */
 .stage:active { cursor: url(assets/cursor/fist.svg) 16 16, grabbing; }
 .stage.pointer { cursor: url(assets/cursor/point.svg) 12 3, pointer; }
 .stage canvas { display: block; }

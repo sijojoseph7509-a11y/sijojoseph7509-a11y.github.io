@@ -745,3 +745,8 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - AI Lab: "Mumbai Local Straphanger" (mumbailocalgame.github.io, Sijo's own) first. Slide 1 is the game, loaded only on Play, in a sandboxed
   iframe (CSP `frame-src https://mumbailocalgame.github.io`); it unloads on another slide, section or closing the Mac, and ducks the music.
   Facts from the game's press/SUBMISSION.md; screenshots in work/mumbai-local/.
+
+### v162: hand cursors
+- The 3D desk uses Sijo's own hand cursors (assets/cursor/open.svg, fist.svg, point.svg; 32 px SVG, skin #b5785a sampled from his photo,
+  dark-brown outline, thin white edge): open hand to look around, fist while dragging, pointing finger over clickable things
+  (`.stage`, `.stage:active`, `.stage.pointer` in styles.css), each falling back to the standard cursor. The Mac windows keep normal cursors.
