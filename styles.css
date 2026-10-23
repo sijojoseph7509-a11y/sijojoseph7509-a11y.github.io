@@ -31,9 +31,9 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid rgba(10, 132, 255, .6); outline-offset: 2px; }
 
 /* ───────── Desk stage ───────── */
-.stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
-.stage:active { cursor: grabbing; }
-.stage.pointer { cursor: pointer; }
+.stage { position: fixed; inset: 0; cursor: url(assets/cursor/open.svg) 16 16, grab; touch-action: none; }   /* cursor-hand preview: Sijo's skin tone */
+.stage:active { cursor: url(assets/cursor/fist.svg) 16 16, grabbing; }
+.stage.pointer { cursor: url(assets/cursor/point.svg) 12 3, pointer; }
 .stage canvas { display: block; }
 .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 85% 90% at 50% 45%, transparent 62%, rgba(12, 12, 13, .45) 120%); }   /* a soft lens falloff, not a dark frame */
 .grain { display: none; }
