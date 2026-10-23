@@ -712,5 +712,5 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 
 ### v155: new photo (IMG_7101, the NID amphitheatre steps)
 - `assets/wallpaper.jpg` (2200 px): the Mac desktop (`--wall-pos 46% 30%`, phones 47% 30%) and the laptop screen on the desk (`WALL_FOCUS [1, 0.3]`, the "Hi, I'm Sijo" panel narrowed to 360 px at the right so he stays clear of it).
-- `assets/card-photo.jpg` (1000 × 1418, head to hands): the profile card on the wall. `assets/profile.jpg` still feeds the About portrait.
+- `assets/card-photo.jpg` (1000 × 1418, head to hands): the profile card on the wall. `assets/profile.jpg` feeds the About portrait (v156: IMG_7035, studio, 1200 × 1500, head to above the knees).
 - `assets/away.jpg`: the previous wallpaper, kept for About's "Away from the desk" tile.

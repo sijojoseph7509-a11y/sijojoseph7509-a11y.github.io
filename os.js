@@ -69,7 +69,7 @@
         const first = esc(S.name.split(" ")[0]), cases = S.projects.filter((x) => x.case);
         return `
         <section class="ab-hero">
-          <div class="ab-photo"><img src="${esc(`assets/profile.jpg?v=${BUILD}`)}" alt="Portrait of ${esc(S.name)}" width="1200" height="1200" decoding="async"></div>
+          <div class="ab-photo"><img src="${esc(`assets/profile.jpg?v=${BUILD}`)}" alt="Portrait of ${esc(S.name)}" width="1200" height="1500" decoding="async"></div>
           <div class="ab-intro">
             <p class="eyebrow">${esc(S.focus)}${S.also ? " · " + esc(S.also) : ""}</p>
             <h1>Hi, I'm ${first}.</h1>
