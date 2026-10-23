@@ -29,7 +29,9 @@ QA_DEPS=<scratch>/qa node .claude/skills/site-music/render.mjs music.js <out-dir
 for f in <out-dir>/*.wav; do afconvert -f m4af -d aac -b 160000 "$f" "${f%.wav}.m4a"; done   # small previews to send
 ```
 It prints, per mood: peak dBFS, RMS dBFS, clipped samples, DC offset and the level of every second (spot dropouts).
-Targets (v149): RMS -16 to -18 dBFS for every mood, peaks below -2 dBFS, 0 clipped samples, 0 errors.
+Targets: every mood within ~1 dB of the others, 0 clipped samples, 0 errors. v159 halved the master (0.45, about -6 dB:
+RMS about -22 to -24 dBFS) because visitors found the music distracting, and `Music.duck(level)` fades it while the Mac is
+open (0.45) and lower in a case study (0.25); back to 1 at the desk (os.js). The welcome card's main Enter is silent.
 Send the .m4a previews to Sijo: only a listener can judge taste.
 
 ## UI sounds (sound.js)

@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=158";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=158";
+import { Sound } from "./sound.js?v=159";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=159";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -93,12 +93,14 @@ const GPU_NAME = (() => { try { const gl = renderer.getContext(), x = gl.getExte
 const CPU_3D = (() => { try { const c = document.createElement("canvas"), o = { failIfMajorPerformanceCaveat: true };
   const g = c.getContext("webgl2", o) || c.getContext("webgl", o); if (!g) return true; g.getExtension("WEBGL_lose_context")?.loseContext(); return false; } catch (_) { return false; } })();
 const SOFTWARE_GL = CPU_3D || /swiftshader|llvmpipe|softpipe|basic render|software/i.test(GPU_NAME);
+// v159: Apple graphics, also when the browser hides the GPU's name (Brave, privacy modes) on a Mac, iPhone or iPad: full sharpness
+const APPLE_GPU = /apple/i.test(GPU_NAME) || (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) && !/intel|amd|radeon|nvidia|geforce/i.test(GPU_NAME));
 if (SOFTWARE_GL) renderer.setPixelRatio(1);
-else if (!/apple/i.test(GPU_NAME)) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+else if (!APPLE_GPU) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 // v143: built-in laptop graphics (Intel UHD/Iris/HD, AMD "Radeon Graphics"/Vega, phone GPUs) start on the light settings instead of
 // stuttering first and stepping down later: ≤1.25× resolution, plain (not soft) shadows; the lamp's shadow is switched off once it exists
 const LIGHT_GPU = !SOFTWARE_GL && /intel|uhd|iris|hd graphics|radeon\(tm\) graphics|radeon graphics|vega|adreno|mali|powervr/i.test(GPU_NAME) && !/radeon rx|nvidia|geforce|rtx|gtx|arc a/i.test(GPU_NAME);
-if (LIGHT_GPU) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
+if (LIGHT_GPU) renderer.setPixelRatio(Math.min(devicePixelRatio, devicePixelRatio >= 2 ? 1.5 : 1.25));   // v159: phones (2×–3× screens) start at 1.5×; the live ladder can still step to 1.25×
 // Some phones drop the GPU context under memory pressure: offer a clean reload instead of a frozen/black desk
 renderer.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); $("#glitch").hidden = false; });
 $("#glitchReload").addEventListener("click", () => location.reload());
@@ -1754,34 +1756,38 @@ function placeCoach() {
 // first render at 1× pixel density, then drop the lamp's shadows and halve the sun's shadow map.
 // Only judged once things have settled (≥4 s after the desk appears, not while the camera is flying or models are
 // fading in) — the first seconds include shader compiles and made phones look slow, dropping them to 1× (blurry).
-const perf = { dts: [], step: 0, from: 0 };
+const perf = { dts: [], step: 0, from: 0, fast: 0, need: 3, upAt: -1e9 };
 if (LIGHT_GPU) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); }
 let softwareApplied = false;
 function adaptQuality(dt) {
   if (SOFTWARE_GL && !softwareApplied) { softwareApplied = true; perf.step = 3; lampLight.castShadow = false; renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); console.info("Software 3D detected (" + GPU_NAME + (CPU_3D ? ", browser reports CPU drawing" : "") + "): lightest quality"); return; }
-  if (perf.step >= 4 || document.hidden || dt > 2500 || tween || fading.length) return;   // v143: was 500 ms, which ignored every frame on a very slow GPU so it never lowered quality   // ignore pauses + busy moments
+  if (STILL || document.hidden || dt > 2500 || tween || fading.length) return;   // ignore pauses + busy moments
   const now = performance.now();
   if (!perf.from) perf.from = now + 1200;
   if (now < perf.from) return;
   perf.dts.push(dt);
   if (perf.dts.length < 40) return;
   const median = perf.dts.sort((a, b) => a - b)[20];
-  perf.dts = [];
-  // aim for smooth (≈45 fps or better), not just "usable": 25 fps still feels stuck when you drag to look around
-  if (median < 19) return;   // v143: smooth (≈50+ fps) — keep watching; a later slowdown still steps down
-  if (!/apple/i.test(GPU_NAME)) {   // v145: off Apple only the resolution changes during use — switching shadows rebuilds every shader, which froze Windows for seconds
-    const cur = renderer.getPixelRatio(), next = [1.25, 1, 0.85, 0.7].find((p) => p < cur - 0.01);
-    if (next === undefined) { perf.step = 4; return; }
-    renderer.setPixelRatio(next); renderer.setSize(innerWidth, innerHeight); perf.step = Math.max(perf.step, 1);
-    console.info("Lowered 3D resolution for smoother performance (" + next + "×)"); return;
+  perf.dts = []; perf.last = median;
+  // v159: during use only the resolution moves, in small steps, and it comes back. A heavier moment (the room view, a busy
+  // tab) used to lower it for good, which is why the desk looked soft after zooming out and in. Shadows are settled once,
+  // at load (GPU test). Never below 1.25× on Retina screens and phones, so the desk stays crisp.
+  const cur = renderer.getPixelRatio(), top = perf.top || (perf.top = cur);
+  const floor = devicePixelRatio >= 2 ? 1.25 : 0.85;
+  const levels = [...new Set([top, 1.75, 1.5, 1.25, 1, 0.85].filter((p) => p <= top + 1e-3 && p >= Math.min(floor, top) - 1e-3))].sort((a, b) => b - a);
+  const k = levels.findIndex((p) => Math.abs(p - cur) < 0.01);
+  const set = (p, why) => { renderer.setPixelRatio(p); renderer.setSize(innerWidth, innerHeight); shadowDirty = true; perf.fast = 0; console.info(why + " (" + p + "×)"); };
+  if (median >= 19) {   // under ~50 fps: one step sharper→smoother
+    if (k >= 0 && k < levels.length - 1) {
+      if (now - perf.upAt < 10000) perf.need = Math.min(48, perf.need * 2);   // the last step up was too much: wait longer before the next try
+      set(levels[k + 1], "Lowered 3D resolution for smoother motion"); perf.step = Math.max(perf.step, 1);
+    }
+    return;
   }
-  perf.step++;
-  const pr = renderer.getPixelRatio();
-  if (perf.step === 1 && pr > 1.25) { renderer.setPixelRatio(1.25); renderer.setSize(innerWidth, innerHeight); }
-  else if (perf.step <= 2) { perf.step = 2; lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; }
-  else if (perf.step >= 4) { if (pr > 0.8) { renderer.setPixelRatio(0.8); renderer.setSize(innerWidth, innerHeight); } }
-  else { perf.step = 3; if (pr > 1) { renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); } renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); }); }
-  shadowDirty = true; console.info("Lowered 3D quality for smoother performance (step " + perf.step + ")");
+  // running at full frame rate (~55 fps or better; frames can't come faster than the screen refreshes, so this is the
+  // headroom signal): after a run of fast windows, one step sharper again. A step that proves too heavy doubles the wait.
+  if (k > 0 && median < 18) { if (++perf.fast >= perf.need) { set(levels[k - 1], "Raised 3D resolution again"); perf.upAt = now; } }
+  else perf.fast = 0;
 }
 
 const clock = new THREE.Clock();
@@ -2082,9 +2088,11 @@ try { const seen = new Set(); scene.traverse((o) => { if (o.material) for (const
 let benchMs = null;
 function applyTier(t) {
   perf.step = t;
-  if (t >= 2) { lampLight.castShadow = false; sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1.25)); }
-  if (t >= 3) { renderer.shadowMap.enabled = false; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1)); }
-  if (t >= 4) renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 0.8));
+  const hi = devicePixelRatio >= 2;   // v159: Retina screens and phones keep at least 1.25×
+  if (t >= 1) lampLight.castShadow = false;
+  if (t >= 2) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), hi ? 1.5 : 1.25)); }
+  if (t >= 3) { renderer.shadowMap.enabled = false; renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), hi ? 1.25 : 1)); }
+  if (t >= 4) renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), hi ? 1.25 : 0.85));
   renderer.setSize(innerWidth, innerHeight);
   scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((x) => (x.needsUpdate = true)); });
   shadowDirty = true;
@@ -2093,7 +2101,7 @@ if (SOFTWARE_GL) {   // v146: software 3D named as such: lightest settings, comp
   applyTier(3);
   try { await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 4000))]); } catch (_) {}
 }
-if (!SOFTWARE_GL && !/apple/i.test(GPU_NAME)) {
+if (!SOFTWARE_GL) {   // v159: every GPU (Apple too) gets the one-time test, so shadows are settled at load, not mid-use
   try {
     const gl = renderer.getContext(), px = new Uint8Array(4), sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera); sync();   // warm-up
@@ -2101,7 +2109,7 @@ if (!SOFTWARE_GL && !/apple/i.test(GPU_NAME)) {
     let n = 0;
     while (n < 6 && (n < 2 || performance.now() - t0 < 300)) { renderer.shadowMap.needsUpdate = n % 2 === 0; renderer.render(scene, camera); sync(); n++; }   // v146: stop early on a slow device
     benchMs = (performance.now() - t0) / n;
-    const tier = benchMs < 9 ? 0 : benchMs < 16 ? 2 : benchMs < 28 ? 3 : 4;
+    const tier = benchMs < 11 ? 0 : benchMs < 16 ? 1 : benchMs < 24 ? 2 : benchMs < 34 ? 3 : 4;   // v159: 1 = lamp shadow off only
     console.info("3D test frame: " + benchMs.toFixed(1) + " ms → quality " + Math.max(tier, perf.step));
     if (tier > perf.step) {
       applyTier(tier);
@@ -2147,7 +2155,7 @@ window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix],
     const r = renderer.domElement.getBoundingClientRect(); _br.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(BALL_R).add(_bw).project(camera);
     return { airborne, keepy, best: keepyBest, h: +(ball.position.y - ballY0).toFixed(2), vy: +ballVY.toFixed(3), x: r.left + (_bs.x + 1) / 2 * r.width, y: r.top + (1 - _bs.y) / 2 * r.height, r: Math.abs(_br.x - _bs.x) / 2 * r.width, onScreen: Math.abs(_bs.x) < 1 && Math.abs(_bs.y) < 1 }; },
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
-  covering: !!window.OS.isCovering?.(), quality: perf.step, still: STILL, frames: renderer.info.render.frame, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
+  covering: !!window.OS.isCovering?.(), quality: perf.step, perf: { fast: perf.fast, need: perf.need, top: perf.top, n: perf.dts.length, median: perf.last }, still: STILL, frames: renderer.info.render.frame, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
   ballX: ball ? ball.position.x : null, audio: Sound.state, music: window.Music.playing, room: roomView, homeDist: HOME.dist, roomDist: ROOM.dist, night: dayTarget === 1, dayMix }),
   toggleDay: () => setNight(dayTarget === 0), get cat() { return shea; }, catStep: (sec) => { catManual = true; for (let i = 0; i < Math.round(sec * 60); i++) shea.update(1 / 60); catShadowFollow(); renderer.render(scene, camera); return shea.busy; },
@@ -2189,8 +2197,8 @@ else {
   } catch (_) {}
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
-  $("#introGo").addEventListener("click", () => enter(true));        // v148: Enter starts with sound
-  $("#introSound").addEventListener("click", () => enter(false));    // "Enter without sound"
+  $("#introGo").addEventListener("click", () => enter(false));       // v159: Enter is quiet again (visitors found the music distracting)
+  $("#introSound").addEventListener("click", () => enter(true));     // "Enter with sound"
   $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects
   $("#introGo").focus({ preventScroll: true });
 }

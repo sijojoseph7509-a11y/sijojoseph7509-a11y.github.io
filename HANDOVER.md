@@ -725,3 +725,14 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - syntra-fx.js / ekmaati-fx.js call renderer.forceContextLoss() on close, so repeated case opens can't exhaust the browser's ~16 live WebGL contexts and kill the room's.
 - QA: 39 checks (+ return-flight click, + standalone pages with no failed requests, gate or private links).
 - Known and fine: cat.glb is unused but kept on Sijo's instruction (do not change the cat model).
+
+### v159: sharpness, quieter music, smoother case transitions
+- Quality ladder (main.js `adaptQuality`): during use only the resolution moves, in steps (top → 1.75 → 1.5 → 1.25 → 1 → 0.85), never
+  below 1.25× on 2×+ screens, and it climbs back after a run of full-frame-rate windows (the wait doubles if a step up proves too heavy).
+  Shadows are settled once at load by the GPU test, which now runs on every GPU. `APPLE_GPU` also covers Macs/iPhones whose browser hides
+  the GPU name (Brave), so they get full 2×. Phones with integrated GPUs start at 1.5×. `Desk.state().perf` shows the ladder state.
+- Case-study enter/exit: View Transitions (`#win { view-transition-name: mac-win }`), the whole switch inside one; fallback fade. The old FLIP
+  squashed the page on the way back.
+- Removed: the role/problem/result band (v154) from all case studies.
+- AI Lab: equal card heights; "See it in the … case study" on the first slide.
+- Welcome: Enter is silent again (main button); "Enter with sound" is the link. Music master halved; `Music.duck()` in the Mac / case study.

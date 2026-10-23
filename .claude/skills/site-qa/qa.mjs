@@ -67,18 +67,18 @@ await check("Phone: loads with all models and no errors", async () => {
   await sleep(1000); clean(p); await p.ctx.close();
 });
 
-await check("Welcome screen: Enter (the default) starts the music and shows the laptop pointer", async () => {
+await check("Welcome screen: 'Enter with sound' starts the music and shows the laptop pointer", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
   expect(await p.$eval("#intro", (e) => !e.hidden), "welcome screen not shown");
-  await p.click("#introGo"); await sleep(800);
+  await p.click("#introSound"); await sleep(800);
   const s = await p.evaluate(() => Desk.state());
   expect(s.audio === "running" && s.music, "music not playing: " + s.audio);
   expect(await p.$eval("#coach", (e) => !e.hidden), "laptop pointer not shown"); clean(p); await p.ctx.close();
 });
 
-await check("Welcome screen: 'Enter without sound' stays silent", async () => {
+await check("Welcome screen: Enter (the default) stays silent", async () => {
   const p = await page(); await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
-  await p.click("#introSound"); await sleep(600);
+  await p.click("#introGo"); await sleep(600);
   const s = await p.evaluate(() => Desk.state());
   expect(!s.music && (await p.$eval("#soundBtn", (b) => b.classList.contains("muted"))), "sound still on"); await p.ctx.close();
 });
@@ -244,7 +244,7 @@ await check("Phone landscape: the welcome card fits on screen", async () => {
   const p = await page({ mobile: true }); await p.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await p.goto(BASE + "?qa=" + Date.now()); await ready(p, 60000, false);
   const b = await p.$eval("#introSound", (e) => e.getBoundingClientRect().bottom);
-  expect(b <= 390, "'Enter without sound' is below the screen (" + Math.round(b) + "px)"); await p.ctx.close();
+  expect(b <= 390, "'Enter with sound' is below the screen (" + Math.round(b) + "px)"); await p.ctx.close();
 });
 
 for (const sec of ["about", "work", "skills", "resume", "contact"]) {

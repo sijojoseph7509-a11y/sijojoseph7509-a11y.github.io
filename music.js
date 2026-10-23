@@ -31,7 +31,7 @@
     const wowLfo = O("sine", 0.5), wowAmt = G(0.00028); wowLfo.connect(wowAmt).connect(wow.delayTime); wowLfo.start();
     const glue = ctx.createDynamicsCompressor(); glue.threshold.value = -20; glue.knee.value = 12; glue.ratio.value = 2.5; glue.attack.value = 0.02; glue.release.value = 0.25;
     const limit = ctx.createDynamicsCompressor(); limit.threshold.value = -4; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.12;
-    const master = G(0.9);
+    const master = G(0.45);   // v159: half the level it was (visitors found it too loud)
     fxIn.connect(hp).connect(tone).connect(wow).connect(glue).connect(limit).connect(master).connect(out);
     // a small, warm room: decaying noise that gets darker as it fades
     const rev = ctx.createConvolver();
@@ -309,7 +309,8 @@
   }
 
   /* ── window.Music: the same API the desk and the phone use ── */
-  let ctx = null, eng = null, timer = null, current = 0;
+  let ctx = null, eng = null, timer = null, current = 0, duck = 1;
+  const VOL = 0.45;   // v159: base level; duck() lowers it while someone reads in the Mac
   const listeners = new Set();
   const notify = () => listeners.forEach((f) => { try { f(); } catch (_) {} });
   const tick = () => { if (eng) eng.schedule(ctx.currentTime + (document.hidden ? 1.5 : 0.2)); };   // background tabs tick rarely: look further ahead
@@ -318,7 +319,7 @@
       if (timer) return;
       if (ctx !== audioCtx) { ctx = audioCtx; eng = createEngine(ctx, ctx.destination); }
       if (ctx.state === "suspended") ctx.resume();
-      eng.master.gain.cancelScheduledValues(ctx.currentTime); eng.master.gain.setValueAtTime(0.9, ctx.currentTime);
+      eng.master.gain.cancelScheduledValues(ctx.currentTime); eng.master.gain.setValueAtTime(VOL * duck, ctx.currentTime);
       eng.startMood(current, ctx.currentTime + 0.1);
       timer = setInterval(tick, 25); tick();
       notify();
@@ -339,6 +340,11 @@
     get moods() { return ["Desk lo-fi", "Night-drive phonk", "Kerala evening", "Monsoon chai"]; },
     onChange(f) { listeners.add(f); return () => listeners.delete(f); },
     get playing() { return !!timer; },
+    // v159: fade the music to a fraction of its level (1 = full) over about a second, e.g. while a case study is open
+    duck(level) {
+      duck = Math.max(0, Math.min(1, level));
+      if (eng && ctx) { const g = eng.master.gain, t = ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(VOL * duck, t, 0.35); }
+    },
     _engine: createEngine
   };
 })();

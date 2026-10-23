@@ -999,11 +999,17 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .wc-result { display: block !important; margin: 0 0 10px !important; font-size: 13px !important; color: #fff !important; -webkit-line-clamp: unset !important; }
 .wc-result span { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #0d2a17; background: #7ee0a1; }
 .work-card:hover img, .work-card:focus-visible img { filter: none; transform: scale(1.03); }
-/* case studies: role, problem and result before anything else */
-.case-brief { --bg: #1c1c1e; --fg: #fff; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 34px max(28px, calc((100% - 1180px) / 2)) 38px;
-  background: var(--bg); color: var(--fg); }
-.case-brief div { min-width: 0; }
-.case-brief small { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
-.case-brief p { margin: 0 !important; font-size: 16px; line-height: 1.5; color: inherit !important; }
-.case-brief .res p { font-weight: 600; }
-@media (max-width: 760px) { .case-brief { grid-template-columns: 1fr; gap: 16px; padding: 24px 22px 26px; } .case-brief p { font-size: 15px; } }
+
+/* v159: entering / leaving a case study as a View Transition: the window resizes for real while old and new cross-fade.
+   The snapshots keep their proportions (cover, anchored at the top), so nothing squashes on the way back. */
+#win { view-transition-name: mac-win; }
+::view-transition-group(mac-win) { animation-duration: .46s; animation-timing-function: cubic-bezier(.32, .72, 0, 1); }
+::view-transition-old(mac-win), ::view-transition-new(mac-win) { height: 100%; object-fit: cover; object-position: 50% 0; animation-duration: .3s; animation-timing-function: ease; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+/* v159: AI Lab projects are the same size: rows share the tallest height, slides fill their card */
+.lab { grid-auto-rows: 1fr; }
+.lab-item { display: flex; flex-direction: column; }
+.lab-track { flex: 1 1 auto; }
+.lab-slide .lab-media { min-height: 400px; }
+.lab-case { align-self: flex-start; margin: 6px 0 4px; }

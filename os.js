@@ -140,11 +140,13 @@
           : `<div class="lab-media ticket"><img src="${esc(m.src)}?v=${BUILD}" alt="${esc(m.caption || "")}" loading="lazy" decoding="async"><span class="lab-badge">AR</span><small class="lab-cap">${esc(m.caption || "")}</small></div>`;
         const project = (it) => {
           const pics = [it.media, ...(it.gallery || [])].filter(Boolean), how = it.how || [], slides = [];
-          slides.push({ m: pics[0], body: `<p class="eyebrow">${esc(it.kind)}</p><h2>${esc(it.title)}</h2><p class="lab-sum">${esc(it.summary)}</p>${how.length ? `<p class="lab-more">How I made it ›</p>` : ""}` });
-          for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
           const caseTitle = (S.projects.find((p) => p.case && p.case.slug === it.case) || {}).title || "";
+          const caseBtn = it.case ? `<button class="btn alt lab-case" data-case="${esc(it.case)}">See it in the ${esc(caseTitle)} case study ›</button>` : "";
+          // v159: the case-study link sits on the first slide of every project
+          slides.push({ m: pics[0], body: `<p class="eyebrow">${esc(it.kind)}</p><h2>${esc(it.title)}</h2><p class="lab-sum">${esc(it.summary)}</p>${caseBtn}${how.length ? `<p class="lab-more">How I made it ›</p>` : ""}` });
+          for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
           if (pics.length > slides.length) slides.push({ m: pics[slides.length], body: `<p class="eyebrow">Built with</p><h2>${esc(it.title)}</h2>` });   // a spare image gets its own closing slide
-          slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}${it.case ? `<button class="btn alt" data-case="${esc(it.case)}">See it in the ${esc(caseTitle)} case study ›</button>` : ""}`;
+          slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}`;
           return `<article class="lab-item">
             <div class="lab-track" tabindex="0" aria-roledescription="carousel" aria-label="${esc(it.title)}">${slides.map((sl, k) => `
               <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
@@ -291,20 +293,29 @@
   let caseSlug = null;
   // Full-screen zoom, the macOS way: measure the window, switch layout, then animate from the old frame to the new one (FLIP)
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // v159: entering and leaving a case study. The old FLIP stretched the window with a non-uniform scale, which squashed the page
+  // on the way back. Now, where the browser has View Transitions, the whole switch (layout + content) runs inside one: the
+  // window resizes for real while the two views cross-fade, nothing is distorted. Elsewhere: a soft fade-and-settle.
+  let inVT = false;
+  const canVT = () => !!document.startViewTransition && !reducedMotion && !win.hidden && !os.hidden && !inVT;
+  function viewTransition(update) {
+    inVT = true;
+    let vt; try { vt = document.startViewTransition(() => { try { update(); } finally { inVT = false; } }); } catch (_) { inVT = false; return update(); }
+    vt.finished.catch(() => {}).finally(() => { inVT = false; });
+  }
   function morphWindow(change) {
-    if (reducedMotion || win.hidden || !win.animate) return change();
-    const a = win.getBoundingClientRect(); change(); const b = win.getBoundingClientRect();
-    if (!b.width || !b.height) return;
-    const base = getComputedStyle(win).transform, t = base === "none" ? "" : base + " ";
-    win.animate([
-      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height}) ${t}`.trim(), transformOrigin: "0 0", borderRadius: "26px" },
-      { transform: t.trim() || "none", transformOrigin: "0 0", borderRadius: getComputedStyle(win).borderRadius }
-    ], { duration: 560, easing: getComputedStyle(document.documentElement).getPropertyValue("--smooth").trim() || "cubic-bezier(.32,.72,0,1)" });
+    change();
+    if (inVT || reducedMotion || win.hidden || !win.animate) return;
+    win.animate([{ opacity: 0, scale: 0.985 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "cubic-bezier(.32,.72,0,1)" });
   }
   // case-study images: 1× and 2× (Figma resolution) — the browser picks the sharp one for the screen
   const caseImg = (slug, f, x = 1) => esc(`work/${slug}/${x === 2 ? f.replace(/\.(\w+)$/, "@2x.$1") : f}?v=${BUILD}`);
   const SHARE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
   function openCase(slug) {
+    if (!caseSlug && canVT()) return viewTransition(() => openCaseNow(slug));
+    openCaseNow(slug);
+  }
+  function openCaseNow(slug) {
     const list = S.projects.filter((x) => x.case);
     const k = list.findIndex((x) => x.case.slug === slug);
     if (k < 0) return show("work");
@@ -317,6 +328,7 @@
       SJT.view("/case/" + slug, p.title);
       [[60, "1min"], [180, "3min"]].forEach(([sec, tag]) => setTimeout(() => { if (caseSlug === slug && !os.hidden) SJT.once(`case-${slug}-${tag}`); }, sec * 1000));
     }
+    window.Music?.duck?.(0.25);   // v159: reading a case study: the music drops to a quiet background
     const goFull = () => { win.hidden = false; win.classList.remove("min", "max"); resetWindowPlacement(); screen.classList.add("case-fs"); os.classList.add("case-fs"); };
     if (entering) morphWindow(goFull); else goFull();
     $("#winTitle").textContent = p.title;
@@ -380,15 +392,6 @@
       box.firstElementChild.insertAdjacentHTML("afterend", `<figure class="case-glance"><img src="${caseImg(slug, g[0])}" srcset="${caseImg(slug, g[0])} 1440w, ${caseImg(slug, g[0], 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+g[1]}" alt="${esc(g[2])}" fetchpriority="high" decoding="async"></figure>`);
     // images fade in as they arrive (no pop), over the project's own colour instead of a grey block; the browser
     // fetches the rest as the reader nears them (no more downloading the whole case study up front)
-    // v154: role, problem and result come first, so a reviewer has the whole story in the first screen
-    const br = p.case.brief || p.brief;
-    if (br) {
-      const hex = (p.color || "#1c1c1e").replace("#", ""), rgb = [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16) / 255), lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-      const el = document.createElement("section"); el.className = "case-brief"; el.setAttribute("aria-label", "In brief");
-      el.style.setProperty("--bg", p.color || "#1c1c1e"); el.style.setProperty("--fg", lum > 0.6 ? "#4a2f12" : "#ffffff");
-      el.innerHTML = `<div><small>My role</small><p>${esc(br.role)}</p></div><div><small>Problem</small><p>${esc(br.problem)}</p></div><div class="res"><small>Result</small><p>${esc(br.result)}</p></div>`;
-      box.prepend(el);
-    }
     box.querySelectorAll("img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else im.addEventListener("load", () => im.classList.add("in"), { once: true }); });
     requestAnimationFrame(restore);
     // a case study can bring its own motion layer: an ES module loaded only when it opens
@@ -455,11 +458,16 @@
   }
   function show(key, fromHistory) {
     if (String(key).startsWith("case:")) return openCase(String(key).slice(5));
+    if (caseSlug && canVT()) return viewTransition(() => showNow(key, fromHistory));
+    showNow(key, fromHistory);
+  }
+  function showNow(key, fromHistory) {
     exitCase(fromHistory);
+    if (!os.hidden || opening) window.Music?.duck?.(0.45);   // v159: in the Mac: quieter than at the desk
     body.classList.remove("case-mode");
     const app = apps[key] || apps.about;
     current = key in apps ? key : "about";
-    const switching = !win.hidden && !os.hidden && body.childElementCount > 0 && !opening;
+    const switching = !win.hidden && !os.hidden && body.childElementCount > 0 && !opening && !inVT;
     const order = Object.keys(apps), dir = Math.sign(order.indexOf(current) - order.indexOf(shownKey || current)) || 1;   // v148: down the list → from below
     shownKey = current;
     body.style.setProperty("--dir", dir);
@@ -750,6 +758,7 @@
     if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.go(history.state.sjCase ? -2 : -1); } } catch (_) {} }
     caseSlug = null; screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
     closeMenu(); closeSpotlight();
+    window.Music?.duck?.(1);   // v159: back at the desk: the music comes back up
     const finish = () => {
       os.hidden = true; closing = false;
       screen.style.transition = os.style.transition = "none";
