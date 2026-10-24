@@ -760,3 +760,20 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - AI Lab: tabs (thumbnail, `tab` or title, kind) above one project at a time. On ≥1001 px the card height fits the visible window
   (`sizeLab()` sets `--lab-h`, 440–700 px) and the game plays in a phone frame: a 360 × 780 iframe scaled by `--ps`, with "Open full size".
   Narrower screens: Play opens the game in a new tab.
+
+### v165: lighter downloads
+- Desk mat, phone desk mat and card photo moved to WebP; the laptop-screen wallpaper (`assets/wallpaper-sm.jpg`) was left as is.
+  First load before the welcome card: about 2.4 MB on a laptop, 2.3 MB on a phone.
+
+### v166: plain language, faster Enter, less memory
+- **Plain language** (review: Carekin, Ekmaati and Handovo used hard phrases). Rewritten in the Work cards, alt text, the text
+  versions (`work/*/index.html`, `reader.html`) and in the case images (Figma edits were made on temporary copies, exported, then the
+  copies deleted; the original Figma frames still have the old wording):
+  - Carekin 01, 04 ("One medicine plan, seen three ways."), 19 ("Who uses it, and how"; "Helper"; "Only reads").
+  - Ekmaati 03 ("These idols come home in bubble wrap and tape…"), 05 ("Hand-made river-clay idols, an officially recognised local craft…").
+  - Handovo: card summary and the text-version opening ("Helps a store manager run the day…"). The Handovo 01 image still says
+    "AI operations layer" (not re-exported).
+- **Enter without waiting:** the welcome card shows as soon as os.js runs. Pressing Enter before the 3D desk is ready shows
+  "Loading the desk… N%" (`window.__deskProgress`) and enters by itself when ready (`window.__pendingEnter`, `window.__deskReady`).
+- **Memory:** `releaseTextureCopies()` in main.js drops the browser's CPU copies of textures already uploaded to the GPU (4 s and
+  15 s after Enter; live canvases are skipped). Page footprint on an M-series Mac: about 355 → 320 MB (`footprint -p <pid>`).

@@ -1066,3 +1066,4 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .lab-media.play { min-height: 380px; }
 }
 .lab-media.playing .lab-phone > iframe { inset: auto; left: 0; top: 0; width: 360px; height: 780px; }   /* v164: native size, scaled once (the v160 rule stretched it to 100% first) */
+.intro-go.waiting { opacity: .85; cursor: progress; font-size: 15px; }   /* v166: Enter clicked before the desk has loaded */

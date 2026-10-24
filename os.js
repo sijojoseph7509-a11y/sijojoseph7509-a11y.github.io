@@ -837,6 +837,25 @@
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
   window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isClosing: () => closing, isCovering, toast, warmCase };
 
+  // v166: the welcome card is usable from the first paint. Enter clicked before the desk has loaded waits on the button
+  // ("Loading the desk… 70%") and goes in the moment it is ready; most visitors read the card for a few seconds anyway.
+  (() => {
+    if (new URLSearchParams(location.search).get("open")) return;   // a deep link skips the welcome
+    const ld = document.getElementById("loader"), intro = document.getElementById("intro"), go = document.getElementById("introGo"), snd = document.getElementById("introSound");
+    if (!ld || !intro || !go) return;
+    const touch = matchMedia("(pointer: coarse)").matches;
+    document.querySelectorAll("#intro [data-touch]").forEach((b) => (b.textContent = touch ? b.dataset.touch : b.dataset.mouse));
+    ld.classList.add("ready"); intro.hidden = false;
+    const wait = (sound) => (e) => {
+      if (window.__deskReady) return;   // main.js has taken over
+      e.stopImmediatePropagation(); window.__pendingEnter = { sound };
+      go.classList.add("waiting"); go.disabled = true;
+      const tick = () => { if (window.__deskReady || !go.isConnected) { go.disabled = false; go.classList.remove("waiting"); go.textContent = "Enter"; return; }
+        go.textContent = "Loading the desk… " + Math.round(window.__deskProgress || 0) + "%"; setTimeout(tick, 200); };
+      tick();
+    };
+    go.addEventListener("click", wait(false)); if (snd) snd.addEventListener("click", wait(true));
+  })();
   // v160: "Skip the desk, see my projects" works from the first second, before the 3D desk has loaded (on a slow laptop that can
   // take a while): it opens the portfolio straight away, and the desk finishes loading behind it (main.js sees __skippedDesk).
   const skip = document.getElementById("introWork");

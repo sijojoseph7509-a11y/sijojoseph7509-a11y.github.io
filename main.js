@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=165";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=165";
+import { Sound } from "./sound.js?v=166";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=166";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -15,7 +15,7 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let shownProgress = 0;
 const setProgress = (p, msg) => {
   p = shownProgress = Math.max(shownProgress, p);   // never runs backwards (models report progress while fonts load)
-  $("#loaderBar").style.width = p + "%";
+  $("#loaderBar").style.width = p + "%"; window.__deskProgress = p;   // v166: the early Enter button shows it while waiting
   $("#loaderPct").textContent = `${msg} ${Math.round(p)}%`;
 };
 
@@ -2153,6 +2153,10 @@ window.Desk = { astro: () => [astroHead.rotation.x, astroTilt, astroOn, dayMix],
   game: () => { if (!ball) return null; ball.getWorldPosition(_bw); _bs.copy(_bw).project(camera);
     const r = renderer.domElement.getBoundingClientRect(); _br.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(BALL_R).add(_bw).project(camera);
     return { airborne, keepy, best: keepyBest, h: +(ball.position.y - ballY0).toFixed(2), vy: +ballVY.toFixed(3), x: r.left + (_bs.x + 1) / 2 * r.width, y: r.top + (1 - _bs.y) / 2 * r.height, r: Math.abs(_br.x - _bs.x) / 2 * r.width, onScreen: Math.abs(_bs.x) < 1 && Math.abs(_bs.y) < 1 }; },
+  // debug: every texture in the scene with its pixel size and the memory its CPU-side copy holds (v166)
+  textures: () => { const seen = new Map(); scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) for (const k in m) { const t = m[k]; if (t && t.isTexture && !seen.has(t)) seen.set(t, k); } });
+    if (scene.background && scene.background.isTexture) seen.set(scene.background, "background");
+    return [...seen].map(([t, k]) => { const im = t.image || {}, w = im.width || im.videoWidth || 0, h = im.height || 0; return { slot: k, type: im.constructor ? im.constructor.name : "?", w, h, mb: +(w * h * 4 / 1048576).toFixed(1), name: t.name || "" }; }).sort((a, b) => b.mb - a.mb); },
   state: () => ({ started, cat: !!cat, ball: !!ball, catBusy: !!shea && shea.busy, cam: camera.position.toArray().map((v) => +v.toFixed(2)),
   covering: !!window.OS.isCovering?.(), quality: perf.step, perf: { fast: perf.fast, need: perf.need, top: perf.top, n: perf.dts.length, median: perf.last }, still: STILL, frames: renderer.info.render.frame, bench: benchMs, programs: renderer.info.programs?.length, screenUploads: screenCanvas.tex.version, shadows: renderer.shadowMap.enabled, gpu: GPU_NAME, pixelRatio: renderer.getPixelRatio(), fading: fading.length,
   booting,
@@ -2168,6 +2172,22 @@ setHint(); addEventListener("resize", setHint);
 $("#coachText").textContent = TOUCH ? "Tap the laptop" : "Click the laptop";
 const deep = new URLSearchParams(location.search).get("open");
 let entered = false;
+// v166: once a texture is on the GPU its page copy (a decoded image or a full-size canvas) is no longer needed. Static ones
+// are released a few seconds after the desk appears: about 130 MB less memory. Live textures that are redrawn stay.
+function releaseTextureCopies() {
+  const live = new Set([screenCanvas.tex, phoneScreenTex.tex, cardTex, screenBtnTex.tex]);
+  let freed = 0;
+  scene.traverse((o) => { if (!o.material) return; for (const m of [].concat(o.material)) for (const k in m) { const t = m[k];
+    if (!t || !t.isTexture || live.has(t) || t.userData.released) continue;
+    const im = t.image, p = renderer.properties.get(t);
+    if (!im || !p.__webglTexture || p.__version !== t.version) continue;   // only what is already uploaded, unchanged
+    const w = im.width || 0, h = im.height || 0;
+    if (im instanceof HTMLCanvasElement) { if (im.width > 1) { im.width = 1; im.height = 1; } }
+    else if (im instanceof HTMLImageElement || (typeof ImageBitmap !== "undefined" && im instanceof ImageBitmap)) { if (im.close) im.close(); t.source.data = { width: w, height: h }; }
+    else continue;
+    t.userData.released = true; freed += w * h * 4; } });
+  if (freed) console.info("Released " + Math.round(freed / 1048576) + " MB of texture copies");
+}
 function enter(withSound, app) {
   if (entered) return;
   entered = true;
@@ -2176,7 +2196,8 @@ function enter(withSound, app) {
   $("#loader").classList.add("done");
   document.activeElement?.blur?.();
   if (STILL) { camera.position.copy(HOME.pos); controls.target.copy(HOME.target); controls.update(); stillUntil = performance.now() + 400; }   // v146: no fly-in on the still desk
-  else moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140: from the blurred room view, glide in to the desk as the blur clears
+  else moveCamera(HOME.pos, HOME.target, 1, 2200);   // v140
+  setTimeout(releaseTextureCopies, 4000); setTimeout(releaseTextureCopies, 15000);   // v166: after the fly-in, and again once late models are in: from the blurred room view, glide in to the desk as the blur clears
   coachShow();
 }
 if (window.__skippedDesk) { camera.position.copy(ROOM.pos); controls.target.copy(ROOM.target); controls.update(); enter(false); }   // v160: "Skip the desk" was used before the desk was ready: the Mac is already open
@@ -2198,10 +2219,12 @@ else {
   } catch (_) {}
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
+  window.__deskReady = true;   // v166: the early welcome (os.js) hands over: its own clicks stop here
   $("#introGo").addEventListener("click", () => enter(false));       // v159: Enter is quiet again (visitors found the music distracting)
   $("#introSound").addEventListener("click", () => enter(true));     // "Enter with sound"
   $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects
   $("#introGo").focus({ preventScroll: true });
+  if (window.__pendingEnter) { const pe = window.__pendingEnter; window.__pendingEnter = null; enter(pe.sound); }   // v166: clicked Enter while the desk was loading
 }
 
 // Coming back to the site later (reopened tab, back/forward cache, or after 10+ min away) starts at the desk,
