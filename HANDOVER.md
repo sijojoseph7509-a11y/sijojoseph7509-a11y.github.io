@@ -819,3 +819,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   sometimes in split screen. os.js `mailApp()` (pointer: coarse) decides: phones/tablets keep the mailto: links; laptops get the
   address as a copy button, "Copy email address" and "Write in Gmail" (`gmailUrl()`, new tab), and Spotlight "Email Sijo" copies.
   track.js counts `copy-email` and `click-gmail`.
+
+### v173: welcome tip
+- Second tip on the welcome card: "Click/Tap Shea to pet her, the football for keepy-ups, the window to switch day and night."
+  (the speaker and curtains are no longer mentioned).
