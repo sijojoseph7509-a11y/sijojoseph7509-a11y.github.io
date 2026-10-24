@@ -5,6 +5,10 @@
   const $ = (s) => document.querySelector(s);
   // Security: links from content.js may only be web or email links — never "javascript:" or other schemes
   // (v151: plus one exact local shape, a PDF in this site's assets/ folder, for the resume download)
+  // v172: mailto: links only on phones and tablets, where a mail app is set up. On a laptop they launch the Mac's Mail app,
+  // which (when no account is set up) asks for a password and keeps reopening, so laptops copy the address or open Gmail instead.
+  const mailApp = () => matchMedia("(pointer: coarse)").matches;
+  const gmailUrl = () => "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(S.email);
   const safeUrl = (u) => (/^(https?:\/\/|mailto:)/i.test(String(u || "").trim()) || /^assets\/[\w-]+\.pdf$/.test(String(u || "").trim()) ? String(u).trim() : "#");
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -225,11 +229,15 @@
           </div>
           <div class="ct-mail">
             <small>Email</small>
-            <a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
+            ${mailApp() ? `<a class="big-link" href="${esc(safeUrl("mailto:" + S.email))}">${esc(S.email)}</a>
             <div class="btn-row">
               <a class="btn" href="${esc(safeUrl(S.links.mail))}">Send an email</a>
               <button class="btn alt" type="button" data-copy-email>Copy address</button>
-            </div>
+            </div>` : `<button class="big-link" type="button" data-copy-email title="Copy the address">${esc(S.email)}</button>
+            <div class="btn-row">
+              <button class="btn" type="button" data-copy-email>Copy email address</button>
+              <a class="btn alt" href="${esc(safeUrl(gmailUrl()))}" target="_blank" rel="noopener">Write in Gmail</a>
+            </div>`}
           </div>
           <div class="ct-grid">
             ${tile(S.links.linkedin, appIcon("linkedin"), "LinkedIn", "Work history and recommendations", true)}
@@ -710,7 +718,7 @@
     ...S.projects.map((p) => ({ label: p.title, hint: p.tag, icon: "work", run: () => (p.case ? openCase(p.case.slug) : show("work")) })),
     ...((S.aiLab && S.aiLab.items) || []).filter((it) => !it.draft).map((it) => ({ label: it.title, hint: "AI Lab · " + it.kind, icon: "ai", run: () => show("ai") })),
     ...S.skills.flatMap((g) => g.items.map((i) => ({ label: i, hint: g.group, icon: "skills", run: () => show("skills") }))),
-    { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (location.href = safeUrl(S.links.mail)) },
+    { label: "Email " + S.name.split(" ")[0], hint: S.email, icon: "contact", run: () => (mailApp() ? (location.href = safeUrl(S.links.mail)) : copyEmail()) },
     { label: "Back to desk", hint: "Close the Mac", icon: "desk", run: () => close() }
   ];
   let spSel = 0, spItems = [];

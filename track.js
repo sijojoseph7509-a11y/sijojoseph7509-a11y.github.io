@@ -74,6 +74,7 @@
     else if (/behance\.net/.test(href)) SJT.event("click-behance");
     else if (/github\.com/.test(href)) SJT.event("click-github");
     else if (/^mailto:/.test(href)) SJT.event("click-email");
+    else if (/mail\.google\.com/.test(href)) SJT.event("click-gmail");
     else if (t.matches("[data-copy-email]")) SJT.event("copy-email");
     else if (t.matches("[data-share]")) SJT.event("copy-link");
   }, true);

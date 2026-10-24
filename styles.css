@@ -474,6 +474,7 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .big-link { display: inline-block; font-family: var(--display); font-size: 26px; font-weight: 600; letter-spacing: -.02em; color: var(--accent); text-decoration: none; margin: 4px 0 18px; }
 .big-link:hover { text-decoration: underline; }
+button.big-link { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }   /* v172: copies the address on laptops */
 
 /* Dock — glass shelf with layered-glass icons */
 .dock {

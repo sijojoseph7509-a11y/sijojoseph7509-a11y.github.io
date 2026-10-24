@@ -813,3 +813,9 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 ### v171: About photo back on phones
 - v169 made the photo's image absolutely positioned; on the one-column layout `.ab-photo` had no width of its own and iOS Safari
   collapsed it to 0 × 0 (Chrome stretched it). It now has `width: 100%; max-width: 260px` with the 4:5 ratio.
+
+### v172: no mailto: on laptops
+- Clicking "Send an email" on a Mac launched the Mail app, which (with no account set up) asked for a password and kept reopening,
+  sometimes in split screen. os.js `mailApp()` (pointer: coarse) decides: phones/tablets keep the mailto: links; laptops get the
+  address as a copy button, "Copy email address" and "Write in Gmail" (`gmailUrl()`, new tab), and Spotlight "Email Sijo" copies.
+  track.js counts `copy-email` and `click-gmail`.
