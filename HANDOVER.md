@@ -795,3 +795,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   work/<slug>/index.html pages; remove the "Password gate (gate.js)" rules from styles.css and the `.rp .gate` rules from reader.css;
   drop GATE / the gate script from tools/reader/page.py; put back the v154 "Open to everyone" QA check and the "leftover password
   gate" standalone check; GATE_HASH in qa.mjs, sweep.mjs and audit.mjs can then go.
+
+### v169: About photo spans the intro
+- `.ab-hero` stretches its row; `.ab-photo` (300 px column, image absolutely positioned, `object-fit: cover`) now runs from the top of
+  the eyebrow to the bottom of the button row (was a fixed 4:5 box, centred and shorter). Under the one-column breakpoint it stays 4:5, max 260 px.
