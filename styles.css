@@ -644,7 +644,7 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   .win-body { padding: 72px 18px 40px; }
   .win-body h1, .ab-intro h1 { font-size: 32px; }
   .ab-hero { grid-template-columns: 1fr; gap: 20px; }
-  .ab-photo { max-width: 260px; aspect-ratio: 4 / 5; min-height: 0; }
+  .ab-photo { width: 100%; max-width: 260px; aspect-ratio: 4 / 5; min-height: 0; }   /* v171: explicit width, or iOS Safari collapses it to 0 (its image is absolutely positioned) */
   .ab-facts { grid-template-columns: 1fr; }
   .ab-work, .bento, .disc-grid { grid-template-columns: 1fr; }
   .tool-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 8px; }

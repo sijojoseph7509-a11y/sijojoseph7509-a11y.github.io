@@ -809,3 +809,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   download-resume, click-linkedin/-github/-email, copy-email, copy-link. `?ref=name` links show as UTM source.
 - Off on localhost and in headless browsers; `sijo.work/?notrack` switches it off on a device (`?notrack=0` back on);
   `localStorage.sjTrackDebug = 1` logs instead of sending.
+
+### v171: About photo back on phones
+- v169 made the photo's image absolutely positioned; on the one-column layout `.ab-photo` had no width of its own and iOS Safari
+  collapsed it to 0 × 0 (Chrome stretched it). It now has `width: 100%; max-width: 260px` with the 4:5 ratio.
