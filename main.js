@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=174";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=174";
+import { Sound } from "./sound.js?v=176";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=176";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -17,6 +17,8 @@ const setProgress = (p, msg) => {
   p = shownProgress = Math.max(shownProgress, p);   // never runs backwards (models report progress while fonts load)
   $("#loaderBar").style.width = p + "%"; window.__deskProgress = p;   // v166: the early Enter button shows it while waiting
   $("#loaderPct").textContent = `${msg} ${Math.round(p)}%`;
+  const ib = $("#introLoadBar"), it = $("#introLoadTxt");   // v176: the same progress on the welcome card
+  if (ib && !window.__deskReady) { ib.style.width = p + "%"; it.textContent = `Loading the 3D desk… ${Math.round(p)}%`; }
 };
 
 // Start the model downloads right away (the 3D engine has arrived — this module only runs after it).
@@ -2222,6 +2224,7 @@ else {
   $("#loader").classList.add("ready");
   $("#intro").hidden = false;
   window.__deskReady = true;   // v166: the early welcome (os.js) hands over: its own clicks stop here
+  { const il = $("#introLoad"); if (il) { $("#introLoadBar").style.width = "100%"; $("#introLoadTxt").textContent = "Desk ready"; il.classList.add("done"); } }
   $("#introGo").addEventListener("click", () => enter(false));       // v159: Enter is quiet again (visitors found the music distracting)
   $("#introSound").addEventListener("click", () => enter(true));     // "Enter with sound"
   $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects

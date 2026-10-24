@@ -253,7 +253,19 @@
   const os = $("#os"), win = $("#win"), body = $("#winBody"), screen = $("#osScreen");
   // wallpaper URL carries the release number (os.js?v=N) so a replaced photo is never served stale from cache
   const BUILD = (document.currentScript && new URL(document.currentScript.src).searchParams.get("v")) || "dev";
-  screen.style.setProperty("--wallpaper", `url("assets/wallpaper.webp?v=${BUILD}")`);
+  // v176: the wallpaper in the size this screen needs (1920 / 2560 / 3840 px wide; 160 / 247 / 506 KB). It covers the screen, so a
+  // tall phone needs width = height × 1.78. A 200-byte blurred copy shows at once, and the real one downloads in the background
+  // once the 3D desk has loaded (or after 6 s), so the Mac opens on a sharp wallpaper instead of a purple gradient.
+  // (window.screen: "screen" here is the Mac's screen element)
+  const WALL = (() => {
+    const dpr = Math.min(devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1.5 : 2), sc = window.screen || {};
+    const need = Math.max(sc.width || innerWidth, (sc.height || innerHeight) * 1.78) * dpr;
+    return `assets/${need <= 2000 ? "wallpaper-1920.webp" : need <= 2700 ? "wallpaper-2560.webp" : "wallpaper.webp"}?v=${BUILD}`;
+  })();
+  screen.style.setProperty("--wallpaper", `url("${WALL}")`);
+  screen.style.setProperty("--wall-lqip", 'url("data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAACwBgCdASowABsAPs1SoUunpKMhtVgIAPAZiUAWHYizeV3GuFYsfyRZPAJwOiHYfgTHm126vhM99UxNtR0kAAD+9ZeCWs8kDicBBNaZNRvKY/GEycEiS3U4wuiaKzBw+D/cVV1Sxb1Qaalnk/t40kF25w7bOKjuAdECzRGPKj4eedBA5KZskBHZ/d5dBs50sD7K23NYJ7UEFszfW8d9R6zWywnoNgluCc3iZsQETvbvKgAA")');
+  const warmWall = () => { if (warmWall.done) return; warmWall.done = true; const im = new Image(); im.fetchPriority = "low"; im.src = WALL; };
+  (function waitDesk(t) { if (window.__deskReady || t > 6000) setTimeout(warmWall, 300); else setTimeout(() => waitDesk(t + 250), 250); })(0);
   let onClose = () => {}, current = "about";
   const sound = () => window.Sound && window.Sound.click();
 
@@ -860,7 +872,7 @@
       e.stopImmediatePropagation(); window.__pendingEnter = { sound };
       go.classList.add("waiting"); go.disabled = true;
       const tick = () => { if (window.__deskReady || !go.isConnected) { go.disabled = false; go.classList.remove("waiting"); go.textContent = "Enter"; return; }
-        go.textContent = "Loading the desk… " + Math.round(window.__deskProgress || 0) + "%"; setTimeout(tick, 200); };
+        go.textContent = "Opening when ready…"; setTimeout(tick, 200); };   // v176: the bar above shows the progress
       tick();
     };
     go.addEventListener("click", wait(false)); if (snd) snd.addEventListener("click", wait(true));

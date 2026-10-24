@@ -830,3 +830,14 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   About instead of revealing a welcome card whose Enter would wait for a desk that never loads.
 - Web-filter categorisation of sijo.work (Talos, Palo Alto, FortiGuard) has to be requested by Sijo himself: each form needs a
   human check, a vendor account, or (Zscaler) a customer login.
+
+### v176: wallpaper size, loading bar on the welcome card, card on every screen
+- Mac wallpaper in three sizes: `assets/wallpaper-1920.webp` (160 KB), `-2560.webp` (247 KB), `wallpaper.webp` (3840, 506 KB). os.js
+  `WALL` picks by window.screen size × DPR (cover: width needed = max(screen width, height × 1.78); DPR capped at 2, 1.5 on touch).
+  A 200-byte blurred copy (`--wall-lqip`, data URI) sits under it in `.os-screen`, and `warmWall()` downloads the real one at low
+  priority once the desk is ready (or after 6 s), so the Mac no longer opens on the purple gradient on slow connections.
+- Welcome card: `#introLoad` (bar + "Loading the 3D desk… N%", then "Desk ready" in green) above Enter, fed by main.js setProgress;
+  an early Enter now says "Opening when ready…".
+- Layout: `.loader.ready` is a flex column; the "Skip the desk" pill sits under the card (it was pinned to the bottom and covered
+  the card on 1280×720 / 1366×657 and small phones). Tighter card under 800 px and 680 px tall, narrower padding under 360 px wide.
+  Checked at 13 sizes from 320×568 to 2560×1300: no overlap, Enter visible without scrolling.

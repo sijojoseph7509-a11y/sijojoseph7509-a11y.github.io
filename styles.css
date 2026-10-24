@@ -209,7 +209,7 @@ body { transition: background-color .7s var(--ease); }
   position: relative; width: calc(100vw / var(--z)); height: calc(100vh / var(--z)); height: calc(100dvh / var(--z));
   border-radius: 0; overflow: hidden; color: var(--t1);
   /* wallpaper: Sijo's photo (same crop focus as the 3D laptop screen); the gradient shows until it loads */
-  background: var(--wallpaper, none) var(--wall-pos, 46% 30%) / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);
+  background: var(--wallpaper, none) var(--wall-pos, 46% 30%) / cover no-repeat, var(--wall-lqip, none) var(--wall-pos, 46% 30%) / cover no-repeat, linear-gradient(135deg, #4b3fd1, #e46aa0);   /* v176: blurred copy under the real one */
   animation: wake .7s var(--ease);
   transition: filter .7s var(--ease);
 }
@@ -1090,3 +1090,37 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 
 /* v174: no 3D in this browser: no desk to return to */
 .no3d .dock-item[data-desk] { display: none; }
+
+/* v176: loading progress on the welcome card (main.js setProgress), so nobody wonders why Enter waits */
+.intro-load { display: grid; gap: 8px; justify-items: center; width: min(240px, 100%); margin-top: 2px; font-size: 13px; color: #a1a1a6; font-variant-numeric: tabular-nums; }
+.intro-load-bar { width: 100%; height: 4px; border-radius: 2px; background: #3a3a3c; overflow: hidden; }
+.intro-load-bar i { display: block; height: 100%; width: 0; background: var(--blue); border-radius: 2px; transition: width .4s var(--ease), background-color .4s; }
+.intro-load.done { color: #30d158; }
+.intro-load.done .intro-load-bar i { background: #30d158; }
+
+/* v176: the welcome card on every screen. The skip pill sits under the card in the page flow (it was pinned to the bottom and
+   collided with the card on 1280×720 / 1366×657 laptops and small phones), and the card tightens on shorter screens so Enter
+   is always on screen without scrolling. */
+.loader.ready { display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 18px; }
+.loader.ready .wl-work { position: relative; left: auto; bottom: auto; translate: none; flex: none; order: 2; }
+.loader.ready .intro-load { margin-top: 24px; }
+.loader.ready .intro-go { margin-top: 18px; }
+@media (max-height: 800px) and (min-height: 521px) {
+  .loader .loader-inner, .loader.ready .loader-inner { padding: 30px 40px 24px; }
+  .loader.ready .loader-name img { height: 52px; }
+  .loader-rule { margin-top: 16px; }
+  .loader .hello, .loader.ready .hello { margin-top: 12px; }
+  .loader.ready .intro { margin-top: 20px; }
+  .loader.ready .intro-tips { margin-top: 16px; gap: 10px; }
+  .loader.ready .intro-load { margin-top: 16px; }
+  .loader.ready .intro-go { margin-top: 14px; }
+  .loader.ready .intro-quiet { margin-top: 10px; }
+}
+@media (max-height: 680px) and (min-height: 521px) {
+  .loader.ready .loader-rule, .loader.ready .hello-en { display: none; }
+  .loader.ready .loader-name img { height: 42px; }
+  .loader.ready .intro-title { font-size: 23px; }
+  .loader.ready .intro-tips li { font-size: 14px; }
+}
+@media (max-height: 520px) { .loader.ready .intro-load { margin-top: 8px; } .loader.ready .intro-go { margin-top: 8px; } }
+@media (max-width: 360px) { .loader .loader-inner, .loader.ready .loader-inner { padding-left: 22px; padding-right: 22px; } }
