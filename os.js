@@ -819,6 +819,7 @@
   }
   function close(fromHistory) {
     if (closing || os.hidden) return;
+    if (window.__no3D) { show("about"); return; }   // v174: no 3D in this browser, so there's no desk behind the Mac
     if (!fromHistory) { try { if (history.state && history.state.sjDesktop) { skipPop = true; history.go(history.state.sjCase ? -2 : -1); } } catch (_) {} }
     caseSlug = null; screen.classList.remove("case-fs", "dock-peek"); os.classList.remove("case-fs");
     closeMenu(); closeSpotlight();

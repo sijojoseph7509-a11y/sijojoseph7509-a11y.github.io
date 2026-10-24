@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=173";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=173";
+import { Sound } from "./sound.js?v=174";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=174";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -77,7 +77,8 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 } catch (err) {
-  // No WebGL — open the simple portfolio and say why
+  // No WebGL — open the simple portfolio and say why. v174: there is no desk to go back to, so the Mac stays open (os.js close)
+  window.__no3D = true; document.documentElement.classList.add("no3d");
   $("#loader").classList.add("done");
   window.OS.open("about");
   window.OS.toast("3D isn't available in this browser — here's the simple version");

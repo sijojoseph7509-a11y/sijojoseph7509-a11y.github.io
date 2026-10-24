@@ -823,3 +823,10 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 ### v173: welcome tip
 - Second tip on the welcome card: "Click/Tap Shea to pet her, the football for keepy-ups, the window to switch day and night."
   (the speaker and curtains are no longer mentioned).
+
+### v174: browsers with no 3D at all
+- Tested with Chrome's WebGL switched off (locked-down company laptops): the renderer catch in main.js already opens the Mac on
+  About with a toast. New: it sets `window.__no3D` + `html.no3d`, the Dock's Desk button is hidden, and os.js `close()` goes back to
+  About instead of revealing a welcome card whose Enter would wait for a desk that never loads.
+- Web-filter categorisation of sijo.work (Talos, Palo Alto, FortiGuard) has to be requested by Sijo himself: each form needs a
+  human check, a vendor account, or (Zscaler) a customer login.

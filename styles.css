@@ -1087,3 +1087,6 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .gate-msg { min-height: 1.3em; margin: -4px 0 0; font-size: 14px; color: #ff6961; }
 .gate.shake .gate-inner { animation: gateShake .4s var(--ease); }
 @keyframes gateShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+/* v174: no 3D in this browser: no desk to return to */
+.no3d .dock-item[data-desk] { display: none; }
