@@ -16,7 +16,7 @@ window.SITE = {
   roles: ["Product Designer", "UX Designer", "AI Designer", "Vibe Coder", "Brand Strategist"],
   location: "Bangalore, India",
   email: "sijojoseph7509@gmail.com",
-  analytics: "",                                 // ✏️ GoatCounter code (the "sijo" in sijo.goatcounter.com); empty = no counting. See track.js
+  analytics: "1bd5e5d0-dafc-4bae-8a4c-c4046bd56e07",   // Umami Cloud website ID (cloud.umami.is); empty = no counting. See track.js
   resumeUrl: "assets/Sijo_Joseph_Resume.pdf",     // v151: the one-page resume (a copy of the PDF in ~/Downloads); replace the file to update it
   links: {
     mail: "mailto:sijojoseph7509@gmail.com",

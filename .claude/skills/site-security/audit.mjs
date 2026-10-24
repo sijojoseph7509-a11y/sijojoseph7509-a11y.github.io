@@ -69,7 +69,7 @@ if (BASE) {
   if (await p.$("#introGo")) await p.click("#introGo").catch(() => {});
   await new Promise((r) => setTimeout(r, 2500));
   viol.length ? bad("site runs with no policy violations", viol.join(" | ")) : ok("site runs with no policy violations");
-  const site = new URL(BASE).host, extra = [...hosts].filter((h) => h !== site && !h.endsWith(".goatcounter.com"));   // visit counter (img requests only, see track.js)
+  const site = new URL(BASE).host, extra = [...hosts].filter((h) => h !== site && h !== "gateway.umami.is");   // visitor stats (Umami, see track.js)
   extra.length ? bad("only talks to its own server + Google Fonts", extra.join(", ")) : ok("only talks to its own server + Google Fonts", [...hosts].join(", "));
   const blocked = await p.evaluate(async () => { window.__x = 0; const s = document.createElement("script"); s.textContent = "window.__x=1"; document.head.appendChild(s);
     const e = document.createElement("script"); e.src = "https://example.com/x.js"; document.head.appendChild(e); await new Promise((r) => setTimeout(r, 600)); return window.__x === 0; });

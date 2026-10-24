@@ -80,7 +80,7 @@ analytics, no cookies, no third-party requests (fonts and three.js are self-host
 | GoDaddy DNS records (set 8 Oct 2026) | `A @ 185.199.108.153` · `A @ 185.199.109.153` · `A @ 185.199.110.153` · `A @ 185.199.111.153` · `CNAME www → sijojoseph7509-a11y.github.io` (TTL 1 h). Leave GoDaddy's `NS`, `SOA`, `_domainconnect` and `_dmarc` records alone. The old "Parked" A record and forwarding were removed. |
 | GoDaddy IPv6 records (added 11 Oct 2026) | `AAAA @` → `2606:50c0:8000::153`, `…8001::153`, `…8002::153`, `…8003::153`. **Required:** on IPv6-only networks (Jio/Airtel mobile data, many hotspots in India) the bare domain was unreachable (`DNS_PROBE_POSSIBLE`) without them, and www.sijo.work redirected there too. Verified over IPv6: HTTPS 200, valid certificate, HTTP→HTTPS 301. |
 | Moving the domain elsewhere later | Replace the A/CNAME records with the new host's, then clear the custom domain in Pages settings and delete `CNAME`. Moving back = restore the records above. |
-| Third-party services at runtime | **None.** `localStorage`: `muted`, `keepy` (`gate` is no longer used, v154) (keepy-up best). `sessionStorage`: `updatedTo` (self-update guard). |
+| Third-party services at runtime | **Umami Cloud visitor stats (v170)**: track.js POSTs to `https://gateway.umami.is/api/send` (CSP connect-src); no third-party script, no cookies. Earlier: **None.** `localStorage`: `muted`, `keepy` (`gate` is no longer used, v154) (keepy-up best). `sessionStorage`: `updatedTo` (self-update guard). |
 | Working copy | The project was built in a Claude session "scratch" folder (deleted with the session). **GitHub is the source of truth** — clone it to work elsewhere. |
 
 ---
@@ -799,3 +799,13 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 ### v169: About photo spans the intro
 - `.ab-hero` stretches its row; `.ab-photo` (300 px column, image absolutely positioned, `object-fit: cover`) now runs from the top of
   the eyebrow to the bottom of the button row (was a fixed 4:5 box, centred and shorter). Under the one-column breakpoint it stays 4:5, max 260 px.
+
+### v170: visitor dashboard (Umami Cloud, free Hobby plan, EU region)
+- Dashboard: cloud.umami.is (Sijo's account). Website ID `1bd5e5d0-dafc-4bae-8a4c-c4046bd56e07` in content.js `analytics` and as
+  `data-id` on track.js in the four standalone pages. track.js now sends Umami's own request format itself (no script from Umami),
+  so the CSP only adds `connect-src https://gateway.umami.is` (the GoatCounter img-src is gone); site-security allows that host.
+- Pages: `/`, `/about`, `/work`, … (Mac apps), `/case/<slug>`, `/work/<slug>/`. Events: stayed-30s/1min/3min/10min (visible time),
+  wrong-password, unlock, enter-desk, desk-<object> (main.js pointerup), play-mumbai-local, filter-*, view-*, case-<slug>-half/-end/-1min/-3min,
+  download-resume, click-linkedin/-github/-email, copy-email, copy-link. `?ref=name` links show as UTM source.
+- Off on localhost and in headless browsers; `sijo.work/?notrack` switches it off on a device (`?notrack=0` back on);
+  `localStorage.sjTrackDebug = 1` logs instead of sending.

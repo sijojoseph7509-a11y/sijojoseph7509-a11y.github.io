@@ -31,11 +31,13 @@
       const ok = (await sha(SALT + input.value.trim().toLowerCase())) === HASH;
       if (!ok) {
         msg.textContent = "That's not it. Try again.";
+        if (window.SJT) SJT.once("wrong-password");
         gate.classList.remove("shake"); void gate.offsetWidth; gate.classList.add("shake");
         input.select();
         return;
       }
       try { localStorage.setItem(KEY, HASH); } catch (_) {}
+      if (window.SJT) SJT.event("unlock");
       root.classList.remove("locked");
       root.classList.add("unlocked");
       removeEventListener("keydown", guard, true);

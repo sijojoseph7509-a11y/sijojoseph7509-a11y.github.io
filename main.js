@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=169";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=169";
+import { Sound } from "./sound.js?v=170";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=170";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1680,6 +1680,7 @@ renderer.domElement.addEventListener("pointerup", (e) => {
     tapTimer = setTimeout(() => { hovered = null; hideTooltip(); }, 1200);
   }
   if (STILL) stillUntil = performance.now() + 2500;   // v146: let a reaction (cat, ball, curtains) play on the still desk
+  if (window.SJT) SJT.event("desk-" + String(o.userData.hover.label || "item").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40));
   o.userData.hover.onClick();
 });
 let tapTimer = 0;
