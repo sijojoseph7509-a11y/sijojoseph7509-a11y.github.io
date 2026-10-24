@@ -9,7 +9,7 @@
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
 | **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
-| **Status** | Live and **public (v154: the temporary password gate and gate.js were removed after a portfolio review)**. All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Status** | Live, **behind the password gate again since v168** (Sijo's request; it was off v154–v167). All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
 | **Cache-buster** | `?v=N` everywhere in `index.html`, in the two `import` lines at the top of `main.js` (`sound.js`, `room-utils.js`) **and** `{"build": "N"}` in `version.json` — always the same number (§19) |
 
@@ -782,3 +782,16 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   to-do list on every staff phone. It follows up and keeps attendance, stock and reports up to date." Only section 01 and
   `fx/cover-slide` were re-rendered (same settings as render.mjs); 01 is now 1480 px tall (one line shorter). The text versions were
   edited directly rather than re-run through reader.py. Carekin 01 alt text matches its new image.
+
+### v168: Syntra cover line readable, password gate back
+- Syntra cover (section 01 and still/01): the three-line intro under "An interactive perfume finder." is now Lato Regular 24 px in
+  solid #8C4A0E (was Lato Light 15 px, #BD680F at 67 %). Made from a temporary Figma copy of text 223:9 on a white band (deleted
+  afterwards; the original frame is unchanged) and pasted over y 870–1070 (1x). The still version was recomputed from the same band.
+- Password gate restored as it was in v153: `gate.js`, the `#gate` block at the top of index.html `<body>`, the gate rules at the end
+  of styles.css, `gate.js` + gate markup in the four standalone pages `work/<slug>/index.html` (reader.css already had its styles),
+  and the "Password gate: blocks a new visitor…" check in site-qa (the standalone-page check now requires the gate). main.js no
+  longer moves focus to Enter while the site is locked. Same password and hash as before, so devices that unlocked earlier stay unlocked.
+- **To remove it completely** when Sijo asks: delete gate.js; remove its `<script>` and the `#gate` block from index.html and the four
+  work/<slug>/index.html pages; remove the "Password gate (gate.js)" rules from styles.css and the `.rp .gate` rules from reader.css;
+  drop GATE / the gate script from tools/reader/page.py; put back the v154 "Open to everyone" QA check and the "leftover password
+  gate" standalone check; GATE_HASH in qa.mjs, sweep.mjs and audit.mjs can then go.
