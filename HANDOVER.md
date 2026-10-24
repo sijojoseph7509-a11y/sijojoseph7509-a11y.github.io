@@ -771,9 +771,14 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   copies deleted; the original Figma frames still have the old wording):
   - Carekin 01, 04 ("One medicine plan, seen three ways."), 19 ("Who uses it, and how"; "Helper"; "Only reads").
   - Ekmaati 03 ("These idols come home in bubble wrap and tape…"), 05 ("Hand-made river-clay idols, an officially recognised local craft…").
-  - Handovo: card summary and the text-version opening ("Helps a store manager run the day…"). The Handovo 01 image still says
-    "AI operations layer" (not re-exported).
+  - Handovo: card summary and the text-version opening ("Helps a store manager run the day…"). Handovo 01 was re-rendered in v167.
 - **Enter without waiting:** the welcome card shows as soon as os.js runs. Pressing Enter before the 3D desk is ready shows
   "Loading the desk… N%" (`window.__deskProgress`) and enters by itself when ready (`window.__pendingEnter`, `window.__deskReady`).
 - **Memory:** `releaseTextureCopies()` in main.js drops the browser's CPU copies of textures already uploaded to the GPU (4 s and
   15 s after Enter; live canvases are skipped). Page footprint on an M-series Mac: about 355 → 320 MB (`footprint -p <pid>`).
+
+### v167: Handovo opening in plain words
+- `tools/handovo/case.html` lead now reads "Helps a store manager run the day. The manager types what matters today, and it becomes a
+  to-do list on every staff phone. It follows up and keeps attendance, stock and reports up to date." Only section 01 and
+  `fx/cover-slide` were re-rendered (same settings as render.mjs); 01 is now 1480 px tall (one line shorter). The text versions were
+  edited directly rather than re-run through reader.py. Carekin 01 alt text matches its new image.
