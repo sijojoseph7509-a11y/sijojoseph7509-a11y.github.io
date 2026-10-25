@@ -847,3 +847,14 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   subtitle's, was 80), 24 px (subtitle 32 px), line height 150 %, letter spacing 1 %, solid #9C540C (readable, same amber family).
   Same band method as v168 (temporary Figma copy, deleted). The still cover is rebuilt from the pre-v168 originals, with the old
   text's spots filled from the surrounding background, so no ghost letters show.
+
+### v178: Handovo in device mockups, key-flow films with a pointer
+- `tools/handovo/case.html`: a script at the end wraps every `img.shot` in a Studio Display (`figure.studio`: black bezel, aluminium
+  edge, neck and foot; the cover shot is `.studio--peek`, no stand) and every `img.phone` in an iPhone (`.iphone`: bezel, titanium
+  edge, Dynamic Island, side buttons). The markup stays plain `<img>`, so render.mjs still measures `[data-fx-video]` on the screen.
+  All 38 sections re-rendered; 13 heights and every film position in content.js updated from render.mjs / fx.json (radius now 3).
+- `tools/handovo/films.mjs`: a big pointer (with drop shadow) glides to each coach button and clicks with a blue ripple; each step
+  holds for its coach text's reading time (1.5-2.4 s, was a flat 3-3.6 s), so a step takes about 3 s instead of 4. Encoding is now
+  `tools/handovo/frames2mp4.swift` (Apple's H.264 encoder via AVFoundation, compiled on the fly) instead of ffmpeg, which this Mac
+  doesn't have. Needs the floor-pilot demo served (`~/floor-pilot/public`, e.g. port 4394). Films are about 1.5-2x the old sizes
+  (tour 1.5 MB, clips 50-380 KB). The text version (reader.py, m/ images) was not regenerated.

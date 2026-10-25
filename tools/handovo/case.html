@@ -82,6 +82,22 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 @keyframes f3 { 0%, 31% { opacity: 1; transform: none; box-shadow: none; } 34%, 45% { opacity: 1; transform: translateX(12px); box-shadow: 0 16px 32px -14px rgba(11,11,15,.4); } 48%, 81% { opacity: .28; transform: none; box-shadow: none; } 86%, 100% { opacity: 1; } }
 @keyframes f4 { 0%, 31% { opacity: 1; transform: none; box-shadow: none; } 34%, 45% { opacity: .28; transform: none; } 48%, 59% { opacity: 1; transform: translateX(12px); box-shadow: 0 16px 32px -14px rgba(11,11,15,.4); } 62%, 81% { opacity: .28; transform: none; box-shadow: none; } 86%, 100% { opacity: 1; } }
 @keyframes f5 { 0%, 31% { opacity: 1; transform: none; box-shadow: none; } 34%, 59% { opacity: .28; transform: none; } 62%, 73% { opacity: 1; transform: translateX(12px); box-shadow: 0 16px 32px -14px rgba(11,11,15,.4); } 76%, 81% { opacity: .28; transform: none; box-shadow: none; } 86%, 100% { opacity: 1; } }
+
+/* v178: device mockups (wrapped by the script at the end of the page). Laptop-screen shots sit in a Studio Display (black bezel,
+   aluminium edge, stand); phone shots in an iPhone (bezel, titanium edge, Dynamic Island, side buttons). */
+.studio { margin: 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.studio-screen { width: 100%; padding: 1.3%; border-radius: 16px; background: #0d0d0f;
+  box-shadow: 0 0 0 1.5px #d4d6db, 0 0 0 3px #a9acb3, 0 40px 80px -30px rgba(10,10,40,.45); }
+.studio-screen .shot { border-radius: 3px; box-shadow: none; }
+.studio-neck { display: block; width: 16%; height: 52px; background: linear-gradient(90deg, #a9acb3, #e7e8eb 40%, #f3f4f6 55%, #b9bcc2); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
+.studio-foot { display: block; width: 26%; height: 9px; border-radius: 2px 2px 7px 7px; background: linear-gradient(#f1f2f4, #b5b8be); box-shadow: 0 16px 22px -10px rgba(0,0,0,.35); }
+.studio--peek .studio-screen { border-radius: 16px 16px 0 0; padding-bottom: 0; }
+.iphone { position: relative; flex: none; width: 300px; padding: 3%; border-radius: 16.7% / 6.9%; background: #0b0b0c;
+  box-shadow: 0 0 0 2px #4a4a4f, 0 0 0 3.5px #1d1d20, 0 30px 60px -20px rgba(0,0,0,.5); }
+.iphone .phone { width: 100%; border: 0; border-radius: 14.5% / 6.1%; box-shadow: none; }
+.iphone .island { display: block; position: absolute; top: 2.6%; left: 50%; translate: -50% 0; width: 31%; aspect-ratio: 3.7; border-radius: 99px; background: #000; }
+.iphone::before { content: ""; position: absolute; right: -5px; top: 24%; width: 3px; height: 11%; border-radius: 0 2px 2px 0; background: #2c2c30; }
+.iphone::after { content: ""; position: absolute; left: -5px; top: 18%; width: 3px; height: 7%; border-radius: 2px 0 0 2px; background: #2c2c30; }
 </style></head>
 <body>
 
@@ -605,4 +621,20 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
     <p style="font-size:15px; max-width:440px; text-align:right">The store, staff and figures in the screens are the prototype’s scripted demo, not a real store’s data. Illustrations are AI-generated in my style.</p>
   </div>
 </section>
+<script>
+// v178: device mockups. Every laptop-screen shot (img.shot) goes into a Studio Display, every phone shot (img.phone) into an iPhone.
+// The markup above stays plain <img>; render.mjs still measures [data-fx-video] on the <img>, so the films land on the screen itself.
+document.querySelectorAll("img.shot").forEach((im) => {
+  const peek = /0px 0px$/.test(im.style.borderRadius);   // the cover shot runs off the bottom of its section: no stand
+  const f = document.createElement("figure"); f.className = "studio" + (peek ? " studio--peek" : "");
+  f.style.marginTop = im.style.marginTop; im.style.marginTop = im.style.borderRadius = im.style.boxShadow = "";
+  im.replaceWith(f); const sc = document.createElement("div"); sc.className = "studio-screen"; sc.appendChild(im); f.appendChild(sc);
+  if (!peek) f.insertAdjacentHTML("beforeend", '<i class="studio-neck"></i><i class="studio-foot"></i>');
+});
+document.querySelectorAll("img.phone").forEach((im) => {
+  const f = document.createElement("div"); f.className = "iphone";
+  if (im.style.width) f.style.width = im.style.width; f.style.marginTop = im.style.marginTop;
+  im.removeAttribute("style"); im.replaceWith(f); f.appendChild(im); f.insertAdjacentHTML("beforeend", '<i class="island"></i>');
+});
+</script>
 </body></html>
