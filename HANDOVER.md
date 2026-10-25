@@ -898,3 +898,8 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Removed the v181 "Three calls I made after testing" section: it repeated the existing "What the test changed" section, and its
   "No guessing" card was wrong (forwarding was always the design, "Kept" in the original). Handovo is 42 sections again in
   content.js and reader.py. (`.bagrid` styles in case.html are now unused.)
+
+### v184: Handovo 90-second section redesigned
+- Paper background; a 52 px headline ("An AI teammate for the shop floor that only does what the manager allows.") beside the
+  highlight film; four proof cards (`.qcard`: 63% problem, blue insight card, solo role, lime 0 / 8,019 result); the stack strip
+  with a dark "Designed and built by me" pill. Section 02 is 1089 px; highlight film re-placed; reader.py re-run.

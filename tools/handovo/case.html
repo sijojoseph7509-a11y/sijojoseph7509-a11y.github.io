@@ -123,6 +123,12 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .acc ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; } .acc li { font-size: 16px; line-height: 1.35; padding-left: 18px; position: relative; color: #DADAE6; }
 .acc li::before { content: ""; position: absolute; left: 0; top: .5em; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
 .acc div:last-child li::before { background: transparent; border: 1.5px solid var(--lime); }
+.qcard { display: flex; flex-direction: column; gap: 10px; padding: 26px 26px 28px; border-radius: 22px; background: #fff; border: 1px solid var(--line); box-shadow: 0 18px 40px -28px rgba(20,20,60,.25); }
+.qcard b { font: 700 34px/1.05 'Mona Sans', Inter, sans-serif; white-space: nowrap; letter-spacing: -.02em; color: var(--blue); }
+.qcard p:not(.lab) { font-size: 16px; line-height: 1.45; color: #3A3A48; margin: 0; }
+.qblue { background: var(--blue); border-color: var(--blue); } .qblue .lab { color: var(--lime); } .qblue b { color: #fff; } .qblue p:not(.lab) { color: rgba(255,255,255,.86); }
+.qlime { background: var(--lime); border-color: var(--lime); } .qlime b { color: var(--ink); } .qlime .lab { color: var(--ink); opacity: .7; }
+.stack .me { background: var(--ink); color: #fff; border-color: var(--ink); }
 .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .stack span { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); font: 600 14px/1 Inter; }
 </style></head>
@@ -142,19 +148,21 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <img class="shot" src="shots/screen03.webp" alt="" style="margin-top:88px; border-radius:22px 22px 0 0; box-shadow:0 -20px 80px rgba(0,0,40,.35)">
 </section>
 
-<!-- 02 the 90-second version (v181) -->
-<section data-new="summary" style="padding:80px 120px 88px; border-bottom:1px solid var(--line)">
-  <p class="eye">The 90-second version</p>
-  <div class="grid2" style="gap:72px; align-items:center; grid-template-columns:1fr 640px">
-    <div style="display:grid; gap:26px">
-      <div><p class="lab">The problem</p><p style="font-size:19px">A manager’s plan rarely reaches every person on a busy floor. 63% of frontline workers say messages from leadership don’t make it to them (Microsoft, 2022).</p></div>
-      <div><p class="lab">The insight</p><p style="font-size:19px">Staff won’t learn another app, and managers won’t hand money or people decisions to software. So the AI works in the chat staff already use, and the manager decides what it may do alone.</p></div>
-      <div><p class="lab">My role</p><p style="font-size:19px">Designed and built it myself: research plan, AI behaviour, interaction and visual design, and the working pilot.</p></div>
-      <div><p class="lab">The result so far</p><p style="font-size:19px">A working pilot build. In 8,019 engine checks the agent never went past the manager’s setting; 78 attack attempts approved nothing. A four-week pilot in a real store is next.</p></div>
-    </div>
+<!-- 02 the 90-second version (v181, v184 layout: headline + film, four short proof cards, stack) -->
+<section data-new="summary" class="qs" style="padding:96px 120px 100px; background:var(--paper)">
+  <div class="grid2" style="gap:64px; align-items:center; grid-template-columns:1fr 640px">
+    <div><p class="eye">The 90-second version</p>
+      <h2 style="font-size:52px; line-height:1.05; margin-top:18px">An AI teammate for the shop floor that only does what the manager allows.</h2>
+      <p class="lead" style="margin-top:22px; max-width:520px">It works in the chat staff already use. I designed it and built the working pilot.</p></div>
     <img class="shot" data-fx-video="highlight" src="shots/tour01.webp" alt="">
   </div>
-  <div class="stack"><span>Designed and built by me</span><span>Figma</span><span>Next.js</span><span>Postgres (Supabase)</span><span>Claude API, structured output</span><span>Vercel</span><span>4 languages</span></div>
+  <div class="grid4 qs-cards" style="margin-top:64px; gap:20px">
+    <div class="qcard"><p class="lab">The problem</p><b>63%</b><p>of frontline workers say messages from leadership don’t make it to them (Microsoft, 2022).</p></div>
+    <div class="qcard qblue"><p class="lab">The insight</p><b>In their chat</b><p>Staff won’t learn another app; managers won’t hand over money or people calls. So it lives in their chat, within the manager’s limits.</p></div>
+    <div class="qcard"><p class="lab">My role</p><b>Solo build</b><p>Designed and built end to end: research plan, AI behaviour, interaction and visual design, and the working pilot.</p></div>
+    <div class="qcard qlime"><p class="lab">The result so far</p><b>0 / 8,019</b><p>engine checks where the agent went past the manager’s setting. A four-week store pilot is next.</p></div>
+  </div>
+  <div class="stack" style="margin-top:32px"><span class="me">Designed and built by me</span><span>Figma</span><span>Next.js</span><span>Postgres (Supabase)</span><span>Claude API, structured output</span><span>Vercel</span><span>4 languages</span></div>
 </section>
 
 <!-- 03 at a glance: shipped, tested, decided -->
