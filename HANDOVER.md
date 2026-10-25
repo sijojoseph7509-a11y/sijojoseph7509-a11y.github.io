@@ -869,3 +869,7 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   option `pops` ([section, x, y, w, h, file]): each rises, scales up and sharpens into place in turn when seen (`.cfx-pop`).
 - Films re-encoded at 0.024 bits/pixel (about 780 kbit/s at 1440 × 900) instead of 0.011, which looked soft in fades and scrolls;
   tour.mp4 3.3 MB, clips 0.1-0.8 MB (loaded only when scrolled to).
+
+### v180: number pops placed on the image
+- `.cfx-pop` lacked `position: absolute`, so the four Handovo number layers sat in the page flow: numbers out of place and a
+  ~380 px grey gap under the context section. Fixed in styles.css.
