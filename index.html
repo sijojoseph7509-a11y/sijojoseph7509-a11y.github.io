@@ -24,10 +24,9 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Sijo Joseph, product, UX and AI designer, with four case study covers">
   <meta name="twitter:card" content="summary_large_image">
-  <script src="update.js?v=195" defer></script>
-  <script src="gate.js?v=195"></script>
-  <link href="fonts/fonts.css?v=195" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=195" fetchpriority="high">
+  <script src="update.js?v=196" defer></script>
+  <link href="fonts/fonts.css?v=196" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=196" fetchpriority="high">
   <script type="importmap">
   {
     "imports": {
@@ -41,25 +40,26 @@
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js" fetchpriority="low">
   <link rel="modulepreload" href="vendor/three/examples/jsm/controls/OrbitControls.js" fetchpriority="low">
   <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js" fetchpriority="low">
-  <link rel="modulepreload" href="main.js?v=195" fetchpriority="low">
-  <link rel="modulepreload" href="sound.js?v=195" fetchpriority="low">
-  <link rel="modulepreload" href="room-utils.js?v=195" fetchpriority="low">
-  <link rel="modulepreload" href="cat.js?v=195" fetchpriority="low">
+  <link rel="modulepreload" href="main.js?v=196" fetchpriority="low">
+  <link rel="modulepreload" href="sound.js?v=196" fetchpriority="low">
+  <link rel="modulepreload" href="room-utils.js?v=196" fetchpriority="low">
+  <link rel="modulepreload" href="cat.js?v=196" fetchpriority="low">
+  <!-- v196: what the desk waits for (the cat and the football, three small three.js helpers) starts downloading at once, alongside
+       the scripts, instead of after main.js runs. Same URLs as main.js asks for, so nothing downloads twice; the room's textures are
+       left out on purpose (they arrive after the desk appears). Keep in sync with MODEL in main.js. -->
+  <link rel="modulepreload" href="vendor/three/examples/jsm/environments/RoomEnvironment.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/utils/BufferGeometryUtils.js">
+  <link rel="preload" as="fetch" href="models/cat/shea.glb?v=196" crossorigin>
+  <link rel="preload" as="fetch" href="models/football/football.glb?v=196" crossorigin>
+  <link rel="preload" as="image" href="models/cat/cat_diffuse.jpg?v=196" crossorigin>
+  <link rel="preload" as="image" href="models/cat/cat_bump.jpg?v=196" crossorigin>
+  <link rel="preload" as="image" href="models/football/color.jpg?v=196" crossorigin>
+  <link rel="preload" as="image" href="models/football/normal.jpg?v=196" crossorigin>
+  <link rel="preload" as="image" href="models/football/arm.jpg?v=196" crossorigin>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sijo Joseph", "url": "https://sijo.work/", "jobTitle": "Product, UX and AI designer", "alumniOf": {"@type": "CollegeOrUniversity", "name": "National Institute of Design, Bengaluru"}, "address": {"@type": "PostalAddress", "addressLocality": "Bengaluru", "addressCountry": "IN"}, "sameAs": ["https://www.linkedin.com/in/sijodesign", "https://github.com/sijojoseph7509-a11y"], "knowsAbout": ["Product design", "UX design", "Interaction design", "Information design", "Wayfinding", "Brand identity", "AI-assisted prototyping"]}</script>
 </head>
 <body>
-  <!-- Password gate (gate.js): covers everything until the password is entered once on this device -->
-  <div class="gate" id="gate" hidden>
-    <form class="gate-inner" autocomplete="off">
-      <span class="loader-name" aria-hidden="true"><img src="assets/brand/sj-mark-on-dark.svg" alt=""></span>
-      <h1 class="gate-title">This portfolio is private</h1>
-      <p class="gate-sub">Enter the password to see my work.</p>
-      <label class="gate-field"><span class="sr">Password</span>
-        <input type="password" name="pw" placeholder="Password" required autocapitalize="off" spellcheck="false" enterkeyhint="go"></label>
-      <button class="intro-go gate-go" type="submit">Unlock</button>
-      <p class="gate-msg" role="alert" aria-live="assertive"></p>
-    </form>
-  </div>
 
   <!-- 3D desk -->
   <div id="stage" class="stage" aria-label="Interactive 3D desk. Click the laptop to open the portfolio."></div>
@@ -192,11 +192,11 @@
     </div>
   </noscript>
 
-  <script src="content.js?v=195"></script>
-  <script src="track.js?v=195"></script>
-  <script src="icons.js?v=195"></script>
-  <script src="os.js?v=195"></script>
-  <script src="music.js?v=195"></script>
-  <script type="module" src="main.js?v=195"></script>
+  <script src="content.js?v=196"></script>
+  <script src="track.js?v=196"></script>
+  <script src="icons.js?v=196"></script>
+  <script src="os.js?v=196"></script>
+  <script src="music.js?v=196"></script>
+  <script type="module" src="main.js?v=196"></script>
 </body>
 </html>

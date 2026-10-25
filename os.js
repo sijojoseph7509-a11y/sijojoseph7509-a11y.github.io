@@ -925,7 +925,7 @@
     addEventListener("error", (e) => { if (/main\.js|three|cat\.js/.test(e.filename || "")) failed = true; });
     const tick = () => {
       if (window.Desk && Desk.state && Desk.state().started) return;
-      if (!document.documentElement.classList.contains("locked")) waited += 1;
+      waited += 1;
       if (failed || waited >= 25) {
         $("#loader") && $("#loader").classList.add("done");
         if (os.hidden) { open("about"); toast("The 3D desk couldn't start here, so this is the simple version."); }

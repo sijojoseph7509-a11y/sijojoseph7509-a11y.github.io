@@ -6,17 +6,14 @@ import { execSync } from "child_process";
 const require = createRequire(import.meta.url);
 const puppeteer = require(require.resolve("puppeteer-core", { paths: [process.env.QA_DEPS || process.cwd(), process.cwd()] }));
 const BASE = (process.argv[2] || "http://localhost:4321/").replace(/\/?$/, "/");
-// password gate (gate.js): tests start unlocked, as a visitor who already entered the password. Keep in sync with gate.js HASH.
-const GATE_HASH = "1242c393c539cf38364f807ab0a916199da4fb071ee17fe9349ddfe853e39f89";
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: "new", args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"] });
 const results = [];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function page({ mobile = false, route, locked = false } = {}) {
+async function page({ mobile = false, route } = {}) {
   const ctx = await browser.createBrowserContext();
   const p = await ctx.newPage();
-  if (!locked) await p.evaluateOnNewDocument((h) => { try { localStorage.setItem("gate", h); } catch (_) {} }, GATE_HASH);
   await p.setViewport(mobile ? { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: 1440, height: 900 });
   p.problems = [];
   p.on("pageerror", (e) => p.problems.push("JS error: " + e.message));
@@ -52,19 +49,12 @@ await check("Desktop: loads with real cat, ball and no errors", async () => {
   return JSON.stringify(s);
 });
 
-await check("Password gate: blocks a new visitor, wrong password refused, right one unlocks and is remembered", async () => {
-  const p = await page({ locked: true }); await p.goto(BASE + "?qa=" + Date.now());
-  await p.waitForSelector("#gate:not([hidden]) input", { timeout: 10000 });
-  const covers = await p.evaluate(() => { const r = document.getElementById("gate").getBoundingClientRect(); return r.width >= innerWidth && r.height >= innerHeight; });
-  expect(covers, "gate does not cover the screen");
-  await p.keyboard.press("Escape"); await p.type("#gate input", "wrong"); await p.keyboard.press("Enter"); await sleep(400);
-  expect(await p.$eval(".gate-msg", (e) => e.textContent.length > 0), "no message for a wrong password");
-  expect(await p.evaluate(() => document.documentElement.classList.contains("locked")), "wrong password unlocked the site");
-  await p.$eval("#gate input", (e) => (e.value = "")); await p.type("#gate input", " SHEA "); await p.keyboard.press("Enter");
-  await p.waitForFunction(() => document.getElementById("gate").hidden, { timeout: 5000 });
-  await ready(p);
-  await p.goto(BASE + "?qa=" + Date.now());
-  expect(await p.evaluate(() => document.documentElement.classList.contains("unlocked") && document.getElementById("gate").hidden), "password not remembered after a reload");
+await check("Open to everyone: a first-time visitor (nothing stored) reaches the welcome card, which names Sijo and his role", async () => {
+  const p = await page(); await p.goto(BASE + "?qa=" + Date.now());   // v196: the password gate is removed for good
+  await p.waitForFunction(() => document.getElementById("intro") && !document.getElementById("intro").hidden, { timeout: 60000 });
+  expect(!(await p.$("#gate")) && !(await p.$("script[src*=gate]")), "a password gate is still on the page");
+  const t = await p.$eval("#intro", (e) => e.innerText);
+  expect(/Sijo Joseph/.test(t) && /designer/i.test(t), "the welcome card doesn't say who this is: " + t.slice(0, 80));
   clean(p); await p.ctx.close();
 });
 
@@ -168,7 +158,7 @@ await check("Standalone case-study pages load with no failed requests or errors 
   for (const slug of ["handovo", "syntra", "carekin", "ekmaati"]) {
     const p = await page(); p.on("response", (r) => { if (r.status() >= 400) bad.push(slug + ": " + r.status() + " " + r.url().replace(BASE, "/")); });
     await p.goto(BASE + "work/" + slug + "/", { waitUntil: "networkidle2", timeout: 60000 });
-    if (!(await p.$("#gate")) || !(await p.$("script[src*=gate]"))) bad.push(slug + ": no password gate");
+    if ((await p.$("#gate")) || (await p.$("script[src*=gate]"))) bad.push(slug + ": leftover password gate");
     if (await p.$('a[href*="claude.ai/artifact"]')) bad.push(slug + ": private claude.ai artifact link");
     await p.ctx.close();
   }

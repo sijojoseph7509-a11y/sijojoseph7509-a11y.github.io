@@ -9,7 +9,7 @@
 | **Live site** | **https://sijo.work** (also `https://www.sijo.work` and `https://sijojoseph7509-a11y.github.io` → both redirect to sijo.work) |
 | **Repository** | https://github.com/sijojoseph7509-a11y/sijojoseph7509-a11y.github.io — public, branch `main` (**the repo name must never change**, see §2) |
 | **Phone preview page** | https://sijo.work/mobile-preview.html |
-| **Status** | Live, **behind the password gate again since v168** (Sijo's request; it was off v154–v167). All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
+| **Status** | Live and **open to everyone since v196** (the password gate is removed for good). All automated checks green (site-qa 36/36, security 15/15, copy-check clean, sweep 18/18 devices). Open items in §23. |
 | **Last commit at handover** | `3be1c63` — "v76: bottle in the pen stand's place, loose floor cable, bigger card with a light studio photo" (60 commits) |
 | **Cache-buster** | `?v=N` everywhere in `index.html`, in the two `import` lines at the top of `main.js` (`sound.js`, `room-utils.js`) **and** `{"build": "N"}` in `version.json` — always the same number (§19) |
 
@@ -998,3 +998,15 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   (or `error`); styles.css hides everything the effects add while it is there (section stills, reel and glance stay visible).
 - os.js reel: an `<img class="reel-still">` (the poster) sits under the video; the video fades in (0.12 s) only after it has
   painted two frames (`playing` + two requestVideoFrameCallbacks), so no decoder start-up frame is ever seen.
+
+### v196: password gate removed for good, faster desk start, full bug sweep
+- Gate gone completely (Sijo's request): gate.js deleted; its script tag and `#gate` markup removed from index.html and the four
+  work/<slug>/index.html pages (and from tools/reader/page.py); gate rules removed from styles.css and reader.css; the `locked`
+  checks in main.js and os.js removed. QA: "Open to everyone" check back, the standalone check now fails on a leftover gate,
+  GATE_HASH removed from qa.mjs, sweep.mjs and audit.mjs.
+- Faster desk: index.html preloads what the desk waits for (cat and football models and textures, plus RoomEnvironment,
+  RoundedBoxGeometry and BufferGeometryUtils) so they download alongside the scripts. Same files and URLs, nothing downloads
+  twice. Measured locally at 40 Mbit/s, 150 ms: welcome card 2.0 s → 1.8 s. The room textures (desk mat, prints, window,
+  card photo, wallpaper) are deliberately not preloaded: they arrive after the desk appears, and preloading them made it slower.
+- sweep.mjs: the blur check now measures the first section still, not the reel's poster image.
+- Checks: site-qa 39/39, security 15/15, sweep 18/18 devices, copy-check clean, every script passes `node --check`.

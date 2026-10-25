@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=195";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=195";
+import { Sound } from "./sound.js?v=196";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=196";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -2228,7 +2228,7 @@ else {
   $("#introGo").addEventListener("click", () => enter(false));       // v159: Enter is quiet again (visitors found the music distracting)
   $("#introSound").addEventListener("click", () => enter(true));     // "Enter with sound"
   $("#introWork").addEventListener("click", () => { enter(false, "work"); setTimeout(() => boot("work"), 900); });   // straight to the projects
-  if (!document.documentElement.classList.contains("locked")) $("#introGo").focus({ preventScroll: true });   // not while the password screen is up
+  $("#introGo").focus({ preventScroll: true });
   if (window.__pendingEnter) { const pe = window.__pendingEnter; window.__pendingEnter = null; enter(pe.sound); }   // v166: clicked Enter while the desk was loading
 }
 

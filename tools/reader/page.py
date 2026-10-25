@@ -1,6 +1,6 @@
 # The standalone page around a case study's text version: sijo.work/work/<slug>/ (see build.py).
 # Plain HTML and CSS: it works without JavaScript and without WebGL, search engines can read it, and it is the
-# link to share for one project. gate.js keeps the temporary password screen on it while the site is private.
+# link to share for one project.
 import json, os, html
 from projects import PROJECTS, ORDER
 
@@ -15,17 +15,6 @@ def version():
     try: return json.load(open(os.path.join(ROOT, 'version.json')))['build']
     except Exception: return 'dev'
 
-GATE = '''<div class="gate" id="gate" hidden>
-    <form class="gate-inner" autocomplete="off">
-      <span class="gate-mark" aria-hidden="true">SJ</span>
-      <h1 class="gate-title">This portfolio is private</h1>
-      <p class="gate-sub">Enter the password to see my work.</p>
-      <label class="gate-field"><span class="sr">Password</span>
-        <input type="password" name="pw" placeholder="Password" required autocapitalize="off" spellcheck="false" enterkeyhint="go"></label>
-      <button class="gate-go" type="submit">Unlock</button>
-      <p class="gate-msg" role="alert" aria-live="assertive"></p>
-    </form>
-  </div>'''
 
 def write_page(slug, P, main):
     v = version()
@@ -58,11 +47,9 @@ def write_page(slug, P, main):
   <meta name="theme-color" content="{P['color']}">
   <link rel="icon" href="{ICON}">
   <link rel="stylesheet" href="reader.css?v={v}">
-  <script src="gate.js?v={v}"></script>
   <script type="application/ld+json">{json.dumps(ld)}</script>
 </head>
 <body class="rp">
-  {GATE}
   <a class="rp-skip" href="work/{slug}/#reader">Skip to the case study</a>
   <header class="rp-top">
     <a class="rp-me" href="./">Sijo Joseph <span>Product, UX &amp; AI designer</span></a>
