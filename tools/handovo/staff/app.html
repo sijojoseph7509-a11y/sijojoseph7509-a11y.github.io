@@ -1,0 +1,147 @@
+<!doctype html>
+<!-- Handovo for staff: a concept app for everyone on the floor except the manager (floor staff, cashiers, visual merchandisers,
+     shift leads). Five 393 × 852 screens (iPhone points); tools/handovo/staff/render.mjs captures each at 3× into
+     shots/staff01–05.webp for the case study. Same demo store, people and day as the rest of the case. -->
+<html lang="en"><head><meta charset="utf-8">
+<style>
+  @font-face { font-family: Inter; src: url(../../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: Mona; src: url(../../../fonts/mona-400-900.woff2) format("woff2"); font-weight: 400 900; }
+  :root { --blue: #2F3BEA; --deep: #1820A8; --lime: #D4FF3A; --ink: #0B0B0F; --paper: #F4F4F7; --mute: #6B6B78; --line: #E2E2EA;
+    --red: #E5484D; --amber: #F5A524; --green: #1F9D55; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ddd; font-family: Inter, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; }
+  .s { position: relative; width: 393px; height: 852px; overflow: hidden; background: var(--paper); display: flex; flex-direction: column; }
+  .sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 32px 0 40px; font: 600 16px/1 Inter; }
+  .sb i { display: flex; gap: 6px; align-items: center; } .sb b { display: block; background: currentColor; border-radius: 2px; }
+  .top { padding: 8px 20px 0; flex: none; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .eye { font: 600 12px/1 Inter; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+  h1 { font: 800 30px/1.05 Mona; letter-spacing: -.03em; }
+  h2 { font: 700 20px/1.15 Mona; letter-spacing: -.02em; }
+  .body { flex: 1; overflow: hidden; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 1px 0 rgba(11,11,15,.04); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 99px; font: 600 12px/1 Inter; white-space: nowrap; }
+  .c-blue { background: #E6E8FD; color: var(--deep); } .c-lime { background: var(--lime); color: var(--ink); } .c-red { background: #FDE7E8; color: #B4232A; }
+  .c-amber { background: #FEF1DC; color: #8A5300; } .c-grey { background: #ECECF1; color: #4A4A55; } .c-green { background: #E2F5EA; color: #13703B; }
+  .t { font: 600 16px/1.3 Inter; } .m { font: 400 13.5px/1.4 Inter; color: var(--mute); } .sm { font: 500 12.5px/1.3 Inter; color: var(--mute); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; border-radius: 16px; font: 600 16px/1 Inter; }
+  .b-blue { background: var(--blue); color: #fff; } .b-line { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); } .b-ink { background: var(--ink); color: #fff; }
+  .tabs { flex: none; height: 86px; padding: 8px 10px 30px; display: flex; justify-content: space-around; background: rgba(255,255,255,.92); border-top: 1px solid var(--line); }
+  .tabs a { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; font: 600 10.5px/1 Inter; color: #8A8A96; }
+  .tabs a.on { color: var(--blue); } .tabs svg { width: 24px; height: 24px; }
+  .av { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; font: 700 13px/1 Inter; color: #fff; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .hr { height: 1px; background: var(--line); margin: 12px 0; }
+  .ck { flex: none; width: 24px; height: 24px; border-radius: 8px; box-shadow: inset 0 0 0 2px #C9C9D3; display: grid; place-items: center; }
+  .ck.on { background: var(--blue); box-shadow: none; }
+  .back { display: flex; align-items: center; gap: 4px; font: 600 16px/1 Inter; color: var(--blue); padding: 6px 0 10px; }
+</style></head><body>
+<script>
+const I = {   // 24 px line icons
+  today: '<path d="M4 7h16M4 7v12h16V7M8 3v4M16 3v4"/><path d="M8 12h3v3H8z" fill="currentColor"/>',
+  tasks: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17"/>',
+  ask: '<path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v4M12 14.5v.01"/>',
+  team: '<circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14c3 0 5 1.8 5 4.5"/>',
+  me: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>', left: '<path d="M15 5l-7 7 7 7"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  cam: '<path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>', clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/>',
+  bell: '<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/>',
+  lang: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"/>',
+  swap: '<path d="M7 4L3.5 7.5 7 11M3.5 7.5H17M17 13l3.5 3.5L17 20M20.5 16.5H7"/>', lock: '<rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+  tag: '<path d="M3.5 12.5V4h8.5l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8.5" r="1.4"/>', box: '<path d="M4 8l8-4 8 4v9l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v9"/>',
+  alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.01"/>', hand: '<path d="M8 13V6.5a1.5 1.5 0 013 0V12M11 11.5V5a1.5 1.5 0 013 0v6.5M14 11.5V6.5a1.5 1.5 0 013 0V15c0 3.5-2.5 6-6 6s-5.5-2-6.5-4.5L3 13a1.5 1.5 0 012.5-1.5L8 14"/>',
+  hand2: '<path d="M4 12h12M12 6l6 6-6 6"/>',
+};
+const ic = (n, s = 24, w = 1.8) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+const sb = (dark) => `<div class="sb" style="color:${dark ? "#fff" : "var(--ink)"}"><span>10:30</span><i><b style="width:17px;height:11px;clip-path:polygon(0 100%,100% 0,100% 100%)"></b><b style="width:15px;height:11px;border-radius:50% 50% 0 0/100% 100% 0 0"></b><b style="width:25px;height:12px;border-radius:4px;opacity:.9"></b></i></div>`;
+const tabs = (on, lead) => `<nav class="tabs">${[["today", "Today"], ["tasks", "My tasks"], ["ask", "Ask"], ...(lead ? [["team", "Team"]] : []), ["me", "Me"]].map(([k, l]) => `<a class="${k === on ? "on" : ""}">${ic(k, 24, k === on ? 2.1 : 1.8)}${l}</a>`).join("")}</nav>`;
+const av = (t, c) => `<span class="av" style="background:${c}">${t}</span>`;
+const S = [];
+
+// 1 · Today (Meera, floor staff)
+S.push(`${sb()}<div class="top"><div class="row" style="justify-content:space-between"><div><p class="eye">Thursday · Floor, Womenswear</p><h1 style="margin-top:8px">Morning, Meera</h1></div>${av("M", "var(--blue)")}</div></div>
+<div class="body">
+  <div class="card" style="background:var(--blue); color:#fff; padding:16px 16px 14px">
+    <div class="row" style="justify-content:space-between"><span class="chip" style="background:rgba(255,255,255,.16); color:#fff">${ic("clock", 14, 2.2)} Shift 9:00 am – 6:00 pm</span><span class="chip c-lime">${ic("check", 14, 2.6)} In at 9:26</span></div>
+    <p class="eye" style="color:rgba(255,255,255,.7); margin-top:16px">Today’s goal from the manager</p>
+    <p style="font:600 17px/1.32 Inter; margin-top:6px">Rain is forecast all week. Push rain jackets near the entrance and keep the fitting rooms tidy.</p>
+  </div>
+  <div class="row" style="justify-content:space-between; margin-top:4px"><h2>Your tasks</h2><span class="sm">1 of 3 done</span></div>
+  <div class="card" style="box-shadow: inset 0 0 0 2px var(--blue)">
+    <div class="row" style="justify-content:space-between"><span class="chip c-blue">Due 12:30 pm</span><span class="chip c-grey">To do</span></div>
+    <p class="t" style="margin-top:10px">Count white linen shirts on the floor and in the stockroom</p>
+    <p class="m" style="margin-top:4px">Why: the system says 12, the rail looks short.</p>
+    <div class="row" style="margin-top:12px; gap:8px"><span class="btn b-blue" style="flex:1; height:42px; font-size:15px">Start</span><span class="btn b-line" style="width:96px; height:42px; font-size:15px">Can’t do</span></div>
+  </div>
+  <div class="card"><div class="row" style="justify-content:space-between"><span class="chip c-blue">Due 1:00 pm</span><span class="chip c-amber">Photo needed</span></div>
+    <p class="t" style="margin-top:10px">Move the navy rain jackets to the entrance table</p></div>
+  <div class="card" style="opacity:.62"><div class="row" style="justify-content:space-between"><span class="chip c-green">${ic("check", 13, 2.6)} Done 10:05</span></div>
+    <p class="t" style="margin-top:10px; text-decoration:line-through">Tidy fitting rooms 1–4</p></div>
+</div>${tabs("today")}`);
+
+// 2 · A task (Meera counts): steps, the number, a photo, done or can't do
+S.push(`${sb()}<div class="top"><p class="back">${ic("left", 20, 2.2)} Today</p><span class="chip c-blue">Due 12:30 pm · from the plan</span><h1 style="margin-top:12px; font-size:27px">Count white linen shirts</h1></div>
+<div class="body">
+  <div class="card"><p class="eye">Steps</p>
+    <div class="row" style="margin-top:12px"><span class="ck on">${ic("check", 16, 2.8).replace("currentColor", "#fff")}</span><p class="t" style="font-weight:500">Count the floor rail</p><span class="sm" style="margin-left:auto">5</span></div>
+    <div class="hr"></div>
+    <div class="row"><span class="ck on">${ic("check", 16, 2.8).replace("currentColor", "#fff")}</span><p class="t" style="font-weight:500">Count the stockroom shelf</p><span class="sm" style="margin-left:auto">3</span></div>
+  </div>
+  <div class="card"><p class="eye">Your count</p>
+    <div class="row" style="justify-content:space-between; margin-top:10px"><span class="btn b-line" style="width:52px">–</span><span style="font:800 52px/1 Mona; letter-spacing:-.03em">8</span><span class="btn b-line" style="width:52px">+</span></div>
+    <div class="row" style="margin-top:14px; gap:8px; padding:10px 12px; border-radius:14px; background:#FEF1DC; color:#8A5300"><span style="flex:none">${ic("alert", 18, 2)}</span><p style="font:500 13px/1.35 Inter">The system says 12. A gap over 2 goes to the manager to decide; you don’t need to do anything else.</p></div>
+  </div>
+  <div class="card row" style="gap:12px"><span style="width:52px; height:52px; border-radius:14px; background:#ECECF1; display:grid; place-items:center; color:var(--mute)">${ic("cam", 24)}</span><div><p class="t" style="font-size:15px">Add a photo of the rail</p><p class="sm" style="margin-top:3px">Optional · deleted after a day</p></div><span style="margin-left:auto; color:#B0B0BA">${ic("chev", 20)}</span></div>
+  <div style="margin-top:auto; padding-bottom:14px; display:flex; flex-direction:column; gap:8px">
+    <span class="btn b-blue">${ic("check", 20, 2.4)} Done, send 8</span>
+    <span class="btn b-line">Can’t do it, tell Priya</span>
+  </div>
+</div>`);
+
+// 3 · Ask (Kavya, cashier): what goes to the manager and what she can just report
+S.push(`${sb()}<div class="top"><p class="eye">Billing counter · Kavya</p><h1 style="margin-top:8px">Ask or report</h1><p class="m" style="margin-top:6px">Say what happened. Handovo sends it to the right person.</p></div>
+<div class="body">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+    ${[["tag", "Discount or price", "Manager decides", "c-blue"], ["alert", "Upset customer", "Always urgent", "c-red"], ["box", "Stock problem", "Shift lead", "c-grey"], ["hand", "Need a hand", "Nearest free staff", "c-grey"]].map(([i, t, s, c]) => `<div class="card" style="padding:14px"><span style="display:grid; place-items:center; width:40px; height:40px; border-radius:12px; background:var(--paper); color:var(--ink)">${ic(i, 22)}</span><p class="t" style="font-size:15px; margin-top:12px">${t}</p><span class="chip ${c}" style="margin-top:8px; height:22px; font-size:11px">${s}</span></div>`).join("")}
+  </div>
+  <div class="row" style="justify-content:space-between; margin-top:6px"><h2>Your requests</h2></div>
+  <div class="card" style="box-shadow: inset 0 0 0 2px var(--lime)">
+    <div class="row" style="justify-content:space-between"><span class="chip c-lime">Waiting for the manager</span><span class="sm">10:24</span></div>
+    <p class="t" style="margin-top:10px">15% off a navy rain jacket (₹450)</p>
+    <p class="m" style="margin-top:4px">Customer says the zip is stiff. Bill is ₹2,999.</p>
+    <div class="row" style="margin-top:12px; gap:8px; padding:10px 12px; border-radius:14px; background:var(--paper)"><span style="color:var(--mute)">${ic("lock", 18, 2)}</span><p class="sm" style="color:var(--ink)">Discounts are the manager’s call. You’ll hear back here.</p></div>
+  </div>
+  <div class="row" style="margin-top:auto; margin-bottom:12px; gap:8px; height:50px; padding:0 8px 0 16px; border-radius:99px; background:#fff; box-shadow: inset 0 0 0 1.5px var(--line)"><p class="m" style="flex:1">Type or hold to speak…</p><span style="display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:var(--blue); color:#fff">${ic("mic", 20, 2)}</span></div>
+</div>${tabs("ask")}`);
+
+// 4 · Team (Priya, shift lead): who is in, what is late, who needs help, the handover
+S.push(`${sb(true)}<div style="position:absolute; inset:0; background:var(--ink)"></div><div class="top" style="position:relative; color:#fff"><p class="eye" style="color:rgba(255,255,255,.6)">Shift lead · Priya · morning shift</p><h1 style="margin-top:8px; color:#fff">Your team now</h1></div>
+<div class="body" style="position:relative">
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px">
+    ${[["9", "of 11 in", "#fff"], ["2", "late tasks", "var(--amber)"], ["1", "blocked", "#FF7B7F"]].map(([n, l, c]) => `<div class="card" style="background:#17171E; padding:14px 12px"><p style="font:800 30px/1 Mona; color:${c}">${n}</p><p class="sm" style="color:rgba(255,255,255,.62); margin-top:6px">${l}</p></div>`).join("")}
+  </div>
+  <div class="card" style="background:#17171E; color:#fff"><div class="row" style="justify-content:space-between"><span class="chip c-red">Needs help</span><span class="sm" style="color:rgba(255,255,255,.5)">10:12</span></div>
+    <div class="row" style="margin-top:12px">${av("N", "#7A5AF8")}<div><p class="t" style="font-size:15px">Nisha · new arrivals rail</p><p class="sm" style="color:rgba(255,255,255,.6)">Blocked: one side has fallen. Sent to the manager.</p></div></div>
+    <div class="row" style="margin-top:12px; gap:8px"><span class="btn" style="flex:1; height:40px; font-size:14px; background:#fff; color:var(--ink)">Send Deepak</span><span class="btn" style="flex:1; height:40px; font-size:14px; background:rgba(255,255,255,.1); color:#fff">I’ll go</span></div></div>
+  <div class="card" style="background:#17171E; color:#fff; padding:14px 16px"><p class="eye" style="color:rgba(255,255,255,.55)">Running late</p>
+    ${[["P", "#E8590C", "Pooja", "Restock rain jacket, navy M", "due 11:30"], ["R", "#0E9F6E", "Rohit", "Face up the footwear wall", "due 12:00"]].map(([a, c, n, t, d]) => `<div class="row" style="margin-top:12px">${av(a, c)}<div style="flex:1"><p class="t" style="font-size:14.5px">${n}</p><p class="sm" style="color:rgba(255,255,255,.6)">${t} · ${d}</p></div><span class="chip" style="background:rgba(255,255,255,.1); color:#fff">Nudge</span></div>`).join("")}</div>
+  <div class="card" style="background:var(--lime); margin-top:auto; margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><p class="eye" style="color:rgba(11,11,15,.6)">Shift change · 2:00 pm</p><p class="t" style="margin-top:6px">3 open tasks to hand on</p><p class="sm" style="color:rgba(11,11,15,.7); margin-top:2px">Owners suggested for the evening shift</p></div><span style="display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:var(--ink); color:var(--lime)">${ic("hand2", 20, 2.2)}</span></div></div>
+</div><nav class="tabs" style="position:relative; background:#111116; border-color:#24242C">${[["today", "Today"], ["tasks", "My tasks"], ["ask", "Ask"], ["team", "Team"], ["me", "Me"]].map(([k, l]) => `<a style="color:${k === "team" ? "var(--lime)" : "#6E6E7A"}">${ic(k, 24, k === "team" ? 2.1 : 1.8)}${l}</a>`).join("")}</nav>`);
+
+// 5 · Me (Meera): language, where tasks arrive, the week, a swap, what the manager sees
+S.push(`${sb()}<div class="top"><div class="row" style="gap:14px">${av("M", "var(--blue)").replace("36px;height:36px", "")}<div><h1 style="font-size:26px">Meera</h1><p class="m">Floor · Womenswear</p></div></div></div>
+<div class="body">
+  <div class="card"><div class="row"><span style="color:var(--blue)">${ic("lang", 22)}</span><p class="t" style="font-size:15px">Language</p></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px">${["English", "ಕನ್ನಡ", "हिंदी", "മലയാളം"].map((l, k) => `<span class="btn ${k === 1 ? "b-blue" : "b-line"}" style="height:42px; font-size:15px; font-family:system-ui, sans-serif">${l}</span>`).join("")}</div></div>
+  <div class="card"><div class="row"><span style="color:var(--blue)">${ic("bell", 22)}</span><p class="t" style="font-size:15px">Get tasks on</p></div>
+    <div class="row" style="margin-top:12px; padding:4px; border-radius:14px; background:var(--paper)"><span class="btn" style="flex:1; height:38px; font-size:14px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.08)">This app</span><span class="btn" style="flex:1; height:38px; font-size:14px; color:var(--mute)">WhatsApp</span></div></div>
+  <div class="card"><div class="row" style="justify-content:space-between"><div class="row"><span style="color:var(--blue)">${ic("today", 22)}</span><p class="t" style="font-size:15px">This week</p></div><span class="chip c-blue">${ic("swap", 13, 2.2)} Swap a shift</span></div>
+    <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:12px">${[["T", "9–6", 1], ["F", "9–6"], ["S", "12–9"], ["S", "12–9"], ["M", "Off"], ["T", "9–6"], ["W", "Off"]].map(([d, h, on]) => `<div style="text-align:center; padding:8px 0; border-radius:12px; ${on ? "background:var(--blue); color:#fff" : "background:var(--paper)"}"><p style="font:700 12px/1 Inter">${d}</p><p style="font:500 10.5px/1 Inter; margin-top:6px; ${on ? "" : h === "Off" ? "color:#A0A0AB" : "color:var(--mute)"}">${h}</p></div>`).join("")}</div></div>
+  <div class="card" style="background:#E6E8FD"><div class="row" style="align-items:flex-start"><span style="color:var(--deep); flex:none">${ic("lock", 22)}</span><div><p class="t" style="font-size:15px; color:var(--deep)">What your manager sees</p><p class="m" style="margin-top:4px; color:#3B3F7A">Tasks done and open for the store, as counts. Never a ranking of people, and never your location.</p></div></div></div>
+</div>${tabs("me")}`);
+
+S.forEach((h, k) => { const d = document.createElement("section"); d.className = "s"; d.id = "s" + (k + 1); d.innerHTML = h; document.body.append(d); });
+window.ready = document.fonts.ready;
+</script></body></html>

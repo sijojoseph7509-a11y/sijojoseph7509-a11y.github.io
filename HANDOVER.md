@@ -1017,3 +1017,14 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - os.js `fitScreen()`: on every open and on resize (also fires when the window moves to another screen) it measures the screen
   untransformed; if it is more than 8 % off the window (the opening animation alone is ≤ 6 %), it sets `--z: 1` on the screen so
   it fills the window at normal scale. Tested in Chrome at 1440 and 2560 px, resizing while open, and with zoom disabled.
+
+### v198: Handovo staff app (concept) at the end of the case
+- New section 41 in the Handovo case (before the reflection): "Concept · Handovo for staff: An app for everyone on the floor."
+  For everyone except the manager (floor staff, cashiers, visual merchandisers, shift leads); WhatsApp stays the default and the
+  app follows the same rules. Five screens: Today (Meera), a task (count + optional photo, mismatch goes to the manager), Ask or
+  report (Kavya's discount waits for the manager, upset customer always urgent, voice or text), Shift lead (Priya: who is in, late,
+  blocked, send help, hand-over at shift change) and Me (language, app or WhatsApp, the week and a swap, what the manager sees).
+  Captioned as designed screens, not yet built or tested.
+- Source: tools/handovo/staff/app.html (five 393 × 852 screens in Handovo's tokens, Mona + Inter); tools/handovo/staff/render.mjs
+  captures them at 3× into tools/handovo/shots/staff01–05.webp; case.html shows them in the iPhone frames. Then render.mjs (case),
+  content.js (new 41, 1226 px; reflection and footer are now 42 and 43) and reader.py 198.
