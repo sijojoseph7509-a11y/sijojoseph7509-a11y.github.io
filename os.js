@@ -823,6 +823,21 @@
     const to = screen.getBoundingClientRect();
     return `translate(${r.left - to.left}px, ${r.top - to.top}px) scale(${r.width / to.width}, ${r.height / to.height})`;
   };
+  // v197: big screens scale the Mac UI up with CSS zoom (--z in styles.css) and size the screen 100vw / --z, so it still fills the
+  // window. Browsers don't all treat zoom and vw the same way (a friend's Safari on a 24-inch monitor showed the desktop at
+  // two-thirds size with black around it), so measure it, untransformed, and if it doesn't fill the window drop the zoom there.
+  function fitScreen() {
+    if (os.hidden) return;
+    screen.style.removeProperty("--z");
+    if ((parseFloat(getComputedStyle(screen).getPropertyValue("--z")) || 1) === 1) return;
+    const t = screen.style.transform; screen.style.transform = "none";
+    const r = screen.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = innerHeight;
+    screen.style.transform = t;
+    // the opening animation scales it by a few per cent, so only a real mismatch counts (a browser that gets zoom wrong is off by 13–55 %)
+    if (Math.abs(r.width / vw - 1) > 0.08 || Math.abs(r.height / vh - 1) > 0.08) screen.style.setProperty("--z", "1");
+  }
+  let fitT = 0;
+  addEventListener("resize", () => { clearTimeout(fitT); fitT = setTimeout(fitScreen, 120); });   // resized, or moved to another screen
   // Back button / phone back-swipe: opening the desktop adds a history step, so "back" closes it
   // (returning to the desk) instead of leaving the site.
   let skipPop = false;
@@ -841,6 +856,7 @@
     win.classList.remove("max");
     closeMenu(); closeSpotlight();
     opening = true; show(key); opening = false;
+    fitScreen();
     zoomRect = fromRect && !reduced ? fromRect : null;
     if (zoomRect) {
       os.style.animation = screen.style.animation = "none";

@@ -1010,3 +1010,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   card photo, wallpaper) are deliberately not preloaded: they arrive after the desk appears, and preloading them made it slower.
 - sweep.mjs: the blur check now measures the first section still, not the reel's poster image.
 - Checks: site-qa 39/39, security 15/15, sweep 18/18 devices, copy-check clean, every script passes `node --check`.
+
+### v197: the Mac desktop always fills the window
+- A friend's Safari on a 24-inch monitor showed the desktop at about two-thirds size with black around it: on big screens the UI
+  is scaled with CSS `zoom` (--z) and sized `100vw / --z`, and that browser didn't apply the zoom the way Chrome does.
+- os.js `fitScreen()`: on every open and on resize (also fires when the window moves to another screen) it measures the screen
+  untransformed; if it is more than 8 % off the window (the opening animation alone is ≤ 6 %), it sets `--z: 1` on the screen so
+  it fills the window at normal scale. Tested in Chrome at 1440 and 2560 px, resizing while open, and with zoom disabled.
