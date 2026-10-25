@@ -129,6 +129,9 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .qblue { background: var(--blue); border-color: var(--blue); } .qblue .lab { color: var(--lime); } .qblue b { color: #fff; } .qblue p:not(.lab) { color: rgba(255,255,255,.86); }
 .qlime { background: var(--lime); border-color: var(--lime); } .qlime b { color: var(--ink); } .qlime .lab { color: var(--ink); opacity: .7; }
 .stack .me { background: var(--ink); color: #fff; border-color: var(--ink); }
+/* v187: four-card rows line up (label, title, each paragraph) and card labels stay on one line */
+.grid4 > .card .lab { white-space: nowrap; letter-spacing: .04em; }
+.grid4.align > .card { display: grid; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
 .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .stack span { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); font: 600 14px/1 Inter; }
 </style></head>
@@ -732,6 +735,11 @@ document.querySelectorAll("img.shot").forEach((im) => {
   f.style.marginTop = im.style.marginTop; im.style.marginTop = im.style.borderRadius = im.style.boxShadow = "";
   im.replaceWith(f); const sc = document.createElement("div"); sc.className = "studio-screen"; sc.appendChild(im); f.appendChild(sc);
   if (!peek) f.insertAdjacentHTML("beforeend", '<i class="studio-neck"></i><i class="studio-foot"></i>');
+});
+// v187: in a row of four cards, give every card the same rows so labels, titles and paragraphs line up across the row
+document.querySelectorAll(".grid4").forEach((g) => {
+  const cards = [...g.children].filter((c) => c.classList.contains("card")); if (cards.length < 2) return;
+  const n = Math.max(...cards.map((c) => c.children.length)); g.classList.add("align"); cards.forEach((c) => (c.style.gridRow = `span ${n}`));
 });
 document.querySelectorAll("img.phone").forEach((im) => {
   const f = document.createElement("div"); f.className = "iphone";

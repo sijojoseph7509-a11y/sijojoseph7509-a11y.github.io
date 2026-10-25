@@ -1130,3 +1130,4 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .cfx-pop img { display: block; width: 100%; height: 100%; opacity: 0; transform: translateY(30px) scale(.9); filter: blur(8px); transform-origin: 0 100%;
   transition: opacity .7s var(--ease) var(--d, 0s), transform 1s cubic-bezier(.2, .9, .25, 1.15) var(--d, 0s), filter .8s var(--ease) var(--d, 0s); }
 .cfx-pop.on img { opacity: 1; transform: none; filter: none; }
+.cfx-pop img { background: none !important; box-shadow: none !important; }   /* v186: not the case images' loading colour (it showed as blue boxes) */

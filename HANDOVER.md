@@ -907,3 +907,7 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 ### v185: 90-second cards line up
 - Card titles are one line each at 34 px (63% · In their chat · Solo build · 0 / 8,019), so the text below starts at the same
   height in all four cards. Section 02 is 1043 px.
+
+### v186: no blue boxes behind the Handovo numbers
+- Case images get the project colour as a loading background; the transparent number layers inherited it. `.cfx-pop img` now
+  has `background: none !important`.
