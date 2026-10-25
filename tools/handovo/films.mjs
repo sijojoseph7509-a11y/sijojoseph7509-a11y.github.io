@@ -35,7 +35,7 @@ async function film(p, name, size, act) {
 }
 // v178: clips are cut, scaled/cropped and encoded by tools/handovo/frames2mp4.swift (Apple's H.264 encoder) instead of ffmpeg
 const F2M = `${tmp}/frames2mp4`; execFileSync("swiftc", ["-O", "tools/handovo/frames2mp4.swift", "-o", F2M]);
-const enc = (src, dst, from, to, w, h, crop = []) => execFileSync(F2M, [src, dst, from.toFixed(3), to.toFixed(3), String(w), String(h), ...crop.map(String)]);
+const enc = (src, dst, from, to, w, h, crop = [], speed = 1) => execFileSync(F2M, [src, dst, from.toFixed(3), to.toFixed(3), String(w), String(h), ...crop.map(String)], { env: { ...process.env, SPEED: String(speed) } });
 
 // 1. the tour
 const p = await b.newPage(); await p.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
@@ -75,12 +75,12 @@ const tourSrc = await film(p, "tour", [1440, 900], async (t0) => {
   v.push(Date.now() / 1000 - t0);
 });
 await p.close();
-const CLIPS = { tour: [0, 12], goal: [1, 3], plan: [2, 4], discount: [4, 6], count: [6, 7.3], soldout: [7, 8], urgent: [8, 9], handover: [10, 11], digest: [11, 12] };
+const CLIPS = { highlight: [1, 12, 1.7], tour: [0, 12], goal: [1, 3], plan: [2, 4], discount: [4, 6], count: [6, 7.3], soldout: [7, 8], urgent: [8, 9], handover: [10, 11], digest: [11, 12] };
 const tm = (k) => { const i = Math.floor(k), f = k - i; return v[i] + f * ((v[i + 1] ?? v[i]) - v[i]); };
-for (const [name, [a, z]] of Object.entries(CLIPS)) {
+for (const [name, [a, z, speed = 1]] of Object.entries(CLIPS)) {   // highlight: the whole day at 1.7x, about 18 s, for the 90-second summary
   const f = at(name); if (!f) continue;
   const w = f.w > 600 ? 1440 : 1136;   // about 2x the size it shows at
-  enc(tourSrc, `${out}/${name}.mp4`, tm(a), tm(z), w, Math.round(w * 900 / 1440));
+  enc(tourSrc, `${out}/${name}.mp4`, tm(a), tm(z), w, Math.round(w * 900 / 1440), [], speed);
 }
 
 // 2. the routing diagram, an 8-second loop

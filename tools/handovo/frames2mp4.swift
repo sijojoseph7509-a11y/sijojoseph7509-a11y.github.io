@@ -14,6 +14,7 @@ guard a.count >= 7 else { print("usage: frames2mp4 list.tsv out.mp4 from to widt
 let rows = try String(contentsOfFile: a[1], encoding: .utf8).split(separator: "\n").map { $0.split(separator: "\t") }
 let frames: [(String, Double)] = rows.compactMap { $0.count == 2 ? (String($0[0]), Double($0[1])!) : nil }
 let from = Double(a[3])!, to = Double(a[4])!
+let speed = Double(ProcessInfo.processInfo.environment["SPEED"] ?? "1") ?? 1   // v181: SPEED=1.7 plays the source 1.7x faster
 func load(_ p: String) -> CGImage { let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: p) as CFURL, nil)!; return CGImageSourceCreateImageAtIndex(src, 0, nil)! }
 let first = load(frames[0].0)
 let crop = a.count >= 11 ? CGRect(x: Double(a[7])!, y: Double(a[8])!, width: Double(a[9])!, height: Double(a[10])!)
@@ -36,9 +37,9 @@ let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sour
 writer.add(input); writer.startWriting(); writer.startSession(atSourceTime: .zero)
 
 var k = 0, lastPath = "", img = first
-let n = Int(((to - from) * 25).rounded())
+let n = Int(((to - from) / speed * 25).rounded())
 for f in 0..<n {
-  let t = from + Double(f) / 25
+  let t = from + Double(f) / 25 * speed
   while k + 1 < frames.count && frames[k + 1].1 <= t { k += 1 }
   if frames[k].0 != lastPath { lastPath = frames[k].0; img = load(lastPath).cropping(to: crop) ?? load(lastPath) }
   while !input.isReadyForMoreMediaData { Thread.sleep(forTimeInterval: 0.002) }

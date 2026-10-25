@@ -873,3 +873,15 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 ### v180: number pops placed on the image
 - `.cfx-pop` lacked `position: absolute`, so the four Handovo number layers sat in the page flow: numbers out of place and a
   ~380 px grey gap under the context section. Fixed in styles.css.
+
+### v181: Handovo, hiring-grade additions (Sijo's points 2-8)
+New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 sections), facts only from the pilot and its tests:
+- 02 "The 90-second version" replaces the snapshot: problem (Microsoft 2022 stat), insight, role, result so far, a "Designed and
+  built by me" stack strip, and `highlight.mp4` (the whole tour at 1.7×, ~18 s; frames2mp4 reads SPEED from the environment).
+- "The whole service" blueprint (manager / staff / agent / owner across six moments), before the routing decision.
+- "How the AI behaves" (blue): acts alone, asks first, explains itself, fails safely. `.blue .card` styles added.
+- "Design system" (colour, type, routing chips, tags, components) and "From one store to fifty" (marked as a proposal).
+- "Three calls I made after testing": before / evidence / after for khatam ho gaya, no guessing, Kannada and Malayalam.
+- Language section: Built vs Next-with-real-people lists. Measurement: three north stars with targets I set (−40% manager
+  decisions by week 4, 90% on time, 0 lost at handover) plus four guardrails. Targets are Sijo's to adjust.
+- content.js section list rebuilt (alts carried over, new ones written), films and pops re-placed; reader.py re-run (43 sections).
