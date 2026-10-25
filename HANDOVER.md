@@ -911,3 +911,8 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 ### v186: no blue boxes behind the Handovo numbers
 - Case images get the project colour as a loading background; the transparent number layers inherited it. `.cfx-pop img` now
   has `background: none !important`.
+
+### v187: four-card rows line up
+- case.html script: every `.grid4` with cards gets `.align`; each card spans as many rows as the busiest card and uses
+  `grid-template-rows: subgrid`, so labels, titles and paragraphs line up (proto-personas, How the AI behaves, scale). Card labels
+  stay on one line (`white-space: nowrap`, letter spacing .04em).
