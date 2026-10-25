@@ -1124,3 +1124,9 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 }
 @media (max-height: 520px) { .loader.ready .intro-load { margin-top: 8px; } .loader.ready .intro-go { margin-top: 8px; } }
 @media (max-width: 360px) { .loader .loader-inner, .loader.ready .loader-inner { padding-left: 22px; padding-right: 22px; } }
+
+/* v179: case-fx pops, layers that rise and sharpen into place when seen (Handovo numbers) */
+.cfx-pop { opacity: 0; transform: translateY(30px) scale(.9); filter: blur(8px); transform-origin: 0 100%;
+  transition: opacity .7s var(--ease) var(--d, 0s), transform 1s cubic-bezier(.2, .9, .25, 1.15) var(--d, 0s), filter .8s var(--ease) var(--d, 0s); }
+.cfx-pop.on { opacity: 1; transform: none; filter: none; }
+.cfx-pop img { display: block; width: 100%; height: 100%; }

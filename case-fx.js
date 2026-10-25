@@ -81,6 +81,16 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     else { const dio = new IntersectionObserver((es) => { if (es[0].isIntersecting) { box.classList.add("on"); dio.disconnect(); } }, { threshold: 0.45 }); dio.observe(box); cleanups.push(() => dio.disconnect()); }
   }
 
+  // v179: layers that rise into place when seen, one after another (Handovo: the four big numbers in the context section)
+  if (opts.pops) opts.pops.forEach(([i, x, y, w, h, f], k) => {
+    if (!secs[i]) return;
+    const box = document.createElement("div"); box.className = "cfx-pop"; box.setAttribute("aria-hidden", "true"); box.style.setProperty("--d", (k % 3) * 0.16 + "s");
+    box.innerHTML = `<img src="${asset(f)}" srcset="${asset(f)} 1x, ${asset(f.replace(/\.(\w+)$/, "@2x.$1"))} 2x" alt="" decoding="async">`;
+    place(i, box, x, y, w, h);
+    if (reduce) box.classList.add("on");
+    else { const o = new IntersectionObserver((es) => { if (es[0].isIntersecting) { box.classList.add("on"); o.disconnect(); } }, { threshold: 0.6 }); o.observe(box); cleanups.push(() => o.disconnect()); }
+  });
+
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
   mo.observe(caseEl.ownerDocument.body, { childList: true, subtree: true });
 }

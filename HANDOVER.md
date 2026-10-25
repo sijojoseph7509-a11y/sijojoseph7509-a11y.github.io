@@ -858,3 +858,14 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
   `tools/handovo/frames2mp4.swift` (Apple's H.264 encoder via AVFoundation, compiled on the fly) instead of ffmpeg, which this Mac
   doesn't have. Needs the floor-pilot demo served (`~/floor-pilot/public`, e.g. port 4394). Films are about 1.5-2x the old sizes
   (tour 1.5 MB, clips 50-380 KB). The text version (reader.py, m/ images) was not regenerated.
+
+### v179: Handovo polish
+- iPhones: the phone shots (620×1470) are longer than an iPhone screen, so `.iphone .phone` now uses aspect 1179/2556 with
+  object-fit cover from the top (the bottom strip with the message box and the demo's own home bar is trimmed) and a CSS home bar
+  (`.home`); phones default to 270 px, align to the top of their row, all the same size.
+- Two-column sections (sold out / urgent, handover / digest): `.grid2 > div` is a flex column and the Studio Display sits at the
+  bottom (`margin-top: auto`), so both displays line up whatever the text length.
+- The four context numbers (~8%, 63%, 1 in 3, 400M+) are `data-fx-draw="stat-N"` layers (fx/stat-N.webp) shown by a new case-fx
+  option `pops` ([section, x, y, w, h, file]): each rises, scales up and sharpens into place in turn when seen (`.cfx-pop`).
+- Films re-encoded at 0.024 bits/pixel (about 780 kbit/s at 1440 × 900) instead of 0.011, which looked soft in fades and scrolls;
+  tour.mp4 3.3 MB, clips 0.1-0.8 MB (loaded only when scrolled to).

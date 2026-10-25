@@ -91,10 +91,14 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .studio-screen .shot { border-radius: 3px; box-shadow: none; }
 .studio-neck { display: block; width: 16%; height: 52px; background: linear-gradient(90deg, #a9acb3, #e7e8eb 40%, #f3f4f6 55%, #b9bcc2); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
 .studio-foot { display: block; width: 26%; height: 9px; border-radius: 2px 2px 7px 7px; background: linear-gradient(#f1f2f4, #b5b8be); box-shadow: 0 16px 22px -10px rgba(0,0,0,.35); }
+/* v179: in two-column sections both displays sit on the same line, under text of any length */
+.grid2 > div:has(> .studio) { display: flex; flex-direction: column; }
+.grid2 > div > .studio { margin-top: auto !important; padding-top: 40px; }
 .studio--peek .studio-screen { border-radius: 16px 16px 0 0; padding-bottom: 0; }
-.iphone { position: relative; flex: none; width: 300px; padding: 3%; border-radius: 16.7% / 6.9%; background: #0b0b0c;
+.iphone { position: relative; flex: none; align-self: flex-start; width: 270px; padding: 3%; border-radius: 16.7% / 6.9%; background: #0b0b0c;
   box-shadow: 0 0 0 2px #4a4a4f, 0 0 0 3.5px #1d1d20, 0 30px 60px -20px rgba(0,0,0,.5); }
-.iphone .phone { width: 100%; border: 0; border-radius: 14.5% / 6.1%; box-shadow: none; }
+.iphone .phone { width: 100%; aspect-ratio: 1179 / 2556; object-fit: cover; object-position: 50% 0; border: 0; border-radius: 14.5% / 6.7%; box-shadow: none; }   /* v179: real iPhone proportions; the shots are longer, so their bottom strip (message box and the demo's own home bar) is trimmed */
+.iphone .home { display: block; position: absolute; bottom: 2.4%; left: 50%; translate: -50% 0; width: 36%; height: 5px; border-radius: 3px; background: rgba(255,255,255,.88); }
 .iphone .island { display: block; position: absolute; top: 2.6%; left: 50%; translate: -50% 0; width: 31%; aspect-ratio: 3.7; border-radius: 99px; background: #000; }
 .iphone::before { content: ""; position: absolute; right: -5px; top: 24%; width: 3px; height: 11%; border-radius: 0 2px 2px 0; background: #2c2c30; }
 .iphone::after { content: ""; position: absolute; left: -5px; top: 18%; width: 3px; height: 7%; border-radius: 2px 0 0 2px; background: #2c2c30; }
@@ -164,12 +168,12 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <p class="eye">Context by numbers</p>
   <h2>The front line is big, busy and badly connected.</h2>
   <div class="grid3" style="margin-top:80px; gap:56px">
-    <div class="stat"><b>~8%</b><p>of India’s workforce is employed in retail.</p><p class="src">IBEF, Retail Industry in India</p></div>
-    <div class="stat"><b>63%</b><p>of frontline workers say messages from leadership don’t make it to them.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022 (9,600 frontline workers and managers surveyed)</p></div>
-    <div class="stat"><b>1 in 3</b><p>frontline workers say they don’t have the right technology tools to do their job.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022</p></div>
+    <div class="stat"><b data-fx-draw="stat-1">~8%</b><p>of India’s workforce is employed in retail.</p><p class="src">IBEF, Retail Industry in India</p></div>
+    <div class="stat"><b data-fx-draw="stat-2">63%</b><p>of frontline workers say messages from leadership don’t make it to them.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022 (9,600 frontline workers and managers surveyed)</p></div>
+    <div class="stat"><b data-fx-draw="stat-3">1 in 3</b><p>frontline workers say they don’t have the right technology tools to do their job.</p><p class="src">Microsoft Work Trend Index, frontline special report, 2022</p></div>
   </div>
   <div style="margin-top:72px; padding-top:48px; border-top:1px solid #26262F; display:grid; grid-template-columns:1fr 1fr; gap:56px">
-    <div class="stat"><b>400M+</b><p>monthly WhatsApp users in India, its largest market, so staff already know the chat.</p><p class="src">WhatsApp, as reported by TechCrunch, July 2019</p></div>
+    <div class="stat"><b data-fx-draw="stat-4">400M+</b><p>monthly WhatsApp users in India, its largest market, so staff already know the chat.</p><p class="src">WhatsApp, as reported by TechCrunch, July 2019</p></div>
     <div style="align-self:end"><p style="font-size:20px">Why it matters: the tool staff already open all day is a chat app. Handovo puts the work there instead of asking thirty people to learn a new app.</p></div>
   </div>
 </section>
@@ -634,7 +638,7 @@ document.querySelectorAll("img.shot").forEach((im) => {
 document.querySelectorAll("img.phone").forEach((im) => {
   const f = document.createElement("div"); f.className = "iphone";
   if (im.style.width) f.style.width = im.style.width; f.style.marginTop = im.style.marginTop;
-  im.removeAttribute("style"); im.replaceWith(f); f.appendChild(im); f.insertAdjacentHTML("beforeend", '<i class="island"></i>');
+  im.removeAttribute("style"); im.replaceWith(f); f.appendChild(im); f.insertAdjacentHTML("beforeend", '<i class="island"></i><i class="home"></i>');
 });
 </script>
 </body></html>
