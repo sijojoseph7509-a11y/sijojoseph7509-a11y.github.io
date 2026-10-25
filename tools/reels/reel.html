@@ -1,136 +1,188 @@
 <!doctype html>
-<!-- 15-second project reels (v190). One page, one config per project: five 3-second beats of real material with one caption each.
-     tools/reels/record.mjs opens reel.html?p=<slug>, calls start() and records it into work/<slug>/fx/reel.mp4 (+ reel-540.mp4, poster). -->
-<html lang="en"><head><meta charset="utf-8">
-<link rel="stylesheet" href="../../fonts/fonts.css">
+<!-- 15-second project reels, v2 (v191). A frame-exact motion piece on a strict system:
+     1920 × 1080 · margins 128 · text column 640 on the left (step label, headline, one annotation) · product on the right in a clean frame.
+     Five scenes: the problem → three steps → the result. In each step the camera pushes into the one feature that matters and a
+     spotlight ring draws around it. Every animation is a Web Animations keyframe track, so tools/reels/record.mjs can seek any
+     millisecond and capture lossless frames (no screen recording, no blur). Open reel.html?p=<slug> in a browser to preview. -->
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../fonts/fonts.css">
 <style>
-  * { box-sizing: border-box; margin: 0; }
-  html, body { width: 1440px; height: 810px; overflow: hidden; background: var(--bg); font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
-  .stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
-  .beat { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; display: grid; place-items: center; }
-  .beat.on { opacity: 1; }
-  .beat .full { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 3.6s ease-out; }
-  .beat.on .full { transform: scale(1.12); }
-  .beat .full.top { object-position: 50% 0; }
-  .beat .full.zoomR { transform-origin: 82% 28%; transform: scale(1.55); } .beat.on .full.zoomR { transform: scale(1.68); }   /* the idols, not the photo's own headline */
-  /* caption: one sentence at a time, bottom left */
-  .cap { position: absolute; left: 64px; bottom: 60px; max-width: 760px; padding: 18px 26px 20px; border-radius: 22px; background: var(--capbg); color: var(--capfg);
-    font: 600 34px/1.18 var(--font, Inter), sans-serif; letter-spacing: -.01em; box-shadow: 0 20px 50px -20px rgba(0,0,0,.45); opacity: 0; transform: translateY(18px);
-    transition: opacity .5s ease .25s, transform .6s cubic-bezier(.2,.8,.2,1) .25s; z-index: 5; }
-  .beat.on .cap { opacity: 1; transform: none; }
-  .tag { position: absolute; left: 64px; top: 52px; z-index: 6; font: 600 15px/1 Inter; letter-spacing: .14em; text-transform: uppercase; color: var(--tagfg); }
-  .dots { position: absolute; right: 64px; top: 52px; z-index: 6; display: flex; gap: 8px; }
-  .dots i { width: 26px; height: 4px; border-radius: 2px; background: var(--dot); }
-  .dots i.on { background: var(--accent); }
-  /* a Studio Display for screen films */
-  .studio { position: relative; width: 860px; margin-top: -90px; display: grid; justify-items: center; }
-  .studio .scr { width: 100%; padding: 1.3%; border-radius: 16px; background: #0d0d0f; box-shadow: 0 0 0 1.5px #d4d6db, 0 0 0 3px #a9acb3, 0 40px 80px -30px rgba(0,0,0,.6); }
-  .studio video, .studio img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 3px; }
-  .studio .neck { width: 16%; height: 50px; background: linear-gradient(90deg, #a9acb3, #e7e8eb 40%, #f3f4f6 55%, #b9bcc2); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
-  .studio .foot { width: 26%; height: 9px; border-radius: 2px 2px 7px 7px; background: linear-gradient(#f1f2f4, #b5b8be); }
-  /* iPhones */
-  .phones { display: flex; gap: 44px; align-items: flex-start; margin-top: -60px; }
-  .iphone { position: relative; width: 250px; padding: 8px; border-radius: 42px / 19px; background: #0b0b0c; box-shadow: 0 0 0 2px #4a4a4f, 0 30px 60px -20px rgba(0,0,0,.55); }
-  .iphone .s { position: relative; width: 100%; aspect-ratio: 412 / 917; border-radius: 34px / 16px; overflow: hidden; background: #fff; }
-  .iphone .s img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; transition: opacity .35s ease; }
-  .iphone .island { position: absolute; top: 2.4%; left: 50%; translate: -50% 0; width: 30%; aspect-ratio: 3.6; border-radius: 99px; background: #000; z-index: 2; }
-  .phones .iphone { opacity: 0; transform: translateY(40px); transition: opacity .5s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
-  .beat.on .phones .iphone { opacity: 1; transform: none; }
-  .beat.on .phones .iphone:nth-child(2) { transition-delay: .25s; } .beat.on .phones .iphone:nth-child(3) { transition-delay: .5s; }
-  .one .iphone { width: 300px; border-radius: 48px / 22px; } .one .iphone .s { border-radius: 40px / 18px; }
-  .tap { position: absolute; width: 16%; aspect-ratio: 1; margin: -8% 0 0 -8%; border-radius: 50%; background: rgba(40,40,46,.3); border: 2px solid rgba(255,255,255,.95); opacity: 0; z-index: 3; }
-  .tap.go { animation: tap .9s ease-out forwards; }
-  @keyframes tap { 0% { opacity: 0; transform: scale(1.5); } 28% { opacity: 1; transform: scale(1); } 48% { transform: scale(.78); } 100% { opacity: 0; transform: scale(1.1); } }
-  /* a 360 world panning */
-  .pano { position: absolute; inset: 0; background-size: auto 100%; background-repeat: repeat-x; animation: none; }
-  .beat.on .pano { animation: pan 6s linear forwards; }
-  @keyframes pan { from { background-position: 0 0; } to { background-position: -520px 0; } }
-  /* tickets fanning in */
-  .tickets { display: flex; gap: 26px; margin-top: -40px; }
-  .tickets img { width: 190px; border-radius: 6px; box-shadow: 0 24px 50px -18px rgba(60,30,0,.45); opacity: 0; transform: translateY(60px) rotate(var(--r)); transition: opacity .5s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
-  .beat.on .tickets img { opacity: 1; transform: translateY(0) rotate(var(--r)); }
-  .beat.on .tickets img:nth-child(2) { transition-delay: .2s; } .beat.on .tickets img:nth-child(3) { transition-delay: .4s; } .beat.on .tickets img:nth-child(4) { transition-delay: .6s; }
-  /* end card */
-  .end { text-align: center; color: var(--endfg); }
-  .end h1 { font: 700 120px/1 var(--font, Inter), sans-serif; letter-spacing: -.035em; opacity: 0; transform: translateY(24px); transition: all .7s cubic-bezier(.2,.8,.2,1) .1s; }
-  .end p { margin-top: 26px; font: 500 30px/1.3 Inter; max-width: 900px; opacity: 0; transition: opacity .6s ease .5s; }
-  .end small { display: block; margin-top: 22px; font: 600 16px/1 Inter; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); opacity: 0; transition: opacity .6s ease .8s; }
-  .beat.on .end h1, .beat.on .end p, .beat.on .end small { opacity: 1; transform: none; }
-  .framed { width: 980px; aspect-ratio: 4 / 3; border-radius: 22px; overflow: hidden; margin-top: -70px; box-shadow: 0 40px 90px -30px rgba(0,0,0,.6); }
-  .framed img, .framed video { width: 100%; height: 100%; object-fit: cover; display: block; }
-</style></head>
-<body><div class="stage" id="stage"></div>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--brand); font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .scene.stage { background: var(--stage); } .scene.brandbg { background: var(--brand); }
+  /* top bar and progress: constant through the reel */
+  .brand { position: absolute; left: 128px; top: 64px; z-index: 20; font: 700 26px/1 Inter; letter-spacing: -.01em; color: var(--ink); display: flex; align-items: center; gap: 12px; }
+  .brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .steps { position: absolute; right: 128px; top: 72px; z-index: 20; display: flex; gap: 8px; }
+  .steps b { width: 34px; height: 4px; border-radius: 2px; background: var(--faint); overflow: hidden; } .steps b i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+  /* the left column */
+  .col { position: absolute; left: 128px; top: 150px; bottom: 150px; width: 640px; display: flex; flex-direction: column; justify-content: center; }
+  .kick { font: 600 26px/1 Inter; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .head { margin-top: 28px; font: 700 74px/1.04 Inter; letter-spacing: -.032em; color: var(--ink); }
+  .note { margin-top: 44px; padding-left: 24px; border-left: 5px solid var(--accent); font: 500 33px/1.36 Inter; color: var(--sub); }
+  /* title and end scenes */
+  .big { position: absolute; left: 128px; right: 128px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; z-index: 2; }
+  .big .head { font-size: 112px; line-height: 1.0; letter-spacing: -.04em; max-width: 1380px; margin-top: 30px; }
+  .big .sub { margin-top: 36px; font: 500 38px/1.3 Inter; color: var(--sub); max-width: 1200px; }
+  .big.center { align-items: center; text-align: center; }
+  .big .foot { margin-top: 60px; font: 600 26px/1 Inter; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+  .bgimg { position: absolute; inset: 0; background-size: cover; background-position: var(--pos, 50% 50%); }
+  .bgimg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 88%, transparent) 38%, color-mix(in srgb, var(--brand) 20%, transparent) 75%, transparent 100%); }
+  /* product frames on the right (area x 840 to 1792) */
+  .win { position: absolute; left: 840px; top: 243px; width: 952px; height: 595px; border-radius: 22px; overflow: hidden; background: #000;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 50px 120px -30px rgba(0,0,0,.6); }
+  .phone { position: absolute; top: 98px; transform-origin: 0 0; height: 884px; width: 410px; padding: 12px; border-radius: 64px / 29px; background: #0b0b0c;
+    box-shadow: 0 0 0 2.5px #50505a, 0 50px 120px -30px rgba(0,0,0,.65); }
+  .phone .scr { position: relative; width: 100%; height: 100%; border-radius: 52px / 24px; overflow: hidden; background: #fff; }
+  .phone .island { position: absolute; top: 26px; left: 50%; width: 118px; height: 33px; margin-left: -59px; border-radius: 20px; background: #000; z-index: 6; }
+  .photo { position: absolute; top: 110px; height: 860px; border-radius: 26px; overflow: hidden; box-shadow: 0 50px 120px -30px rgba(0,0,0,.6); }
+  .cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .cam img, .cam .layer { position: absolute; left: 0; top: 0; display: block; }
+  .ring { position: absolute; border: 4px solid var(--accent); border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, var(--dim, .3)), 0 0 36px 6px color-mix(in srgb, var(--accent) 55%, transparent); z-index: 4; }
+  .tapdot { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(30,30,36,.32); border: 3px solid #fff; box-shadow: 0 6px 20px rgba(0,0,0,.3); z-index: 5; }
+  .pano { position: absolute; inset: 0; background-size: auto 100%; background-repeat: repeat-x; }
+  .ticket { position: absolute; top: 160px; width: 236px; border-radius: 8px; box-shadow: 0 34px 70px -24px rgba(60,30,0,.5); }
+</style></head><body>
+<div id="root"></div>
 <script>
-const W = "../../work/";
+const W = "../../work/", SH = "../handovo/shots/", LIVE = (f) => W + "carekin/fx/live-" + f + ".webp";
 const R = {
-  handovo: { name: "Handovo", font: "Inter", c: { bg: "#2F3BEA", accent: "#D4FF3A", capbg: "#D4FF3A", capfg: "#0B0B0F", tagfg: "rgba(255,255,255,.75)", dot: "rgba(255,255,255,.3)", endfg: "#fff" },
-    beats: [
-      { img: W + "handovo/fx/cover-slide@2x.webp", cls: "top", cap: "A store manager’s plan, on every staff phone." },
-      { studio: W + "handovo/fx/goal.mp4", cap: "The manager writes one goal, in plain words." },
-      { studio: W + "handovo/fx/plan.mp4", cap: "The AI drafts the tasks: an owner and a reason for each." },
-      { phones: ["../handovo/shots/phone06.webp", "../handovo/shots/phone08.webp", "../handovo/shots/phone12.webp"], cap: "Staff get only their own tasks, in their own language." },
-      { end: ["Handovo", "8,019 tests. It never went past the manager’s limits.", "Designed and built by Sijo Joseph"] } ] },
-  carekin: { name: "Carekin", font: "Inter", c: { bg: "#0F3B38", accent: "#FF8A6B", capbg: "#FFFFFF", capfg: "#0F3B38", tagfg: "rgba(255,255,255,.7)", dot: "rgba(255,255,255,.25)", endfg: "#fff" },
-    beats: [
-      { img: W + "carekin/fx/cover-slide@2x.webp", cls: "top", cap: "When Amma’s medicine changes, who hears about it?" },
-      { seq: [["scan", 206, 768], ["check"]], cap: "Priya scans the new prescription; anything unclear, she checks." },
-      { seq: [["change", 206, 440], ["today"]], cap: "The change stays open until every carer has seen it." },
-      { seq: [["wa-before", 162, 514], ["wa"]], cap: "Lakshmi taps Given on WhatsApp, in Malayalam." },
-      { end: ["Carekin", "One medicine plan, seen three ways.", "UX and product design · Sijo Joseph"] } ] },
-  ekmaati: { name: "Ek maati", font: "Inter", c: { bg: "#1D1410", accent: "#F5A623", capbg: "#F5A623", capfg: "#1D1410", tagfg: "rgba(255,255,255,.7)", dot: "rgba(255,255,255,.25)", endfg: "#F7EFE3" },
-    beats: [
-      { img: W + "ekmaati/05@2x.webp", cls: "zoomR", cap: "Pen’s clay Ganesh idols are sold by the row: no name, no maker." },
-      { img: W + "ekmaati/fx/cover-slide@2x.webp", cls: "top", cap: "I gave them a name and a mark: Ek maati, one clay." },
-      { framed: W + "ekmaati/fx/film-unbox.mp4", cap: "A temple-shaped box that folds with no tape or plastic." },
-      { framedImg: W + "ekmaati/fx/real/temple-34@2x.webp", cap: "Prototyped by hand, three times." },
-      { end: ["Ek maati", "Brand identity and packaging for the clay idols of Pen.", "Branding and packaging · Sijo Joseph"] } ] },
-  syntra: { name: "Syntra", font: "Lato", c: { bg: "#F4E7D4", accent: "#BD680F", capbg: "#3A1F0B", capfg: "#F7EBDD", tagfg: "rgba(58,31,11,.6)", dot: "rgba(58,31,11,.18)", endfg: "#3A1F0B" },
-    beats: [
-      { img: W + "syntra/fx/cover-slide@2x.webp", cls: "top", cap: "Know the feeling, not the name?" },
-      { framedLoop: ["loop-0", "loop-1", "loop-2", "loop-3"].map((n) => W + "syntra/fx/" + n + ".webp"), cap: "Turn a knob and three sliders to say how it should feel." },
-      { pano: W + "syntra/fx/pano-lakeside_night.webp", cap: "Then step inside your scent: one of nine 360° worlds." },
-      { tickets: ["140032", "164936", "170525", "200951"].map((n) => W + "syntra/fx/receipt-" + n + ".webp"), cap: "Take it home: a printed ticket that comes alive in AR." },
-      { end: ["Syntra", "66 tickets printed at our exhibit.", "Interaction design · NID · team of 3"] } ] },
+  handovo: { name: "Handovo", c: { brand: "#2F3BEA", stage: "#0C0D16", ink: "#FFFFFF", sub: "rgba(255,255,255,.74)", accent: "#D4FF3A", faint: "rgba(255,255,255,.22)" },
+    scenes: [
+      { type: "title", kick: "Handovo · AI for store floors", head: "A store manager’s plan rarely reaches the whole floor.", sub: "30 staff. Four languages. One busy Thursday." },
+      { type: "screen", kick: "01 · The goal", head: "The manager types one goal.", note: "In plain words. No forms.", img: SH + "screen02.webp", size: [1440, 900], target: [276, 275, 466, 350] },
+      { type: "screen", kick: "02 · The plan", head: "The AI turns it into tasks, each with an owner.", note: "Picked by role, section, shift and workload.", img: SH + "screen03.webp", size: [1440, 900], target: [596, 98, 424, 206] },
+      { type: "phones", kick: "03 · The floor", head: "Everyone gets only their own task, in their language.", note: "Done is one tap away.", imgs: [SH + "phone04.webp", SH + "phone12.webp"], size: [620, 1470], target: [6, 556, 470, 268] },
+      { type: "end", count: 8019, head: "tests.", sub: "The agent never went past the manager’s limits.", foot: "Handovo · Product, UX & AI design · Sijo Joseph" } ] },
+  carekin: { name: "Carekin", c: { brand: "#0F3B38", stage: "#0F3B38", ink: "#FFFFFF", sub: "rgba(255,255,255,.76)", accent: "#FF8A6B", faint: "rgba(255,255,255,.2)" },
+    scenes: [
+      { type: "title", kick: "Carekin · Medicines for families", head: "When Amma’s dose changes, not everyone hears.", sub: "One parent. Three carers. Three cities." },
+      { type: "phone", kick: "01 · Scan", head: "Priya photographs the prescription.", note: "Anything it isn’t sure about, she checks.", seq: [[LIVE("scan"), [206, 768]], [LIVE("check")]], size: [412, 917], target: [18, 266, 376, 76] },
+      { type: "phone", kick: "02 · The change", head: "A dose change stays open until everyone has seen it.", note: "Arun gets a nudge until he confirms.", seq: [[LIVE("change")]], size: [412, 917], target: [16, 112, 380, 382] },
+      { type: "phone", kick: "03 · The dose", head: "Lakshmi taps Given on WhatsApp, in Malayalam.", note: "Logged at 8:04. Priya sees it at once.", seq: [[LIVE("wa-before"), [162, 514]], [LIVE("wa")]], size: [412, 917], target: [12, 630, 300, 146] },
+      { type: "end", head: "One medicine plan, seen three ways.", foot: "Carekin · UX & product design · Sijo Joseph" } ] },
+  ekmaati: { name: "Ek maati", c: { brand: "#1D1410", stage: "#1D1410", ink: "#F7EFE3", sub: "rgba(247,239,227,.74)", accent: "#F5A623", faint: "rgba(247,239,227,.2)" },
+    scenes: [
+      { type: "title", bg: W + "ekmaati/05@2x.webp", pos: "50% 50%", zoom: [1.62, 1.72], origin: "72% 52%", kick: "Ek maati · Branding & packaging", head: "Pen’s clay Ganesh idols are sold by the row.", sub: "No name. No maker. No box worth keeping." },
+      { type: "screen", kick: "01 · A name", head: "Ek maati: one clay.", note: "A mark of three strokes and a tilak.", img: W + "ekmaati/11@2x.webp", size: [1440, 1056], target: [340, 400, 690, 570] },
+      { type: "photo", kick: "02 · A box", head: "A temple-shaped box, folded with no tape or plastic.", note: "Prototyped by hand, three times.", img: W + "ekmaati/fx/real/temple-34@2x.webp", size: [973, 1800], target: [150, 120, 680, 560] },
+      { type: "photo", kick: "03 · The promise", head: "The idol goes back to the river. The box stays.", note: "Because the box is the temple.", img: W + "ekmaati/fx/real/temple-front@2x.webp", size: [939, 1669] },
+      { type: "end", head: "Ek maati", sub: "Brand identity and packaging for the clay idols of Pen.", foot: "NID · Sijo Joseph" } ] },
+  syntra: { name: "Syntra", c: { brand: "#F4E7D4", stage: "#F4E7D4", ink: "#2B1608", sub: "rgba(43,22,8,.72)", accent: "#BD680F", faint: "rgba(43,22,8,.16)" },
+    scenes: [
+      { type: "title", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "50% 34%", kick: "Syntra · A perfume finder for ZARA", head: "Know the feeling, not the name?", sub: "Find a perfume by how it should feel." },
+      { type: "screen", kick: "01 · Turn and feel", head: "Turn a knob and three sliders to say how it should feel.", note: "Mood on the knob; how long, how bold and when, on the sliders.", img: W + "syntra/08@2x.webp", size: [1440, 3300], target: [190, 1520, 560, 420] },
+      { type: "pano", kick: "02 · Step inside", head: "Then step inside your scent, in VR.", note: "One of nine 360° worlds on a Meta Quest 3.", img: W + "syntra/fx/pano-lakeside_night.webp" },
+      { type: "tickets", kick: "03 · Take it home", head: "A printed ticket that comes alive in AR.", note: "66 printed at our exhibit.", imgs: ["140032", "164936", "170525", "200951"].map((n) => W + "syntra/fx/receipt-" + n + ".webp") },
+      { type: "end", head: "Syntra", sub: "Interaction design for an interactive perfume kiosk.", foot: "NID · team of 3 · Sijo Joseph" } ] },
 };
 const P = R[new URLSearchParams(location.search).get("p") || "handovo"];
 for (const [k, v] of Object.entries(P.c)) document.documentElement.style.setProperty("--" + k, v);
-document.documentElement.style.setProperty("--font", P.font);
-const live = (f) => W + "carekin/fx/live-" + f + ".webp";
-const stage = document.getElementById("stage");
-const html = (b, i) => {
-  let m = "";
-  if (b.img) m = `<img class="full ${b.cls || ""}" src="${b.img}" alt="">`;
-  if (b.studio) m = `<div class="studio"><div class="scr"><video src="${b.studio}" muted playsinline preload="auto"></video></div><i class="neck"></i><i class="foot"></i></div>`;
-  if (b.phones) m = `<div class="phones">${b.phones.map((s) => `<div class="iphone"><div class="s"><img src="${s}" alt=""></div><i class="island"></i></div>`).join("")}</div>`;
-  if (b.seq) m = `<div class="phones one"><div class="iphone"><div class="s">${b.seq.map(([f], k) => `<img src="${live(f)}" alt="" style="opacity:${k ? 0 : 1}">`).join("")}<i class="tap"></i></div><i class="island"></i></div></div>`;
-  if (b.framed) m = `<div class="framed"><video src="${b.framed}" muted playsinline preload="auto"></video></div>`;
-  if (b.framedImg) m = `<div class="framed"><img src="${b.framedImg}" alt=""></div>`;
-  if (b.framedLoop) m = `<div class="framed" style="aspect-ratio:16/9; width:1000px">${b.framedLoop.map((s, k) => `<img src="${s}" alt="" style="position:absolute; inset:0; opacity:${k ? 0 : 1}; transition:opacity .3s">`).join("")}</div>`;
-  if (b.pano) m = `<div class="pano" style="background-image:url('${b.pano}')"></div>`;
-  if (b.tickets) m = `<div class="tickets">${b.tickets.map((s, k) => `<img src="${s}" alt="" style="--r:${[-6, 3, -2, 5][k]}deg">`).join("")}</div>`;
-  if (b.end) m = `<div class="end"><h1>${b.end[0]}</h1><p>${b.end[1]}</p><small>${b.end[2]}</small></div>`;
-  return `<section class="beat" data-i="${i}">${m}${b.cap ? `<p class="cap">${b.cap}</p>` : ""}</section>`;
-};
-stage.innerHTML = P.beats.map(html).join("") + `<p class="tag">${P.name}</p><div class="dots">${P.beats.map(() => "<i></i>").join("")}</div>`;
-const beats = [...stage.querySelectorAll(".beat")], dots = [...stage.querySelectorAll(".dots i")];
-const BEAT = 3000;
-function play(i) {
-  beats.forEach((b, k) => b.classList.toggle("on", k === i)); dots.forEach((d, k) => d.classList.toggle("on", k <= i));
-  const b = beats[i], cfg = P.beats[i];
-  b.querySelectorAll("video").forEach((v) => { v.currentTime = 0; v.play(); });
-  if (cfg.seq) {   // the prototype: tap, next screen
-    const imgs = [...b.querySelectorAll(".s img")], tap = b.querySelector(".tap"); let k = 0;
-    const step = () => { const [, x, y] = cfg.seq[k]; if (x == null) return;
-      tap.style.left = x / 412 * 100 + "%"; tap.style.top = y / 917 * 100 + "%"; tap.classList.remove("go"); void tap.offsetWidth; tap.classList.add("go");
-      setTimeout(() => { imgs[k].style.opacity = 0; k++; imgs[k].style.opacity = 1; setTimeout(step, 1100); }, 420); };
-    setTimeout(step, 900);
-  }
-  if (cfg.framedLoop) { const imgs = [...b.querySelectorAll(".framed img")]; let k = 0;
-    const t = setInterval(() => { imgs[k].style.opacity = 0; k = (k + 1) % imgs.length; imgs[k].style.opacity = 1; }, 700); setTimeout(() => clearInterval(t), BEAT); }
+
+// timeline: title 0-3000, three steps of 3600 overlapping 300, end 2900
+const SPANS = [[0, 3000], [2700, 6300], [6000, 9600], [9300, 12900], [12600, 15600]], D = 15600;
+const EO = "cubic-bezier(.22,1,.36,1)", IO = "cubic-bezier(.65,0,.35,1)";
+const hooks = [];
+// one keyframe track per element: [[ms, {props}, easing-after]] over the whole reel, so any time can be seeked exactly
+function K(el, keys) {
+  const ks = keys.slice().sort((a, b) => a[0] - b[0]);
+  if (ks[0][0] > 0) ks.unshift([0, ks[0][1]]);
+  if (ks[ks.length - 1][0] < D) ks.push([D, ks[ks.length - 1][1]]);
+  el.animate(ks.map(([t, p, e]) => ({ offset: t / D, ...p, easing: e || "linear" })), { duration: D, fill: "both" }).pause();
 }
-window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((im) => im.decode().catch(() => {})),
-  ...[...document.querySelectorAll("video")].map((v) => new Promise((r) => { if (v.readyState >= 3) r(); else { v.addEventListener("canplaythrough", r, { once: true }); setTimeout(r, 8000); } }))]);
-window.start = () => { beats.forEach((_, i) => setTimeout(() => play(i), i * BEAT)); };
-window.DURATION = P.beats.length * BEAT;
-if (!navigator.webdriver) window.ready.then(() => window.start());   // open it in a browser to preview
+const rise = (el, t, dy = 34, dur = 650) => K(el, [[t, { opacity: 0, transform: `translateY(${dy}px)` }, EO], [t + dur, { opacity: 1, transform: "none" }]]);
+const h = (tag, cls, html = "") => { const e = document.createElement(tag); if (cls) e.className = cls; e.innerHTML = html; return e; };
+const root = document.getElementById("root");
+const brand = h("div", "brand", `<i></i>${P.name}`); root.append(brand);
+const steps = h("div", "steps", "<b><i></i></b>".repeat(5)); root.append(steps);
+[...steps.querySelectorAll("i")].forEach((i, k) => K(i, [[SPANS[k][0], { transform: "scaleX(0)" }], [SPANS[k][1] - 300, { transform: "scaleX(1)" }]]));
+
+// the camera inside a frame: fit the image, then push in on the target so it fills ~70% of the frame
+function camera(frame, fw, fh, size, target, t0, t1) {
+  const [iw, ih] = size, fit = Math.max(fw / iw, fh / ih), cam = h("div", "cam");
+  cam.style.width = iw + "px"; cam.style.height = ih + "px";
+  const T = (s, cx, cy) => { let tx = fw / 2 - cx * s, ty = fh / 2 - cy * s; tx = Math.min(0, Math.max(fw - iw * s, tx)); ty = Math.min(0, Math.max(fh - ih * s, ty)); return `translate(${tx}px, ${ty}px) scale(${s})`; };
+  const start = T(fit, iw / 2, ih / 2);
+  if (!target) { K(cam, [[t0 - 400, { transform: T(fit, iw / 2, ih / 2) }], [t0 + 3400, { transform: T(fit * 1.12, iw / 2, ih * .42) }]]); frame.append(cam); return { cam, s: fit }; }
+  const [x, y, w, hh] = target, z = Math.min(Math.max(fit, Math.min(fw * .74 / w, fh * .74 / hh)), fit * 2.6);
+  K(cam, [[t0, { transform: start }, IO], [t1, { transform: T(z, x + w / 2, y + hh / 2) }]]);
+  const ring = h("div", "ring"); Object.assign(ring.style, { left: x + "px", top: y + "px", width: w + "px", height: hh + "px", borderWidth: 4 / z + "px", borderRadius: 14 / z + "px" });
+  cam.append(ring); K(ring, [[t1 - 150, { opacity: 0, transform: "scale(1.06)" }, EO], [t1 + 350, { opacity: 1, transform: "none" }]]);
+  frame.append(cam); return { cam, s: z };
+}
+function img(cam, src, size) { const i = h("img"); i.src = src; i.style.width = size[0] + "px"; i.style.height = size[1] + "px"; cam.prepend(i); return i; }
+
+P.scenes.forEach((sc, k) => {
+  const [S, E] = SPANS[k], el = h("section", "scene " + (sc.type === "title" || sc.type === "end" ? "brandbg" : "stage")); root.append(el);
+  K(el, [[S, { opacity: 0 }, "ease-out"], [S + 320, { opacity: 1 }], [E - 320, { opacity: 1 }, "ease-in"], [E, { opacity: 0 }]].filter(([t]) => t >= 0 && (k < 4 || t < E)));
+  if (sc.type === "title" || sc.type === "end") {
+    if (sc.bg) { const b = h("div", "bgimg"); b.style.backgroundImage = `url('${sc.bg}')`; b.style.setProperty("--pos", sc.pos || "50% 50%"); el.append(b);
+      if (sc.origin) b.style.transformOrigin = sc.origin; const [z0, z1] = sc.zoom || [1.06, 1.16];
+      K(b, [[S, { transform: `scale(${z0})` }], [E, { transform: `scale(${z1})` }]]); }
+    const box = h("div", "big" + (sc.type === "end" ? " center" : "")); el.append(box);
+    if (sc.kick) { const kk = h("p", "kick", sc.kick); box.append(kk); rise(kk, S + 150); }
+    const hd = h("h1", "head", sc.count ? `<span class="n">0</span> ${sc.head}` : sc.head); box.append(hd); rise(hd, S + 280, 44, 800);
+    if (sc.count) { const n = hd.querySelector(".n"); hooks.push((t) => { const p = Math.min(1, Math.max(0, (t - S - 280) / 1300)); n.textContent = Math.round(sc.count * (1 - Math.pow(1 - p, 3))).toLocaleString("en-IN"); }); }
+    if (sc.sub) { const sb = h("p", "sub", sc.sub); box.append(sb); rise(sb, S + 900); }
+    if (sc.foot) { const ft = h("p", "foot", sc.foot); box.append(ft); rise(ft, S + 1300, 20); }
+    return;
+  }
+  const col = h("div", "col"); el.append(col);
+  const kk = h("p", "kick", sc.kick), hd = h("h2", "head", sc.head), nt = h("p", "note", sc.note); col.append(kk, hd, nt);
+  rise(kk, S + 150); rise(hd, S + 260, 40, 750); rise(nt, S + 2050, 24);
+  if (sc.type === "screen") {
+    const f = h("div", "win"); el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
+    const { cam } = camera(f, 952, 595, sc.size, sc.target, S + 1050, S + 2050); img(cam, sc.img, sc.size);
+  }
+  if (sc.type === "photo") {
+    const pw = Math.round(860 * sc.size[0] / sc.size[1]), f = h("div", "photo"); f.style.width = pw + "px"; f.style.left = 840 + (952 - pw) / 2 + "px"; el.append(f);
+    K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
+    const { cam } = camera(f, pw, 860, sc.size, sc.target, S + 1050, S + 2050); img(cam, sc.img, sc.size);
+  }
+  if (sc.type === "phone" || sc.type === "phones") {
+    const list = sc.type === "phone" ? [sc.seq] : sc.imgs.map((s) => [[s]]);
+    list.forEach((seq, j) => {
+      const ph = h("div", "phone", '<div class="scr"></div><i class="island"></i>'); el.append(ph);
+      const x = list.length === 1 ? 840 + (952 - 410) / 2 : 840 + 40 + j * 470; ph.style.left = x + "px";
+      if (list.length > 1 && j === 1) ph.style.top = "150px";
+      if (!(j === 0 && sc.target)) K(ph, [[S + 60 + j * 160, { opacity: 0, transform: "translateY(80px)" }, EO], [S + 900 + j * 160, { opacity: 1, transform: "none" }]]);
+      const scr = ph.querySelector(".scr"), zoom = j === 0 && sc.target;
+      const tTap = seq.length > 1 ? S + 900 : null, tZoom0 = tTap ? S + 1500 : S + 1050, tZoom1 = tZoom0 + 1000;
+      const fit = Math.max(386 / sc.size[0], 860 / sc.size[1]), cam = h("div", "cam");
+      cam.style.width = sc.size[0] + "px"; cam.style.height = sc.size[1] + "px"; cam.style.transform = `translate(${(386 - sc.size[0] * fit) / 2}px, ${(860 - sc.size[1] * fit) / 2}px) scale(${fit})`; scr.append(cam);
+      if (zoom) {   // device zoom: the phone scales around the feature so it lands at the centre of the product area
+        const [tx, ty, tw, th] = sc.target, Z = Math.min(2.3, 780 / (tw * fit), 760 / (th * fit));
+        const px = 12 + (386 - sc.size[0] * fit) / 2 + (tx + tw / 2) * fit, py = 12 + (860 - sc.size[1] * fit) / 2 + (ty + th / 2) * fit;
+        const y0 = list.length > 1 && j === 1 ? 150 : 98, a = 1316 - x - Z * px, bb = 540 - y0 - Z * py;
+        K(ph, [[S + 60, { opacity: 0, transform: "translateY(80px)" }, EO], [S + 900, { opacity: 1, transform: "translate(0px, 0px) scale(1)" }],
+          [tZoom0, { opacity: 1, transform: "translate(0px, 0px) scale(1)" }, IO], [tZoom1, { opacity: 1, transform: `translate(${a}px, ${bb}px) scale(${Z})` }]]);
+        const ring = h("div", "ring"); Object.assign(ring.style, { left: tx + "px", top: ty + "px", width: tw + "px", height: th + "px", borderWidth: 4 / (fit * Z) + "px", borderRadius: 14 / (fit * Z) + "px" });
+        cam.append(ring); K(ring, [[tZoom1 - 150, { opacity: 0, transform: "scale(1.06)" }, EO], [tZoom1 + 350, { opacity: 1, transform: "none" }]]);
+        ph.style.zIndex = 3;
+      }
+      seq.slice().reverse().forEach(([src], r) => { const i = img(cam, src, sc.size); const idx = seq.length - 1 - r;
+        if (seq.length > 1) K(i, idx === 0 ? [[tTap + 380, { opacity: 1 }], [tTap + 620, { opacity: 0 }]] : [[tTap + 380, { opacity: 0 }], [tTap + 620, { opacity: 1 }]]); });
+      if (tTap) { const [tx, ty] = seq[0][1], d = h("i", "tapdot"); d.style.left = tx + "px"; d.style.top = ty + "px"; cam.append(d);
+        K(d, [[tTap - 250, { opacity: 0, transform: "scale(1.6)" }, EO], [tTap, { opacity: 1, transform: "scale(1)" }], [tTap + 180, { opacity: 1, transform: "scale(.78)" }], [tTap + 600, { opacity: 0, transform: "scale(1.1)" }]]); }
+    });
+  }
+  if (sc.type === "loop") {
+    const f = h("div", "win"); f.style.height = "536px"; f.style.top = "272px"; el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
+    sc.imgs.forEach((src, j) => { const i = h("img"); i.src = src; Object.assign(i.style, { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }); f.append(i);
+      const t = S + 700 + j * 520; K(i, j === 0 ? [[t, { opacity: 1 }], [t + 520, { opacity: 1 }], [t + 640, { opacity: 0 }]] : [[t - 120, { opacity: 0 }], [t, { opacity: 1 }], [t + 520, { opacity: 1 }], [t + 640, { opacity: j === sc.imgs.length - 1 ? 1 : 0 }]]); });
+  }
+  if (sc.type === "pano") {
+    const f = h("div", "win"); el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
+    const p = h("div", "pano"); p.style.backgroundImage = `url('${sc.img}')`; f.append(p); K(p, [[S, { backgroundPosition: "0px 0px" }], [E, { backgroundPosition: "-640px 0px" }]]);
+  }
+  if (sc.type === "tickets") {
+    sc.imgs.forEach((src, j) => { const i = h("img", "ticket"); i.src = src; i.style.left = 860 + j * 230 + "px"; el.append(i); const r = [-5, 3, -2, 4][j];
+      K(i, [[S + 200 + j * 170, { opacity: 0, transform: `translateY(120px) rotate(${r}deg)` }, EO], [S + 1000 + j * 170, { opacity: 1, transform: `translateY(${j % 2 ? 40 : 0}px) rotate(${r}deg)` }]]); });
+  }
+});
+window.D = D;
+window.seek = (t) => { document.getAnimations().forEach((a) => (a.currentTime = t)); hooks.forEach((f) => f(t)); };
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {})),
+  ...[...document.querySelectorAll("[style*='background-image']")].map((e) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = e.style.backgroundImage.slice(5, -2); }))]);
+if (!navigator.webdriver) window.ready.then(() => { const t0 = performance.now(); const loop = () => { const t = (performance.now() - t0) % D; window.seek(t); requestAnimationFrame(loop); }; loop(); });   // live preview
 </script></body></html>

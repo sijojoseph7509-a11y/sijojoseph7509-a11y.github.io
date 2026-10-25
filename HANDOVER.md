@@ -946,3 +946,14 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   `work/<slug>/fx/reel.mp4` (1600 × 900, ~1.4 MB), `reel-540.mp4` (phones, ~0.5 MB), `reel-poster.webp`.
 - content.js `case.reel: true`; os.js inserts `<figure class="case-reel">` first in the case (full width, 16:9), muted loop, plays only
   while in view, pause/play button, poster for reduced motion. A figure, so case-fx section indices are unaffected.
+
+### v191: reels redone as a motion-design system
+- tools/reels/reel.html v2: 1920 × 1080, margins 128, left column 640 (step label 26 px caps, headline 74 px, one annotation 33 px
+  with an accent bar), product on the right in a clean frame; project name top-left and five step bars top-right on every scene.
+  Five scenes (title → three steps → result), 15.6 s. Each step pushes into one feature: screens zoom inside their frame, phones
+  scale as a device (up to 2.3×) around it, and a spotlight ring (accent border, gentle dim outside) draws in. Handovo's result
+  counts up to 8,019. Sources: Handovo shots (screen02/03, phone04/12), Carekin live frames, Ekmaati 05 / 11 / box photos,
+  Syntra cover-bg, 08 (controls drawing), pano, tickets.
+- Every animation is one Web Animations keyframe track over the whole reel; record.mjs seeks each 40 ms and captures a JPEG-96
+  frame (no screen recording), then frames2mp4 encodes reel.mp4 1920 × 1080 (BPP 0.045, ~3.6 MB) and reel-540.mp4 1280 × 720
+  (~1.8 MB) plus the poster. `SHEET=<dir>` keeps the frames for review.

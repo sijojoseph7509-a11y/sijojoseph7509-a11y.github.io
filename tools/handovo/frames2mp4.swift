@@ -26,7 +26,8 @@ W -= W % 2; H -= H % 2
 let out = URL(fileURLWithPath: a[2]); try? FileManager.default.removeItem(at: out)
 let writer = try AVAssetWriter(outputURL: out, fileType: .mp4)
 writer.shouldOptimizeForNetworkUse = true   // index at the front, so the browser can start playing at once
-let bitrate = Int(Double(W * H) * 25 * 0.024)   // about 780 kbit/s at 1440 x 900: sharp text during scrolls and fades (0.011 looked soft)
+let bpp = Double(ProcessInfo.processInfo.environment["BPP"] ?? "") ?? 0.024   // v191: BPP sets bits per pixel per frame (reels use more)
+let bitrate = Int(Double(W * H) * 25 * bpp)   // about 780 kbit/s at 1440 x 900: sharp text during scrolls and fades (0.011 looked soft)
 let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
   AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: W, AVVideoHeightKey: H,
   AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: bitrate, AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
