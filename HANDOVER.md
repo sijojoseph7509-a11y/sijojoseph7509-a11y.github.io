@@ -903,3 +903,7 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Paper background; a 52 px headline ("An AI teammate for the shop floor that only does what the manager allows.") beside the
   highlight film; four proof cards (`.qcard`: 63% problem, blue insight card, solo role, lime 0 / 8,019 result); the stack strip
   with a dark "Designed and built by me" pill. Section 02 is 1089 px; highlight film re-placed; reader.py re-run.
+
+### v185: 90-second cards line up
+- Card titles are one line each at 34 px (63% · In their chat · Solo build · 0 / 8,019), so the text below starts at the same
+  height in all four cards. Section 02 is 1043 px.
