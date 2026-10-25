@@ -891,3 +891,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   `data-fx-pop` (render.mjs: kind "pop", rendered as a layer like draw but not hidden in the still). case-fx pops take a 7th value,
   the section colour: the box covers the still's number and the copy inside rises in (`.cfx-pop img`). If case-fx can't run, the
   numbers simply show; a 700 ms in-view check backs up the IntersectionObserver (threshold 0.3).
+
+### v183: Handovo layout fixes
+- Build table: description column gets 40 px right padding, status tags sit in a fixed right-aligned column (no more text running
+  into "Working"). Language section: Built / Next lists are short bullet lists (`.acc`), not dot-separated runs.
+- Removed the v181 "Three calls I made after testing" section: it repeated the existing "What the test changed" section, and its
+  "No guessing" card was wrong (forwarding was always the design, "Kept" in the original). Handovo is 42 sections again in
+  content.js and reader.py. (`.bagrid` styles in case.html are now unused.)

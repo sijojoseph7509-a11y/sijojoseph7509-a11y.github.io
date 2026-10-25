@@ -38,6 +38,7 @@ p, li { font-size: 20px; line-height: 1.6; color: #2A2A33; }
 .step h3 { font-size: 40px; line-height: 1.08; margin-bottom: 18px; }
 .tbl { width: 100%; border-collapse: collapse; } .tbl td { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.14); font-size: 19px; color: #DADAE6; vertical-align: top; }
 .tbl td:first-child { width: 360px; color: #fff; font-weight: 600; }
+.tbl td:nth-child(2) { padding-right: 40px; } .tbl td:last-child:not(:first-child) { width: 120px; text-align: right; white-space: nowrap; }   /* v183 */
 .tag { font: 600 13px/1 Inter; padding: 6px 10px; border-radius: 6px; } .ok { background: var(--lime); color: #000; } .wip { background: #2A2A33; color: #fff; }
 .card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
 .dark .card { background: #16161D; border-color: #26262F; }
@@ -113,11 +114,15 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .bp .no { color: #B7B7C4; }
 .sw { height: 92px; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); }
 .ba { display: grid; gap: 14px; }
+.bagrid { grid-template-rows: auto auto auto auto; row-gap: 14px; } .bagrid > .ba { grid-row: span 4; grid-template-rows: subgrid; gap: 0; }   /* v183: rows align across columns */
 .ba > div { padding: 18px 20px; border-radius: 14px; background: #fff; border: 1px solid var(--line); }
 .ba .was { background: #FFF1F0; border-color: #FFD7D3; }
 .ba .now { background: #F2FFD0; border-color: #D4FF3A; }
 .blue .card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.24); box-shadow: none; }
 .blue .card h3 { color: #fff; } .blue .card p { color: rgba(255,255,255,.84); } .blue .card .lab { color: var(--lime); }
+.acc ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; } .acc li { font-size: 16px; line-height: 1.35; padding-left: 18px; position: relative; color: #DADAE6; }
+.acc li::before { content: ""; position: absolute; left: 0; top: .5em; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
+.acc div:last-child li::before { background: transparent; border: 1.5px solid var(--lime); }
 .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .stack span { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); font: 600 14px/1 Inter; }
 </style></head>
@@ -527,8 +532,8 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
     <div><p class="eye">Language and access</p><h3 style="font-size:40px; line-height:1.08">Their language, their phone, one word to reply</h3>
       <p style="margin-top:12px">Staff write in English, Hindi, Kannada or Malayalam and get answers in the language they wrote in. Quick replies like “done” sit under each message, so a task can be closed with one tap.</p>
       <p style="margin-top:18px">The non-English lines still need a check by native readers before a real store sees them. I’ve kept that as a known gap, not hidden it.</p>
-      <div class="grid2" style="gap:20px; margin-top:26px"><div><p class="lab">Built</p><p style="font-size:16px">Four languages · answers in the language written · one-tap replies · the chat staff already use · no ranking of people</p></div>
-      <div><p class="lab">Next, with real people</p><p style="font-size:16px">Native readers check every line · TalkBack and VoiceOver pass · staff who prefer voice notes · contrast check on every screen</p></div></div></div>
+      <div class="grid2 acc" style="gap:28px; margin-top:34px"><div><p class="lab">Built</p><ul><li>Four languages</li><li>Answers in the language written</li><li>One-tap replies</li><li>The chat staff already use</li><li>No ranking of people</li></ul></div>
+      <div><p class="lab">Next, with real people</p><ul><li>Native readers check every line</li><li>TalkBack and VoiceOver pass</li><li>Staff who prefer voice notes</li><li>Contrast check on every screen</li></ul></div></div></div>
     <div style="display:flex; gap:20px; justify-content:flex-end"><img class="phone" src="shots/phone06.webp" alt="" style="width:212px; border-width:8px; border-radius:30px"><img class="phone" src="shots/phone08.webp" alt="" style="width:212px; border-width:8px; border-radius:30px; margin-top:60px"><img class="phone" src="shots/phone12.webp" alt="" style="width:212px; border-width:8px; border-radius:30px"></div>
   </div>
 </section>
@@ -659,17 +664,6 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
       <div><p class="lab">Found</p><p>Free text in Kannada and Malayalam script was read right half the time or less by the fallback.</p></div>
       <div><p class="lab">Decided</p><p>For the pilot, stores with Kannada or Malayalam speakers run with Live AI on, and native readers write the fallback’s keyword lists before they ship.</p></div>
     </div>
-  </div>
-</section>
-
-<!-- 31b three calls (v181) -->
-<section data-new="calls">
-  <p class="eye">Decisions the evidence changed</p>
-  <h2>Three calls I made after testing.</h2>
-  <div class="grid3" style="margin-top:56px; gap:28px; align-items:start">
-    <div class="ba"><p class="lab">01 · A word that meant two things</p><div class="was"><b>Before.</b> “Khatam ho gaya” (it’s finished) was read as task done, and closed a restock task.</div><div><b>Evidence.</b> The forced-reading test caught it: in a stockroom it usually means the stock ran out.</div><div class="now"><b>After.</b> It now flags a reorder and keeps the task open.</div></div>
-    <div class="ba"><p class="lab">02 · No guessing</p><div class="was"><b>Before.</b> A message the reader couldn’t place could be matched to the nearest intent.</div><div><b>Evidence.</b> 15 of 95 labelled staff messages were read wrong by the fallback.</div><div class="now"><b>After.</b> Anything it can’t place goes to the shift lead word for word. All 15 still reached a person.</div></div>
-    <div class="ba"><p class="lab">03 · Language before launch</p><div class="was"><b>Before.</b> The scripted fallback was trusted equally in all four languages.</div><div><b>Evidence.</b> It read Kannada 5 of 10 and Malayalam 4 of 9 right, against 52 of 54 in English.</div><div class="now"><b>After.</b> Kannada and Malayalam staff keep Live AI on until native readers check the fallback words.</div></div>
   </div>
 </section>
 
