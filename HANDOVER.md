@@ -957,3 +957,20 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Every animation is one Web Animations keyframe track over the whole reel; record.mjs seeks each 40 ms and captures a JPEG-96
   frame (no screen recording), then frames2mp4 encodes reel.mp4 1920 × 1080 (BPP 0.045, ~3.6 MB) and reel-540.mp4 1280 × 720
   (~1.8 MB) plus the poster. `SHEET=<dir>` keeps the frames for review.
+
+### v192: reels v3, every project told the same way, each in its own brand
+- Structure for every reel: what it is (title) → the problem (one line + one stat) → one scene per feature → the result.
+  Handovo 30 s (8 features), Carekin 26.5 s (6), Syntra 19 s (4). The Ekmaati reel is removed (content.js `reel` gone, files deleted).
+- content.js `case.reel` is now the reel's length in seconds (caption "… in N seconds"); os.js otherwise unchanged.
+- tools/reels/reel.html v3: per-project theme (fonts, colours, chip, dim). Handovo: Mona headlines + Inter, blue/ink/lime.
+  Carekin: Google Sans Flex (as in the app), teal/coral. Syntra: the real logo and "Let's find your perfume." in La Mericana as
+  images (tools/reels/syntra/logo.webp, tagline.webp, transparent), everything else Lato Light in the amber gradient, cream with
+  the cover glow, frosted-glass frames, amber ring.
+- Motion: headlines rise word by word out of a mask; frames and phones swing in with 3D depth; the camera pushes into the feature,
+  a spotlight ring draws in and a label chip pops in under it; the background crossfades while the content pushes out left and the
+  next pushes in from the right; a progress bar runs along the bottom; kicker "03 / 08 · The floor".
+- Phones are a realistic iPhone (400 × 867 screen, 12 px bezel, 68 px corners, titanium edge, side buttons, Dynamic Island, glare);
+  in a feature the whole phone comes toward the camera (zoom capped so the screenshot is never upscaled more than 1.15×).
+- record.mjs: BPP 0.034 (1080p) / 0.042 (720p); poster = frame at 2.0 s.
+- Cleanup: 86 stray `*.sb-*` temp files (sandbox write leftovers next to the films, ~125 MB) were untracked and deleted; `.gitignore`
+  now ignores `*.sb-*`.

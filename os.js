@@ -426,12 +426,12 @@
     const g = p.case.glance;
     if (Array.isArray(g) && /^[\w-]+\.webp$/.test(g[0]) && box.firstElementChild)
       box.firstElementChild.insertAdjacentHTML("afterend", `<figure class="case-glance"><img src="${caseImg(slug, g[0])}" srcset="${caseImg(slug, g[0])} 1440w, ${caseImg(slug, g[0], 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+g[1]}" alt="${esc(g[2])}" fetchpriority="high" decoding="async"></figure>`);
-    // v190: the project's 15-second reel (tools/reels), full width at the very top, before the cover. Silent, looping, it plays
+    // v190: the project's reel (tools/reels; v192: 19–30 s, `reel` = its length in seconds), full width at the very top, before the cover. Silent, looping, it plays
     // only while in view; reduced motion shows the poster with a play button. A <figure>, so the motion layers are unaffected.
     if (p.case.reel && box.firstElementChild) {
       const small = innerWidth < 760;
       box.insertAdjacentHTML("afterbegin", `<figure class="case-reel"><video muted loop playsinline preload="metadata" poster="${caseImg(slug, "fx/reel-poster.webp")}"><source src="${caseImg(slug, small ? "fx/reel-540.mp4" : "fx/reel.mp4")}" type="video/mp4"></video>
-        <figcaption><span>${esc(p.title)} in 15 seconds</span><button type="button" data-reel aria-label="Pause"></button></figcaption></figure>`);
+        <figcaption><span>${esc(p.title)} in ${+p.case.reel || 30} seconds</span><button type="button" data-reel aria-label="Pause"></button></figcaption></figure>`);
       const fig = box.firstElementChild, v = fig.querySelector("video"), btn = fig.querySelector("[data-reel]");
       let user = reducedMotion ? "paused" : "";
       const icon = () => { const on = !v.paused; btn.setAttribute("aria-label", on ? "Pause" : "Play"); btn.innerHTML = on ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'; };

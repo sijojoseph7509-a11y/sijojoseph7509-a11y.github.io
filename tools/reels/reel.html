@@ -1,188 +1,262 @@
 <!doctype html>
-<!-- 15-second project reels, v2 (v191). A frame-exact motion piece on a strict system:
-     1920 × 1080 · margins 128 · text column 640 on the left (step label, headline, one annotation) · product on the right in a clean frame.
-     Five scenes: the problem → three steps → the result. In each step the camera pushes into the one feature that matters and a
-     spotlight ring draws around it. Every animation is a Web Animations keyframe track, so tools/reels/record.mjs can seek any
-     millisecond and capture lossless frames (no screen recording, no blur). Open reel.html?p=<slug> in a browser to preview. -->
-<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../fonts/fonts.css">
+<!-- Project reels, v3 (v192). One motion system for every project, each in its own brand language.
+     Structure, always: what it is → the problem → one scene per feature → the result.
+     Canvas 1920 × 1080 · margins 128 · left column 660 (step + kinetic headline) · product on the right. In each feature the camera
+     pushes into it, a spotlight ring draws in and a short label is pinned under it. Scenes push into each other; frames swing in with depth.
+     Every animation is one Web Animations track over the whole reel, so record.mjs can seek any frame exactly.
+     Preview: open reel.html?p=<slug> in a browser. -->
+<html lang="en"><head><meta charset="utf-8">
 <style>
+  @font-face { font-family: Inter; src: url(../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: Mona; src: url(../../fonts/mona-400-900.woff2) format("woff2"); font-weight: 400 900; }
+  @font-face { font-family: GSFlex; src: url(../../fonts/gsflex-400-700.woff2) format("woff2"); font-weight: 400 700; }
+  @font-face { font-family: Lato; src: url(../../fonts/lato-300-latin.woff2) format("woff2"); font-weight: 300; }
+  @font-face { font-family: Lato; src: url(../../fonts/lato-400.woff2) format("woff2"); font-weight: 400; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--brand); font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
-  .scene { position: absolute; inset: 0; opacity: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--brand); -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--font); color: var(--ink); }
+  .scene { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
   .scene.stage { background: var(--stage); } .scene.brandbg { background: var(--brand); }
-  /* top bar and progress: constant through the reel */
-  .brand { position: absolute; left: 128px; top: 64px; z-index: 20; font: 700 26px/1 Inter; letter-spacing: -.01em; color: var(--ink); display: flex; align-items: center; gap: 12px; }
-  .brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-  .steps { position: absolute; right: 128px; top: 72px; z-index: 20; display: flex; gap: 8px; }
-  .steps b { width: 34px; height: 4px; border-radius: 2px; background: var(--faint); overflow: hidden; } .steps b i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
-  /* the left column */
-  .col { position: absolute; left: 128px; top: 150px; bottom: 150px; width: 640px; display: flex; flex-direction: column; justify-content: center; }
-  .kick { font: 600 26px/1 Inter; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-  .head { margin-top: 28px; font: 700 74px/1.04 Inter; letter-spacing: -.032em; color: var(--ink); }
-  .note { margin-top: 44px; padding-left: 24px; border-left: 5px solid var(--accent); font: 500 33px/1.36 Inter; color: var(--sub); }
-  /* title and end scenes */
-  .big { position: absolute; left: 128px; right: 128px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; z-index: 2; }
-  .big .head { font-size: 112px; line-height: 1.0; letter-spacing: -.04em; max-width: 1380px; margin-top: 30px; }
-  .big .sub { margin-top: 36px; font: 500 38px/1.3 Inter; color: var(--sub); max-width: 1200px; }
-  .big.center { align-items: center; text-align: center; }
-  .big .foot { margin-top: 60px; font: 600 26px/1 Inter; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+  .glow { position: absolute; left: 0; top: 0; width: 1500px; height: 1500px; border-radius: 50%; background: radial-gradient(circle, var(--glow) 0%, transparent 62%); pointer-events: none; }
+  .brandbg .glow { background: radial-gradient(circle, var(--glowb) 0%, transparent 62%); }
   .bgimg { position: absolute; inset: 0; background-size: cover; background-position: var(--pos, 50% 50%); }
-  .bgimg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 88%, transparent) 38%, color-mix(in srgb, var(--brand) 20%, transparent) 75%, transparent 100%); }
-  /* product frames on the right (area x 840 to 1792) */
-  .win { position: absolute; left: 840px; top: 243px; width: 952px; height: 595px; border-radius: 22px; overflow: hidden; background: #000;
-    box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 50px 120px -30px rgba(0,0,0,.6); }
-  .phone { position: absolute; top: 98px; transform-origin: 0 0; height: 884px; width: 410px; padding: 12px; border-radius: 64px / 29px; background: #0b0b0c;
-    box-shadow: 0 0 0 2.5px #50505a, 0 50px 120px -30px rgba(0,0,0,.65); }
-  .phone .scr { position: relative; width: 100%; height: 100%; border-radius: 52px / 24px; overflow: hidden; background: #fff; }
-  .phone .island { position: absolute; top: 26px; left: 50%; width: 118px; height: 33px; margin-left: -59px; border-radius: 20px; background: #000; z-index: 6; }
-  .photo { position: absolute; top: 110px; height: 860px; border-radius: 26px; overflow: hidden; box-shadow: 0 50px 120px -30px rgba(0,0,0,.6); }
+  .shade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 82%, transparent) 42%, color-mix(in srgb, var(--brand) 10%, transparent) 80%, transparent 100%); }
+  /* constant chrome */
+  .brand { position: absolute; left: 128px; top: 58px; z-index: 30; display: flex; align-items: center; gap: 14px; font: var(--boldw) 28px/1 var(--hfont); letter-spacing: -.01em; color: var(--ink); }
+  .brand img { height: 34px; } .brand .logoimg { height: 46px; }
+  .bar { position: absolute; left: 128px; right: 128px; bottom: 50px; height: 4px; border-radius: 2px; background: var(--faint); z-index: 30; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; }
+  /* type */
+  .col { position: absolute; left: 128px; top: 150px; bottom: 150px; width: 640px; display: flex; flex-direction: column; justify-content: center; z-index: 5; }
+  .kick { font: var(--kickw) 24px/1 var(--font); letter-spacing: .16em; white-space: pre; text-transform: uppercase; color: var(--accent2, var(--accent)); }
+  .head { margin-top: 26px; font: var(--headw) 74px/1.07 var(--hfont); letter-spacing: var(--track); color: var(--ink); }
+  .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .12em; margin: 0 -.04em -.12em; }
+  .wi { display: inline-block; will-change: transform; }
+  .grad .wi { background: var(--hgrad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .big { position: absolute; left: 128px; right: 128px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; z-index: 5; }
+  .big.center { align-items: center; text-align: center; }
+  .big .name { font: var(--namew) 200px/.95 var(--hfont); letter-spacing: -.045em; }
+  .big .what { margin-top: 34px; font: var(--subw) 50px/1.22 var(--font); color: var(--sub); max-width: 1150px; letter-spacing: -.01em; }
+  .big .head { font-size: 108px; line-height: 1.02; letter-spacing: -.04em; max-width: 1450px; margin-top: 0; }
+  .big .sub { margin-top: 40px; font: var(--subw) 40px/1.3 var(--font); color: var(--sub); max-width: 1180px; }
+  .big .foot { margin-top: 56px; font: var(--boldw) 24px/1 var(--font); letter-spacing: .16em; text-transform: uppercase; color: var(--accent2, var(--accent)); }
+  .big .bigimg { display: block; }
+  .src { margin-top: 22px; font: 400 22px/1 var(--font); color: var(--sub); opacity: .8; }
+  /* product frames */
+  .win { position: absolute; left: 820px; top: 236px; width: 972px; height: 607px; border-radius: 22px; overflow: hidden; background: var(--winbg, #000); transform-origin: 20% 50%;
+    box-shadow: 0 0 0 1px var(--winline, rgba(255,255,255,.1)), 0 60px 130px -40px rgba(0,0,0,.6); }
+  .glass { background: rgba(255,255,255,.45); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: 0 0 0 1.5px rgba(255,255,255,.8), 0 40px 90px -30px rgba(120,60,10,.35); }
+  .cn { position: absolute; inset: 0; }
   .cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-  .cam img, .cam .layer { position: absolute; left: 0; top: 0; display: block; }
-  .ring { position: absolute; border: 4px solid var(--accent); border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, var(--dim, .3)), 0 0 36px 6px color-mix(in srgb, var(--accent) 55%, transparent); z-index: 4; }
-  .tapdot { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(30,30,36,.32); border: 3px solid #fff; box-shadow: 0 6px 20px rgba(0,0,0,.3); z-index: 5; }
+  .cam img { position: absolute; left: 0; top: 0; display: block; }
+  .ring { position: absolute; border: 4px solid var(--ring, var(--accent)); border-radius: 14px; z-index: 4; box-shadow: 0 0 0 9999px var(--dim); }
+  .chip { position: absolute; z-index: 12; display: flex; align-items: center; gap: 12px; padding: 16px 26px 17px 20px; border-radius: 999px; white-space: nowrap;
+    background: var(--chipbg); color: var(--chipfg); font: var(--boldw) 28px/1 var(--font); letter-spacing: -.005em; box-shadow: 0 18px 40px -14px rgba(0,0,0,.45); }
+  .chip i { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--chipfg); opacity: .85; }
+  .tapdot { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; background: rgba(30,30,36,.28); border: 3px solid #fff; box-shadow: 0 6px 22px rgba(0,0,0,.3); z-index: 5; }
+  /* a realistic iPhone: titanium edge, side buttons, Dynamic Island, glass */
+  .iph { position: absolute; width: 424px; height: 891px; transform-origin: 0 0; }
+  .iph .body { position: absolute; inset: 0; padding: 12px; border-radius: 68px; background: #050506;
+    box-shadow: inset 0 0 0 1.5px #2c2c31, 0 0 0 2px #c4c4cc, 0 0 0 3.5px #7a7a82, 0 0 0 5px #313136, 0 70px 130px -40px rgba(0,0,0,.6), 0 30px 60px -30px rgba(0,0,0,.45); }
+  .iph .scr { position: relative; width: 400px; height: 867px; border-radius: 56px; overflow: hidden; background: #fff; isolation: isolate; }
+  .iph .island { position: absolute; top: 23px; left: 50%; width: 122px; height: 36px; margin-left: -61px; border-radius: 20px; background: #000; z-index: 8; }
+  .iph .glare { position: absolute; left: 12px; top: 12px; width: 400px; height: 867px; border-radius: 56px; background: linear-gradient(118deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,0) 30%); z-index: 9; pointer-events: none; }
+  .iph .btn { position: absolute; width: 5px; border-radius: 2px; background: linear-gradient(90deg, #45454c, #b8b8c0, #5a5a61); }
   .pano { position: absolute; inset: 0; background-size: auto 100%; background-repeat: repeat-x; }
-  .ticket { position: absolute; top: 160px; width: 236px; border-radius: 8px; box-shadow: 0 34px 70px -24px rgba(60,30,0,.5); }
-</style></head><body>
-<div id="root"></div>
+  .ticket { position: absolute; top: 150px; width: 220px; border-radius: 6px; box-shadow: 0 34px 70px -24px rgba(90,45,0,.45); }
+  .capsule { display: inline-flex; gap: 5px; } .capsule b { width: 30px; height: 26px; border-radius: 13px 4px 4px 13px; background: #7EE0C6; } .capsule b + b { border-radius: 4px 13px 13px 4px; background: #FF8A6B; }
+  .big .capsule { gap: 12px; } .big .capsule b { width: 92px; height: 78px; border-radius: 39px 10px 10px 39px; } .big .capsule b + b { border-radius: 10px 39px 39px 10px; }
+</style></head><body><div id="root"></div>
 <script>
 const W = "../../work/", SH = "../handovo/shots/", LIVE = (f) => W + "carekin/fx/live-" + f + ".webp";
-const R = {
-  handovo: { name: "Handovo", c: { brand: "#2F3BEA", stage: "#0C0D16", ink: "#FFFFFF", sub: "rgba(255,255,255,.74)", accent: "#D4FF3A", faint: "rgba(255,255,255,.22)" },
-    scenes: [
-      { type: "title", kick: "Handovo · AI for store floors", head: "A store manager’s plan rarely reaches the whole floor.", sub: "30 staff. Four languages. One busy Thursday." },
-      { type: "screen", kick: "01 · The goal", head: "The manager types one goal.", note: "In plain words. No forms.", img: SH + "screen02.webp", size: [1440, 900], target: [276, 275, 466, 350] },
-      { type: "screen", kick: "02 · The plan", head: "The AI turns it into tasks, each with an owner.", note: "Picked by role, section, shift and workload.", img: SH + "screen03.webp", size: [1440, 900], target: [596, 98, 424, 206] },
-      { type: "phones", kick: "03 · The floor", head: "Everyone gets only their own task, in their language.", note: "Done is one tap away.", imgs: [SH + "phone04.webp", SH + "phone12.webp"], size: [620, 1470], target: [6, 556, 470, 268] },
-      { type: "end", count: 8019, head: "tests.", sub: "The agent never went past the manager’s limits.", foot: "Handovo · Product, UX & AI design · Sijo Joseph" } ] },
-  carekin: { name: "Carekin", c: { brand: "#0F3B38", stage: "#0F3B38", ink: "#FFFFFF", sub: "rgba(255,255,255,.76)", accent: "#FF8A6B", faint: "rgba(255,255,255,.2)" },
-    scenes: [
-      { type: "title", kick: "Carekin · Medicines for families", head: "When Amma’s dose changes, not everyone hears.", sub: "One parent. Three carers. Three cities." },
-      { type: "phone", kick: "01 · Scan", head: "Priya photographs the prescription.", note: "Anything it isn’t sure about, she checks.", seq: [[LIVE("scan"), [206, 768]], [LIVE("check")]], size: [412, 917], target: [18, 266, 376, 76] },
-      { type: "phone", kick: "02 · The change", head: "A dose change stays open until everyone has seen it.", note: "Arun gets a nudge until he confirms.", seq: [[LIVE("change")]], size: [412, 917], target: [16, 112, 380, 382] },
-      { type: "phone", kick: "03 · The dose", head: "Lakshmi taps Given on WhatsApp, in Malayalam.", note: "Logged at 8:04. Priya sees it at once.", seq: [[LIVE("wa-before"), [162, 514]], [LIVE("wa")]], size: [412, 917], target: [12, 630, 300, 146] },
-      { type: "end", head: "One medicine plan, seen three ways.", foot: "Carekin · UX & product design · Sijo Joseph" } ] },
-  ekmaati: { name: "Ek maati", c: { brand: "#1D1410", stage: "#1D1410", ink: "#F7EFE3", sub: "rgba(247,239,227,.74)", accent: "#F5A623", faint: "rgba(247,239,227,.2)" },
-    scenes: [
-      { type: "title", bg: W + "ekmaati/05@2x.webp", pos: "50% 50%", zoom: [1.62, 1.72], origin: "72% 52%", kick: "Ek maati · Branding & packaging", head: "Pen’s clay Ganesh idols are sold by the row.", sub: "No name. No maker. No box worth keeping." },
-      { type: "screen", kick: "01 · A name", head: "Ek maati: one clay.", note: "A mark of three strokes and a tilak.", img: W + "ekmaati/11@2x.webp", size: [1440, 1056], target: [340, 400, 690, 570] },
-      { type: "photo", kick: "02 · A box", head: "A temple-shaped box, folded with no tape or plastic.", note: "Prototyped by hand, three times.", img: W + "ekmaati/fx/real/temple-34@2x.webp", size: [973, 1800], target: [150, 120, 680, 560] },
-      { type: "photo", kick: "03 · The promise", head: "The idol goes back to the river. The box stays.", note: "Because the box is the temple.", img: W + "ekmaati/fx/real/temple-front@2x.webp", size: [939, 1669] },
-      { type: "end", head: "Ek maati", sub: "Brand identity and packaging for the clay idols of Pen.", foot: "NID · Sijo Joseph" } ] },
-  syntra: { name: "Syntra", c: { brand: "#F4E7D4", stage: "#F4E7D4", ink: "#2B1608", sub: "rgba(43,22,8,.72)", accent: "#BD680F", faint: "rgba(43,22,8,.16)" },
-    scenes: [
-      { type: "title", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "50% 34%", kick: "Syntra · A perfume finder for ZARA", head: "Know the feeling, not the name?", sub: "Find a perfume by how it should feel." },
-      { type: "screen", kick: "01 · Turn and feel", head: "Turn a knob and three sliders to say how it should feel.", note: "Mood on the knob; how long, how bold and when, on the sliders.", img: W + "syntra/08@2x.webp", size: [1440, 3300], target: [190, 1520, 560, 420] },
-      { type: "pano", kick: "02 · Step inside", head: "Then step inside your scent, in VR.", note: "One of nine 360° worlds on a Meta Quest 3.", img: W + "syntra/fx/pano-lakeside_night.webp" },
-      { type: "tickets", kick: "03 · Take it home", head: "A printed ticket that comes alive in AR.", note: "66 printed at our exhibit.", imgs: ["140032", "164936", "170525", "200951"].map((n) => W + "syntra/fx/receipt-" + n + ".webp") },
-      { type: "end", head: "Syntra", sub: "Interaction design for an interactive perfume kiosk.", foot: "NID · team of 3 · Sijo Joseph" } ] },
+const THEMES = {
+  handovo: { hfont: "Mona", font: "Inter", namew: 800, headw: 700, subw: 500, kickw: 600, boldw: 600, track: "-.03em", brand: "#2F3BEA", stage: "#0B0C15", ink: "#FFFFFF", sub: "rgba(255,255,255,.76)",
+    accent: "#D4FF3A", faint: "rgba(255,255,255,.18)", chipbg: "#D4FF3A", chipfg: "#0B0C15", dim: "rgba(0,0,0,.42)", glow: "rgba(47,59,234,.38)", glowb: "rgba(140,155,255,.55)" },
+  carekin: { hfont: "GSFlex", font: "GSFlex", namew: 700, headw: 700, subw: 400, kickw: 600, boldw: 600, track: "-.025em", brand: "#0F3B38", stage: "#0B2B29", ink: "#FFFFFF", sub: "rgba(255,255,255,.78)",
+    accent: "#FF8A6B", faint: "rgba(255,255,255,.18)", chipbg: "#FF8A6B", chipfg: "#0B2523", dim: "rgba(0,0,0,.4)", glow: "rgba(126,224,198,.16)", glowb: "rgba(126,224,198,.2)" },
+  syntra: { hfont: "Lato", font: "Lato", namew: 300, headw: 300, subw: 300, kickw: 400, boldw: 400, track: "-.012em", brand: "#F5E8D6", stage: "#F7EDE0", ink: "#7A4D1C", sub: "rgba(140,78,14,.85)",
+    accent: "#DD8020", accent2: "#BD680F", faint: "rgba(122,77,28,.16)", chipbg: "rgba(255,255,255,.78)", chipfg: "#8A5414", dim: "rgba(89,51,11,.2)", glow: "rgba(249,156,54,.34)", glowb: "rgba(249,156,54,.3)",
+    winbg: "rgba(255,255,255,.4)", winline: "rgba(255,255,255,.8)", ring: "#DD8020", hgrad: "radial-gradient(ellipse 90% 160% at 25% 30%, #F99C36 0%, #C0741F 50%, #7A4D1C 100%)" },
 };
-const P = R[new URLSearchParams(location.search).get("p") || "handovo"];
-for (const [k, v] of Object.entries(P.c)) document.documentElement.style.setProperty("--" + k, v);
-
-// timeline: title 0-3000, three steps of 3600 overlapping 300, end 2900
-const SPANS = [[0, 3000], [2700, 6300], [6000, 9600], [9300, 12900], [12600, 15600]], D = 15600;
-const EO = "cubic-bezier(.22,1,.36,1)", IO = "cubic-bezier(.65,0,.35,1)";
-const hooks = [];
-// one keyframe track per element: [[ms, {props}, easing-after]] over the whole reel, so any time can be seeked exactly
+const R = {
+  handovo: { brand: `<img src="${SH}handovo-mark-reverse.svg" alt="">Handovo`, scenes: [
+    { type: "title", d: 2600, name: "Handovo", what: "An AI teammate for store floors." },
+    { type: "problem", d: 3200, head: "A manager’s plan rarely reaches\nall 30 people on the floor.", hs: 92, sub: "63% of frontline workers say leadership messages don’t reach them.", src: "Microsoft Work Trend Index, 2022" },
+    { type: "screen", d: 3100, kick: "The goal", head: "The manager writes one goal for the day.", chip: "In plain words. No forms.", img: SH + "screen02.webp", size: [1440, 900], target: [276, 275, 466, 350] },
+    { type: "screen", d: 3100, kick: "The plan", head: "The AI turns it into tasks for the right people.", chip: "Each task gets an owner and a reason", img: SH + "screen03.webp", size: [1440, 900], target: [596, 98, 424, 206] },
+    { type: "phones", d: 3100, kick: "The floor", head: "Everyone gets only their own task, on their phone.", chip: "Kannada, Hindi, Malayalam or English", imgs: [SH + "phone04.webp", SH + "phone12.webp"], size: [620, 1470], px: 1, target: [6, 556, 470, 268] },
+    { type: "screen", d: 3100, kick: "Handled alone", head: "Low-risk work, like a restock, it just does.", chip: "Made by the agent", img: SH + "screen08.webp", size: [1440, 900], target: [276, 280, 748, 114] },
+    { type: "screen", d: 3100, kick: "Asks first", head: "Money and people decisions wait for the manager.", chip: "Yours only: a ₹450 discount", img: SH + "screen05.webp", size: [1440, 900], target: [276, 192, 748, 304] },
+    { type: "screen", d: 3100, kick: "Never missed", head: "An upset customer always reaches the manager.", chip: "Always marked urgent", img: SH + "screen09.webp", size: [1440, 900], target: [276, 192, 748, 304] },
+    { type: "screen", d: 3100, kick: "Shift change", head: "Open work is handed on, not lost.", chip: "An owner for every open task", img: SH + "screen11.webp", size: [1440, 900], target: [276, 155, 748, 590] },
+    { type: "screen", d: 3100, kick: "The owner", head: "One plain summary at the end of the day.", chip: "Counts only, never names", img: SH + "screen12.webp", size: [1440, 900], target: [276, 136, 744, 708] },
+    { type: "end", d: 3400, count: 8019, head: "engine checks.", sub: "The agent never went past the manager’s setting.", foot: "Designed and built by Sijo Joseph" } ] },
+  carekin: { brand: `<span class="capsule"><b></b><b></b></span>Carekin`, scenes: [
+    { type: "title", d: 2600, name: "Carekin", logo: true, what: "Medicines, coordinated for families\ncaring for a parent." },
+    { type: "problem", d: 3200, head: "When Amma’s dose changes,\nnot everyone hears.", sub: "57.8% of family carers made a medication error in the past year." },
+    { type: "phone", d: 3800, kick: "Scan", head: "Priya photographs the prescription. Carekin reads it.", chip: "Not sure? It asks her", seq: [[LIVE("scan"), [206, 768]], [LIVE("check")]], size: [412, 917], target: [18, 266, 376, 76] },
+    { type: "phone", d: 3100, kick: "Today", head: "Today at a glance: what was given, by whom, and when.", chip: "One calm sentence first", seq: [[LIVE("today")]], size: [412, 917], target: [16, 104, 380, 116] },
+    { type: "phone", d: 3100, kick: "A change", head: "A dose change stays open until every carer has seen it.", chip: "Arun in Dubai sees it too", seq: [[LIVE("change")]], size: [412, 917], target: [16, 112, 380, 382] },
+    { type: "phone", d: 3800, kick: "WhatsApp", head: "Lakshmi gets the dose on WhatsApp, in Malayalam.", chip: "Given at 8:04. Priya sees it.", seq: [[LIVE("wa-before"), [162, 514]], [LIVE("wa")]], size: [412, 917], target: [12, 630, 300, 146] },
+    { type: "phone", d: 3800, kick: "Home mode", head: "On a shared phone: one dose, one big button.", chip: "One tap, and it’s logged", seq: [[LIVE("home"), [206, 579]], [LIVE("done")]], size: [412, 917], target: [18, 166, 376, 218] },
+    { type: "phone", d: 3100, kick: "Safety", head: "If it was already given, Carekin says so first.", chip: "No double dose by mistake", seq: [[LIVE("guard")]], size: [412, 917], target: [16, 112, 380, 266] },
+    { type: "end", d: 3200, head: "One medicine plan, seen three ways.", foot: "UX & product design · Sijo Joseph" } ] },
+  syntra: { brand: `<img class="logoimg" src="syntra/logo.webp" alt="Syntra">`, scenes: [
+    { type: "title", d: 2800, logo: "syntra/logo.webp", what: "An interactive perfume finder, a concept for ZARA.", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "60% 30%" },
+    { type: "problem", d: 3400, head: "Know the feeling, not the name?", tagline: "syntra/tagline.webp", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "40% 62%" },
+    { type: "screen", d: 3000, kick: "Turn and feel", head: "Turn a knob and three sliders to describe a feeling.", chip: "Mood · longevity · expression · occasion", img: W + "syntra/08@2x.webp", size: [1440, 3300], target: [172, 1508, 908, 440], glass: true, up: 62 },
+    { type: "kiosk", d: 3000, kick: "The match", head: "The kiosk turns that feeling into a scent.", chip: "From feeling to fragrance", imgs: ["loop-0", "loop-2", "loop-4", "loop-6"].map((n) => W + "syntra/fx/" + n + "@2x.webp") },
+    { type: "pano", d: 3000, kick: "Step inside", head: "Then step inside it, in VR.", chip: "Nine 360° worlds · Meta Quest 3", img: W + "syntra/fx/pano-lakeside_night.webp" },
+    { type: "tickets", d: 3000, kick: "Take it home", head: "A printed ticket that comes alive in AR.", chip: "66 printed at our exhibit", imgs: ["140032", "164936", "165536", "170525"].map((n) => W + "syntra/fx/receipt-" + n + ".webp") },
+    { type: "end", d: 3200, logo: "syntra/logo.webp", sub: "Knob, screen, VR and a ticket: one perfume journey.", foot: "Interaction design · NID · team of 3", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "50% 40%" } ] },
+};
+const slug = new URLSearchParams(location.search).get("p") || "handovo", P = R[slug], TH = THEMES[slug];
+for (const [k, v] of Object.entries(TH)) document.documentElement.style.setProperty("--" + k, v);
+// the timeline: scenes overlap by 400 ms (a push from right to left)
+const OV = 400, SPANS = []; { let t = 0; P.scenes.forEach((s) => { SPANS.push([t, t + s.d]); t += s.d - OV; }); }
+const D = SPANS[SPANS.length - 1][1], EO = "cubic-bezier(.22,1,.36,1)", IO = "cubic-bezier(.65,0,.35,1)", BACK = "cubic-bezier(.34,1.45,.64,1)";
+const hooks = [], chips = [], isBrand = (s) => ["title", "problem", "end"].includes(s.type);
 function K(el, keys) {
-  const ks = keys.slice().sort((a, b) => a[0] - b[0]);
-  if (ks[0][0] > 0) ks.unshift([0, ks[0][1]]);
-  if (ks[ks.length - 1][0] < D) ks.push([D, ks[ks.length - 1][1]]);
+  const ks = keys.filter(([t]) => t >= 0 && t <= D).sort((a, b) => a[0] - b[0]);
+  if (ks[0][0] > 0) ks.unshift([0, ks[0][1]]); if (ks[ks.length - 1][0] < D) ks.push([D, ks[ks.length - 1][1]]);
   el.animate(ks.map(([t, p, e]) => ({ offset: t / D, ...p, easing: e || "linear" })), { duration: D, fill: "both" }).pause();
 }
-const rise = (el, t, dy = 34, dur = 650) => K(el, [[t, { opacity: 0, transform: `translateY(${dy}px)` }, EO], [t + dur, { opacity: 1, transform: "none" }]]);
 const h = (tag, cls, html = "") => { const e = document.createElement(tag); if (cls) e.className = cls; e.innerHTML = html; return e; };
+const rise = (el, t, dy = 34, dur = 650) => K(el, [[t, { opacity: 0, transform: `translateY(${dy}px)` }, EO], [t + dur, { opacity: 1, transform: "none" }]]);
+function kinetic(el, text, t, gap = 42) {   // words rise out of a mask, one after another
+  el.innerHTML = text.split("\n").map((line) => line.split(" ").map((w) => `<span class="w"><span class="wi">${w}</span></span>`).join(" ")).join("<br>");
+  [...el.querySelectorAll(".wi")].forEach((wi, k) => K(wi, [[t + k * gap, { transform: "translateY(110%)" }, EO], [t + k * gap + 720, { transform: "none" }]]));
+}
 const root = document.getElementById("root");
-const brand = h("div", "brand", `<i></i>${P.name}`); root.append(brand);
-const steps = h("div", "steps", "<b><i></i></b>".repeat(5)); root.append(steps);
-[...steps.querySelectorAll("i")].forEach((i, k) => K(i, [[SPANS[k][0], { transform: "scaleX(0)" }], [SPANS[k][1] - 300, { transform: "scaleX(1)" }]]));
+const brandEl = h("div", "brand", P.brand); root.append(brandEl);
+K(brandEl, [[SPANS[0][1] - OV, { opacity: 0 }], [SPANS[0][1], { opacity: 1 }], [SPANS[SPANS.length - 1][0], { opacity: 1 }], [SPANS[SPANS.length - 1][0] + OV, { opacity: 0 }]]);
+const feats = []; P.scenes.forEach((s, k) => { if (!isBrand(s)) feats.push(SPANS[k][0]); });
+const bar = h("div", "bar", "<i></i>"); root.append(bar); K(bar.firstChild, [[0, { transform: "scaleX(0)" }], [D, { transform: "scaleX(1)" }]]);
+const SWING = "perspective(1800px) translateX(160px) rotateY(-16deg) scale(.9)";
+const enter = (el, S, end = S + 800) => K(el, [[S - 60, { opacity: 0, transform: SWING }, EO], [end, { opacity: 1, transform: "perspective(1800px) translateX(0px) rotateY(0deg) scale(1)" }]]);
 
-// the camera inside a frame: fit the image, then push in on the target so it fills ~70% of the frame
-function camera(frame, fw, fh, size, target, t0, t1) {
-  const [iw, ih] = size, fit = Math.max(fw / iw, fh / ih), cam = h("div", "cam");
-  cam.style.width = iw + "px"; cam.style.height = ih + "px";
-  const T = (s, cx, cy) => { let tx = fw / 2 - cx * s, ty = fh / 2 - cy * s; tx = Math.min(0, Math.max(fw - iw * s, tx)); ty = Math.min(0, Math.max(fh - ih * s, ty)); return `translate(${tx}px, ${ty}px) scale(${s})`; };
-  const start = T(fit, iw / 2, ih / 2);
-  if (!target) { K(cam, [[t0 - 400, { transform: T(fit, iw / 2, ih / 2) }], [t0 + 3400, { transform: T(fit * 1.12, iw / 2, ih * .42) }]]); frame.append(cam); return { cam, s: fit }; }
-  const [x, y, w, hh] = target, z = Math.min(Math.max(fit, Math.min(fw * .74 / w, fh * .74 / hh)), fit * 2.6);
-  K(cam, [[t0, { transform: start }, IO], [t1, { transform: T(z, x + w / 2, y + hh / 2) }]]);
+function cameraFrame(frame, fw, fh, size, target, t0, t1, fx, fy) {   // pushes in on the target; returns the ring's final rectangle on the canvas
+  const [iw, ih] = size, fit = Math.max(fw / iw, fh / ih), cam = h("div", "cam"); cam.style.width = iw + "px"; cam.style.height = ih + "px";
+  const T = (s, cx, cy) => { let tx = fw / 2 - cx * s, ty = fh / 2 - cy * s; tx = Math.min(0, Math.max(fw - iw * s, tx)); ty = Math.min(0, Math.max(fh - ih * s, ty)); return [tx, ty, s]; };
+  const str = ([tx, ty, s]) => `translate(${tx}px, ${ty}px) scale(${s})`;
+  const [x, y, w, hh] = target, cx = x + w / 2, cy = y + hh / 2;
+  const z = Math.min(Math.max(fit * 1.06, Math.min(fw * .74 / w, fh * .72 / hh)), fit * 2.8), A = T(fit, cx, cy), B = T(z, cx, cy);
+  K(cam, [[t0, { transform: str(A) }, IO], [t1, { transform: str(B) }], [t1 + 2600, { transform: str(T(z * 1.03, cx, cy)) }]]);
+  frame.append(cam);
   const ring = h("div", "ring"); Object.assign(ring.style, { left: x + "px", top: y + "px", width: w + "px", height: hh + "px", borderWidth: 4 / z + "px", borderRadius: 14 / z + "px" });
-  cam.append(ring); K(ring, [[t1 - 150, { opacity: 0, transform: "scale(1.06)" }, EO], [t1 + 350, { opacity: 1, transform: "none" }]]);
-  frame.append(cam); return { cam, s: z };
+  cam.append(ring); K(ring, [[t1 - 220, { opacity: 0, transform: "scale(1.08)" }, EO], [t1 + 380, { opacity: 1, transform: "none" }]]);
+  return { cam, rect: [fx + B[0] + x * z, fy + B[1] + y * z, w * z, hh * z] };
+}
+function pin(el, text, rect, t, area, up) {   // the label sits under (or over) the highlighted feature
+  const c = h("div", "chip", `<i></i>${text}`); el.append(c);
+  const [rx, ry, rw, rh] = rect;
+  let top = ry + rh + 24 + (+up || 0); if (up === true || top + 66 > area[1] + area[3]) top = ry - 90; if (top < area[1]) top = ry + rh - 90;
+  c.style.left = Math.max(area[0], rx) + "px"; c.style.top = top + "px"; chips.push([c, area[0] + area[2]]);
+  K(c, [[t, { opacity: 0, transform: "translateY(18px) scale(.84)" }, BACK], [t + 560, { opacity: 1, transform: "none" }]]);
+}
+function iphone(x, y) {
+  const p = h("div", "iph", `<b class="btn" style="left:-6px;top:170px;height:34px"></b><b class="btn" style="left:-6px;top:232px;height:64px"></b><b class="btn" style="left:-6px;top:310px;height:64px"></b><b class="btn" style="right:-6px;top:262px;height:102px"></b><div class="body"><div class="scr"></div><i class="island"></i><i class="glare"></i></div>`);
+  p.style.left = x + "px"; p.style.top = y + "px"; return p;
 }
 function img(cam, src, size) { const i = h("img"); i.src = src; i.style.width = size[0] + "px"; i.style.height = size[1] + "px"; cam.prepend(i); return i; }
 
 P.scenes.forEach((sc, k) => {
-  const [S, E] = SPANS[k], el = h("section", "scene " + (sc.type === "title" || sc.type === "end" ? "brandbg" : "stage")); root.append(el);
-  K(el, [[S, { opacity: 0 }, "ease-out"], [S + 320, { opacity: 1 }], [E - 320, { opacity: 1 }, "ease-in"], [E, { opacity: 0 }]].filter(([t]) => t >= 0 && (k < 4 || t < E)));
-  if (sc.type === "title" || sc.type === "end") {
-    if (sc.bg) { const b = h("div", "bgimg"); b.style.backgroundImage = `url('${sc.bg}')`; b.style.setProperty("--pos", sc.pos || "50% 50%"); el.append(b);
-      if (sc.origin) b.style.transformOrigin = sc.origin; const [z0, z1] = sc.zoom || [1.06, 1.16];
-      K(b, [[S, { transform: `scale(${z0})` }], [E, { transform: `scale(${z1})` }]]); }
-    const box = h("div", "big" + (sc.type === "end" ? " center" : "")); el.append(box);
-    if (sc.kick) { const kk = h("p", "kick", sc.kick); box.append(kk); rise(kk, S + 150); }
-    const hd = h("h1", "head", sc.count ? `<span class="n">0</span> ${sc.head}` : sc.head); box.append(hd); rise(hd, S + 280, 44, 800);
-    if (sc.count) { const n = hd.querySelector(".n"); hooks.push((t) => { const p = Math.min(1, Math.max(0, (t - S - 280) / 1300)); n.textContent = Math.round(sc.count * (1 - Math.pow(1 - p, 3))).toLocaleString("en-IN"); }); }
-    if (sc.sub) { const sb = h("p", "sub", sc.sub); box.append(sb); rise(sb, S + 900); }
-    if (sc.foot) { const ft = h("p", "foot", sc.foot); box.append(ft); rise(ft, S + 1300, 20); }
+  const [S, E] = SPANS[k], last = k === P.scenes.length - 1, brand = isBrand(sc);
+  const el = h("section", "scene " + (brand ? "brandbg" : "stage")); root.append(el);
+  K(el, [[S, { opacity: k ? 0 : 1 }, "ease-in-out"], [S + OV, { opacity: 1 }]]);   // the new background crossfades over the old one
+  const g = h("div", "glow"); el.append(g);
+  K(g, [[S, { transform: `translate(${brand ? 760 : 980}px, ${-640 + (k % 2) * 420}px)` }], [E, { transform: `translate(${brand ? 560 : 820}px, ${-520 + (k % 2) * 360}px)` }]]);
+  if (sc.bg) { const b = h("div", "bgimg" + (sc.type === "end" ? "" : " shade")); b.style.backgroundImage = `url('${sc.bg}')`; b.style.setProperty("--pos", sc.pos || "50% 50%"); el.append(b);
+    K(b, [[S, { transform: "scale(1.06)" }], [E, { transform: "scale(1.16)" }]]); }
+  const cn = h("div", "cn"); el.append(cn);   // the content leaves quickly, then the next scene's content pushes in from the right
+  K(cn, [[S + 250, { opacity: k ? 0 : 1, transform: k ? "translateX(90px)" : "none" }, EO], [S + 800, { opacity: 1, transform: "none" }],
+    ...(last ? [] : [[E - OV, { opacity: 1, transform: "none" }, "cubic-bezier(.55,0,.8,.2)"], [E - 160, { opacity: 0, transform: "translateX(-70px)" }]])]);
+  const gr = slug === "syntra" ? " grad" : "";
+  if (brand) {
+    const box = h("div", "big" + (sc.type === "end" ? " center" : "")); cn.append(box);
+    if (sc.type === "title") {
+      if (sc.logo === true) { const lg = h("div", "", '<span class="capsule"><b></b><b></b></span>'); box.append(lg);
+        K(lg, [[S + 60, { opacity: 0, transform: "translateY(30px) rotate(-12deg) scale(.8)" }, BACK], [S + 760, { opacity: 1, transform: "none" }]]); }
+      if (typeof sc.logo === "string") { const li = h("img", "bigimg"); li.src = sc.logo; li.style.width = "780px"; box.append(li);
+        K(li, [[S + 60, { opacity: 0, transform: "translateY(30px) scale(.96)", filter: "blur(14px)" }, EO], [S + 1100, { opacity: 1, transform: "none", filter: "blur(0px)" }]]); }
+      if (sc.name) { const n = h("h1", "name"); box.append(n); kinetic(n, sc.name, S + 150, 60); if (sc.logo === true) n.style.marginTop = "34px"; }
+      const wt = h("p", "what" + gr); box.append(wt); kinetic(wt, sc.what, S + 700, 45);
+    }
+    if (sc.type === "problem") {
+      const hd = h("h1", "head" + gr); box.append(hd); kinetic(hd, sc.head, S + 150, 55); if (sc.hs) hd.style.fontSize = sc.hs + "px";
+      if (sc.sub) { const sb = h("p", "sub"); box.append(sb); kinetic(sb, sc.sub, S + 1250, 28); }
+      if (sc.src) { const s2 = h("p", "src", sc.src); box.append(s2); rise(s2, S + 1700, 14, 500); }
+      if (sc.tagline) { const tg = h("img", "bigimg"); tg.src = sc.tagline; tg.style.width = "1150px"; tg.style.marginTop = "56px"; box.append(tg);
+        K(tg, [[S + 1200, { opacity: 0, transform: "translateY(30px)", filter: "blur(14px)" }, EO], [S + 2200, { opacity: 1, transform: "none", filter: "blur(0px)" }]]); }
+    }
+    if (sc.type === "end") {
+      if (sc.logo) { const li = h("img", "bigimg"); li.src = sc.logo; li.style.width = "680px"; box.append(li);
+        K(li, [[S + 100, { opacity: 0, transform: "scale(.94)", filter: "blur(12px)" }, EO], [S + 1000, { opacity: 1, transform: "none", filter: "blur(0px)" }]]); }
+      if (sc.count) { const hd = h("h1", "head"); box.append(hd); hd.innerHTML = `<span class="n">0</span> ${sc.head}`; rise(hd, S + 150, 40, 700); const n = hd.querySelector(".n");
+        hooks.push((t) => { const p = Math.min(1, Math.max(0, (t - S - 250) / 1400)); n.textContent = Math.round(sc.count * (1 - Math.pow(1 - p, 3))).toLocaleString("en-IN"); }); }
+      else if (sc.head) { const hd = h("h1", "head" + gr); box.append(hd); kinetic(hd, sc.head, S + 150, 55); }
+      if (sc.sub) { const sb = h("p", "sub" + gr); box.append(sb); kinetic(sb, sc.sub, S + 900, 32); }
+      if (sc.foot) { const ft = h("p", "foot", sc.foot); box.append(ft); rise(ft, S + 1500, 20); }
+    }
     return;
   }
-  const col = h("div", "col"); el.append(col);
-  const kk = h("p", "kick", sc.kick), hd = h("h2", "head", sc.head), nt = h("p", "note", sc.note); col.append(kk, hd, nt);
-  rise(kk, S + 150); rise(hd, S + 260, 40, 750); rise(nt, S + 2050, 24);
+  const col = h("div", "col"); cn.append(col);
+  const kk = h("p", "kick", `${String(feats.indexOf(S) + 1).padStart(2, "0")} / ${String(feats.length).padStart(2, "0")}  ·  ${sc.kick}`), hd = h("h2", "head" + gr);
+  col.append(kk, hd); rise(kk, S + 100, 24, 600); kinetic(hd, sc.head, S + 200, 42);
+  const AREA = [820, 150, 972, 790];
   if (sc.type === "screen") {
-    const f = h("div", "win"); el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
-    const { cam } = camera(f, 952, 595, sc.size, sc.target, S + 1050, S + 2050); img(cam, sc.img, sc.size);
-  }
-  if (sc.type === "photo") {
-    const pw = Math.round(860 * sc.size[0] / sc.size[1]), f = h("div", "photo"); f.style.width = pw + "px"; f.style.left = 840 + (952 - pw) / 2 + "px"; el.append(f);
-    K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
-    const { cam } = camera(f, pw, 860, sc.size, sc.target, S + 1050, S + 2050); img(cam, sc.img, sc.size);
+    const f = h("div", "win" + (sc.glass ? " glass" : "")); cn.append(f); enter(f, S);
+    const { cam, rect } = cameraFrame(f, 972, 607, sc.size, sc.target, S + 700, S + 1400, 820, 236); img(cam, sc.img, sc.size);
+    pin(cn, sc.chip, rect, S + 1450, AREA, sc.up);
   }
   if (sc.type === "phone" || sc.type === "phones") {
-    const list = sc.type === "phone" ? [sc.seq] : sc.imgs.map((s) => [[s]]);
+    const list = sc.type === "phone" ? [sc.seq] : sc.imgs.map((s) => [[s]]), two = list.length > 1;
+    let rect;
     list.forEach((seq, j) => {
-      const ph = h("div", "phone", '<div class="scr"></div><i class="island"></i>'); el.append(ph);
-      const x = list.length === 1 ? 840 + (952 - 410) / 2 : 840 + 40 + j * 470; ph.style.left = x + "px";
-      if (list.length > 1 && j === 1) ph.style.top = "150px";
-      if (!(j === 0 && sc.target)) K(ph, [[S + 60 + j * 160, { opacity: 0, transform: "translateY(80px)" }, EO], [S + 900 + j * 160, { opacity: 1, transform: "none" }]]);
-      const scr = ph.querySelector(".scr"), zoom = j === 0 && sc.target;
-      const tTap = seq.length > 1 ? S + 900 : null, tZoom0 = tTap ? S + 1500 : S + 1050, tZoom1 = tZoom0 + 1000;
-      const fit = Math.max(386 / sc.size[0], 860 / sc.size[1]), cam = h("div", "cam");
-      cam.style.width = sc.size[0] + "px"; cam.style.height = sc.size[1] + "px"; cam.style.transform = `translate(${(386 - sc.size[0] * fit) / 2}px, ${(860 - sc.size[1] * fit) / 2}px) scale(${fit})`; scr.append(cam);
-      if (zoom) {   // device zoom: the phone scales around the feature so it lands at the centre of the product area
-        const [tx, ty, tw, th] = sc.target, Z = Math.min(2.3, 780 / (tw * fit), 760 / (th * fit));
-        const px = 12 + (386 - sc.size[0] * fit) / 2 + (tx + tw / 2) * fit, py = 12 + (860 - sc.size[1] * fit) / 2 + (ty + th / 2) * fit;
-        const y0 = list.length > 1 && j === 1 ? 150 : 98, a = 1316 - x - Z * px, bb = 540 - y0 - Z * py;
-        K(ph, [[S + 60, { opacity: 0, transform: "translateY(80px)" }, EO], [S + 900, { opacity: 1, transform: "translate(0px, 0px) scale(1)" }],
-          [tZoom0, { opacity: 1, transform: "translate(0px, 0px) scale(1)" }, IO], [tZoom1, { opacity: 1, transform: `translate(${a}px, ${bb}px) scale(${Z})` }]]);
-        const ring = h("div", "ring"); Object.assign(ring.style, { left: tx + "px", top: ty + "px", width: tw + "px", height: th + "px", borderWidth: 4 / (fit * Z) + "px", borderRadius: 14 / (fit * Z) + "px" });
-        cam.append(ring); K(ring, [[tZoom1 - 150, { opacity: 0, transform: "scale(1.06)" }, EO], [tZoom1 + 350, { opacity: 1, transform: "none" }]]);
-        ph.style.zIndex = 3;
-      }
-      seq.slice().reverse().forEach(([src], r) => { const i = img(cam, src, sc.size); const idx = seq.length - 1 - r;
-        if (seq.length > 1) K(i, idx === 0 ? [[tTap + 380, { opacity: 1 }], [tTap + 620, { opacity: 0 }]] : [[tTap + 380, { opacity: 0 }], [tTap + 620, { opacity: 1 }]]); });
-      if (tTap) { const [tx, ty] = seq[0][1], d = h("i", "tapdot"); d.style.left = tx + "px"; d.style.top = ty + "px"; cam.append(d);
-        K(d, [[tTap - 250, { opacity: 0, transform: "scale(1.6)" }, EO], [tTap, { opacity: 1, transform: "scale(1)" }], [tTap + 180, { opacity: 1, transform: "scale(.78)" }], [tTap + 600, { opacity: 0, transform: "scale(1.1)" }]]); }
+      const x = two ? 870 + j * 478 : 820 + (972 - 424) / 2, y0 = two && j ? 128 : 92, ph = iphone(x, y0); cn.append(ph);
+      const scr = ph.querySelector(".scr"), fit = 400 / sc.size[0], cam = h("div", "cam");
+      cam.style.width = sc.size[0] + "px"; cam.style.height = sc.size[1] + "px"; cam.style.transform = `scale(${fit})`; scr.append(cam);
+      const tTap = seq.length > 1 ? S + 950 : null, z0 = tTap ? S + 1400 : S + 820, z1 = z0 + 730;
+      if (j === 0) {   // the whole phone comes toward the camera, centred on the feature
+        const [tx, ty, tw, th] = sc.target, Z = Math.min(2.2, (sc.px || 2) * 1.15 / fit, 760 / (tw * fit), 640 / (th * fit));
+        const px = 12 + (tx + tw / 2) * fit, py = 12 + (ty + th / 2) * fit, a = 1306 - x - Z * px, b = 500 - y0 - Z * py;
+        const flat = "perspective(1800px) translate(0px, 0px) rotateY(0deg) scale(1)", zoom = (dx, dy, s) => `perspective(1800px) translate(${dx}px, ${dy}px) rotateY(0deg) scale(${s})`;
+        K(ph, [[S - 60, { opacity: 0, transform: SWING }, EO], [S + 800, { opacity: 1, transform: flat }], [z0, { opacity: 1, transform: flat }, IO],
+          [z1, { opacity: 1, transform: zoom(a, b, Z) }], [z1 + 2400, { opacity: 1, transform: zoom(a - 10, b - 8, Z * 1.025) }]]);
+        const ring = h("div", "ring"); Object.assign(ring.style, { left: tx + "px", top: ty + "px", width: tw + "px", height: th + "px", borderWidth: 4 / (fit * Z) + "px", borderRadius: 16 / (fit * Z) + "px" });
+        cam.append(ring); K(ring, [[z1 - 220, { opacity: 0, transform: "scale(1.08)" }, EO], [z1 + 380, { opacity: 1, transform: "none" }]]);
+        rect = [x + a + Z * (12 + tx * fit), y0 + b + Z * (12 + ty * fit), Z * tw * fit, Z * th * fit]; ph.style.zIndex = 3;
+        pin(cn, sc.chip, rect, z1 + 50, AREA);
+      } else K(ph, [[S + 60, { opacity: 0, transform: SWING }, EO], [S + 900, { opacity: 1, transform: "perspective(1800px) translateX(0px) rotateY(0deg) scale(1)" }]]);
+      seq.slice().reverse().forEach(([src], r) => { const i = img(cam, src, sc.size), idx = seq.length - 1 - r;
+        if (seq.length > 1) K(i, idx === 0 ? [[tTap + 260, { opacity: 1 }], [tTap + 440, { opacity: 0 }]] : [[tTap + 260, { opacity: 0 }], [tTap + 440, { opacity: 1 }]]); });
+      if (tTap && j === 0) { const [tx, ty] = seq[0][1], d = h("i", "tapdot"); d.style.left = tx + "px"; d.style.top = ty + "px"; cam.append(d);
+        K(d, [[tTap - 280, { opacity: 0, transform: "scale(1.7)" }, EO], [tTap, { opacity: 1, transform: "scale(1)" }], [tTap + 160, { opacity: 1, transform: "scale(.76)" }], [tTap + 560, { opacity: 0, transform: "scale(1.15)" }]]); }
     });
   }
-  if (sc.type === "loop") {
-    const f = h("div", "win"); f.style.height = "536px"; f.style.top = "272px"; el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
-    sc.imgs.forEach((src, j) => { const i = h("img"); i.src = src; Object.assign(i.style, { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }); f.append(i);
-      const t = S + 700 + j * 520; K(i, j === 0 ? [[t, { opacity: 1 }], [t + 520, { opacity: 1 }], [t + 640, { opacity: 0 }]] : [[t - 120, { opacity: 0 }], [t, { opacity: 1 }], [t + 520, { opacity: 1 }], [t + 640, { opacity: j === sc.imgs.length - 1 ? 1 : 0 }]]); });
+  if (sc.type === "kiosk") {
+    const f = h("div", "win glass"); Object.assign(f.style, { top: "262px", height: "561px" }); cn.append(f); enter(f, S);
+    sc.imgs.forEach((src, j) => { const i = h("img"); i.src = src; Object.assign(i.style, { position: "absolute", left: "14px", top: "14px", width: "944px", height: "533px", objectFit: "cover", borderRadius: "12px" }); f.append(i);
+      const t = S + 700 + j * 560; K(i, j === 0 ? [[t + 560, { opacity: 1 }], [t + 720, { opacity: 0 }]] : [[t - 160, { opacity: 0 }], [t, { opacity: 1 }], ...(j < sc.imgs.length - 1 ? [[t + 560, { opacity: 1 }], [t + 720, { opacity: 0 }]] : [])]); });
+    pin(cn, sc.chip, [834, 262, 400, 561], S + 1500, AREA);
   }
   if (sc.type === "pano") {
-    const f = h("div", "win"); el.append(f); K(f, [[S + 60, { opacity: 0, transform: "translateY(70px) scale(.95)" }, EO], [S + 900, { opacity: 1, transform: "none" }]]);
-    const p = h("div", "pano"); p.style.backgroundImage = `url('${sc.img}')`; f.append(p); K(p, [[S, { backgroundPosition: "0px 0px" }], [E, { backgroundPosition: "-640px 0px" }]]);
+    const f = h("div", "win"); cn.append(f); enter(f, S);
+    const p = h("div", "pano"); p.style.backgroundImage = `url('${sc.img}')`; f.append(p); K(p, [[S, { backgroundPosition: "0px 0px" }], [E, { backgroundPosition: "-820px 0px" }]]);
+    pin(cn, sc.chip, [834, 236, 400, 607], S + 1300, AREA);
   }
   if (sc.type === "tickets") {
-    sc.imgs.forEach((src, j) => { const i = h("img", "ticket"); i.src = src; i.style.left = 860 + j * 230 + "px"; el.append(i); const r = [-5, 3, -2, 4][j];
-      K(i, [[S + 200 + j * 170, { opacity: 0, transform: `translateY(120px) rotate(${r}deg)` }, EO], [S + 1000 + j * 170, { opacity: 1, transform: `translateY(${j % 2 ? 40 : 0}px) rotate(${r}deg)` }]]); });
+    sc.imgs.forEach((src, j) => { const i = h("img", "ticket"); i.src = src; i.style.left = 846 + j * 234 + "px"; cn.append(i); const r = [-5, 3, -2, 4][j], dy = j % 2 ? 36 : 0;
+      K(i, [[S + 100 + j * 130, { opacity: 0, transform: `translateY(220px) rotate(${r * 3}deg)` }, BACK], [S + 1000 + j * 130, { opacity: 1, transform: `translateY(${dy}px) rotate(${r}deg)` }],
+        [E, { opacity: 1, transform: `translateY(${dy - 14}px) rotate(${r}deg)` }]]); });
+    pin(cn, sc.chip, [846, 150, 300, 690], S + 1400, [820, 150, 972, 800]);
   }
 });
 window.D = D;
 window.seek = (t) => { document.getAnimations().forEach((a) => (a.currentTime = t)); hooks.forEach((f) => f(t)); };
-window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {})),
-  ...[...document.querySelectorAll("[style*='background-image']")].map((e) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = e.style.backgroundImage.slice(5, -2); }))]);
-if (!navigator.webdriver) window.ready.then(() => { const t0 = performance.now(); const loop = () => { const t = (performance.now() - t0) % D; window.seek(t); requestAnimationFrame(loop); }; loop(); });   // live preview
+const fontsIn = ["800 20px Mona", "700 20px Mona", "500 20px Inter", "600 20px Inter", "400 20px GSFlex", "700 20px GSFlex", "300 20px Lato", "400 20px Lato"].map((f) => document.fonts.load(f));
+window.ready = Promise.all([...fontsIn, document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {})),
+  ...[...document.querySelectorAll("[style*='background-image']")].map((e) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = e.style.backgroundImage.slice(5, -2); }))])
+  .then(() => chips.forEach(([c, right]) => { const l = parseFloat(c.style.left), w = c.offsetWidth; if (l + w > right) c.style.left = right - w + "px"; }));   // keep each label inside the margin
+if (!navigator.webdriver) window.ready.then(() => { const t0 = performance.now(); const loop = () => { window.seek((performance.now() - t0) % D); requestAnimationFrame(loop); }; loop(); });
 </script></body></html>
