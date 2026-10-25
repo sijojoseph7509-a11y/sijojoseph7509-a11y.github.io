@@ -885,3 +885,9 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Language section: Built vs Next-with-real-people lists. Measurement: three north stars with targets I set (−40% manager
   decisions by week 4, 90% on time, 0 lost at handover) plus four guardrails. Targets are Sijo's to adjust.
 - content.js section list rebuilt (alts carried over, new ones written), films and pops re-placed; reader.py re-run (43 sections).
+
+### v182: number animation can't leave a blank
+- Sijo saw the four Handovo numbers missing (could not reproduce in Chrome). The numbers now stay in the still: they are
+  `data-fx-pop` (render.mjs: kind "pop", rendered as a layer like draw but not hidden in the still). case-fx pops take a 7th value,
+  the section colour: the box covers the still's number and the copy inside rises in (`.cfx-pop img`). If case-fx can't run, the
+  numbers simply show; a 700 ms in-view check backs up the IntersectionObserver (threshold 0.3).

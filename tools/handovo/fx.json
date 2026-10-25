@@ -22,7 +22,7 @@
   "bg": "rgba(0, 0, 0, 0)"
  },
  {
-  "kind": "draw",
+  "kind": "pop",
   "name": "stat-1",
   "i": 5,
   "x": 120,
@@ -33,7 +33,7 @@
   "bg": "rgb(11, 11, 15)"
  },
  {
-  "kind": "draw",
+  "kind": "pop",
   "name": "stat-2",
   "i": 5,
   "x": 539,
@@ -44,7 +44,7 @@
   "bg": "rgb(11, 11, 15)"
  },
  {
-  "kind": "draw",
+  "kind": "pop",
   "name": "stat-3",
   "i": 5,
   "x": 957,
@@ -55,7 +55,7 @@
   "bg": "rgb(11, 11, 15)"
  },
  {
-  "kind": "draw",
+  "kind": "pop",
   "name": "stat-4",
   "i": 5,
   "x": 120,

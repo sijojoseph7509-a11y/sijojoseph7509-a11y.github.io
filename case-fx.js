@@ -82,13 +82,20 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
   }
 
   // v179: layers that rise into place when seen, one after another (Handovo: the four big numbers in the context section)
-  if (opts.pops) opts.pops.forEach(([i, x, y, w, h, f], k) => {
+  // v182: the numbers stay in the still; each pop covers its own with the section colour and animates a copy in, so if this
+  // script can't run the numbers still show, and a slow observer gets a 700 ms in-view check as a backstop
+  if (opts.pops) opts.pops.forEach(([i, x, y, w, h, f, bg], k) => {
     if (!secs[i]) return;
-    const box = document.createElement("div"); box.className = "cfx-pop"; box.setAttribute("aria-hidden", "true"); box.style.setProperty("--d", (k % 3) * 0.16 + "s");
+    const box = document.createElement("div"); box.className = "cfx-pop"; box.setAttribute("aria-hidden", "true"); box.style.setProperty("--d", (k % 3) * 0.16 + "s"); if (bg) box.style.background = bg;
     box.innerHTML = `<img src="${asset(f)}" srcset="${asset(f)} 1x, ${asset(f.replace(/\.(\w+)$/, "@2x.$1"))} 2x" alt="" decoding="async">`;
     place(i, box, x, y, w, h);
     if (reduce) box.classList.add("on");
-    else { const o = new IntersectionObserver((es) => { if (es[0].isIntersecting) { box.classList.add("on"); o.disconnect(); } }, { threshold: 0.6 }); o.observe(box); cleanups.push(() => o.disconnect()); }
+    else {
+      const on = () => { box.classList.add("on"); o.disconnect(); clearInterval(t); };
+      const o = new IntersectionObserver((es) => { if (es[0].isIntersecting) on(); }, { threshold: 0.3 }); o.observe(box);
+      const t = setInterval(() => { const r = box.getBoundingClientRect(); if (r.height && r.top < innerHeight - r.height * 0.3 && r.bottom > r.height * 0.3) on(); }, 700);
+      cleanups.push(() => { o.disconnect(); clearInterval(t); });
+    }
   });
 
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
