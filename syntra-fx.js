@@ -11,7 +11,9 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const touch = matchMedia("(pointer: coarse)").matches;
   const asset = (f) => `${base}work/${slug}/fx/${f}?v=${v}`;
-  if (!document.querySelector("link[data-sx]")) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `${base}syntra-fx.css?v=${v}`; l.dataset.sx = ""; document.head.appendChild(l); }
+  let css = document.querySelector("link[data-sx]");
+  if (!css) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `${base}syntra-fx.css?v=${v}`; l.dataset.sx = ""; document.head.appendChild(l); css = l; }
+  caseEl.classList.add("fx-wait"); { const done = () => caseEl.classList.remove("fx-wait"); if (css.sheet) done(); else { css.addEventListener("load", done, { once: true }); css.addEventListener("error", done, { once: true }); } }
   const srcset = (f) => `${asset(f)} 1x, ${asset(f.replace(/\.(\w+)$/, "@2x.$1"))} 2x`;
   const cleanups = [];
   caseEl.classList.add("case-syntra");

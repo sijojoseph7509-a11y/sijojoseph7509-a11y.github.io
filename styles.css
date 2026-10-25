@@ -1125,6 +1125,8 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 @media (max-height: 520px) { .loader.ready .intro-load { margin-top: 8px; } .loader.ready .intro-go { margin-top: 8px; } }
 @media (max-width: 360px) { .loader .loader-inner, .loader.ready .loader-inner { padding-left: 22px; padding-right: 22px; } }
 
+/* v195: while a case's effects stylesheet loads, everything the effects add (not the section stills, reel or glance) stays hidden */
+.case.fx-wait > :not(img):not(figure):not(.cfx-sec), .case.fx-wait .cfx-sec > :not(img) { visibility: hidden !important; }
 /* v179/v182: case-fx pops. The box covers the still's number with the section colour; the number inside rises and sharpens in */
 .cfx-pop { position: absolute; z-index: 2; pointer-events: none; }
 .cfx-pop img { display: block; width: 100%; height: 100%; opacity: 0; transform: translateY(30px) scale(.9); filter: blur(8px); transform-origin: 0 100%;
@@ -1150,7 +1152,9 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 
 /* v190: the 15-second reel, full width at the top of a case study */
 .case-reel { position: relative; margin: 0; aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
-.case-reel video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.case-reel video { position: relative; display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .12s linear; }
+.case-reel.live video { opacity: 1; }
+.case-reel .reel-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }   /* v195: shown until the video is live */
 .case-reel figcaption { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 40px 22px 16px;
   background: linear-gradient(transparent, rgba(0, 0, 0, .45)); color: #fff; font: 600 13px/1 Inter, sans-serif; letter-spacing: .04em; pointer-events: none; }
 .case-reel figcaption span { flex: 1; opacity: .9; }

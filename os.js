@@ -430,10 +430,14 @@
     // only while in view; reduced motion shows the poster with a play button. A <figure>, so the motion layers are unaffected.
     if (p.case.reel && box.firstElementChild) {
       const small = innerWidth < 760;
-      box.insertAdjacentHTML("afterbegin", `<figure class="case-reel"><video muted loop playsinline preload="metadata" poster="${caseImg(slug, "fx/reel-poster.webp")}"><source src="${caseImg(slug, small ? "fx/reel-540.mp4" : "fx/reel.mp4")}" type="video/mp4"></video>
+      box.insertAdjacentHTML("afterbegin", `<figure class="case-reel"><img class="reel-still" src="${caseImg(slug, "fx/reel-poster.webp")}" alt="" decoding="async"><video muted loop playsinline preload="metadata"><source src="${caseImg(slug, small ? "fx/reel-540.mp4" : "fx/reel.mp4")}" type="video/mp4"></video>
         <figcaption><span>${esc(p.title)} in ${+p.case.reel || 30} seconds</span><button type="button" data-reel aria-label="Pause"></button></figcaption></figure>`);
       const fig = box.firstElementChild, v = fig.querySelector("video"), btn = fig.querySelector("[data-reel]");
-      if (/^#[0-9a-f]{6}$/i.test(p.case.reelBg || "")) fig.style.backgroundColor = p.case.reelBg;   // v194: the reel's first colour, not black, until the poster arrives
+      if (/^#[0-9a-f]{6}$/i.test(p.case.reelBg || "")) fig.style.backgroundColor = p.case.reelBg;
+      // v195: the video stays hidden behind its still until it has painted two clean frames; browsers can show black
+      // patches in the first frames while the stream starts, which read as a glitch at the top of the case
+      const live = () => fig.classList.add("live");
+      v.addEventListener("playing", () => { if (fig.classList.contains("live")) return; if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => v.requestVideoFrameCallback(live)); else setTimeout(live, 120); });   // v194: the reel's first colour, not black, until the poster arrives
       let user = reducedMotion ? "paused" : "";
       const icon = () => { const on = !v.paused; btn.setAttribute("aria-label", on ? "Pause" : "Play"); btn.innerHTML = on ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'; };
       v.addEventListener("play", icon); v.addEventListener("pause", icon); icon();

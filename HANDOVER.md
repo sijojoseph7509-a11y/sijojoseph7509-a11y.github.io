@@ -990,3 +990,11 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   case-fx.css: the box background is transparent, so the still underneath shows until the film is ready.
 - os.js: the reel figure takes `case.reelBg` (its first colour: Handovo #2F3BEA, Carekin #0F3B38, Syntra #F5E8D6) instead of
   black while the poster loads.
+
+### v195: the real cause of the black boxes when a case opens
+- case-fx.js, syntra-fx.js and ekmaati-fx.js add their stylesheet at run time; until it loaded, the overlays they add (Handovo's
+  four stat-number patches in #0B0B0F, film boxes, etc.) had no `position: relative` section to sit in and were drawn near the
+  top of the window, over the reel, as black bars. Each module now puts `fx-wait` on the case until its stylesheet's `load`
+  (or `error`); styles.css hides everything the effects add while it is there (section stills, reel and glance stay visible).
+- os.js reel: an `<img class="reel-still">` (the poster) sits under the video; the video fades in (0.12 s) only after it has
+  painted two frames (`playing` + two requestVideoFrameCallbacks), so no decoder start-up frame is ever seen.

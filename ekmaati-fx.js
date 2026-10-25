@@ -15,7 +15,8 @@ export default function ekmaatiFx(caseEl, { slug, v }) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const A = (f) => `work/${slug}/fx/${f}?v=${v}`;
   const cleanups = [];
-  injectCss(v);
+  const css = injectCss(v);   // v195: overlays stay hidden until their stylesheet has loaded
+  caseEl.classList.add("fx-wait"); { const done = () => caseEl.classList.remove("fx-wait"); if (css.sheet) done(); else { css.addEventListener("load", done, { once: true }); css.addEventListener("error", done, { once: true }); } }
 
   const imgs = [...caseEl.querySelectorAll(":scope > img")];
   const after = imgs[18] || imgs[imgs.length - 1];   // 19.webp, "The temple box"
@@ -415,6 +416,6 @@ function sunburst() {
 }
 
 function injectCss(v) {
-  if (document.querySelector("link[data-ekx]")) return;
-  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `ekmaati-fx.css?v=${v}`; l.dataset.ekx = ""; document.head.appendChild(l);
+  const had = document.querySelector("link[data-ekx]"); if (had) return had;
+  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `ekmaati-fx.css?v=${v}`; l.dataset.ekx = ""; document.head.appendChild(l); return l;
 }

@@ -12,7 +12,10 @@ const W = 1440;
 export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = "" }) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const asset = (f) => `${base}work/${slug}/fx/${f}?v=${v}`;
-  if (!document.querySelector("link[data-cfx]")) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `${base}case-fx.css?v=${v}`; l.dataset.cfx = ""; document.head.appendChild(l); }
+  // v195: until case-fx.css has loaded, the overlays below have no position and drew as dark boxes over the top of the case
+  let css = document.querySelector("link[data-cfx]");
+  if (!css) { css = document.createElement("link"); css.rel = "stylesheet"; css.href = `${base}case-fx.css?v=${v}`; css.dataset.cfx = ""; document.head.appendChild(css); }
+  caseEl.classList.add("fx-wait"); { const done = () => caseEl.classList.remove("fx-wait"); if (css.sheet) done(); else { css.addEventListener("load", done, { once: true }); css.addEventListener("error", done, { once: true }); } }
   caseEl.classList.add("cfx", "cfx-" + (opts.reveal || "rise"));
   if (opts.accent) caseEl.style.setProperty("--cfx-accent", opts.accent);
   const cleanups = [];
