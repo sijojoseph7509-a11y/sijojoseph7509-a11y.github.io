@@ -48,9 +48,10 @@
   .glass { background: rgba(255,255,255,.45); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: 0 0 0 1.5px rgba(255,255,255,.8), 0 40px 90px -30px rgba(120,60,10,.35); }
   .cn { position: absolute; inset: 0; }
   .cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .mask { position: absolute; background: #000; z-index: 1; }
   .cam img { position: absolute; left: 0; top: 0; display: block; }
   .ring { position: absolute; border: 4px solid var(--ring, var(--accent)); border-radius: 14px; z-index: 4; box-shadow: 0 0 0 9999px var(--dim); }
-  .chip { position: absolute; z-index: 12; display: flex; align-items: center; gap: 12px; padding: 16px 26px 17px 20px; border-radius: 999px; white-space: nowrap;
+  .chip { position: relative; align-self: flex-start; margin-top: 44px; transform-origin: 0 50%; z-index: 12; display: flex; align-items: center; gap: 12px; padding: 16px 26px 17px 20px; border-radius: 999px; white-space: nowrap;
     background: var(--chipbg); color: var(--chipfg); font: var(--boldw) 28px/1 var(--font); letter-spacing: -.005em; box-shadow: 0 18px 40px -14px rgba(0,0,0,.45); }
   .chip i { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--chipfg); opacity: .85; }
   .tapdot { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; background: rgba(30,30,36,.28); border: 3px solid #fff; box-shadow: 0 6px 22px rgba(0,0,0,.3); z-index: 5; }
@@ -62,8 +63,9 @@
   .iph .island { position: absolute; top: 23px; left: 50%; width: 122px; height: 36px; margin-left: -61px; border-radius: 20px; background: #000; z-index: 8; }
   .iph .glare { position: absolute; left: 12px; top: 12px; width: 400px; height: 867px; border-radius: 56px; background: linear-gradient(118deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,0) 30%); z-index: 9; pointer-events: none; }
   .iph .btn { position: absolute; width: 5px; border-radius: 2px; background: linear-gradient(90deg, #45454c, #b8b8c0, #5a5a61); }
+  .wtag { position: absolute; left: 26px; top: 26px; z-index: 3; padding: 13px 22px 14px; border-radius: 999px; background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); font: 400 26px/1 var(--font); color: var(--chipfg); }
   .pano { position: absolute; inset: 0; background-size: auto 100%; background-repeat: repeat-x; }
-  .ticket { position: absolute; top: 150px; width: 220px; border-radius: 6px; box-shadow: 0 34px 70px -24px rgba(90,45,0,.45); }
+  .ticket { position: absolute; top: 205px; width: 220px; border-radius: 6px; box-shadow: 0 34px 70px -24px rgba(90,45,0,.45); }
   .capsule { display: inline-flex; gap: 5px; } .capsule b { width: 30px; height: 26px; border-radius: 13px 4px 4px 13px; background: #7EE0C6; } .capsule b + b { border-radius: 4px 13px 13px 4px; background: #FF8A6B; }
   .big .capsule { gap: 12px; } .big .capsule b { width: 92px; height: 78px; border-radius: 39px 10px 10px 39px; } .big .capsule b + b { border-radius: 10px 39px 39px 10px; }
 </style></head><body><div id="root"></div>
@@ -76,20 +78,20 @@ const THEMES = {
     accent: "#FF8A6B", faint: "rgba(255,255,255,.18)", chipbg: "#FF8A6B", chipfg: "#0B2523", dim: "rgba(0,0,0,.4)", glow: "rgba(126,224,198,.16)", glowb: "rgba(126,224,198,.2)" },
   syntra: { hfont: "Lato", font: "Lato", namew: 300, headw: 300, subw: 300, kickw: 400, boldw: 400, track: "-.012em", brand: "#F5E8D6", stage: "#F7EDE0", ink: "#7A4D1C", sub: "rgba(140,78,14,.85)",
     accent: "#DD8020", accent2: "#BD680F", faint: "rgba(122,77,28,.16)", chipbg: "rgba(255,255,255,.78)", chipfg: "#8A5414", dim: "rgba(89,51,11,.2)", glow: "rgba(249,156,54,.34)", glowb: "rgba(249,156,54,.3)",
-    winbg: "rgba(255,255,255,.4)", winline: "rgba(255,255,255,.8)", ring: "#DD8020", hgrad: "radial-gradient(ellipse 90% 160% at 25% 30%, #F99C36 0%, #C0741F 50%, #7A4D1C 100%)" },
+    winbg: "rgba(255,255,255,.4)", winline: "rgba(255,255,255,.8)", ring: "#DD8020", hgrad: "radial-gradient(ellipse 90% 160% at 25% 30%, #EE8E2C 0%, #B4681A 52%, #7A4D1C 100%)" },
 };
 const R = {
   handovo: { brand: `<img src="${SH}handovo-mark-reverse.svg" alt="">Handovo`, scenes: [
     { type: "title", d: 2600, name: "Handovo", what: "An AI teammate for store floors." },
-    { type: "problem", d: 3200, head: "A manager’s plan rarely reaches\nall 30 people on the floor.", hs: 92, sub: "63% of frontline workers say leadership messages don’t reach them.", src: "Microsoft Work Trend Index, 2022" },
-    { type: "screen", d: 3100, kick: "The goal", head: "The manager writes one goal for the day.", chip: "In plain words. No forms.", img: SH + "screen02.webp", size: [1440, 900], target: [276, 275, 466, 350] },
-    { type: "screen", d: 3100, kick: "The plan", head: "The AI turns it into tasks for the right people.", chip: "Each task gets an owner and a reason", img: SH + "screen03.webp", size: [1440, 900], target: [596, 98, 424, 206] },
+    { type: "problem", d: 3200, head: "A manager’s plan rarely reaches\neveryone on the floor.", hs: 92, sub: "63% of frontline workers say leadership messages don’t reach them.", src: "Microsoft Work Trend Index, 2022" },
+    { type: "screen", d: 3100, kick: "The goal", head: "The manager writes one goal for the day.", chip: "In plain words. No forms.", img: SH + "screen02.webp", mask: [[72, 47, 86, 22]], size: [1440, 900], target: [276, 275, 466, 350] },
+    { type: "screen", d: 3100, kick: "The plan", head: "The AI turns it into tasks for the right people.", chip: "Each task gets an owner and a reason", img: SH + "screen03.webp", mask: [[72, 45, 86, 22]], size: [1440, 900], target: [596, 98, 424, 206] },
     { type: "phones", d: 3100, kick: "The floor", head: "Everyone gets only their own task, on their phone.", chip: "Kannada, Hindi, Malayalam or English", imgs: [SH + "phone04.webp", SH + "phone12.webp"], size: [620, 1470], px: 1, target: [6, 556, 470, 268] },
-    { type: "screen", d: 3100, kick: "Handled alone", head: "Low-risk work, like a restock, it just does.", chip: "Made by the agent", img: SH + "screen08.webp", size: [1440, 900], target: [276, 280, 748, 114] },
-    { type: "screen", d: 3100, kick: "Asks first", head: "Money and people decisions wait for the manager.", chip: "Yours only: a ₹450 discount", img: SH + "screen05.webp", size: [1440, 900], target: [276, 192, 748, 304] },
-    { type: "screen", d: 3100, kick: "Never missed", head: "An upset customer always reaches the manager.", chip: "Always marked urgent", img: SH + "screen09.webp", size: [1440, 900], target: [276, 192, 748, 304] },
-    { type: "screen", d: 3100, kick: "Shift change", head: "Open work is handed on, not lost.", chip: "An owner for every open task", img: SH + "screen11.webp", size: [1440, 900], target: [276, 155, 748, 590] },
-    { type: "screen", d: 3100, kick: "The owner", head: "One plain summary at the end of the day.", chip: "Counts only, never names", img: SH + "screen12.webp", size: [1440, 900], target: [276, 136, 744, 708] },
+    { type: "screen", d: 3100, kick: "Handled alone", head: "Low-risk work, like a restock, it just does.", chip: "Made by the agent", img: SH + "screen08.webp", mask: [[72, 55, 86, 22], [283, 75, 206, 20]], size: [1440, 900], target: [276, 280, 748, 114] },
+    { type: "screen", d: 3100, kick: "Asks first", head: "Money and people decisions wait for the manager.", chip: "Yours only: a ₹450 discount", img: SH + "screen05.webp", mask: [[72, 55, 86, 22], [283, 75, 206, 20]], size: [1440, 900], target: [276, 192, 748, 304] },
+    { type: "screen", d: 3100, kick: "Never missed", head: "An upset customer always reaches the manager.", chip: "Always marked urgent", img: SH + "screen09.webp", mask: [[72, 55, 86, 22], [283, 75, 206, 20]], size: [1440, 900], target: [276, 192, 748, 304] },
+    { type: "screen", d: 3100, kick: "Shift change", head: "Open work is handed on, not lost.", chip: "An owner for every open task", img: SH + "screen11.webp", mask: [[72, 48, 86, 22]], size: [1440, 900], target: [276, 155, 748, 590] },
+    { type: "screen", d: 3100, kick: "The owner", head: "One plain summary at the end of the day.", chip: "Counts only, never names", img: SH + "screen12.webp", mask: [[72, 39, 86, 22]], size: [1440, 900], target: [276, 136, 744, 708] },
     { type: "end", d: 3400, count: 8019, head: "engine checks.", sub: "The agent never went past the manager’s setting.", foot: "Designed and built by Sijo Joseph" } ] },
   carekin: { brand: `<span class="capsule"><b></b><b></b></span>Carekin`, scenes: [
     { type: "title", d: 2600, name: "Carekin", logo: true, what: "Medicines, coordinated for families\ncaring for a parent." },
@@ -104,9 +106,10 @@ const R = {
   syntra: { brand: `<img class="logoimg" src="syntra/logo.webp" alt="Syntra">`, scenes: [
     { type: "title", d: 2800, logo: "syntra/logo.webp", what: "An interactive perfume finder, a concept for ZARA.", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "60% 30%" },
     { type: "problem", d: 3400, head: "Know the feeling, not the name?", tagline: "syntra/tagline.webp", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "40% 62%" },
-    { type: "screen", d: 3000, kick: "Turn and feel", head: "Turn a knob and three sliders to describe a feeling.", chip: "Mood · longevity · expression · occasion", img: W + "syntra/08@2x.webp", size: [1440, 3300], target: [172, 1508, 908, 440], glass: true, up: 62 },
+    { type: "screen", d: 3000, kick: "Turn and feel", head: "Turn a knob and three sliders to describe a feeling.", chip: "Mood · longevity · expression · occasion", img: W + "syntra/08@2x.webp", size: [1440, 3300], target: [172, 1508, 908, 440], glass: true },
     { type: "kiosk", d: 3000, kick: "The match", head: "The kiosk turns that feeling into a scent.", chip: "From feeling to fragrance", imgs: ["loop-0", "loop-2", "loop-4", "loop-6"].map((n) => W + "syntra/fx/" + n + "@2x.webp") },
-    { type: "pano", d: 3000, kick: "Step inside", head: "Then step inside it, in VR.", chip: "Nine 360° worlds · Meta Quest 3", img: W + "syntra/fx/pano-lakeside_night.webp" },
+    { type: "pano", d: 3800, kick: "Step inside", head: "Then step inside it,\nin virtual reality.", chip: "Nine 360° worlds · Meta Quest 3",
+      worlds: [["symmetrical_garden_02", "Flower garden"], ["autumn_forest_04", "Autumn forest"], ["lago_disola", "Snowy Alps"], ["lakeside_night", "Starry lake"]] },
     { type: "tickets", d: 3000, kick: "Take it home", head: "A printed ticket that comes alive in AR.", chip: "66 printed at our exhibit", imgs: ["140032", "164936", "165536", "170525"].map((n) => W + "syntra/fx/receipt-" + n + ".webp") },
     { type: "end", d: 3200, logo: "syntra/logo.webp", sub: "Knob, screen, VR and a ticket: one perfume journey.", foot: "Interaction design · NID · team of 3", bg: W + "syntra/fx/cover-bg@2x.webp", pos: "50% 40%" } ] },
 };
@@ -115,7 +118,7 @@ for (const [k, v] of Object.entries(TH)) document.documentElement.style.setPrope
 // the timeline: scenes overlap by 400 ms (a push from right to left)
 const OV = 400, SPANS = []; { let t = 0; P.scenes.forEach((s) => { SPANS.push([t, t + s.d]); t += s.d - OV; }); }
 const D = SPANS[SPANS.length - 1][1], EO = "cubic-bezier(.22,1,.36,1)", IO = "cubic-bezier(.65,0,.35,1)", BACK = "cubic-bezier(.34,1.45,.64,1)";
-const hooks = [], chips = [], isBrand = (s) => ["title", "problem", "end"].includes(s.type);
+const hooks = [], isBrand = (s) => ["title", "problem", "end"].includes(s.type);
 function K(el, keys) {
   const ks = keys.filter(([t]) => t >= 0 && t <= D).sort((a, b) => a[0] - b[0]);
   if (ks[0][0] > 0) ks.unshift([0, ks[0][1]]); if (ks[ks.length - 1][0] < D) ks.push([D, ks[ks.length - 1][1]]);
@@ -147,11 +150,8 @@ function cameraFrame(frame, fw, fh, size, target, t0, t1, fx, fy) {   // pushes 
   cam.append(ring); K(ring, [[t1 - 220, { opacity: 0, transform: "scale(1.08)" }, EO], [t1 + 380, { opacity: 1, transform: "none" }]]);
   return { cam, rect: [fx + B[0] + x * z, fy + B[1] + y * z, w * z, hh * z] };
 }
-function pin(el, text, rect, t, area, up) {   // the label sits under (or over) the highlighted feature
-  const c = h("div", "chip", `<i></i>${text}`); el.append(c);
-  const [rx, ry, rw, rh] = rect;
-  let top = ry + rh + 24 + (+up || 0); if (up === true || top + 66 > area[1] + area[3]) top = ry - 90; if (top < area[1]) top = ry + rh - 90;
-  c.style.left = Math.max(area[0], rx) + "px"; c.style.top = top + "px"; chips.push([c, area[0] + area[2]]);
+function pin(col, text, t) {   // the label sits under the headline, in the feature's colour, once the ring is drawn
+  const c = h("div", "chip", `<i></i>${text}`); col.append(c);
   K(c, [[t, { opacity: 0, transform: "translateY(18px) scale(.84)" }, BACK], [t + 560, { opacity: 1, transform: "none" }]]);
 }
 function iphone(x, y) {
@@ -203,11 +203,11 @@ P.scenes.forEach((sc, k) => {
   const col = h("div", "col"); cn.append(col);
   const kk = h("p", "kick", `${String(feats.indexOf(S) + 1).padStart(2, "0")} / ${String(feats.length).padStart(2, "0")}  ·  ${sc.kick}`), hd = h("h2", "head" + gr);
   col.append(kk, hd); rise(kk, S + 100, 24, 600); kinetic(hd, sc.head, S + 200, 42);
-  const AREA = [820, 150, 972, 790];
-  if (sc.type === "screen") {
+    if (sc.type === "screen") {
     const f = h("div", "win" + (sc.glass ? " glass" : "")); cn.append(f); enter(f, S);
-    const { cam, rect } = cameraFrame(f, 972, 607, sc.size, sc.target, S + 700, S + 1400, 820, 236); img(cam, sc.img, sc.size);
-    pin(cn, sc.chip, rect, S + 1450, AREA, sc.up);
+    const { cam } = cameraFrame(f, 972, 607, sc.size, sc.target, S + 700, S + 1400, 820, 236); img(cam, sc.img, sc.size);
+    (sc.mask || []).forEach(([x, y, w, hh]) => { const m = h("i", "mask"); Object.assign(m.style, { left: x + "px", top: y + "px", width: w + "px", height: hh + "px" }); cam.append(m); });
+    pin(col, sc.chip, S + 1450);
   }
   if (sc.type === "phone" || sc.type === "phones") {
     const list = sc.type === "phone" ? [sc.seq] : sc.imgs.map((s) => [[s]]), two = list.length > 1;
@@ -219,14 +219,14 @@ P.scenes.forEach((sc, k) => {
       const tTap = seq.length > 1 ? S + 950 : null, z0 = tTap ? S + 1400 : S + 820, z1 = z0 + 730;
       if (j === 0) {   // the whole phone comes toward the camera, centred on the feature
         const [tx, ty, tw, th] = sc.target, Z = Math.min(2.2, (sc.px || 2) * 1.15 / fit, 760 / (tw * fit), 640 / (th * fit));
-        const px = 12 + (tx + tw / 2) * fit, py = 12 + (ty + th / 2) * fit, a = 1306 - x - Z * px, b = 500 - y0 - Z * py;
+        const px = 12 + (tx + tw / 2) * fit, py = 12 + (ty + th / 2) * fit, a = 1306 - x - Z * px, b = 540 - y0 - Z * py;
         const flat = "perspective(1800px) translate(0px, 0px) rotateY(0deg) scale(1)", zoom = (dx, dy, s) => `perspective(1800px) translate(${dx}px, ${dy}px) rotateY(0deg) scale(${s})`;
         K(ph, [[S - 60, { opacity: 0, transform: SWING }, EO], [S + 800, { opacity: 1, transform: flat }], [z0, { opacity: 1, transform: flat }, IO],
           [z1, { opacity: 1, transform: zoom(a, b, Z) }], [z1 + 2400, { opacity: 1, transform: zoom(a - 10, b - 8, Z * 1.025) }]]);
         const ring = h("div", "ring"); Object.assign(ring.style, { left: tx + "px", top: ty + "px", width: tw + "px", height: th + "px", borderWidth: 4 / (fit * Z) + "px", borderRadius: 16 / (fit * Z) + "px" });
         cam.append(ring); K(ring, [[z1 - 220, { opacity: 0, transform: "scale(1.08)" }, EO], [z1 + 380, { opacity: 1, transform: "none" }]]);
         rect = [x + a + Z * (12 + tx * fit), y0 + b + Z * (12 + ty * fit), Z * tw * fit, Z * th * fit]; ph.style.zIndex = 3;
-        pin(cn, sc.chip, rect, z1 + 50, AREA);
+        pin(col, sc.chip, z1 + 50);
       } else K(ph, [[S + 60, { opacity: 0, transform: SWING }, EO], [S + 900, { opacity: 1, transform: "perspective(1800px) translateX(0px) rotateY(0deg) scale(1)" }]]);
       seq.slice().reverse().forEach(([src], r) => { const i = img(cam, src, sc.size), idx = seq.length - 1 - r;
         if (seq.length > 1) K(i, idx === 0 ? [[tTap + 260, { opacity: 1 }], [tTap + 440, { opacity: 0 }]] : [[tTap + 260, { opacity: 0 }], [tTap + 440, { opacity: 1 }]]); });
@@ -235,21 +235,28 @@ P.scenes.forEach((sc, k) => {
     });
   }
   if (sc.type === "kiosk") {
-    const f = h("div", "win glass"); Object.assign(f.style, { top: "262px", height: "561px" }); cn.append(f); enter(f, S);
+    const f = h("div", "win glass"); Object.assign(f.style, { top: "260px", height: "561px" }); cn.append(f); enter(f, S);
     sc.imgs.forEach((src, j) => { const i = h("img"); i.src = src; Object.assign(i.style, { position: "absolute", left: "14px", top: "14px", width: "944px", height: "533px", objectFit: "cover", borderRadius: "12px" }); f.append(i);
       const t = S + 700 + j * 560; K(i, j === 0 ? [[t + 560, { opacity: 1 }], [t + 720, { opacity: 0 }]] : [[t - 160, { opacity: 0 }], [t, { opacity: 1 }], ...(j < sc.imgs.length - 1 ? [[t + 560, { opacity: 1 }], [t + 720, { opacity: 0 }]] : [])]); });
-    pin(cn, sc.chip, [834, 262, 400, 561], S + 1500, AREA);
+    pin(col, sc.chip, S + 1500);
   }
   if (sc.type === "pano") {
     const f = h("div", "win"); cn.append(f); enter(f, S);
-    const p = h("div", "pano"); p.style.backgroundImage = `url('${sc.img}')`; f.append(p); K(p, [[S, { backgroundPosition: "0px 0px" }], [E, { backgroundPosition: "-820px 0px" }]]);
-    pin(cn, sc.chip, [834, 236, 400, 607], S + 1300, AREA);
+    const n = sc.worlds.length, at = (j) => S + 1050 + j * 720;   // each world for ~0.7 s, a short crossfade between, all panning
+    sc.worlds.forEach(([file, name], j) => {
+      const p = h("div", "pano"); p.style.backgroundImage = `url('${W}syntra/fx/pano-${file}.webp')`; f.append(p);
+      const tag = h("div", "wtag", `360° · ${name}`); f.append(tag);
+      K(p, [[S, { backgroundPosition: `${-j * 420}px 0px` }], [E, { backgroundPosition: `${-j * 420 - 760}px 0px` }]]);
+      const vis = j === 0 ? [[at(0), { opacity: 1 }], [at(0) + 200, { opacity: 0 }]] : [[at(j - 1), { opacity: 0 }], [at(j - 1) + 200, { opacity: 1 }], ...(j < n - 1 ? [[at(j), { opacity: 1 }], [at(j) + 200, { opacity: 0 }]] : [])];
+      K(p, vis); K(tag, j === 0 ? [[S + 500, { opacity: 0 }], [S + 800, { opacity: 1 }], ...vis] : vis);
+    });
+    pin(col, sc.chip, S + 1300);
   }
   if (sc.type === "tickets") {
     sc.imgs.forEach((src, j) => { const i = h("img", "ticket"); i.src = src; i.style.left = 846 + j * 234 + "px"; cn.append(i); const r = [-5, 3, -2, 4][j], dy = j % 2 ? 36 : 0;
       K(i, [[S + 100 + j * 130, { opacity: 0, transform: `translateY(220px) rotate(${r * 3}deg)` }, BACK], [S + 1000 + j * 130, { opacity: 1, transform: `translateY(${dy}px) rotate(${r}deg)` }],
         [E, { opacity: 1, transform: `translateY(${dy - 14}px) rotate(${r}deg)` }]]); });
-    pin(cn, sc.chip, [846, 150, 300, 690], S + 1400, [820, 150, 972, 800]);
+    pin(col, sc.chip, S + 1400);
   }
 });
 window.D = D;
@@ -257,6 +264,9 @@ window.seek = (t) => { document.getAnimations().forEach((a) => (a.currentTime = 
 const fontsIn = ["800 20px Mona", "700 20px Mona", "500 20px Inter", "600 20px Inter", "400 20px GSFlex", "700 20px GSFlex", "300 20px Lato", "400 20px Lato"].map((f) => document.fonts.load(f));
 window.ready = Promise.all([...fontsIn, document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {})),
   ...[...document.querySelectorAll("[style*='background-image']")].map((e) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = e.style.backgroundImage.slice(5, -2); }))])
-  .then(() => chips.forEach(([c, right]) => { const l = parseFloat(c.style.left), w = c.offsetWidth; if (l + w > right) c.style.left = right - w + "px"; }));   // keep each label inside the margin
+  .then(() => document.querySelectorAll(".grad").forEach((el) => {   // one gradient across the whole text block, not one per word
+    const bw = el.offsetWidth, bh = el.offsetHeight;
+    el.querySelectorAll(".wi").forEach((wi) => Object.assign(wi.style, { backgroundSize: `${bw}px ${bh}px`, backgroundRepeat: "no-repeat", backgroundPosition: `${el.offsetLeft - wi.offsetLeft}px ${el.offsetTop - wi.offsetTop}px` }));
+  }));
 if (!navigator.webdriver) window.ready.then(() => { const t0 = performance.now(); const loop = () => { window.seek((performance.now() - t0) % D); requestAnimationFrame(loop); }; loop(); });
 </script></body></html>

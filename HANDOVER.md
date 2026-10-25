@@ -974,3 +974,12 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - record.mjs: BPP 0.034 (1080p) / 0.042 (720p); poster = frame at 2.0 s.
 - Cleanup: 86 stray `*.sb-*` temp files (sandbox write leftovers next to the films, ~125 MB) were untracked and deleted; `.gitignore`
   now ignores `*.sb-*`.
+
+### v193: reels tidied (Sijo's notes)
+- Labels now sit in the text column under the headline (same colour as the ring), so nothing covers the product and every scene
+  lines up on the same left edge. The highlighted feature is centred on the text column's centre line (y 540).
+- Handovo: the problem line no longer gives a staff count ("…rarely reaches everyone on the floor."); the store's place name is
+  masked in the screens (`mask` boxes per screen in reel.html, basis 1440 × 900, found with macOS Vision OCR).
+- Syntra: logo and tagline images cropped to their ink so they align with the text; the amber gradient now runs across each whole
+  line (per-word background offsets) instead of restarting on every word; tickets and the kiosk frame centred; the VR scene (3.8 s)
+  cycles four of the nine worlds (Flower garden, Autumn forest, Snowy Alps, Starry lake) with a name tag. Syntra reel is 19.8 s.
