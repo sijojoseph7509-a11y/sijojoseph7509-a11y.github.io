@@ -841,3 +841,9 @@ Claude Code keeps notes in `~/.claude/projects/<this-project>/memory/`:
 - Layout: `.loader.ready` is a flex column; the "Skip the desk" pill sits under the card (it was pinned to the bottom and covered
   the card on 1280×720 / 1366×657 and small phones). Tighter card under 800 px and 680 px tall, narrower padding under 360 px wide.
   Checked at 13 sizes from 320×568 to 2560×1300: no overlap, Enter visible without scrolling.
+
+### v177: Syntra cover intro in the cover's own style
+- The three-line intro (text 223:9) now matches the cover: Lato Light like "An interactive perfume finder.", left edge at x 165 (the
+  subtitle's, was 80), 24 px (subtitle 32 px), line height 150 %, letter spacing 1 %, solid #9C540C (readable, same amber family).
+  Same band method as v168 (temporary Figma copy, deleted). The still cover is rebuilt from the pre-v168 originals, with the old
+  text's spots filled from the surrounding background, so no ghost letters show.
