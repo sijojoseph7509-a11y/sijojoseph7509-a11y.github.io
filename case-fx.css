@@ -12,7 +12,7 @@
 .cfx-wipe .cfx-sec.cfx-in::after { animation: cfxSweep 1.15s cubic-bezier(.65,0,.25,1) forwards; }
 @keyframes cfxSweep { 0% { opacity: 1; left: 0; } 92% { opacity: 1; } 100% { opacity: 0; left: 100%; } }
 /* films */
-.cfx-video { position: absolute; z-index: 2; background: #000; opacity: 0; transition: opacity .8s ease; border-radius: 2px; overflow: hidden; }
+.cfx-video { position: absolute; z-index: 2; background: transparent; opacity: 0; transition: opacity .8s ease; border-radius: 2px; overflow: hidden; }
 .cfx-video.on { opacity: 1; }
 .cfx-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cfx-vbtn { position: absolute; right: 12px; bottom: 12px; width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer;

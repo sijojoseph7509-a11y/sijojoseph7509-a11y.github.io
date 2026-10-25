@@ -40,7 +40,10 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     vid.src = asset(f);
     let user = false;   // a visitor's pause wins over autoplay
     const set = (play) => { if (play) vid.play().catch(() => {}); else vid.pause(); };
-    vid.addEventListener("play", () => { box.classList.add("on"); btn.textContent = "❚❚"; btn.setAttribute("aria-label", "Pause the film"); });
+    // v194: fade the film in only once its first frame is actually on screen (on "play" the box showed black while the file loaded)
+    const show = () => box.classList.add("on");
+    vid.addEventListener("playing", () => { if (vid.requestVideoFrameCallback) vid.requestVideoFrameCallback(show); else show(); });
+    vid.addEventListener("play", () => { btn.textContent = "❚❚"; btn.setAttribute("aria-label", "Pause the film"); });
     vid.addEventListener("pause", () => { btn.textContent = "▶"; btn.setAttribute("aria-label", "Play the film"); });
     btn.addEventListener("click", (e) => { e.stopPropagation(); user = !vid.paused; set(vid.paused); });
     const vio = new IntersectionObserver((es) => { const on = es[0].isIntersecting; if (on && !user && !reduce) { vid.preload = "auto"; set(true); } if (!on) set(false); }, { threshold: 0.35 });

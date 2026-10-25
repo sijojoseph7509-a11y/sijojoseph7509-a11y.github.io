@@ -983,3 +983,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Syntra: logo and tagline images cropped to their ink so they align with the text; the amber gradient now runs across each whole
   line (per-word background offsets) instead of restarting on every word; tickets and the kiosk frame centred; the VR scene (3.8 s)
   cycles four of the nine worlds (Flower garden, Autumn forest, Snowy Alps, Starry lake) with a name tag. Syntra reel is 19.8 s.
+
+### v194: no black boxes before the films start
+- case-fx.js: a film box (`.cfx-video`) now fades in on the video's first painted frame (`playing` + requestVideoFrameCallback)
+  instead of on `play`, which fired before any frame had loaded and showed a black box over the still for a moment.
+  case-fx.css: the box background is transparent, so the still underneath shows until the film is ready.
+- os.js: the reel figure takes `case.reelBg` (its first colour: Handovo #2F3BEA, Carekin #0F3B38, Syntra #F5E8D6) instead of
+  black while the poster loads.
