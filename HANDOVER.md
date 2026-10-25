@@ -928,3 +928,11 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Section 06 rebuilt from a temporary copy of Figma 123:34 (original untouched) as a journey: six rows of 1060 px, phones at
   x 200 / 820 alternating with step label, title and text; 6,700 px. Order: scan and check → Today → a change nobody misses →
   WhatsApp dose → Home mode → double-dose guard. Live screens sit 13.5 / 15.5 px inside each 420 × 897 phone card (393 × 874).
+
+### v189: Carekin journey phones smaller; AI Lab on one page
+- Carekin section 06 rebuilt (temporary Figma copy, deleted): phones 340 × 726 (were 420 × 897), each phone + 440 px text column
+  centred as a pair (x 282 / 818), title 38 px, text 20 px, rows of 856 px; 5,436 px. Live screens re-placed (inset 10.9 / 12.5,
+  318 × 708).
+- AI Lab: every project is shown, stacked (`.lab` gap 44 px). The tabs are a sticky bar (`.lab-tabs`, blurred, a box-shadow fills the
+  window padding above) that scrolls to a project; an IntersectionObserver (`labSpy`, root = window body) lights the tab of the project
+  in view (paused 900 ms after a tab click). Projects keep their own slide carousels.

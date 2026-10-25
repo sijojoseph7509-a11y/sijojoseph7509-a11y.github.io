@@ -1140,3 +1140,10 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   box-shadow: 0 4px 16px rgba(0, 0, 0, .28); opacity: 0; pointer-events: none; }
 .cfx-tap.go { animation: cfxTap .95s ease-out forwards; }
 @keyframes cfxTap { 0% { opacity: 0; transform: scale(1.5); } 28% { opacity: 1; transform: scale(1); } 48% { transform: scale(.78); } 100% { opacity: 0; transform: scale(1.15); } }
+
+/* v189: AI Lab on one page. The tabs stay pinned at the top of the window and jump to each project; projects stack with room between them */
+.lab-tabs { position: sticky; top: 0; z-index: 5; margin: -6px -4px 18px; padding: 10px 4px; background: rgba(246, 246, 248, .94); box-shadow: 0 -40px 0 0 rgba(246, 246, 248, .94);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); }
+.os.dark .lab-tabs { background: rgba(30, 30, 34, .94); box-shadow: 0 -40px 0 0 rgba(30, 30, 34, .94); }
+.lab { gap: 44px; }
+.lab-item { scroll-margin-top: 80px; }

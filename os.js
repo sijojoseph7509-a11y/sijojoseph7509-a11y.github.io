@@ -161,7 +161,7 @@
           for (let k = 0; k < how.length; k += 2) slides.push({ m: pics[(slides.length) % pics.length], body: `<p class="eyebrow">How I made it · ${k + 1}–${Math.min(how.length, k + 2)} of ${how.length}</p><h2>${esc(it.title)}</h2><ol class="lab-steps" start="${k + 1}">${how.slice(k, k + 2).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>` });
           if (pics.length > slides.length) slides.push({ m: pics[slides.length], body: `<p class="eyebrow">Built with</p><h2>${esc(it.title)}</h2>` });   // a spare image gets its own closing slide
           slides[slides.length - 1].body += `${it.ai ? `<p class="lab-ai"><b>Where AI helped</b>${esc(it.ai)}</p>` : ""}${it.built && it.built.length ? `<ul class="chips">${it.built.map((b) => `<li class="chip">${esc(b)}</li>`).join("")}</ul>` : ""}`;
-          return `<article class="lab-item" id="lab-${i}"${i ? " hidden" : ""} role="tabpanel" aria-labelledby="labtab-${i}">
+          return `<article class="lab-item" id="lab-${i}" role="tabpanel" aria-labelledby="labtab-${i}">
             <div class="lab-track" tabindex="0" aria-roledescription="carousel" aria-label="${esc(it.title)}">${slides.map((sl, k) => `
               <section class="lab-slide${k ? "" : " on"}" aria-roledescription="slide" aria-label="${k + 1} of ${slides.length}">${sl.mediaHtml || media(sl.m)}<div class="lab-txt">${sl.body}</div></section>`).join("")}
             </div>
@@ -482,6 +482,7 @@
     if (full) full.outerHTML = `<button class="lab-play" type="button" aria-label="Play again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>Play</span></button>`;
     window.Music?.duck?.(0.45);
   }
+  let labSpy = null, labSpyHold = 0;   // v189: scroll-spy for the AI Lab tabs
   function sizeLab() {   // v164: the AI Lab card fits the visible window, so the game is never cut off top or bottom
     const lab = body.querySelector(".lab"); if (!lab) return;
     const h = Math.round(Math.max(440, Math.min(700, body.clientHeight - 92)));
@@ -528,6 +529,17 @@
     if (window.SJT) SJT.view("/" + current, app.title);
     body.innerHTML = app.html();
     body.querySelectorAll(".lab-track").forEach(labTrack); sizeLab();
+    // v189: the tab of the project in view lights up as you scroll
+    if (labSpy) { labSpy.disconnect(); labSpy = null; }
+    const labItems = [...body.querySelectorAll(".lab-item")];
+    if (labItems.length > 1) {
+      labSpy = new IntersectionObserver((es) => {
+        if (Date.now() < labSpyHold) return;
+        const vis = es.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]; if (!vis) return;
+        const k = vis.target.id.slice(4); body.querySelectorAll("[data-lab-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.labTab === k)));
+      }, { root: body, threshold: [0.25, 0.5, 0.75] });
+      labItems.forEach((it) => labSpy.observe(it));
+    }
     body.querySelectorAll(".work-card img, .ab-proj img, .lab-media img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("in"); else { im.addEventListener("load", () => im.classList.add("in"), { once: true }); im.addEventListener("error", () => im.classList.add("in"), { once: true }); } });
     const nk = Object.keys(apps)[Object.keys(apps).indexOf(current) + 1];   // scroll on past the end to reach the next section
     if (nk) body.insertAdjacentHTML("beforeend", `<p class="next-hint" data-next="${esc(nk)}"><span>Keep scrolling for ${esc(apps[nk].title)}</span><i></i></p>`);
@@ -587,11 +599,10 @@
     }
     const tb = e.target.closest("[data-lab-tab]");
     if (tb) {
-      body.querySelectorAll(".lab-media.playing").forEach(unloadGame);
-      const k = tb.dataset.labTab;
+      // v189: every project is on one page; a tab scrolls to its project (the tabs stay pinned on top)
+      const k = tb.dataset.labTab, item = body.querySelector("#lab-" + k), tabs = body.querySelector(".lab-tabs");
       body.querySelectorAll("[data-lab-tab]").forEach((b) => b.setAttribute("aria-selected", String(b === tb)));
-      body.querySelectorAll(".lab-item").forEach((it) => { it.hidden = it.id !== "lab-" + k; });
-      const tr = body.querySelector("#lab-" + k + " .lab-track"); if (tr) tr.scrollLeft = 0;
+      if (item) { labSpyHold = Date.now() + 900; body.scrollTo({ top: item.offsetTop - (tabs ? tabs.offsetHeight : 0) - 14, behavior: reducedMotion ? "auto" : "smooth" }); }
       sound(); return;
     }
     const pl = e.target.closest(".lab-play");
