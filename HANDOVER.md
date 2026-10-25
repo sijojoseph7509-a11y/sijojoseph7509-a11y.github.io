@@ -936,3 +936,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - AI Lab: every project is shown, stacked (`.lab` gap 44 px). The tabs are a sticky bar (`.lab-tabs`, blurred, a box-shadow fills the
   window padding above) that scrolls to a project; an IntersectionObserver (`labSpy`, root = window body) lights the tab of the project
   in view (paused 900 ms after a tab click). Projects keep their own slide carousels.
+
+### v190: 15-second reels at the top of every case study
+- `tools/reels/reel.html?p=<slug>`: one template, one config per project, five 3-second beats of real material with one caption each
+  (Handovo: cover, goal and plan films in a Studio Display, three staff iPhones, end card; Carekin: cover, live prototype screens with
+  taps, end card; Ekmaati: idols by the row, name and mark, unboxing film, hand-made box, end card; Syntra: cover, kiosk screens,
+  a 360° world panning, AR tickets, end card). Open it in a browser to preview.
+- `tools/reels/record.mjs <base> <slugs…>` records it at 2x (screencast) and encodes with tools/handovo/frames2mp4.swift:
+  `work/<slug>/fx/reel.mp4` (1600 × 900, ~1.4 MB), `reel-540.mp4` (phones, ~0.5 MB), `reel-poster.webp`.
+- content.js `case.reel: true`; os.js inserts `<figure class="case-reel">` first in the case (full width, 16:9), muted loop, plays only
+  while in view, pause/play button, poster for reduced motion. A figure, so case-fx section indices are unaffected.
