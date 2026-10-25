@@ -98,6 +98,28 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     }
   });
 
+  // v188: live phones (Carekin). Each plays a short loop of real prototype screens: a pause, a finger tap where the button is,
+  // the next screen. steps: [[frame, tapX, tapY], …] with taps in the 412 × 917 prototype frame; a step without a tap ends the loop.
+  if (opts.seqs) opts.seqs.forEach(([i, x, y, w, h, steps]) => {
+    if (!secs[i]) return;
+    const box = document.createElement("div"); box.className = "cfx-seq"; box.setAttribute("aria-hidden", "true");
+    box.innerHTML = steps.map(([f]) => `<img src="${asset("live-" + f + ".webp")}" alt="" decoding="async">`).join("") + '<i class="cfx-tap"></i>';
+    place(i, box, x, y, w, h);
+    const imgs = [...box.querySelectorAll("img")], tap = box.querySelector(".cfx-tap");
+    let k = 0, timer = 0; imgs[0].classList.add("on");
+    const show = (n) => { imgs[k].classList.remove("on"); k = n; imgs[k].classList.add("on"); };
+    const step = () => {
+      const [, tx, ty] = steps[k];
+      if (tx == null) { timer = setTimeout(() => { show(0); timer = setTimeout(step, 1400); }, 2600); return; }
+      tap.style.left = (tx / 412) * 100 + "%"; tap.style.top = (ty / 917) * 100 + "%";
+      tap.classList.remove("go"); void tap.offsetWidth; tap.classList.add("go");
+      timer = setTimeout(() => { show((k + 1) % steps.length); timer = setTimeout(step, 1800); }, 430);
+    };
+    if (reduce) return;   // reduced motion: the first screen stays put
+    const o = new IntersectionObserver((es) => { clearTimeout(timer); if (es[0].isIntersecting) timer = setTimeout(step, 900); }, { threshold: 0.35 });
+    o.observe(box); cleanups.push(() => { o.disconnect(); clearTimeout(timer); });
+  });
+
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
   mo.observe(caseEl.ownerDocument.body, { childList: true, subtree: true });
 }

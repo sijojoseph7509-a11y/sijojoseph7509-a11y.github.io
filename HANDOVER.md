@@ -916,3 +916,15 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - case.html script: every `.grid4` with cards gets `.align`; each card spans as many rows as the busiest card and uses
   `grid-template-rows: subgrid`, so labels, titles and paragraphs line up (proto-personas, How the AI behaves, scale). Card labels
   stay on one line (`white-space: nowrap`, letter spacing .04em).
+
+### v188: Carekin live phones and a six-step journey
+- Source screens: the product file `rrp0zvRErU2svocZRN2KpT`, page "09 · Prototype" (and 08 for WhatsApp / Home mode), exported at
+  2x via temporary ×2 copies: `work/carekin/fx/live-*.webp` (scan, check, today, today-detail = overlay 27:1020 over Today,
+  todaychg, change, wa, wa-before = wa with the reply bubbles painted out, home, done, guard; 472 KB in all).
+- case-fx `seqs`: [section, x, y, w, h, [[frame, tapX, tapY], …]] (taps in the 412 × 917 frame). Each live phone pauses, shows a
+  touch dot where the prototype's button is, cross-fades to the next screen, holds the last one and loops while in view
+  (`.cfx-seq`, `.cfx-tap`); reduced motion keeps the first screen.
+- Section 02 (the four phones): screens at x 96.5 / 416.5 / 736.5 / 1056.5, y 136.5 / 66.5 / 106.5 / 156.5, 267.5 × 596.
+- Section 06 rebuilt from a temporary copy of Figma 123:34 (original untouched) as a journey: six rows of 1060 px, phones at
+  x 200 / 820 alternating with step label, title and text; 6,700 px. Order: scan and check → Today → a change nobody misses →
+  WhatsApp dose → Home mode → double-dose guard. Live screens sit 13.5 / 15.5 px inside each 420 × 897 phone card (393 × 874).
