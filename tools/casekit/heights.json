@@ -1,0 +1,20 @@
+{
+ "carekin": {
+  "k-origin": 840,
+  "k-business": 1255,
+  "k-persona": 1384,
+  "k-whiteboard": 1354,
+  "k-map": 1034,
+  "k-extremes": 1010,
+  "k-tools": 728
+ },
+ "syntra": {
+  "k-hook": 1254,
+  "k-persona": 968,
+  "k-business": 1109,
+  "k-whiteboard": 1376,
+  "k-map": 1034,
+  "k-extremes": 902,
+  "k-tools": 698
+ }
+}

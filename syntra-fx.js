@@ -28,6 +28,8 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
     return s;
   });
   const H = (i) => +sections[i][1];
+  // v200: effects are tied to a section by its file name, so added sections (k-*.webp) never shift them
+  const at = (f) => sections.findIndex((x) => x[0] === f);
   // a box in documentation coordinates → percentages of its section
   function box(i, el, x, y, w, h) {
     Object.assign(el.style, { left: (x / W) * 100 + "%", top: (y / H(i)) * 100 + "%", width: (w / W) * 100 + "%", height: (h / H(i)) * 100 + "%" });
@@ -53,18 +55,18 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
   cleanups.push(() => seen.disconnect());
 
   // ── 3. Cover: the bottle breathes behind the page, the headline drifts in and out of focus ──
-  secs[0].classList.add("sx-stack");
-  layer(0, "sx-under sx-breathe", 0, 0, 1440, 2024, img("cover-bg.webp"));
-  layer(0, "sx-under sx-drift", -555, 1598, 1449, 1127, img("cover-bottles.webp"));
-  layer(0, "sx-mul sx-focus", 150, 1250, 1140, 180, img("find-text.webp", "Let's find your perfume."));
+  secs[at("01.webp")].classList.add("sx-stack");
+  layer(at("01.webp"), "sx-under sx-breathe", 0, 0, 1440, 2024, img("cover-bg.webp"));
+  layer(at("01.webp"), "sx-under sx-drift", -555, 1598, 1449, 1127, img("cover-bottles.webp"));
+  layer(at("01.webp"), "sx-mul sx-focus", 150, 1250, 1140, 180, img("find-text.webp", "Let's find your perfume."));
   // Reflection closes on the same line
-  layer(14, "sx-mul sx-focus", 150, 1265, 1140, 180, img("find-text.webp", "Let's find your perfume."));   // v152: 876 px higher (group photo removed)
+  layer(at("15.webp"), "sx-mul sx-focus", 150, 1265, 1140, 180, img("find-text.webp", "Let's find your perfume."));   // v152: 876 px higher (group photo removed)
 
   // ── 4. Meet Syntra: the kiosk photo, slowly breathing in its light ──
-  layer(1, "sx-mul sx-kenburns", 70, 350, 1300, 1000, img("meet-hero.webp", "Syntra at our exhibit: a visitor in the VR headset in front of the lit backdrop and the screen."));
+  layer(at("02.webp"), "sx-mul sx-kenburns", 70, 350, 1300, 1000, img("meet-hero.webp", "Syntra at our exhibit: a visitor in the VR headset in front of the lit backdrop and the screen."));
 
   // ── 5. How it works: the line draws itself, the controls move, the weights grow, 162 counts up ──
-  const how = layer(7, "sx-svg", 0, 0, 1440, 3300, `
+  const how = layer(at("08.webp"), "sx-svg", 0, 0, 1440, 3300, `
     <svg viewBox="0 0 1440 3300" aria-hidden="true">
       <defs>
         <linearGradient id="sxLine" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#F99C36"/><stop offset="1" stop-color="#593314"/></linearGradient>
@@ -85,7 +87,7 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
       <g class="sx-bars">${[[36, "#E39A1B"], [26, "#D37A19"], [22, "#BD680F"], [16, "#975C1C"]].reduce((a, [v, c]) => {
         const w = 1072 * v / 100; a.s += `<rect x="${a.x}" y="2490" width="${w - 4}" height="14" rx="7" fill="${c}" style="--d:${a.k * .18}s"/>`; a.x += w; a.k++; return a; }, { s: "", x: 184, k: 0 }).s}</g>
     </svg>`);
-  const n162 = layer(7, "sx-num", 184, 2140, 360, 220, `<span style="--fs:180">0</span>`);
+  const n162 = layer(at("08.webp"), "sx-num", 184, 2140, 360, 220, `<span style="--fs:180">0</span>`);
   // knob: the six marks of the printed dial (0° = up, clockwise), sliders: three steps each
   const ANG = [-145, -90, -35, 35, 90, 145], KX = 360, KY = 1710;
   const tick = how.querySelector(".sx-tick"), glow = how.querySelector(".sx-knobglow"), caps = [...how.querySelectorAll(".sx-cap")];
@@ -97,7 +99,7 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
     caps.forEach((c, k) => c.style.transform = `translate(var(--x), ${capY(steps[k])}px)`);
   }
   setControls();
-  onEnter[7] = () => {
+  onEnter[at("08.webp")] = () => {
     how.classList.add("sx-go");
     count(n162.firstChild, 162, 1600, 600);
     if (reduce) return;
@@ -110,10 +112,10 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
   cleanups.push(() => clearInterval(tickTimer));
 
   // ── 6. The screens: the kiosk plays its own sequence inside the hero screen ──
-  const loop = layer(8, "sx-loop", 0, 360, 1440, 810,
+  const loop = layer(at("09.webp"), "sx-loop", 0, 360, 1440, 810,
     [0, 1, 2, 3, 4, 5, 6].map((k) => `<img src="${asset(`loop-${k}.webp`)}" srcset="${asset(`loop-${k}.webp`)} 960w, ${asset(`loop-${k}@2x.webp`)} 1920w" sizes="100vw" alt="" decoding="async" loading="lazy">`).join(""));
   let loopTimer = 0;
-  onEnter[8] = () => {
+  onEnter[at("09.webp")] = () => {
     if (reduce) return;
     const frames = [...loop.children], hold = [2600, 2400, 2400, 1500, 1900, 1700, 5200];
     let k = 0;
@@ -127,7 +129,7 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
     ["symmetrical_garden_02", "Flower garden"], ["bell_park_pier", "Lake pier"], ["autumn_forest_04", "Autumn forest"],
     ["rogland_clear_night", "Milky Way"], ["dry_orchard_meadow", "Orchard"], ["lago_disola", "Snowy Alps"],
     ["forest_slope", "Pine forest"], ["kiara_1_dawn", "Desert dawn"], ["lakeside_night", "Starry lake"], ["small_harbor_01", "Lobby"]];
-  const vr = layer(9, "sx-vr", 0, 1480, 1440, 281, `
+  const vr = layer(at("10.webp"), "sx-vr", 0, 1480, 1440, 281, `
     <canvas aria-label="360 degree view of a Syntra VR world. Drag to look around."></canvas>
     <p class="sx-vr-hint">Drag to look around</p>
     <div class="sx-vr-chips" role="group" aria-label="Choose a world">${WORLDS.map(([f, n], k) => `<button type="button" data-w="${k}"${k ? "" : ' aria-pressed="true"'}>${n}</button>`).join("")}</div>`);
@@ -141,10 +143,10 @@ export default function syntra(caseEl, { slug, v, sections, base = "" }) {
 
   // ── 8. Take it home: six tickets feed out of the printer, then 66 counts up ──
   const tickets = ["164936", "165536", "170525", "174335", "200951", "140032"].map((r, k) =>
-    layer(10, "sx-ticket", 110 + k * 208, 400, 192, 562, `<img src="${asset(`receipt-${r}.webp`)}" alt="" decoding="async" loading="lazy">`));
+    layer(at("11.webp"), "sx-ticket", 110 + k * 208, 400, 192, 562, `<img src="${asset(`receipt-${r}.webp`)}" alt="" decoding="async" loading="lazy">`));
   tickets.forEach((t, k) => t.style.setProperty("--d", k * 0.32 + "s"));
-  const n66 = layer(10, "sx-num", 760, 1520, 300, 180, `<span style="--fs:140">0</span>`);
-  onEnter[10] = () => { secs[10].classList.add("sx-go"); count(n66.firstChild, 66, 1400, 2300); };
+  const n66 = layer(at("11.webp"), "sx-num", 760, 1520, 300, 180, `<span style="--fs:140">0</span>`);
+  onEnter[at("11.webp")] = () => { secs[at("11.webp")].classList.add("sx-go"); count(n66.firstChild, 66, 1400, 2300); };
 
   // ── 9. perfume motes drifting up through the page, and a warm lantern that follows the pointer ──
   const stopMotes = reduce ? () => {} : motes(caseEl, touch);

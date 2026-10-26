@@ -1033,3 +1033,25 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - The staff app section is now 32, right after "Language and access" (was 41, near the end); sections 33–41 moved down one.
   Eyebrow "Handovo for staff" (no "Concept"), one short line instead of the paragraph, and the "designed screens" caption removed
   (Sijo's call). content.js reordered and renumbered; reader rebuilt (phone crops are now m/32-*).
+
+### v200: portfolio review changes across Syntra, Handovo and Carekin
+- Order: Syntra first, Handovo second, then Carekin and Ekmaati (content.js projects, tools/reader/projects.py ORDER, the
+  plain-page list in index.html). Syntra's card summary and reel title now lead with VR and AR.
+- Every case gained the same thinking layer, in "I", with real conversations only (Sijo confirmed he talked with store
+  managers and staff, family carers, and perfume shoppers / exhibit visitors) and every number cited in the section:
+  how I found the problem, proof it is wider than one place, "Is it worth solving?" (cost, market, proof people pay, who pays as a
+  hypothesis, how I'll validate it with pass marks, risks, a verdict), detailed Personas (renamed from proto-personas: a day,
+  goals, frustrations, won't accept, must), a Whiteboard (sticky notes → five whys → circled root cause → how might we → ideas,
+  with crossed-out ideas and why), "From what I heard to what I designed", "Designing for the highs and lows", and "How I made it"
+  (tools and exactly where AI was used; Carekin's screens are all Sijo's own work; Syntra was a team of three, his parts named).
+- Handovo: written into tools/handovo/case.html (now 50 sections) and rendered by render.mjs; the VM story at Marks & Spencer and
+  Vero Moda; evidence from Retail Week Talking Shop 2026, Nudge 2022, YOOBIC and Legion 2025; business case with IBEF and
+  Zebra–Reflexis ($575M, 2020). content.js renumbered and every film, pop and draw index remapped.
+- Carekin and Syntra: their pages are Figma exports, so the new sections are built by tools/casekit (content.py = the text,
+  build.py = HTML in each brand + content.js + text version, render.mjs = images k-*.webp, kit/ pictures for the text version,
+  whiteboard.css shared with Handovo). Files are named k-<id>.webp so the numbered Figma files keep their names. Carekin's
+  proto-persona section (18) is replaced by k-persona. syntra-fx.js now finds sections by file name (at("08.webp")), not position.
+- Text versions: kit sections are inserted into work/<slug>/reader.html (data-kit="1", replaced on each run). page.py now writes
+  track.js and the Umami connect-src into every standalone page (regenerating had dropped them).
+- To change a kit section: edit tools/casekit/content.py → `python3 tools/casekit/build.py html` → `node tools/casekit/render.mjs
+  <base>` → update heights in content.js (or rerun `build.py site <build>` on a content.js without the k- entries).

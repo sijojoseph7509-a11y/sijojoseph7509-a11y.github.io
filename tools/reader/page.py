@@ -30,7 +30,7 @@ def write_page(slug, P, main):
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self' https://gateway.umami.is; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
   <base href="../../">
   <title>{esc(title)}</title>
   <meta name="description" content="{esc(P['summary'])}">
@@ -47,6 +47,7 @@ def write_page(slug, P, main):
   <meta name="theme-color" content="{P['color']}">
   <link rel="icon" href="{ICON}">
   <link rel="stylesheet" href="reader.css?v={v}">
+  <script src="track.js?v={v}" data-id="1bd5e5d0-dafc-4bae-8a4c-c4046bd56e07" defer></script>
   <script type="application/ld+json">{json.dumps(ld)}</script>
 </head>
 <body class="rp">

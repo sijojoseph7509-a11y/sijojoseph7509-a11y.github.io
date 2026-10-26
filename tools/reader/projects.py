@@ -23,7 +23,7 @@ PROJECTS = {
                     summary='Brand identity, naming and temple-form packaging for the GI-tagged clay Ganesh idols of Pen.',
                     color='#2A1A10', theme='ekmaati'),
 }
-ORDER = ['syntra', 'carekin', 'handovo', 'ekmaati']
+ORDER = ['syntra', 'handovo', 'carekin', 'ekmaati']   # v200: Syntra first, Handovo second
 
 OVERRIDES = {
     'carekin': {

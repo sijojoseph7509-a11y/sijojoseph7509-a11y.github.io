@@ -4,7 +4,26 @@
      and numbers in the screens are the prototype's scripted demo (Loom & Co., Koramangala), not a real store's data.
      Statistics in "Context by numbers" are cited to their sources. Illustrations in ill/ are AI-generated in Sijo's style. -->
 <html lang="en"><head><script>if (/[?&]anim/.test(location.search)) document.documentElement.classList.add("anim")</script><meta charset="utf-8">
+<link rel="stylesheet" href="../casekit/whiteboard.css">
 <style>
+.wb { --wb-accent: #2F3BEA; }
+.src { font: 500 13px/1.4 GSCode, monospace; color: var(--mute); margin-top: 14px; letter-spacing: .02em; }
+.dark .src { color: #8A8A99; }
+.stat b { font-variant-numeric: tabular-nums; }
+.row-map { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.row-map p { margin: 0; }
+.row-map .arr { text-align: center; font: 700 26px/1 Inter; color: var(--blue); }
+.persona { background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 34px; }
+.persona .who { display: flex; gap: 18px; align-items: center; margin-bottom: 22px; }
+.persona .av { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; font: 800 24px/1 Mona; color: #fff; }
+.persona h3 { margin: 0; } .persona .meta { font-size: 15px; color: var(--mute); margin-top: 4px; line-height: 1.3; }
+.persona .f { display: grid; grid-template-columns: 148px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.persona .f p { font-size: 16px; line-height: 1.5; margin: 0; }
+.persona .f .lab { margin: 4px 0 0; }
+.xt { border-radius: 20px; padding: 28px; }
+.xt .lvl { display: inline-block; font: 600 12px/1 GSCode, monospace; letter-spacing: .08em; text-transform: uppercase; padding: 7px 10px; border-radius: 99px; margin-bottom: 16px; }
+.xt p { font-size: 16px; line-height: 1.5; }
+
 @font-face { font-family: Inter; src: url(../../fonts/inter-latin.woff2) format("woff2"); font-weight: 100 900; }
 @font-face { font-family: Mona; src: url(../../fonts/mona-400-900.woff2) format("woff2"); font-weight: 400 900; }
 @font-face { font-family: GSCode; src: url(../../fonts/gscode-400.woff2) format("woff2"); }
@@ -188,6 +207,24 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <img class="shot" data-fx-video="tour" src="shots/tour01.webp" alt="" style="margin-top:72px">
 </section>
 
+<!-- v200 where I found the problem -->
+<section>
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">Where I found the problem</p><h2>I saw it every day as a visual merchandiser.</h2></div>
+    <p>Before design school I worked as a visual merchandiser at Marks &amp; Spencer and Vero Moda. My job was to turn head-office plans into what customers see, and I depended on the store team to keep it that way all day. That is where I saw how a store’s day really runs.</p>
+  </div>
+  <div class="grid4" style="margin-top:64px">
+    <div class="card"><p class="lab">What I saw · 01</p><h3>The plan didn’t reach everyone</h3><p>Priorities set at the morning huddle never reached people on the later shift or on a break.</p></div>
+    <div class="card"><p class="lab">What I saw · 02</p><h3>Tasks got lost in WhatsApp</h3><p>A task posted in the store group was buried under photos, leave requests and “ok”s within the hour.</p></div>
+    <div class="card"><p class="lab">What I saw · 03</p><h3>The manager became the messenger</h3><p>The manager spent the day walking the floor asking who had done what, instead of selling and coaching.</p></div>
+    <div class="card"><p class="lab">What I saw · 04</p><h3>Head-office work landed late</h3><p>Visual merchandising and promotion briefs were done late, or differently in every store, because no one owned the follow-up.</p></div>
+  </div>
+  <div class="card" style="margin-top:28px; background:var(--paper); border:0; display:grid; grid-template-columns:240px 1fr; gap:40px; align-items:center">
+    <p class="k" style="margin:0">Then I checked it wasn’t just me</p>
+    <p style="margin:0">I talked with store managers and floor staff, including former colleagues, about how the day’s plan reaches the floor. The same four stories came back from every store: the huddle, the group chat, the manager chasing, the brief done late.</p>
+  </div>
+</section>
+
 <!-- 04 problem -->
 <section style="background:var(--paper)">
   <p class="eye">The problem</p>
@@ -214,6 +251,22 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <div style="margin-top:72px; padding-top:48px; border-top:1px solid #26262F; display:grid; grid-template-columns:1fr 1fr; gap:56px">
     <div class="stat"><b data-fx-pop="stat-4">400M+</b><p>monthly WhatsApp users in India, its largest market, so staff already know the chat.</p><p class="src">WhatsApp, as reported by TechCrunch, July 2019</p></div>
     <div style="align-self:end"><p style="font-size:20px">Why it matters: the tool staff already open all day is a chat app. Handovo puts the work there instead of asking thirty people to learn a new app.</p></div>
+  </div>
+</section>
+
+<!-- v200 evidence across retail -->
+<section class="dark">
+  <p class="eye">Not just my stores</p>
+  <h2>The same gap shows up across retail, in every country that measures it.</h2>
+  <div class="grid4" style="margin-top:64px">
+    <div class="card stat"><b style="display:block; font:800 72px/1 Mona; color:var(--lime)">25%</b><p style="margin-top:16px">of UK frontline retail staff call head-office communication ineffective, up from 14% in the previous survey.</p><p class="src">Retail Week, Talking Shop 2026 · 500 store workers</p></div>
+    <div class="card stat"><b style="display:block; font:800 72px/1 Mona; color:var(--lime)">59%</b><p style="margin-top:16px">of US and Canadian retail workers say the messages they get are somewhat to not at all useful, while 81% of their leaders think theirs are meaningful.</p><p class="src">Nudge, retail employee survey 2022</p></div>
+    <div class="card stat"><b style="display:block; font:800 72px/1 Mona; color:var(--lime)">72%</b><p style="margin-top:16px">of retail frontline staff would feel more connected to head office if messages came to their phone. 51% of messages still go by email.</p><p class="src">YOOBIC · 1,000 frontline workers</p></div>
+    <div class="card stat"><b style="display:block; font:800 72px/1 Mona; color:var(--lime)">65%</b><p style="margin-top:16px">of UK retail managers spend over three hours a week on scheduling alone; 46% fill gaps by contacting staff one by one.</p><p class="src">Legion Technologies, 2025</p></div>
+  </div>
+  <div class="grid2" style="margin-top:56px">
+    <p>Different countries and different surveys, one pattern: the plan leaves head office or the manager, and doesn’t arrive whole. In India the channel is a WhatsApp group, which makes it worse, because every kind of message lands in the same place.</p>
+    <p>That told me the problem wasn’t one bad manager or one brand. It is how stores pass work along, so it is worth designing for.</p>
   </div>
 </section>
 
@@ -273,17 +326,57 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <p class="cap" style="margin-top:28px">Categories, not named products: a reading of the kinds of tool a store like this uses today.</p>
 </section>
 
-<!-- 10 proto-personas -->
-<section style="background:var(--paper)">
-  <p class="eye">Proto-personas</p>
-  <h2>Four people, one day, very different jobs.</h2>
-  <div class="grid4" style="margin-top:64px; gap:24px">
-    <div class="card"><p class="lab">Store manager</p><h3>Runs the day</h3><p><b>Needs</b> the plan to reach the floor and only the calls that are really hers.</p><p style="margin-top:12px"><b>Fears</b> an agent that promises a customer something she wouldn’t.</p><p style="margin-top:12px"><b>Uses</b> the control room on a laptop and phone.</p></div>
-    <div class="card"><p class="lab">Shift lead · Priya</p><h3>Keeps a shift moving</h3><p><b>Needs</b> to know who is in, what is late and who needs help.</p><p style="margin-top:12px"><b>Fears</b> being the one who forgot to pass something on.</p><p style="margin-top:12px"><b>Uses</b> chat: asks “status” and gets a summary.</p></div>
-    <div class="card"><p class="lab">Floor staff · Meera</p><h3>Does the work</h3><p><b>Needs</b> to know her own tasks and reply in a word.</p><p style="margin-top:12px"><b>Fears</b> being watched or ranked by a machine.</p><p style="margin-top:12px"><b>Uses</b> WhatsApp, in English; Kavya uses Kannada.</p></div>
-    <div class="card"><p class="lab">Owner</p><h3>Sees the result</h3><p><b>Needs</b> sales against target and what went wrong, once a day.</p><p style="margin-top:12px"><b>Fears</b> finding out about problems a week late.</p><p style="margin-top:12px"><b>Uses</b> the daily digest.</p></div>
+<!-- v200 is it worth solving -->
+<section>
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">Is it worth solving?</p><h2>A daily cost, a proven market, an unserved gap.</h2></div>
+    <p>Before designing anything I asked whether a business would pay to fix this. A real problem isn’t enough; someone has to lose money or time to it, and someone has to buy the fix.</p>
   </div>
-  <p class="cap" style="margin-top:28px">Proto-personas built from the prototype’s cast. They are assumptions for the pilot to test, not research findings. Names are fictional.</p>
+  <div class="grid3" style="margin-top:64px">
+    <div class="card"><p class="lab">The cost</p><h3>Paid every day, in hours and sales</h3><p>Managers lose hours chasing updates and filling gaps by hand. Late or uneven head-office work means a promotion or a display that isn’t there when customers are.</p></div>
+    <div class="card"><p class="lab">Proof people pay</p><h3>Big chains already buy this</h3><p>Zebra bought Reflexis, store task and workforce software, for $575 million in 2020; Reflexis made about $66 million in 2019. Zipline, YOOBIC and WorkJam sell the same idea.</p><p class="src">Business Wire, 28 July 2020</p></div>
+    <div class="card"><p class="lab">The gap</p><h3>Built for chains that aren’t India’s</h3><p>Those tools are separate apps, priced for large chains and English-first. The mid-size chains and franchise stores I worked near run on a WhatsApp group instead.</p></div>
+  </div>
+  <div class="grid3" style="margin-top:28px">
+    <div class="card" style="background:var(--paper); border:0"><p class="lab">The market</p><p style="font:800 44px/1 Mona; color:var(--blue); margin:6px 0 10px">$952B → $1.6T</p><p>Indian retail in 2024, and projected for 2030. Organised retail, the stores with teams and targets, grows fastest.</p><p class="src">IBEF, 2025 · Deloitte–RAI 2025</p></div>
+    <div class="card" style="background:var(--paper); border:0"><p class="lab">Who pays, my hypothesis</p><p>The owner pays per store, per month. The manager uses it. Staff pay nothing and install nothing: they stay in WhatsApp. WhatsApp Business messages are the main running cost.</p></div>
+    <div class="card" style="background:var(--paper); border:0"><p class="lab">How I’ll validate it</p><p><b>1</b> The pilot: 40% fewer decisions reach the manager in four weeks.<br><b>2</b> The owner pays for month two.<br><b>3</b> Running cost stays under a tenth of the price.</p></div>
+  </div>
+  <p style="margin-top:44px; font:700 30px/1.25 Mona; letter-spacing:-.02em; max-width:1100px">My answer: worth solving. Big chains already pay for it, and the stores I know can’t use what they buy.</p>
+</section>
+
+<!-- 10 personas (v200: detailed, from my conversations and my VM years) -->
+<section style="background:var(--paper)">
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">Personas</p><h2>Four people, one store, very different days.</h2></div>
+    <p>Built from my conversations with store managers and floor staff, and from my own years on the floor. Each is a composite; the names are fictional.</p>
+  </div>
+  <div class="grid2" style="margin-top:56px; gap:28px">
+    <div class="persona"><div class="who"><span class="av" style="background:#2F3BEA">A</span><div><h3>Anand, 41 · store manager</h3><p class="meta">Runs a 30-person fashion store · laptop in the back office, phone on the floor</p></div></div>
+      <div class="f"><p class="lab">A day</p><p>Huddle at 9:30, then walks the floor, answers the group chat, approves discounts, chases counts and reports sales to the owner at close.</p></div>
+      <div class="f"><p class="lab">Goals</p><p>Hit the day’s target; the head-office brief done before the area manager visits.</p></div>
+      <div class="f"><p class="lab">Frustrations</p><p>Repeating the plan all day; finding at 6 pm that a task never happened.</p></div>
+      <div class="f"><p class="lab">Won’t accept</p><p>An agent that promises a customer something he wouldn’t, or moves money.</p></div>
+      <div class="f"><p class="lab">Handovo must</p><p>Say the plan once, bring him only the calls that are his, and show why.</p></div></div>
+    <div class="persona"><div class="who"><span class="av" style="background:#7A5AF8">P</span><div><h3>Priya, 29 · shift lead</h3><p class="meta">Five years in retail · English and Kannada · always on her phone</p></div></div>
+      <div class="f"><p class="lab">A day</p><p>Opens or closes, moves people between sections, covers breaks and hands the shift over.</p></div>
+      <div class="f"><p class="lab">Goals</p><p>Her shift runs without the manager stepping in.</p></div>
+      <div class="f"><p class="lab">Frustrations</p><p>Not knowing who is in or what is late; being blamed for what wasn’t passed on.</p></div>
+      <div class="f"><p class="lab">Won’t accept</p><p>Another dashboard to check between customers.</p></div>
+      <div class="f"><p class="lab">Handovo must</p><p>Tell her who is stuck, let her send help in one tap, and hand open work to the next shift.</p></div></div>
+    <div class="persona"><div class="who"><span class="av" style="background:#E8590C">M</span><div><h3>Meera, 24 · floor staff</h3><p class="meta">Womenswear · first retail job · WhatsApp all day, little else</p></div></div>
+      <div class="f"><p class="lab">A day</p><p>Folds, refills, helps customers, counts stock when asked; on her feet for nine hours.</p></div>
+      <div class="f"><p class="lab">Goals</p><p>Know exactly what is hers, finish it, go home on time.</p></div>
+      <div class="f"><p class="lab">Frustrations</p><p>Missing a task posted while she was with a customer, then being told off.</p></div>
+      <div class="f"><p class="lab">Won’t accept</p><p>Being tracked, timed or ranked by a machine; installing another app.</p></div>
+      <div class="f"><p class="lab">Handovo must</p><p>Send only her tasks, in her language, with a one-word reply.</p></div></div>
+    <div class="persona"><div class="who"><span class="av" style="background:#0E9F6E">S</span><div><h3>Suresh, 52 · owner</h3><p class="meta">Three stores in one city · reads reports on his phone at night</p></div></div>
+      <div class="f"><p class="lab">A day</p><p>Visits one store, calls the other two managers, checks sales against target.</p></div>
+      <div class="f"><p class="lab">Goals</p><p>Every store runs the same way; he hears about problems the same day.</p></div>
+      <div class="f"><p class="lab">Frustrations</p><p>Finding out a week later that a promotion was never set up.</p></div>
+      <div class="f"><p class="lab">Won’t accept</p><p>A tool his managers ignore, or one that costs more than it saves.</p></div>
+      <div class="f"><p class="lab">Handovo must</p><p>One plain digest a day, in counts, and a price per store that pays for itself.</p></div></div>
+  </div>
 </section>
 
 <!-- 11 journey map -->
@@ -301,6 +394,63 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
         <g font-family="Inter" font-size="14" fill="#6B6B78"><text x="80" y="30">In control</text><text x="420" y="158">Most stretched</text></g></svg></div>
       <div class="rh" style="color:var(--blue)">With Handovo</div><div><b>One goal</b> becomes a plan for everyone on shift.</div><div><b>Tasks</b> on each phone, with an owner and a time.</div><div><b>Rules</b> decide what reaches her.</div><div><b>Handover</b> moves open work with suggested owners.</div><div><b>Digest</b> writes itself from the day.</div>
     </div>
+  </div>
+</section>
+
+<!-- v200 whiteboard: from symptoms to root cause to the idea -->
+<section style="padding-bottom:110px">
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">Whiteboard</p><h2>How I got from symptoms to the root cause.</h2></div>
+    <p>I put everything I had seen and heard on one board, asked “why” until the answer stopped being about one person, and only then looked for ideas. Ideas that broke what I’d heard were crossed out.</p>
+  </div>
+  <div class="wb">
+    <div class="cols">
+      <div><h4>What I saw &amp; heard<small>my VM years + conversations</small></h4>
+        <div class="note n-yellow">Huddle plan never reached the 2 pm shift</div>
+        <div class="note n-pink">Task buried in a 200-message WhatsApp group</div>
+        <div class="note n-blue">Manager walks the floor asking “who did this?”</div>
+        <div class="note n-green">Head-office brief done late, or differently</div>
+        <div class="note n-orange">“I never saw that message”</div></div>
+      <div><h4>Why? Why? Why?<small>until it isn’t about one person</small></h4>
+        <div class="why">
+          <p><b>Why 1</b> Tasks don’t get done on time.</p><div class="down"></div>
+          <p><b>Why 2</b> People didn’t know the task was theirs.</p><div class="down"></div>
+          <p><b>Why 3</b> It was said once, at the huddle or in the group.</p><div class="down"></div>
+          <p><b>Why 4</b> No one owns each task or follows it up.</p><div class="down"></div>
+          <p><b>Why 5</b> The manager is the only one who can.</p>
+        </div>
+        <div class="root"><svg viewBox="0 0 400 120" preserveAspectRatio="none"><path d="M18 64 C 10 18, 120 6, 210 8 C 320 10, 396 30, 390 66 C 384 104, 270 116, 190 114 C 92 112, 14 100, 22 58" fill="none" stroke="#2F3BEA" stroke-width="3.5" stroke-linecap="round"/></svg><em>root cause</em>The manager is the only router of every task and every decision.</div>
+      </div>
+      <div><h4>So, how might we…</h4>
+        <div class="hmw"><em>HMW</em>…let the manager say it once, and have it reach the right person, followed up, without losing control?</div>
+        <div class="idea"><i>1</i>One goal in, tasks out with an owner and a reason</div>
+        <div class="idea"><i>2</i>Staff stay in WhatsApp; no new app</div>
+        <div class="idea"><i>3</i>The agent follows up, not the manager</div>
+        <div class="idea"><i>4</i>The manager sets what it may do alone</div>
+        <div class="dead"><h4 style="font-size:28px; margin-bottom:6px">Crossed out</h4>
+          <p><s>A new app for staff</s> they won’t install it</p>
+          <p><s>Fully automatic AI</s> managers won’t trust it</p>
+          <p><s>Stricter group rules</s> doesn’t scale past 10 people</p></div>
+      </div>
+    </div>
+    <svg class="arrow" style="left:360px; top:380px; width:36px; height:30px" viewBox="0 0 60 40"><path d="M4 20 C 20 8, 36 30, 54 18 M44 10 L54 18 L44 26"/></svg>
+    <svg class="arrow" style="left:774px; top:380px; width:36px; height:30px" viewBox="0 0 60 40"><path d="M4 20 C 20 8, 36 30, 54 18 M44 10 L54 18 L44 26"/></svg>
+  </div>
+</section>
+
+<!-- v200 research to decisions -->
+<section style="background:var(--paper)">
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">From what I heard to what I built</p><h2>Every decision traces back to something real.</h2></div>
+    <p>Nothing in the design is there because it looked good. Each choice answers something I saw on the floor or heard in a conversation.</p>
+  </div>
+  <div style="margin-top:48px; border-top:1px solid var(--line)">
+    <div class="row-map"><p><span class="lab">I heard</span><br>“Staff won’t install another app.”</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>Tasks arrive in WhatsApp. The staff app is optional.</p></div>
+    <div class="row-map"><p><span class="lab">I heard</span><br>Managers won’t hand over money or people decisions.</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>Three settings per rule; discounts and people stay Yours only.</p></div>
+    <div class="row-map"><p><span class="lab">I saw</span><br>Tasks buried in one noisy group.</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>Each person gets only their own tasks, with a time and a reason.</p></div>
+    <div class="row-map"><p><span class="lab">I saw</span><br>The manager chasing everyone all day.</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>The agent nudges once, then goes to the shift lead.</p></div>
+    <div class="row-map"><p><span class="lab">I heard</span><br>Staff fear being watched.</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>Counts, never rankings, and never anyone’s location.</p></div>
+    <div class="row-map" style="border:0"><p><span class="lab">I saw</span><br>Four languages on one floor.</p><span class="arr">→</span><p><span class="lab">So I designed</span><br>English, Hindi, Kannada and Malayalam; replies in the language written.</p></div>
   </div>
 </section>
 
@@ -537,6 +687,22 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   </div>
 </section>
 
+<!-- v200 designing for the highs and lows -->
+<section>
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">Designing for the highs and lows</p><h2>The busiest day and the worst day decide if it’s trusted.</h2></div>
+    <p>A normal Thursday is easy. I designed for the extremes too, because that is when a manager decides whether to keep using it.</p>
+  </div>
+  <div class="grid3" style="margin-top:56px; gap:24px">
+    <div class="xt" style="background:#EEF0FF"><span class="lvl" style="background:#2F3BEA; color:#fff">High · sale day</span><h3>Diwali or end of season: footfall triples</h3><p>Non-urgent asks wait in one batch for the manager; urgent customers still jump the queue; the shift lead takes the overflow.</p></div>
+    <div class="xt" style="background:#EEF0FF"><span class="lvl" style="background:#2F3BEA; color:#fff">High · launch</span><h3>A new collection lands overnight</h3><p>One head-office brief becomes a task per section, each with a photo to confirm, due before the doors open.</p></div>
+    <div class="xt" style="background:#F2FFE0"><span class="lvl" style="background:#D4FF3A; color:#0B0B0F">Low · quiet day</span><h3>A rainy Tuesday, nobody in</h3><p>The agent suggests work from the backlog: counts, display refresh, product training.</p></div>
+    <div class="xt" style="background:#F2FFE0"><span class="lvl" style="background:#D4FF3A; color:#0B0B0F">Low · manager away</span><h3>The manager is on leave</h3><p>The shift lead gets the Asks you decisions. Yours only waits for a person; it never goes to the AI.</p></div>
+    <div class="xt" style="background:#FFF0F0"><span class="lvl" style="background:#E5484D; color:#fff">Worst · no network</span><h3>The internet or WhatsApp is down</h3><p>Tasks queue and go out when it returns; the shift lead sees what didn’t send.</p></div>
+    <div class="xt" style="background:#FFF0F0"><span class="lvl" style="background:#E5484D; color:#fff">Worst · AI down</span><h3>The model fails or hits its daily cap</h3><p>A scripted reader takes over. Anything it can’t place goes to a person, never a guess.</p></div>
+  </div>
+</section>
+
 <!-- 28 language -->
 <section class="dark" data-new="language">
   <div class="grid2" style="align-items:center; grid-template-columns:440px 1fr">
@@ -722,6 +888,20 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
       <li style="padding:18px 0; border-bottom:1px solid var(--line)">Connect the billing system so sales and stock update themselves.</li>
       <li style="padding:18px 0">Read the photos staff send back, so “done” can be checked, then deleted after a day.</li>
     </ul></div>
+  </div>
+</section>
+
+<!-- v200 how I made it -->
+<section class="dark">
+  <div class="grid2" style="align-items:end">
+    <div><p class="eye">How I made it</p><h2>Where I used AI, and where I didn’t.</h2></div>
+    <p>I designed and built Handovo alone. AI made me faster; every decision about what the agent may do, and every rule, is mine.</p>
+  </div>
+  <div class="grid4" style="margin-top:56px">
+    <div class="card"><p class="lab">Research</p><h3>People first</h3><p>My years as a visual merchandiser, conversations with managers and floor staff, and desk research I cite on every number.</p></div>
+    <div class="card"><p class="lab">Design</p><h3>Figma</h3><p>Every screen, the design system, the flows and this case study. The whiteboard is where the idea came from.</p></div>
+    <div class="card"><p class="lab">Build</p><h3>Code, with AI help</h3><p>Next.js, Postgres on Supabase and Vercel. The Claude API reads staff messages as structured data. I used AI coding help to write and test the build, including the 8,019 checks.</p></div>
+    <div class="card"><p class="lab">Visuals</p><h3>AI, in my style</h3><p>The scenario illustrations are AI-generated in my style. The reel is code I wrote, rendered frame by frame. The screens are the real build.</p></div>
   </div>
 </section>
 

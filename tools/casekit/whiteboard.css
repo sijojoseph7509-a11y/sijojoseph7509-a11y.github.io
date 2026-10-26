@@ -1,0 +1,32 @@
+/* Whiteboard: a hand-drawn board that shows how a problem was taken apart (v200). Used by tools/handovo/case.html and
+   tools/casekit/<slug>.html. Brand colours come from the page: --wb-ink (marker), --wb-accent (circles, arrows). */
+@font-face { font-family: Caveat; src: url(../../fonts/caveat-latin.woff2) format("woff2"); font-weight: 400 700; }
+.wb { position: relative; margin-top: 56px; padding: 56px 56px 60px; border-radius: 28px; background: #FBFBF8;
+  background-image: radial-gradient(circle, rgba(20, 20, 30, .09) 1.2px, transparent 1.4px); background-size: 26px 26px;
+  box-shadow: 0 0 0 10px #E9E9EE, 0 0 0 11px #D7D7DE, 0 40px 80px -40px rgba(0, 0, 0, .35); color: var(--wb-ink, #1B1B22);
+  font-family: Caveat, cursive; }
+.wb .cols { display: grid; grid-template-columns: 300px 1fr 330px; gap: 44px; align-items: start; }
+.wb h4 { font: 700 34px/1 Caveat, cursive; margin: 0 0 18px; color: var(--wb-ink, #1B1B22); }
+.wb h4 small { display: block; margin-top: 6px; font: 500 22px/1.1 Caveat, cursive; opacity: .65; }
+.wb .note { position: relative; padding: 16px 18px 18px; margin-bottom: 16px; font: 600 24px/1.12 Caveat, cursive; color: #26231A;
+  box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .35); }
+.wb .note:nth-child(odd) { transform: rotate(-1.6deg); } .wb .note:nth-child(even) { transform: rotate(1.3deg); }
+.wb .note::before { content: ""; position: absolute; top: -9px; left: 50%; width: 70px; height: 18px; margin-left: -35px; background: rgba(255, 255, 255, .55); transform: rotate(-3deg); }
+.n-yellow { background: #FFE98A; } .n-pink { background: #FFC7DA; } .n-blue { background: #BFE3FF; } .n-green { background: #C9F2C7; } .n-orange { background: #FFD3A8; }
+.wb .why { position: relative; display: grid; gap: 14px; }
+.wb .why p { margin: 0; font: 600 25px/1.15 Caveat, cursive; color: var(--wb-ink, #1B1B22); }
+.wb .why p b { display: inline-block; min-width: 72px; color: var(--wb-accent); font-weight: 700; }
+.wb .why .down { height: 22px; margin-left: 30px; border-left: 2.5px dashed rgba(30, 30, 40, .4); }
+.wb .root { position: relative; margin-top: 52px; padding: 26px 34px 28px; font: 700 34px/1.08 Caveat, cursive; color: var(--wb-ink, #1B1B22); }
+.wb .root svg { position: absolute; inset: -14px -18px; width: calc(100% + 36px); height: calc(100% + 28px); overflow: visible; }
+.wb .root em { position: absolute; left: 6px; top: -40px; font: 700 24px/1 Caveat, cursive; font-style: normal; color: var(--wb-accent); }
+.wb .hmw { padding: 20px 22px; border: 2.5px solid var(--wb-ink, #1B1B22); border-radius: 18px 26px 16px 24px; font: 700 28px/1.12 Caveat, cursive; background: rgba(255, 255, 255, .7); }
+.wb .hmw em { display: block; font: 600 21px/1 Caveat, cursive; font-style: normal; color: var(--wb-accent); margin-bottom: 8px; }
+.wb .idea { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; font: 600 25px/1.12 Caveat, cursive; }
+.wb .idea i { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border: 2.5px solid var(--wb-accent); border-radius: 50%; font: 700 20px/1 Caveat, cursive; font-style: normal; color: var(--wb-accent); }
+.wb .dead { margin-top: 26px; padding-top: 18px; border-top: 2.5px dashed rgba(30, 30, 40, .3); }
+.wb .dead p { margin: 6px 0 0; font: 600 23px/1.15 Caveat, cursive; color: #6A6A75; }
+.wb .dead s { text-decoration-color: #E5484D; text-decoration-thickness: 3px; color: #1B1B22; }
+.wb .arrow { position: absolute; pointer-events: none; overflow: visible; }
+.wb .arrow path { fill: none; stroke: var(--wb-accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.wb .tag { position: absolute; font: 700 24px/1 Caveat, cursive; color: var(--wb-accent); }
