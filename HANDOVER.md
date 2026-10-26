@@ -1028,3 +1028,8 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Source: tools/handovo/staff/app.html (five 393 × 852 screens in Handovo's tokens, Mona + Inter); tools/handovo/staff/render.mjs
   captures them at 3× into tools/handovo/shots/staff01–05.webp; case.html shows them in the iPhone frames. Then render.mjs (case),
   content.js (new 41, 1226 px; reflection and footer are now 42 and 43) and reader.py 198.
+
+### v199: staff app section moved and trimmed
+- The staff app section is now 32, right after "Language and access" (was 41, near the end); sections 33–41 moved down one.
+  Eyebrow "Handovo for staff" (no "Concept"), one short line instead of the paragraph, and the "designed screens" caption removed
+  (Sijo's call). content.js reordered and renumbered; reader rebuilt (phone crops are now m/32-*).
