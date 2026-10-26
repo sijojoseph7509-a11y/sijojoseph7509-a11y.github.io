@@ -1,20 +1,20 @@
 {
  "carekin": {
-  "k-origin": 840,
-  "k-business": 1255,
-  "k-persona": 1384,
-  "k-whiteboard": 1354,
-  "k-map": 1034,
-  "k-extremes": 1010,
-  "k-tools": 728
+  "k-origin": 926,
+  "k-business": 1161,
+  "k-persona": 1243,
+  "k-whiteboard": 1324,
+  "k-map": 889,
+  "k-extremes": 950,
+  "k-tools": 790
  },
  "syntra": {
-  "k-hook": 1254,
-  "k-persona": 968,
-  "k-business": 1109,
-  "k-whiteboard": 1376,
-  "k-map": 1034,
-  "k-extremes": 902,
-  "k-tools": 698
+  "k-hook": 1353,
+  "k-persona": 971,
+  "k-business": 1218,
+  "k-whiteboard": 1345,
+  "k-map": 896,
+  "k-extremes": 899,
+  "k-tools": 717
  }
 }

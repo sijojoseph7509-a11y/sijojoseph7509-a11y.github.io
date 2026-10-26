@@ -1055,3 +1055,11 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   track.js and the Umami connect-src into every standalone page (regenerating had dropped them).
 - To change a kit section: edit tools/casekit/content.py → `python3 tools/casekit/build.py html` → `node tools/casekit/render.mjs
   <base>` → update heights in content.js (or rerun `build.py site <build>` on a content.js without the k- entries).
+
+### v201: the added sections now follow each case's own design system
+- tools/casekit/design.py draws the Carekin and Syntra sections with the exact type, colours and layout measured from their Figma
+  pages (tools/reader/src/<slug>.json). Syntra: white page with amber clouds, centred 40 px Lato Light + Medium heading in #BD680F,
+  20 px Light subtitle and 17–18 px Light body in the amber gradient, 96 px Lato Thin numbers, 24 px item titles, no boxed cards
+  (Lato Medium has no file here, so Regular stands in). Carekin: 13 px Google Sans Code label at x 40, content from x 480, 30 px
+  Google Sans Flex Regular headings, 15–16 px body, 19 px Medium titles, mint and dark-teal panels, Edge-cases-style tables.
+- Handovo: persona and extremes text 16 → 17 px to match its cards. The whiteboard keeps its marker style on purpose.

@@ -18,7 +18,7 @@ for (const slug of slugs) {
       webp(`${tmp}/${id}.png`, `work/${slug}/${id}${dpr === 2 ? "@2x" : ""}.webp`, dpr === 2 ? 88 : 90);
       if (dpr === 1) heights[slug][id] = Math.round(await el.evaluate((e) => e.getBoundingClientRect().height));
       if (dpr === 2) {   // pictures for the text version: the whiteboard itself, or the hook's two tiles
-        const pic = await p.$(`#${id} .wb`) || (id === "k-hook" ? await p.$(`#${id} > div:nth-of-type(2)`) : null);
+        const pic = await p.$(`#${id} .wb`) || (id === "k-hook" ? await p.$(`#${id} > div:nth-of-type(1)`) : null);
         if (pic) { await pic.screenshot({ path: `${tmp}/${id}-b.png` }); webp(`${tmp}/${id}-b.png`, `work/${slug}/kit/${id}-board.webp`, 86); }
       }
     }

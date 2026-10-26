@@ -254,7 +254,8 @@ def site(v):
 if __name__ == '__main__':
     if sys.argv[1] == 'html':
         for slug in DATA:
-            open(os.path.join(os.path.dirname(__file__), slug + '.html'), 'w').write(page(slug))
+            import design   # v201: each case's own design system
+            open(os.path.join(os.path.dirname(__file__), slug + '.html'), 'w').write(design.page(slug, DATA[slug]))
         print('written')
     else:
         site(sys.argv[2])
