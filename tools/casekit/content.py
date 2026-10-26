@@ -142,7 +142,7 @@ SYNTRA = [
      "I put what I saw in stores and heard from shoppers on one board, asked “why” until the answer stopped being about one shopper, and only then looked for ideas."),
     ("wb", dict(
       saw=["“Something fresh, for evenings”, never a note name", "Paper strips everywhere; the nose gives up after three", "Staff busy, shoppers leave without buying", "Bottle chosen by its label, not its scent", "“I forgot the name by the time I got home”"],
-      whys=["Shoppers leave without buying.", "They can’t find a scent that matches.", "They describe moods; the shelf describes notes.", "Testing many scents tires them, and staff aren’t free.", "Nothing turns a feeling into a scent."],
+      whys=["Shoppers leave without buying.", "They can’t find a scent that matches.", "They describe moods; the shelf describes notes.", "Testing tires them; staff aren’t free.", "Nothing turns a feeling into a scent."],
       root="Stores speak in notes and names; people think in feelings and memories.",
       hmw="…let someone find a perfume by describing a feeling, and remember it after they leave?",
       ideas=["A knob and sliders: a feeling you can play", "A screen that names the match", "VR: feel the scent as a place", "A ticket with AR: take it home"],

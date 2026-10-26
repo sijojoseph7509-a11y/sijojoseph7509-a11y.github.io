@@ -1063,3 +1063,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   (Lato Medium has no file here, so Regular stands in). Carekin: 13 px Google Sans Code label at x 40, content from x 480, 30 px
   Google Sans Flex Regular headings, 15–16 px body, 19 px Medium titles, mint and dark-teal panels, Edge-cases-style tables.
 - Handovo: persona and extremes text 16 → 17 px to match its cards. The whiteboard keeps its marker style on purpose.
+
+### v202: a different, hand-made whiteboard per project; glance strips in each case's style
+- tools/casekit/boards.py draws three whiteboards in the same handwriting (Caveat) but different media and structure:
+  Handovo = a FigJam board (sections, square stickies signed "Sijo Joseph", connectors, a 5-whys chain, voting dots, a marker
+  loop round the root cause, my cursor); Carekin = a ruled notebook page in ink (a fishbone of causes: people, messages,
+  moments, tools; the root cause in mint highlighter; a ticked idea list); Syntra = a cream sketchbook page in pencil and amber
+  marker (a mind map around the question, a why-staircase, highlighter, small doodles of the knob, screen, headset and ticket).
+  Handovo's board is pasted into case.html between <!--board--> markers (regenerate from boards.handovo()).
+- tools/glance/glance.html: the Syntra and Carekin "At a glance" strips now use their systems (Syntra: Lato Light + Medium,
+  #BD680F, gradient body, no boxes; Carekin: 30 px Google Sans Flex, 15 px body).

@@ -7,6 +7,7 @@
 #             19 px Medium item titles; mint panels #DDEBE6 / #EEF5F2, dark #0F3B38 with #164A46 panels; table rows with a
 #             13 px code-font header (like Edge cases).
 import html, re
+import boards   # v202: a different, hand-made whiteboard per project
 E = lambda s: html.escape(s, quote=False)
 para = lambda p: '<br>'.join(E(x) for x in p.split('\n'))
 
@@ -121,7 +122,7 @@ def sy_section(S, k):
             cls = {'high': 'hi', 'low': 'lo', 'worst': 'wo'}
             cells = ''.join(f'<div class="it xt rule"><p class="k {cls[lv]}">{E(tag)}</p><h3>{E(h)}</h3><p class="g">{E(p)}</p></div>' for lv, tag, h, p in b[1])
             out.append(f'<div class="cols" style="grid-template-columns:repeat(3,1fr)">{cells}</div>')
-        elif t == 'wb': out.append('<div style="margin:72px -64px 0">' + wb_html(b[1], '#BD680F') + '</div>')
+        elif t == 'wb': out.append('<div style="margin:72px -64px 0">' + boards.syntra(b[1]) + '</div>')
         elif t == 'hook': out.append(sy_hook())
     return f'<section id="{S["id"]}">' + ''.join(out) + '</section>'
 
@@ -172,7 +173,7 @@ def ck_section(S):
             tc = {'high': acc, 'low': '#0F766E' if S['bg'] != 'dark' else '#7EE0C6', 'worst': '#C2412D' if S['bg'] != 'dark' else '#FF8A6B'}
             rows = ''.join(f'<div class="row"><p style="color:{ink}"><span class="tag" style="color:{tc[lv]}">{E(tag)}</span>{E(h)}</p><p style="color:{tx}">{E(p)}</p></div>' for lv, tag, h, p in b[1])
             out.append(f'<div class="tbl"><div class="hd"><span class="k" style="color:{side}">Situation</span><span class="k" style="color:{side}">What Carekin does</span></div>{rows}</div>')
-        elif t == 'wb': out.append('<div style="margin:56px 0 0 -440px">' + wb_html(b[1], '#0F766E') + '</div>')
+        elif t == 'wb': out.append('<div style="margin:56px 0 0 -440px">' + boards.carekin(b[1]) + '</div>')
     return f'<section id="{S["id"]}" style="background:{bg}">' + ''.join(out) + '</section>'
 
 def page(slug, secs):
