@@ -1073,3 +1073,23 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   Handovo's board is pasted into case.html between <!--board--> markers (regenerate from boards.handovo()).
 - tools/glance/glance.html: the Syntra and Carekin "At a glance" strips now use their systems (Syntra: Lato Light + Medium,
   #BD680F, gradient body, no boxes; Carekin: 30 px Google Sans Flex, 15 px body).
+
+### v203: Handovo Engineering section and updated test numbers
+- New Handovo section 46 "Engineering: Built so it can be checked, not just trusted" (structured output then field checks,
+  fallback to a person, every AI call logged, WhatsApp reply-first, one lock per store, 14 tests on every push). Sections 46–50
+  moved to 47–51. Testing numbers now match the rerun of floor-pilot's eval/run.ts on the fixed reader: 82 of 95 read right
+  (Hindi 21 of 22), all 13 misses reach a person; 0 of 8,019 and 0 of 78 unchanged.
+- Code side (~/floor-pilot, private repo, pushed): tests/ suite, "not done yet" and Devanagari fixes, ai_calls log, after() in
+  the WhatsApp webhook, scripts/eval-ai.ts, GitHub Actions. Live AI accuracy is not measured yet (no Anthropic key on the Mac).
+
+### v204: Handovo without the "AI look", plus the Engineering section and updated test numbers
+- From Sijo's checklist of AI-made tells: near-black sections 15 → 4 (the rest Handovo paper, white or blue); every eyebrow
+  label removed; decorative 01/02 numbering removed outside the 10 key flows; labels in sentence case Mona Sans instead of mono
+  caps; middle dots in labels → commas; the 68 bordered white cards are plain text columns (coloured panels keep a background);
+  stat numbers 72–96 px → 48–60 px; 13 contrast/triplet headlines rewritten in plain words; body text Mona Sans instead of Inter
+  (Inter stays only inside the FigJam board). Design-system type card updated to match.
+- Checked before publishing: a layout lint over every section (edge overflow, clipping, overlaps, text under 13 px, WCAG
+  contrast) found and fixed white-on-white rows in the build table, low-contrast "No" cells and red tags, 12 px labels; ends
+  at 0 issues. Visual review of every section; site-qa 39/39, security 15/15, sweep 18/18, copy-check clean.
+- Includes v203 (unpublished until now): section 46 Engineering, and testing numbers 82 of 95 (Hindi 21 of 22), all 13 misses
+  reach a person, from floor-pilot's eval/run.ts on the fixed reader.
