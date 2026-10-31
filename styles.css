@@ -1202,3 +1202,24 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 /* dark secondary buttons: white label on a brighter glass capsule (blue on dark glass was too faint) */
 .os.dark .btn.alt { color: #f5f5f7; background: rgba(255, 255, 255, .16); }
 .os.dark .btn.alt:hover { background: rgba(255, 255, 255, .24); }
+/* v209 AI Lab tabs: no solid band (it hid the intro's second line and fought the glass). The tabs float as frosted glass
+   capsules, pinned just under the title bar, and blur whatever scrolls behind them */
+.lab-tabs { top: -22px; margin: 4px -4px 22px; padding: 0 4px; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.os.dark .lab-tabs { background: none; box-shadow: none; }
+.lab-tab { background: rgba(255, 255, 255, .62); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .08), 0 8px 22px rgba(0, 0, 0, .1); }
+.os.dark .lab-tab { background: rgba(44, 44, 50, .72); }
+.lab-tab[aria-selected="true"] { background: rgba(255, 255, 255, .8); box-shadow: var(--lg-rim), 0 0 0 2px var(--accent), 0 10px 26px rgba(10, 132, 255, .2); }
+.os.dark .lab-tab[aria-selected="true"] { background: rgba(58, 58, 66, .82); }
+.lab-tab small { color: var(--t2); }
+@media (max-width: 760px) { .lab-tabs { top: 0; } }
+/* scroll-edge glass (Apple): only once the tabs are pinned, a frosted band fades in behind them and the title bar, so content
+   scrolling underneath blurs away instead of showing through. Not there at rest, so it never covers the intro */
+.lab-tabs::before { content: ""; position: absolute; z-index: -1; left: -60px; right: -60px; top: -86px; bottom: -14px; pointer-events: none; opacity: 0;
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  background: linear-gradient(rgba(246, 246, 250, .7), rgba(246, 246, 250, .55) 82%, rgba(246, 246, 250, 0));
+  -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); transition: opacity .3s var(--smooth); }
+.os.dark .lab-tabs::before { background: linear-gradient(rgba(30, 30, 34, .78), rgba(30, 30, 34, .6) 82%, rgba(30, 30, 34, 0)); }
+.lab-tabs.stuck::before { opacity: 1; }
+@media (max-width: 760px) { .lab-tabs { top: 0; } .lab-tabs::before { top: -10px; } }
+.lab-tabs { z-index: 1; }   /* under the title bar (z 2), so the band never dims the title or toolbar */

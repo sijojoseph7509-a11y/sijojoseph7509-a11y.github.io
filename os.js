@@ -914,6 +914,12 @@
     t.replaceWith(r);
   });
   rollify(document);
+  // v209: AI Lab tabs get their scroll-edge glass only while pinned
+  document.addEventListener("scroll", (e) => {
+    const b = e.target; if (!(b instanceof Element) || !b.classList.contains("win-body")) return;
+    const t = b.querySelector(".lab-tabs"); if (!t) return;
+    t.classList.toggle("stuck", b.scrollTop > 0 && t.getBoundingClientRect().top - b.getBoundingClientRect().top < 70);
+  }, true);
   let rollQ = 0; new MutationObserver(() => { if (!rollQ) rollQ = requestAnimationFrame(() => { rollQ = 0; rollify(document); }); }).observe(document.body, { childList: true, subtree: true });
 
   window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isClosing: () => closing, isCovering, toast, warmCase };

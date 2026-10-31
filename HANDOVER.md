@@ -1142,3 +1142,9 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Handovo: the gradient-band experiment was removed, and with it the cover and footer slides that carried it (Sijo's call).
   50 sections; fxOpts re-mapped from fx.json; fx/cover-slide (Work card art) kept from v207. The bands code stays in case-fx
   (`fxOpts.bands`) and render.mjs (`data-bands`) but is unused.
+
+### v209: AI Lab tab bar
+- The pinned tab bar painted a solid dark slab plus a 40 px block above it (from the opaque-window days), hiding the intro's second
+  line and clashing with the glass. Now: frosted glass capsules, pinned just under the title bar (`top: -22px`, sticky is measured
+  inside win-body's 84 px top padding), and a scroll-edge glass band that fades in only while pinned (os.js toggles `.stuck`),
+  layered under the title bar (z 1 < 2).
