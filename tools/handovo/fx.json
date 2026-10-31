@@ -2,7 +2,7 @@
  {
   "kind": "video",
   "name": "highlight",
-  "i": 0,
+  "i": 1,
   "x": 688,
   "y": 104,
   "w": 623,
@@ -13,9 +13,9 @@
  {
   "kind": "link",
   "name": "problem",
-  "to": 5,
+  "to": 6,
   "label": "Why stores lose the plan",
-  "i": 1,
+  "i": 2,
   "x": 120,
   "y": 137,
   "w": 288,
@@ -26,9 +26,9 @@
  {
   "kind": "link",
   "name": "decisions",
-  "to": 17,
+  "to": 18,
   "label": "Six calls and their cost",
-  "i": 1,
+  "i": 2,
   "x": 424,
   "y": 137,
   "w": 288,
@@ -39,9 +39,9 @@
  {
   "kind": "link",
   "name": "aiux",
-  "to": 23,
+  "to": 24,
   "label": "How the agent behaves",
-  "i": 1,
+  "i": 2,
   "x": 728,
   "y": 137,
   "w": 288,
@@ -52,9 +52,9 @@
  {
   "kind": "link",
   "name": "testing",
-  "to": 45,
+  "to": 46,
   "label": "8,019 ways to break it",
-  "i": 1,
+  "i": 2,
   "x": 1032,
   "y": 137,
   "w": 288,
@@ -65,7 +65,7 @@
  {
   "kind": "video",
   "name": "tour",
-  "i": 3,
+  "i": 4,
   "x": 136,
   "y": 444,
   "w": 1169,
@@ -76,7 +76,7 @@
  {
   "kind": "draw",
   "name": "journey-curve",
-  "i": 14,
+  "i": 15,
   "x": 290,
   "y": 496,
   "w": 1030,
@@ -87,7 +87,7 @@
  {
   "kind": "video",
   "name": "routing",
-  "i": 21,
+  "i": 22,
   "x": 120,
   "y": 315,
   "w": 1200,
@@ -98,7 +98,7 @@
  {
   "kind": "video",
   "name": "goal",
-  "i": 25,
+  "i": 26,
   "x": 582,
   "y": 170,
   "w": 729,
@@ -109,7 +109,7 @@
  {
   "kind": "video",
   "name": "plan",
-  "i": 26,
+  "i": 27,
   "x": 582,
   "y": 70,
   "w": 729,
@@ -120,7 +120,7 @@
  {
   "kind": "video",
   "name": "discount",
-  "i": 29,
+  "i": 30,
   "x": 582,
   "y": 130,
   "w": 729,
@@ -131,7 +131,7 @@
  {
   "kind": "video",
   "name": "count",
-  "i": 30,
+  "i": 31,
   "x": 582,
   "y": 130,
   "w": 729,
@@ -142,7 +142,7 @@
  {
   "kind": "video",
   "name": "soldout",
-  "i": 31,
+  "i": 32,
   "x": 127,
   "y": 362,
   "w": 553,
@@ -153,7 +153,7 @@
  {
   "kind": "video",
   "name": "urgent",
-  "i": 31,
+  "i": 32,
   "x": 759,
   "y": 362,
   "w": 553,
@@ -164,7 +164,7 @@
  {
   "kind": "video",
   "name": "handover",
-  "i": 34,
+  "i": 35,
   "x": 127,
   "y": 319,
   "w": 553,
@@ -175,7 +175,7 @@
  {
   "kind": "video",
   "name": "digest",
-  "i": 34,
+  "i": 35,
   "x": 759,
   "y": 319,
   "w": 553,

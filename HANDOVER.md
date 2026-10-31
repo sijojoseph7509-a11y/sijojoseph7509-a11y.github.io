@@ -1158,3 +1158,8 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   what was seen; what wasn't measured; what to log next), k-store (hygiene, stock, staff, upkeep; untested). Kit card and
   persona text stay in the pale brand gradient (Sijo's choice). `ONLY=syntra python3 tools/casekit/build.py site N` runs the site step for one project (Carekin's
   "replaces 18.webp" entry breaks a full run).
+
+### v211: Handovo cover restored
+- The cover section (01, solid blue, from v207) is back as the case's first section (53 sections); only the gradient was unwanted.
+  fx/cover-slide (Work/About card art) restored from v207: v210's renders had overwritten it with the top of the case. With the
+  cover first again, render.mjs regenerates the same image.

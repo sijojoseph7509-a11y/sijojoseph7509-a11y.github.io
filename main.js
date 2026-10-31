@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=210";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=210";
+import { Sound } from "./sound.js?v=211";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=211";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
