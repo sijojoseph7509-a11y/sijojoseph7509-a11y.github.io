@@ -1093,3 +1093,17 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   at 0 issues. Visual review of every section; site-qa 39/39, security 15/15, sweep 18/18, copy-check clean.
 - Includes v203 (unpublished until now): section 46 Engineering, and testing numbers 82 of 95 (Hindi 21 of 22), all 13 misses
   reach a person, from floor-pilot's eval/run.ts on the fixed reader.
+
+### v205: animation positions after the v204 restyle, rule and edge-case sections, Syntra personas, Carekin timeline
+- Handovo fxOpts were still at pre-v204 positions: the four stat pops (dark background, old y) drew black boxes and a doubled
+  "400M+", and the journey curve sat 41 px low over "Rules decide what reaches her". Pops now use rgb(47, 60, 233) (the blue as
+  encoded in the WebP) at the fx.json positions; tour, goal, routing and the journey draw were also corrected. After any
+  case.html change, copy positions from tools/handovo/fx.json into content.js.
+- routing.mp4 re-filmed in the new type: `node tools/handovo/films.mjs - <case url>` (a "-" demo url skips the tour).
+- Four rules (22): open columns, no boxes or lines. Edge cases (35): white cards on paper with an AI / Safety / Team chip, a
+  title, the situation and the outcome in blue; rows aligned with subgrid.
+- Syntra k-persona: three columns share rows (subgrid), avatar top-aligned, answers in solid #6E4A22 instead of the pale gradient.
+- Carekin 28 (Figma s6WXmDrd36Frlkg1kVsvUg, node 121:438): the "Verifies new Rx" card is 300 wide so the title fits one line;
+  re-exported, and m/28-1-* re-cut by hand (crop 60,740 to 2740,1380 of the 2x). tools/reader/build.py can no longer run for
+  carekin (its Figma exports in an old scratchpad are gone) and deletes m/ images on the way; restore with git if run.
+- Figma AI images for Handovo not made: the account was out of AI credits.

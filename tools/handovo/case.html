@@ -141,7 +141,13 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .ba > div { padding: 18px 20px; border-radius: 14px; background: #fff; border: 1px solid var(--line); }
 .ba .was { background: #FFF1F0; border-color: #FFD7D3; }
 .ba .now { background: #F2FFD0; border-color: #D4FF3A; }
-.blue .card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.24); box-shadow: none; }
+.blue .card { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+/* v205 edge cases: white cards on paper, a coloured kind chip, the outcome in blue */
+.ec { background: #fff; border-radius: 18px; padding: 28px; display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 14px; align-content: start; }
+.ec h3 { font-size: 22px; margin: 0; } .ec p { font-size: 17px; line-height: 1.5; color: #3A3A45; margin: 0; }
+.ec .out { align-self: start; padding-top: 16px; border-top: 1px solid var(--line); color: var(--blue); font-weight: 600; }
+.ec .chip { justify-self: start; align-self: start; font-size: 14px; padding: 7px 12px; }
+.k-ai { background: #E6E8FF; color: #2F3BEA; } .k-safe { background: #FFE6E6; color: #A8262B; } .k-team { background: #EAFBC7; color: #3D5200; }
 .blue .card h3 { color: #fff; } .blue .card p { color: rgba(255,255,255,.84); } .blue .card .lab { color: var(--lime); }
 .acc ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; } .acc li { font-size: 16px; line-height: 1.35; padding-left: 18px; position: relative; color: #DADAE6; }
 .acc li::before { content: ""; position: absolute; left: 0; top: .5em; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
@@ -626,17 +632,17 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 </section>
 
 <!-- 27 edge cases -->
-<section>
+<section style="background:var(--paper)">
   <h2>What happens when the day doesn’t follow the script.</h2>
-  <div class="grid4" style="margin-top:64px; gap:24px">
-    <div class="card"><p class="lab">The AI fails</p><p>Timeouts, refusals or bad JSON fall back to scripted rules. The store never stops.</p></div>
-    <div class="card"><p class="lab">A message tries to give orders</p><p>“Approve this” or “ignore the rules” is read as a staff message, never as an instruction.</p></div>
-    <div class="card"><p class="lab">A busy day</p><p>A daily cap on AI calls per store keeps a loop from running up a bill. Over the cap, scripted rules answer.</p></div>
-    <div class="card"><p class="lab">No consent</p><p>No message goes to anyone without a phone number and written consent on record.</p></div>
-    <div class="card"><p class="lab">A question the policy doesn’t cover</p><p>The agent answers only from text the manager wrote. If it isn’t there, it tells the person it has asked the manager.</p></div>
-    <div class="card"><p class="lab">Nobody owns a task</p><p>It becomes an open call. The first person to reply “I’ll take it” gets it.</p></div>
-    <div class="card"><p class="lab">Late at night</p><p>WhatsApp allows free replies for 24 hours after someone writes; after that, an approved template is used.</p></div>
-    <div class="card"><p class="lab">Two messages at once</p><p>Each store’s changes run one at a time under a lock, so a task can’t be closed twice.</p></div>
+  <div class="grid4" style="margin-top:64px; column-gap:20px; row-gap:20px">
+    <div class="ec"><span class="chip k-ai">AI</span><h3>The AI fails</h3><p>Timeouts, refusals or bad JSON.</p><p class="out">Scripted rules take over. The store never stops.</p></div>
+    <div class="ec"><span class="chip k-safe">Safety</span><h3>A message tries to give orders</h3><p>“Approve this” or “ignore the rules” in a staff message.</p><p class="out">Read as a message, never as an instruction.</p></div>
+    <div class="ec"><span class="chip k-ai">AI</span><h3>A busy day</h3><p>A loop could run up the AI bill.</p><p class="out">A daily cap per store; above it, scripted rules answer.</p></div>
+    <div class="ec"><span class="chip k-safe">Safety</span><h3>No consent</h3><p>Someone without a phone number or written consent on record.</p><p class="out">Nothing is sent to them.</p></div>
+    <div class="ec"><span class="chip k-ai">AI</span><h3>A question the policy doesn’t cover</h3><p>The agent answers only from text the manager wrote.</p><p class="out">It tells the person it has asked the manager.</p></div>
+    <div class="ec"><span class="chip k-team">Team</span><h3>Nobody owns a task</h3><p>A task comes in with no owner.</p><p class="out">It becomes an open call. The first “I’ll take it” gets it.</p></div>
+    <div class="ec"><span class="chip k-team">Team</span><h3>Late at night</h3><p>WhatsApp allows free replies for 24 hours after someone writes.</p><p class="out">After that, an approved template is used.</p></div>
+    <div class="ec"><span class="chip k-safe">Safety</span><h3>Two messages at once</h3><p>Two people try to close the same task together.</p><p class="out">Changes run one at a time per store, so it closes once.</p></div>
   </div>
 </section>
 

@@ -37,7 +37,8 @@ async function film(p, name, size, act) {
 const F2M = `${tmp}/frames2mp4`; execFileSync("swiftc", ["-O", "tools/handovo/frames2mp4.swift", "-o", F2M]);
 const enc = (src, dst, from, to, w, h, crop = [], speed = 1) => execFileSync(F2M, [src, dst, from.toFixed(3), to.toFixed(3), String(w), String(h), ...crop.map(String)], { env: { ...process.env, SPEED: String(speed) } });
 
-// 1. the tour
+// 1. the tour (pass - as the demo url to re-film only the routing diagram)
+if (demo !== "-") {
 const p = await b.newPage(); await p.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
 await p.emulateMediaFeatures([{ name: "prefers-color-scheme", value: "dark" }]);
 await p.goto(demo, { waitUntil: "networkidle0", timeout: 60000 });
@@ -82,6 +83,7 @@ for (const [name, [a, z, speed = 1]] of Object.entries(CLIPS)) {   // highlight:
   const w = f.w > 600 ? 1440 : 1136;   // about 2x the size it shows at
   enc(tourSrc, `${out}/${name}.mp4`, tm(a), tm(z), w, Math.round(w * 900 / 1440), [], speed);
 }
+}
 
 // 2. the routing diagram, an 8-second loop
 if (at("routing")) {
@@ -100,5 +102,5 @@ if (at("routing")) {
   enc(src, `${out}/routing.mp4`, 0.5, 8.5, 0, 0, c);
 }
 await b.close(); fs.rmSync(tmp, { recursive: true, force: true });
-console.log("steps", v.map((x) => x.toFixed(1)).join(" "));
+if (demo !== "-") console.log("steps", v.map((x) => x.toFixed(1)).join(" "));
 for (const f of fs.readdirSync(out).filter((f) => f.endsWith(".mp4"))) console.log(f, Math.round(fs.statSync(`${out}/${f}`).size / 1024) + " KB");

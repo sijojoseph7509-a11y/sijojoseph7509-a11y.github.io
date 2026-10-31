@@ -36,10 +36,12 @@ h2 { font: 300 40px/1.2 Lato; color: #BD680F; text-align: center; } h2 b { font-
 .src { margin-top: 12px; font: 300 13px/1.45 Lato; color: #948573; }
 .rule { border-top: 1px solid rgba(189,104,15,.22); padding-top: 26px; }
 .verdict { margin: 90px auto 0; max-width: 972px; font: 300 30px/1.4 Lato; color: #BD680F; text-align: center; } .verdict b { font-weight: 500; }
-.persona .who { display: flex; gap: 16px; align-items: center; }
+.persona .who { display: flex; gap: 16px; align-items: flex-start; padding-bottom: 6px; }
+.persona.rule { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: 22px; align-content: start; }
+.persona .f p.pf { font: 400 17px/1.55 Lato; color: #6E4A22; }
 .persona .av { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; font: 300 24px/1 Lato; color: #fff; }
 .persona h3 { font: 500 24px/1.2 Lato; color: #BD680F; } .persona .meta { font: 300 15px/1.4 Lato; color: #948573; margin-top: 4px; }
-.persona .f { margin-top: 20px; } .persona .f .k { display: block; font: 500 16px/1 Lato; color: #BD680F; margin-bottom: 8px; } .persona .f p { font: 300 17px/1.55 Lato; }
+.persona .f { margin-top: 0; } .persona .f .k { display: block; font: 500 16px/1 Lato; color: #BD680F; margin-bottom: 8px; } .persona .f p { font: 300 17px/1.55 Lato; }
 .map { margin-top: 80px; } .map .hd, .map .row { display: grid; grid-template-columns: 1fr 50px 1fr; }
 .map .hd p { font: 400 20px/1 Lato; color: #BD680F; padding-bottom: 18px; } .map .hd p + p + p { font-weight: 500; }
 .map .row { padding: 20px 0; border-top: 1px solid rgba(189,104,15,.18); } .map .row p { font: 300 18px/1.5 Lato; } .map .arr { font: 300 20px/1.4 Lato; color: #BD680F; }
@@ -112,9 +114,9 @@ def sy_section(S, k):
         elif t == 'personas':
             cells = []
             for ini, col, name, meta, fields in b[1]:
-                fs = ''.join(f'<div class="f"><span class="k">{E(a)}</span><p class="g">{E(c)}</p></div>' for a, c in fields)
+                fs = ''.join(f'<div class="f"><span class="k">{E(a)}</span><p class="pf">{E(c)}</p></div>' for a, c in fields)
                 cells.append(f'<div class="persona rule"><div class="who"><span class="av" style="background:{col}">{ini}</span><div><h3>{E(name)}</h3><p class="meta">{E(meta)}</p></div></div>{fs}</div>')
-            out.append(f'<div class="cols" style="grid-template-columns:repeat(3,1fr)">' + ''.join(cells) + '</div>')
+            out.append(f'<div class="cols" style="grid-template-columns:repeat(3,1fr); row-gap:0">' + ''.join(cells) + '</div>')
         elif t == 'map':
             rows = ''.join(f'<div class="row"><p class="g">{E(h)}</p><p class="arr">→</p><p class="g">{E(d)}</p></div>' for a, h, d in b[1])
             out.append(f'<div class="map"><div class="hd"><p>What I heard and saw</p><p></p><p>So I designed</p></div>{rows}</div>')
