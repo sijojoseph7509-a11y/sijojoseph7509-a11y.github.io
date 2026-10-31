@@ -1148,3 +1148,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   line and clashing with the glass. Now: frosted glass capsules, pinned just under the title bar (`top: -22px`, sticky is measured
   inside win-body's 84 px top padding), and a scroll-edge glass band that fades in only while pinned (os.js toggles `.stuck`),
   layered under the title bar (z 1 < 2).
+
+### v210: Handovo AI UX + skim path; Syntra matching, outcomes and real-store sections
+- Handovo (52 sections): 02 "Short on time? Four stops" with real jump links (case-fx `fxOpts.links`, from `[data-fx-link]` /
+  `data-anchor` in case.html via render.mjs); 24 "How the agent behaves on screen" from five real pilot screens
+  (tools/handovo/shots/aiux-*.webp, captured from ~/floor-pilot/public/demo.html). Live Claude eval still blocked: no API key.
+- Syntra (25 sections): k-match (the kiosk's own matching code run over all 162 settings: best match in 119, top three in 158,
+  mean drop 0.01; without the balanced assignment 2 of 19 bottles never appear), k-outcome (66 tickets from the printer log;
+  what was seen; what wasn't measured; what to log next), k-store (hygiene, stock, staff, upkeep; untested). Kit card and
+  persona text stay in the pale brand gradient (Sijo's choice). `ONLY=syntra python3 tools/casekit/build.py site N` runs the site step for one project (Carekin's
+  "replaces 18.webp" entry breaks a full run).

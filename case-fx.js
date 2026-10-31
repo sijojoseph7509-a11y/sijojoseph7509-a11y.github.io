@@ -196,6 +196,14 @@ void main(){
     o.observe(box); cleanups.push(() => { o.disconnect(); clearTimeout(timer); });
   });
 
+  // v210 jump links: [[section, x, y, w, h, targetSection, label]], real links laid over the still that scroll to a section
+  if (opts.links) opts.links.forEach(([i, x, y, w, h, to, label]) => {
+    if (!secs[i] || !secs[to]) return;
+    const a = document.createElement("a"); a.className = "cfx-link"; a.href = "#"; a.setAttribute("aria-label", "Jump to: " + label);
+    a.addEventListener("click", (e) => { e.preventDefault(); secs[to].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); });
+    place(i, a, x, y, w, h);
+  });
+
   const mo = new MutationObserver(() => { if (!caseEl.isConnected) { cleanups.forEach((f) => { try { f(); } catch (_) {} }); mo.disconnect(); } });
   mo.observe(caseEl.ownerDocument.body, { childList: true, subtree: true });
 }

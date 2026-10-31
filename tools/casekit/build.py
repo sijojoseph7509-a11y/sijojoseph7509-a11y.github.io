@@ -190,6 +190,7 @@ def site(v):
     s = open(os.path.join(ROOT, 'content.js')).read()
     heights = json.load(open(os.path.join(ROOT, 'tools', 'casekit', 'heights.json')))
     for slug, SECS in DATA.items():
+        if os.environ.get('ONLY') and slug != os.environ['ONLY']: continue   # v210: one project at a time
         i = s.index(f'slug: "{slug}"'); j = s.index('sections: [', i); k = s.index('\n      ]', j)
         lines = s[j:k].split('\n')
         idx = [n for n, l in enumerate(lines) if re.match(r'\s*\["[\w-]+\.webp"', l)]

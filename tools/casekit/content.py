@@ -159,6 +159,32 @@ SYNTRA = [
       ("I heard", "A scent is remembered as a place.", "Step inside the scent in VR."),
       ("I heard", "I forget the name by the time I’m home.", "A printed ticket that comes alive in AR.")]),
   ]),
+  dict(id="k-match", after="07.webp", bg="light", desc="How the match works and what fairness costs, measured on the kiosk's own code: 162 settings (6 moods x 3 x 3 x 3) and 19 bottles. Picking each setting's single best scent would leave 2 bottles never shown and give one bottle 15 settings. Instead an optimal one-to-one assignment gives every bottle 8 or 9 settings. The cost: the shown scent is still the best match in 119 of 162 settings and in the top three in 158, an average drop of 0.01 on a 0 to 1 score. Next: let people describe a mood in their own words and have an AI model set the controls, tested with 20 people.", blocks=[
+    ("head", "How the match works", "Fair to every bottle, for one point of fit.",
+     "I ran the kiosk’s own matching code across all 162 settings to see what our rules cost."),
+    ("cards", 3, [
+      ("The input", "162 settings", "Six moods on the knob, then three steps on each slider: longevity, expression and occasion."),
+      ("The score", "4 weights", "Mood 0.36, expression 0.26, occasion 0.22, longevity 0.16. Mood leads because it is what people walk in knowing."),
+      ("The catch", "2 of 19", "bottles would never be shown if every setting simply took its best score. One bottle would take 15 settings.")]),
+    ("cards", 3, [
+      ("What I chose", "Share it out", "An optimal one-to-one assignment gives every bottle 8 or 9 settings, so the whole wall gets found."),
+      ("What it cost", "119 of 162", "settings still show their single best match; 158 show one of their top three.", "Measured on the kiosk code"),
+      ("The trade-off", "0.01", "average drop on a 0 to 1 match score. Fairness cost one point of fit.")]),
+    ("verdict", "Next: let people type a mood in their own words and have an AI model set the four controls, then test with 20 people whether the match feels like them."),
+  ]),
+  dict(id="k-outcome", after="12.webp", bg="cream", desc="What the exhibit proved and what it did not. Measured: 66 tickets printed in one day, from the printer's own log on 30 Sep 2026. Seen: strangers reached for the knob without being asked; people walked past the AR ticket until a line beside the printer told them to scan it. Not measured: time to a match, whether the match felt right, and AR scans at home. Next time the kiosk logs the time from first turn to ticket, re-turns, a thumbs up or down on the match, and AR opens.", blocks=[
+    ("head", "Results", "What the exhibit proved, and what it didn’t.",
+     "One day, one room. Here is the line between what we counted, what we saw and what we never measured."),
+    ("cards", 3, [
+      ("Counted", "66 tickets", "printed in one day, each a scent someone chose to take home.", "Printer log, 30 Sep 2026"),
+      ("Seen", "Hands first", "Strangers reached for the knob before reading a word, then looked up at the screen."),
+      ("Seen", "One miss", "People walked past the AR ticket until a line beside the printer told them to scan it.")]),
+    ("cards", 3, [
+      ("Not measured", "Time to a match", "How long from the first turn to a scent people wanted to keep."),
+      ("Not measured", "Did it fit?", "Nobody rated the match, so we know they printed it, not that they loved it."),
+      ("Not measured", "Scans at home", "How many tickets were opened in AR after the exhibit.")]),
+    ("verdict", "Next time: the kiosk logs time to a ticket, re-turns, a thumbs up or down on the match and every AR scan, so the next exhibit brings numbers, not only stories."),
+  ]),
   dict(id="k-extremes", after="13.webp", bg="cream", desc="Designing for the highs and lows: a queue at the exhibit, three friends at one kiosk, one shy visitor with no staff, a match that doesn't feel right, the printer out of paper and a dead VR headset, with what Syntra does in each. Some were built for the exhibit; the rest are how I would handle them in a store.", blocks=[
     ("head", "Designing for the highs and lows", "A rush, an empty floor and a broken printer.",
      "A kiosk is judged on its busiest and worst moments. Some of these I built for the exhibit; the rest are how I’d handle them in a store."),
@@ -169,6 +195,15 @@ SYNTRA = [
       ("low", "Low · not quite right", "The match doesn’t feel like them", "A small turn gives the next closest scent, without starting again."),
       ("worst", "Worst · no paper", "The ticket can’t print", "The screen shows a code to save the result to a phone instead."),
       ("worst", "Worst · no headset", "VR isn’t available", "VR is skipped; the match and the ticket still work.")]),
+  ]),
+  dict(id="k-store", after="k-extremes", bg="light", desc="Would it survive a real store: one headset shared by many faces (a washable face cover and a wipe between visitors, and VR stays optional); stock (connect to live store stock so a sold-out bottle is never the answer); staff (the kiosk starts the conversation and staff hand over the bottle and a tester); and upkeep (an ESP32, five controls, a TV, a Meta Quest 3 and a 58 mm thermal printer, each able to fail without stopping the match on screen). How I would handle them; not tested in a store.", blocks=[
+    ("head", "In a real store", "Would it survive a store floor every day?",
+     "The exhibit was one day. A store is every day: stock, staff, and many faces in one headset. This is how I’d handle each; none of it is tested in a store yet."),
+    ("cards", 4, [
+      ("Hygiene", "One headset, many faces", "A washable face cover and a wipe between visitors. VR stays optional, so nobody has to put it on."),
+      ("Stock", "Only what’s on the shelf", "Connect to the store’s live stock, so a sold-out bottle is never the answer."),
+      ("Staff", "It opens the conversation", "The kiosk replaces the guessing, not the person: staff hand over the bottle and a tester."),
+      ("Upkeep", "Parts a store can swap", "An ESP32, five controls, a TV, a Meta Quest 3 and a 58 mm printer. Any one can fail and the match still shows.")]),
   ]),
   dict(id="k-tools", after="14.webp", bg="dark", desc="How I made it, with my team and with AI: a team of three, my parts the interaction and screens, the nine VR worlds and the ticket with its AR; Arduino IDE on an ESP32 for the knob, sliders and button; Unity for the Meta Quest 3 worlds; AI to help write the ESP32 and app code and to make images and ticket drawings; Figma for screens, the manual and this documentation.", blocks=[
     ("head", "How I made it", "With my team, and with AI where it helped.",
