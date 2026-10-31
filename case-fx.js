@@ -28,8 +28,16 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
   const place = (i, el, x, y, w, h) => { Object.assign(el.style, { left: x / W * 100 + "%", top: y / H(i) * 100 + "%", width: w / W * 100 + "%", height: h / H(i) * 100 + "%" }); secs[i].appendChild(el); return el; };
 
   // sections arrive as you scroll
-  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("cfx-in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -10% 0px", threshold: 0.02 });
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("cfx-in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px", threshold: 0.02 });
   secs.forEach((s, i) => { if (i < 1 || reduce || !opts.reveal || opts.reveal === "none") s.classList.add("cfx-in"); else io.observe(s); });
+  // v206 mask reveal: drop the mask after it has played (and at once for sections that never animate), with a timer as a backstop
+  if (opts.reveal === "mask") secs.forEach((s, i) => {
+    const done = () => s.classList.add("cfx-done");
+    if (i < 1 || reduce) return done();
+    s.addEventListener("transitionend", (e) => { if (e.target === s && /mask/.test(e.propertyName)) done(); });
+    const mo = new MutationObserver(() => { if (s.classList.contains("cfx-in")) { setTimeout(done, 1800); mo.disconnect(); } }); mo.observe(s, { attributes: true, attributeFilter: ["class"] });
+    cleanups.push(() => mo.disconnect());
+  });
   cleanups.push(() => io.disconnect());
 
   // films play in place, only while on screen

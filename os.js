@@ -902,6 +902,19 @@
   // true while the desktop fully covers the 3D scene (the zoom-out/zoom-in animations still need it rendered)
   screen.addEventListener("transitionend", (e) => { if (e.target === screen && e.propertyName === "transform" && !closing) settled = true; });
   const isCovering = () => !os.hidden && !closing && (settled || !zoomRect);
+  // v206 text roll (after ondocollective.jp): a button's label rolls up and a copy rolls in from below on hover.
+  // Only plain-text labels are wrapped; screen readers read the first copy only. Runs on every render via one observer.
+  const rollify = (root) => root.querySelectorAll(".btn:not([data-roll])").forEach((b) => {
+    b.dataset.roll = "";
+    const t = [...b.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!t || b.children.length > 1) return;
+    const txt = t.textContent.trim(), r = document.createElement("span");
+    r.className = "roll"; r.innerHTML = `<span class="roll-t">${esc(txt)}</span><span class="roll-t" aria-hidden="true">${esc(txt)}</span>`;
+    t.replaceWith(r);
+  });
+  rollify(document);
+  let rollQ = 0; new MutationObserver(() => { if (!rollQ) rollQ = requestAnimationFrame(() => { rollQ = 0; rollify(document); }); }).observe(document.body, { childList: true, subtree: true });
+
   window.OS = { open, close: () => close(), setDark, isOpen: () => !os.hidden, isClosing: () => closing, isCovering, toast, warmCase };
 
   // v166: the welcome card is usable from the first paint. Enter clicked before the desk has loaded waits on the button

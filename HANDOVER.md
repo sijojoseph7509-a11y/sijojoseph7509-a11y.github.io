@@ -1107,3 +1107,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   re-exported, and m/28-1-* re-cut by hand (crop 60,740 to 2740,1380 of the 2x). tools/reader/build.py can no longer run for
   carekin (its Figma exports in an old scratchpad are gone) and deletes m/ images on the way; restore with git if run.
 - Figma AI images for Handovo not made: the account was out of AI credits.
+
+### v206: less text in Handovo, a decision whiteboard, and motion after ondocollective.jp
+- Handovo: 6,578 → 4,850 words. Stats divider removed; research plan, "worth solving", "heard → designed" (paired cards,
+  answer in a blue band, subgrid) redesigned; ~40 long paragraphs cut to one-liners; personas down to Goals / Won't accept / Must.
+- New section 18 "Six calls I had to make": a whiteboard per decision with the dropped options crossed out, the choice circled,
+  a yellow trade-off sticky and a green pay-off sticky (real results or marked Target). 52 sections now; fxOpts re-mapped from fx.json.
+- Caveat was never loaded in case.html (the FigJam-style board fell back to the system cursive); @font-face added.
+- The "0 tools" stat I drafted was dropped: not measured. Figma AI images still pending (out of credits; a scheduled reminder is set).
+- Motion (skill: .claude/skills/site-motion): `fxOpts.reveal: "mask"` for Handovo and Carekin, a diagonal mask fade per section
+  that starts ~40% revealed, 1.4 s, removed when done (`.cfx-done`); `.btn` labels roll on hover (os.js `rollify`), replacing the sheen.

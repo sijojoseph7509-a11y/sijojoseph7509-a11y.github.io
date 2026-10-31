@@ -40,7 +40,14 @@
 .cfx-ring::before { content: ""; position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cfx-accent, #FF8A6B); opacity: 0; }
 .cfx-draw.on .cfx-ring::before { animation: cfxRing 2.4s ease-out calc(2.2s + var(--d)) infinite; }
 @keyframes cfxRing { 0% { transform: scale(.4); opacity: .9; } 70% { opacity: 0; } 100% { transform: scale(1.9); opacity: 0; } }
+/* v206 mask reveal (after ondocollective.jp's mask-out): a soft diagonal fade sweeps each section in once, the first time it is seen.
+   The mask sits on the section wrapper so films and overlays inside reveal with it; it is removed when done (masks on tall layers cost paint). */
+.cfx-mask .cfx-sec:not(.cfx-done) { -webkit-mask-image: var(--mo-img); mask-image: var(--mo-img); -webkit-mask-size: 300% 300%; mask-size: 300% 300%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: 62% 38%; mask-position: 62% 38%; transition: -webkit-mask-position var(--mo-dur) var(--mo-ease), mask-position var(--mo-dur) var(--mo-ease); }
+.cfx-mask .cfx-sec.cfx-in:not(.cfx-done) { -webkit-mask-position: 0 100%; mask-position: 0 100%; }
+.cfx-mask { --mo-img: linear-gradient(to top right, #000 0%, #000 34%, rgba(0,0,0,.5) 50%, transparent 66%); --mo-dur: 1.4s; --mo-ease: cubic-bezier(.33, 1, .68, 1); }
 @media (prefers-reduced-motion: reduce) {
+  .cfx-mask .cfx-sec:not(.cfx-done) { -webkit-mask-image: none; mask-image: none; transition: none; }
   .cfx-draw img { clip-path: none; transition: none; } .cfx-draw.on .cfx-ring::before { animation: none; }
   .cfx-rise .cfx-sec > img, .cfx-wipe .cfx-sec > img { opacity: 1; transform: none; filter: none; clip-path: none; transition: none; }
   .cfx-wipe .cfx-sec::after { display: none; }
