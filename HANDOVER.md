@@ -1117,3 +1117,11 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - The "0 tools" stat I drafted was dropped: not measured. Figma AI images still pending (out of credits; a scheduled reminder is set).
 - Motion (skill: .claude/skills/site-motion): `fxOpts.reveal: "mask"` for Handovo and Carekin, a diagonal mask fade per section
   that starts ~40% revealed, 1.4 s, removed when done (`.cfx-done`); `.btn` labels roll on hover (os.js `rollify`), replacing the sheen.
+
+### v207: Syntra cover intro in the brand voice
+- The cover intro (Figma RFow6mVvYRDVcu5NrMgO7D, node 223:9) was 15 px Lato Light in flat 67% orange. Now a Lato Medium 28 px lead
+  line and two Lato Light 22 px lines with a horizontal brand gradient (#7A4D1C → #C4721A). La Mericana isn't installed on this Mac
+  and the Figma plugin can't load it, so the brand's Lato pattern ("We took the question…") was used instead.
+- Only the text was swapped into work/syntra/01(@2x) (foreground on white; syntra-fx paints the background underneath with multiply),
+  the fallback work/syntra/still/01(@2x) (background recovered by dividing out the old foreground) and m/01-1-*. Full-frame Figma
+  exports of 223:3 differ from the stills elsewhere, so don't replace the whole cover from a fresh export.
