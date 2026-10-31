@@ -24,6 +24,68 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
     const s = document.createElement("div"); s.className = "cfx-sec"; s.dataset.i = i;
     im.replaceWith(s); s.appendChild(im); return s;
   });
+  // v208 gradient bands (Handovo): a slow, stepped contour gradient behind the blue and dark sections, drawn live in WebGL.
+  // The section stills for these are rendered with a transparent background (and carry their colour as a CSS fallback),
+  // so text sits on the motion. Palettes stay deep enough for white text (AA). One canvas per section, created when it
+  // is near the screen and paused when it leaves; reduced motion draws one still frame.
+  const BANDS = {
+    blue: [[0.075, 0.08, 0.42], [0.184, 0.231, 0.918], [0.36, 0.33, 0.93]],   // deep indigo -> Handovo blue -> violet tip
+    dark: [[0.024, 0.024, 0.04], [0.06, 0.06, 0.2], [0.15, 0.17, 0.52]],     // near-black -> night navy -> blue glow
+  };
+  const FRAG = `precision mediump float;
+uniform vec2 r; uniform float t; uniform vec3 c0, c1, c2; uniform float seed;
+float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void main(){
+  vec2 uv = gl_FragCoord.xy / r; vec2 p = uv * vec2(r.x / r.y, 1.0);
+  vec2 c = vec2(r.x / r.y * (0.08 + 0.04 * sin(t * 0.07 + seed)), -0.25 + 0.05 * cos(t * 0.05 + seed));
+  vec2 d = (p - c) * vec2(1.0, 0.82);
+  float f = length(d) + 0.06 * sin(d.y * 3.1 + t * 0.11 + seed) + 0.04 * sin(d.x * 4.3 - t * 0.09);
+  float v = f * 11.0 - t * 0.03;   // v208b: tighter bands
+  float b = fract(v);
+  vec3 col = mix(c0, c1, smoothstep(0.0, 0.62, b));
+  col = mix(col, c2, smoothstep(0.62, 1.0, b) * 0.85);
+  col = mix(col, c0, smoothstep(0.965, 1.0, b));   // a soft step into the next band: no jagged edge
+  col *= 0.88 + 0.12 * smoothstep(0.0, 1.2, f);
+  col += (h(gl_FragCoord.xy + t) - 0.5) * 0.018;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+  if (opts.bands) {
+    const live = new Set();
+    const make = (sec, kind, k) => {
+      const cv = document.createElement("canvas"); cv.className = "cfx-bands"; cv.setAttribute("aria-hidden", "true");
+      sec.insertBefore(cv, sec.firstChild); sec.classList.add("cfx-onbands");
+      const gl = cv.getContext("webgl", { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: "low-power" });
+      if (!gl) { cv.remove(); sec.classList.remove("cfx-onbands"); return null; }
+      const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+      const pr = gl.createProgram();
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, "attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }"));
+      gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { cv.remove(); sec.classList.remove("cfx-onbands"); return null; }
+      gl.useProgram(pr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const a = gl.getAttribLocation(pr, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+      const U = (n) => gl.getUniformLocation(pr, n), pal = BANDS[kind] || BANDS.blue;
+      gl.uniform3fv(U("c0"), pal[0]); gl.uniform3fv(U("c1"), pal[1]); gl.uniform3fv(U("c2"), pal[2]); gl.uniform1f(U("seed"), k * 1.7);
+      const ur = U("r"), ut = U("t");
+      let raf = 0, last = 0, t0 = performance.now() - k * 9000;
+      const size = () => { const q = Math.min(devicePixelRatio || 1, 2) * 0.6;   // under device resolution: the bands are soft, so it can't be seen
+        const w = Math.max(2, Math.round(sec.clientWidth * q)), hh = Math.max(2, Math.round(sec.clientHeight * q));
+        if (cv.width !== w || cv.height !== hh) { cv.width = w; cv.height = hh; gl.viewport(0, 0, w, hh); } gl.uniform2f(ur, w, hh); };
+      const draw = (now) => { size(); gl.uniform1f(ut, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
+      const loop = (now) => { raf = requestAnimationFrame(loop); if (now - last < 33) return; last = now; draw(now); };   // ~30 fps is plenty
+      return { start: () => { if (reduce) { draw(performance.now()); return; } if (!raf) raf = requestAnimationFrame(loop); },
+               stop: () => { cancelAnimationFrame(raf); raf = 0; } };
+    };
+    const made = new Map();
+    const bio = new IntersectionObserver((es) => es.forEach((e) => {
+      const i = +e.target.dataset.i;
+      if (e.isIntersecting) { if (!made.has(i)) made.set(i, make(e.target, sections[i][3], i)); made.get(i)?.start(); }
+      else made.get(i)?.stop();
+    }), { rootMargin: "300px 0px" });
+    secs.forEach((s, i) => { if (sections[i] && sections[i][3]) bio.observe(s); });
+    cleanups.push(() => { bio.disconnect(); made.forEach((m) => m?.stop()); });
+  }
+
   const H = (i) => +sections[i][1];
   const place = (i, el, x, y, w, h) => { Object.assign(el.style, { left: x / W * 100 + "%", top: y / H(i) * 100 + "%", width: w / W * 100 + "%", height: h / H(i) * 100 + "%" }); secs[i].appendChild(el); return el; };
 

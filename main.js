@@ -5,8 +5,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Sound } from "./sound.js?v=207";
-import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=207";
+import { Sound } from "./sound.js?v=208";
+import { sharpen, rr, bezier, tileNoise, wrapText } from "./room-utils.js?v=208";
 
 const S = window.SITE;
 const TOUCH = matchMedia("(pointer: coarse)").matches;   // phones & tablets: say "tap", no hover effects
@@ -1431,7 +1431,7 @@ function stepCard(t) {   // a slow drift, as if it hangs in the air (the shadow 
 }
 function cardShadowTex() { return canvasTex(256, 384, (g, w, h) => { g.filter = "blur(18px)"; g.fillStyle = "#000"; g.beginPath(); g.roundRect(44, 44, w - 88, h - 88, 26); g.fill(); }).tex; }
 
-window.OS.setDark(false);   // the desktop uses the light glass look
+window.OS.setDark(true);   // v208: the desktop uses the dark Liquid Glass look (Sijo's choice)
 
 
 // (the desk-mat text links and the "Let's connect" tiles were removed — the top menu and the Mac's dock cover them)

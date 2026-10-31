@@ -1125,3 +1125,20 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Only the text was swapped into work/syntra/01(@2x) (foreground on white; syntra-fx paints the background underneath with multiply),
   the fallback work/syntra/still/01(@2x) (background recovered by dividing out the old foreground) and m/01-1-*. Full-frame Figma
   exports of 223:3 differ from the stills elsewhere, so don't replace the whole cover from a fresh export.
+
+### v208: live gradient bands in Handovo
+- Sijo's reference: stepped contour gradients (navy → blue → violet). case-fx draws them in WebGL (`fxOpts.bands: true`) behind the
+  8 Handovo sections tagged `data-bands` in case.html (cover, stats, four rules, footer = "blue"; four dark sections = "dark").
+- render.mjs renders those sections with a transparent background (RGBA WebP) and prints the kind as a 3rd field; content.js
+  carries it as each section's 4th field; os.js paints #2F3BEA / #0B0B0F under the still if case-fx can't run.
+- Bands drift slowly, ~30 fps, run only near the screen, soft step between bands; reduced motion draws one frame.
+- The stat pop-ins were removed (their solid boxes would cover the bands). Rules recorded in .claude/skills/site-motion.
+
+### v208: dark Liquid Glass desktop; Handovo without the gradient slides
+- Desktop: a Liquid Glass layer (end of styles.css, "v208 Liquid Glass"): clearer frosted window with a specular rim and sheen,
+  sidebar as a floating glass slab, glass capsule toolbar/buttons, clearer dock and menu-bar capsules, Apple Music-style colour
+  glow under work cards, `prefers-reduced-transparency` fallback. Dark is now the default (main.js `setDark(true)`, index.html
+  `.os dark`); dark secondary buttons use white labels, the dock is dark-tinted. Every page checked for readability in dark.
+- Handovo: the gradient-band experiment was removed, and with it the cover and footer slides that carried it (Sijo's call).
+  50 sections; fxOpts re-mapped from fx.json; fx/cover-slide (Work card art) kept from v207. The bands code stays in case-fx
+  (`fxOpts.bands`) and render.mjs (`data-bands`) but is unused.

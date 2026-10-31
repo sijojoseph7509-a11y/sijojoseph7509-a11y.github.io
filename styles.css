@@ -1147,3 +1147,58 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
   background: rgba(255, 255, 255, .22); color: #fff; cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .case-reel figcaption button:hover { background: rgba(255, 255, 255, .36); }
 .case-reel figcaption svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* ============================================================================================================================
+   v208 Liquid Glass (macOS Tahoe, Sijo's own Mac as the reference; Apple Music for the artwork glow).
+   Clearer glass that lets the desk show through, a bright specular rim on every glass edge, a sidebar that floats as its own
+   slab, capsule controls, a clear dock and menu bar. Text stays on enough frost to read; dark mode keeps its own tokens.
+   ============================================================================================================================ */
+.os {
+  --g-win: rgba(246, 246, 250, .64);
+  --g-side: rgba(255, 255, 255, .2);
+  --g-bar: rgba(255, 255, 255, .42);
+  --g-hi: rgba(255, 255, 255, .95);
+  --card: rgba(255, 255, 255, .52);
+  --lg-rim: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(255, 255, 255, .28);
+}
+.os.dark {
+  --g-win: rgba(26, 26, 30, .66);
+  --g-side: rgba(255, 255, 255, .07);
+  --g-bar: rgba(255, 255, 255, .1);
+  --card: rgba(255, 255, 255, .07);
+  --lg-rim: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 -1px 0 rgba(255, 255, 255, .06);
+}
+/* the window: frosted, with a rim and a soft sheen from the top-left, like light caught in glass */
+.win { backdrop-filter: blur(60px) saturate(220%); -webkit-backdrop-filter: blur(60px) saturate(220%); border-radius: 28px;
+  box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .1), 0 40px 90px rgba(0, 0, 0, .34), 0 10px 28px rgba(0, 0, 0, .16); }
+.win::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, .12)); }
+.os.dark .win::before { background: linear-gradient(140deg, rgba(255, 255, 255, .08), transparent 40%, transparent 72%, rgba(255, 255, 255, .04)); }
+/* the sidebar floats as its own slab of glass inside the window */
+.sidebar { background: var(--g-side); border-radius: 20px; box-shadow: var(--lg-rim), 0 6px 20px rgba(0, 0, 0, .06);
+  backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); }
+@media (min-width: 761px) { .side-hl { background: rgba(255, 255, 255, .6); box-shadow: inset 0 1px 0 #fff, 0 1px 4px rgba(0, 0, 0, .08); border-radius: 11px; }
+  .os.dark .side-hl { background: rgba(255, 255, 255, .14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); } }
+/* toolbar: the title sits on a soft fade; tools in one clear capsule */
+.tb-tools { background: var(--g-bar); box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .08), 0 4px 14px rgba(0, 0, 0, .08);
+  backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); }
+/* cards and facts: lighter frost with the same rim */
+.card, .list, .ab-facts div, .tile, .disc { box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .06), 0 8px 24px rgba(0, 0, 0, .05); }
+/* secondary buttons are glass capsules */
+.btn.alt { background: rgba(255, 255, 255, .5); box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .08); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.os.dark .btn.alt { background: rgba(255, 255, 255, .1); }
+.btn:not(.alt) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 0, 0, .12), 0 6px 16px rgba(10, 132, 255, .28); }
+/* the dock: clear glass, the desk visible through it */
+.dock { background: linear-gradient(180deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .26));
+  backdrop-filter: blur(26px) saturate(190%) brightness(1.06); -webkit-backdrop-filter: blur(26px) saturate(190%) brightness(1.06);
+  box-shadow: var(--lg-rim), 0 0 0 .5px rgba(0, 0, 0, .1), 0 22px 50px rgba(0, 0, 0, .24); border-radius: 30px; }
+/* menu bar: fully clear, like Tahoe; menus highlight as glass capsules */
+.mb-left button:hover, .mb-left button.on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5); }
+/* Apple Music: artwork casts its own colour. Each work card glows softly in its project colour */
+.work-card { box-shadow: 0 0 0 .5px rgba(0, 0, 0, .08), 0 24px 50px -18px color-mix(in srgb, var(--c, #111) 70%, transparent), 0 8px 20px rgba(0, 0, 0, .1); }
+.work-card:hover, .work-card:focus-visible { box-shadow: 0 0 0 .5px rgba(0, 0, 0, .08), 0 34px 70px -16px color-mix(in srgb, var(--c, #111) 85%, transparent), 0 10px 24px rgba(0, 0, 0, .14); }
+@media (prefers-reduced-transparency: reduce) { .os { --g-win: rgba(248, 248, 252, .97); --g-side: rgba(236, 236, 242, .95); } .os.dark { --g-win: rgba(28, 28, 32, .97); } }
+.os.dark .dock { background: linear-gradient(180deg, rgba(44, 44, 50, .5), rgba(30, 30, 34, .42)); }
+/* dark secondary buttons: white label on a brighter glass capsule (blue on dark glass was too faint) */
+.os.dark .btn.alt { color: #f5f5f7; background: rgba(255, 255, 255, .16); }
+.os.dark .btn.alt:hover { background: rgba(255, 255, 255, .24); }

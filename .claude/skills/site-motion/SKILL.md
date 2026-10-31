@@ -33,10 +33,16 @@ Nothing bounces, nothing loops, and nothing moves that you didn't just bring int
 |---|---|---|
 | Diagonal mask reveal per section | Handovo, Carekin cases (`fxOpts.reveal: "mask"`) | case-fx.css `.cfx-mask`, case-fx.js |
 | Text roll on hover | every `.btn` with a plain-text label | os.js `rollify`, styles.css `.roll` |
+| Gradient bands (stepped contour gradient, slow drift) | **Not used** (Sijo removed them from Handovo in v208); available as `fxOpts.bands` (`fxOpts.bands`, section entry 4th field `"blue"`/`"dark"`) | case-fx.js WebGL; stills rendered transparent by render.mjs (`data-bands`); os.js paints the colour if the script can't run |
 | Images fade in when loaded | work cards, About projects, Lab media | styles.css `img.in` |
 | Syntra and Ekmaati keep their own motion | syntra-fx, ekmaati-fx | — |
 
 Other reveal options in case-fx: `rise` (Sijo found it "lost the connection" on Carekin), `wipe` (Backwater, retired), `none`.
+
+## Gradient bands rules
+- Palettes stay deep enough for white text (lightest band tone ≥ 4.5:1 with white). Never lavender/pink tips behind text.
+- ~30 fps, under device resolution, only while near the screen; one still frame under reduced motion.
+- A band section's still must be transparent, and its content.js entry must carry the colour for the no-script fallback.
 
 ## Before shipping motion
 

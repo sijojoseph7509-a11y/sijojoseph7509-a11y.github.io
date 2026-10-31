@@ -52,3 +52,8 @@
   .cfx-rise .cfx-sec > img, .cfx-wipe .cfx-sec > img { opacity: 1; transform: none; filter: none; clip-path: none; transition: none; }
   .cfx-wipe .cfx-sec::after { display: none; }
 }
+
+/* v208 gradient bands: a live WebGL layer under transparent section stills (Handovo blue and dark sections) */
+.cfx .cfx-sec > canvas.cfx-bands { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+.cfx .cfx-onbands > img { z-index: 1; background: transparent !important; }
+.cfx .cfx-onbands > :not(canvas):not(img) { z-index: 2; }

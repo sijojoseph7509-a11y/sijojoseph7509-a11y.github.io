@@ -420,7 +420,8 @@
       }).catch(() => { if (caseSlug === slug) fillCase(p, slug, "layout", keepFrac); });
       return;
     }
-    box.innerHTML = p.case.sections.map(([f, h, alt], i) => `<img src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("");
+    const BG = { blue: "#2F3BEA", dark: "#0B0B0F" };
+    box.innerHTML = p.case.sections.map(([f, h, alt, bg], i) => `<img${bg ? ` style="background:${BG[bg] || bg}"` : ""} src="${caseImg(slug, f)}" srcset="${caseImg(slug, f)} 1440w, ${caseImg(slug, f, 2)} 2880w" sizes="(min-width: 1920px) 1920px, 100vw" width="1440" height="${+h}" alt="${esc(alt)}" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`).join("");
     // "At a glance" (what shipped, what was tested, what was decided) sits right after the cover. It is a <figure>, so the
     // motion layers, which count the case's `:scope > img` sections, are unaffected.
     const g = p.case.glance;

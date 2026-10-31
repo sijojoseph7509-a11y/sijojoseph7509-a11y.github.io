@@ -22,10 +22,14 @@ await p.addStyleTag({ content: "[data-fx-draw] { visibility: hidden }" });
 const secs = await p.$$("section"); const list = [];
 for (let i = 0; i < secs.length; i++) {
   const n = String(i + 1).padStart(2, "0"); const png = `${tmp}/ho_${n}.png`;
-  await secs[i].screenshot({ path: png });
+  // v208: sections with data-bands get a transparent background; case-fx paints live gradient bands behind them
+  const bands = await secs[i].evaluate((e) => e.dataset.bands || "");
+  if (bands) await secs[i].evaluate((e) => { e.dataset.bg = e.style.background; e.style.background = "transparent"; document.body.style.background = "transparent"; document.documentElement.style.background = "transparent"; });
+  await secs[i].screenshot({ path: png, omitBackground: !!bands });
+  if (bands) await secs[i].evaluate((e) => { e.style.background = e.dataset.bg; document.body.style.background = ""; document.documentElement.style.background = ""; });
   const h = await secs[i].evaluate((e) => Math.round(e.getBoundingClientRect().height));
-  execFileSync("python3", ["-c", `from PIL import Image\nim=Image.open("${png}").convert("RGB")\nim.save("${out}/${n}@2x.webp",quality=88)\nim.resize((1440,round(im.height/2)),Image.LANCZOS).save("${out}/${n}.webp",quality=88)`]);
-  list.push([n, h]);
+  execFileSync("python3", ["-c", `from PIL import Image\nim=Image.open("${png}").convert("${bands ? "RGBA" : "RGB"}")\nim.save("${out}/${n}@2x.webp",quality=88)\nim.resize((1440,round(im.height/2)),Image.LANCZOS).save("${out}/${n}.webp",quality=88)`]);
+  list.push(bands ? [n, h, bands] : [n, h]);
 }
 for (const f of fx.filter((f) => f.kind !== "video")) {   // draw and pop layers alone, on transparent (v182: pops also stay in the still)
   await p.addStyleTag({ content: `html, body, section { background: transparent !important } body { visibility: hidden } [data-fx-${f.kind}="${f.name}"], [data-fx-${f.kind}="${f.name}"] * { visibility: visible !important }` });
