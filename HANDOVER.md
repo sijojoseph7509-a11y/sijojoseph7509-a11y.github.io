@@ -1163,3 +1163,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - The cover section (01, solid blue, from v207) is back as the case's first section (53 sections); only the gradient was unwanted.
   fx/cover-slide (Work/About card art) restored from v207: v210's renders had overwritten it with the top of the case. With the
   cover first again, render.mjs regenerates the same image.
+
+### v212: two Handovo scroll animations
+- Routing (section 23): `fxOpts.travel` = { i, stops, text }. A "Customer wants 15% off" bubble follows the scroll from the staff
+  message to Read to "Rule is Yours only", each stop ringing as it arrives; reversible; skipped under reduced motion. Stops come
+  from `data-fx-stop` in case.html; the routing film was dropped from fxOpts.videos (routing.mp4 kept on disk, unused).
+- Decision whiteboard (section 19): `fxOpts.layers` = [[section, x, y, w, h, file, anim, seq]]. Strikes wipe, rings ink, stickies
+  drop, card by card (`data-fx-layer`, `data-anim`, `data-seq` in case.html). render.mjs saves each layer padded and alone
+  (fx/wb*.webp) plus a "-base" still without them; case-fx swaps the base in only when it animates, so no-JS and reduced motion
+  keep the complete still. Starts when the first card passes 75% of the viewport. Layer CSS is scoped `.case img.*` to beat the
+  site's `.case img { opacity: 0 }` fade-in.

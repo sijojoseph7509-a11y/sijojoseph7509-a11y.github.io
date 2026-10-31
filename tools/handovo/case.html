@@ -185,8 +185,10 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .dc .n { font: 700 32px/1 Caveat, cursive; color: #F24822; }
 .dc h3 { font: 700 30px/1.05 Caveat, cursive; color: #1E1E1E; margin: 4px 0 14px; }
 .dc .opt { font: 600 24px/1.2 Caveat, cursive; margin: 0 0 6px; }
-.dc .opt s { text-decoration-color: #F24822; text-decoration-thickness: 3px; color: #3A3A3A; }
-.dc .pick { display: inline-block; font: 700 23px/1.15 Caveat, cursive; color: #2F3BEA; border: 2.5px solid #2F3BEA; border-radius: 40% 55% 45% 60% / 60% 45% 55% 40%; padding: 6px 14px; margin: 4px 0 14px; transform: rotate(-1.5deg); }
+.dc .opt .xo { position: relative; color: #3A3A3A; }
+.dc .opt .strike { position: absolute; left: -3px; right: -3px; top: 54%; height: 3px; border-radius: 2px; background: #F24822; transform: rotate(-1.2deg); }
+.dc .pick { position: relative; display: inline-block; font: 700 23px/1.15 Caveat, cursive; color: #2F3BEA; padding: 6px 14px; margin: 4px 0 14px; transform: rotate(-1.5deg); }
+.dc .pick .ring { position: absolute; inset: 0; border: 2.5px solid #2F3BEA; border-radius: 40% 55% 45% 60% / 60% 45% 55% 40%; }
 .dc .st { padding: 12px 14px 14px; box-shadow: 0 2px 3px rgba(0,0,0,.1), 0 8px 14px -8px rgba(0,0,0,.18); margin-top: 10px; }
 .dc .st b { display: block; font: 600 13px/1 Mona; letter-spacing: .04em; text-transform: uppercase; color: rgba(0,0,0,.55); margin-bottom: 6px; }
 .dc .st p { font: 600 22px/1.12 Caveat, cursive; color: #1E1E1E; margin: 0; }
@@ -462,12 +464,12 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
     <p>Crossed out: what I dropped. Circled: what I chose. Yellow: what it cost. Green: what it bought.</p>
   </div>
   <div class="wb">
-    <div class="dc"><p class="n">#1</p><h3>Where do staff work?</h3><p class="opt"><s>Build a staff app</s></p><span class="pick">✓ Their own WhatsApp</span><div class="st to"><b>Trade-off</b><p>Less control of the screen; Meta’s 24-hour and template rules.</p></div><div class="st roi"><b>Pay-off</b><p>Zero installs. All thirty staff reachable on day one.</p></div></div>
-    <div class="dc"><p class="n">#2</p><h3>How much does the AI decide?</h3><p class="opt"><s>Everything</s></p><p class="opt"><s>Nothing, ask every time</s></p><span class="pick">✓ A setting per rule</span><div class="st to"><b>Trade-off</b><p>The manager sets nine rules once.</p></div><div class="st roi"><b>Pay-off</b><p>Target: 40% fewer calls reach her. Money and people stay hers.</p></div></div>
-    <div class="dc"><p class="n">#3</p><h3>Who changes the data?</h3><p class="opt"><s>The model, directly</s></p><span class="pick">✓ Model reads, code decides</span><div class="st to"><b>Trade-off</b><p>More code to write and test.</p></div><div class="st roi"><b>Pay-off</b><p>Provable: 0 of 8,019 runs past her setting.</p></div></div>
-    <div class="dc"><p class="n">#4</p><h3>What if the AI fails?</h3><p class="opt"><s>Show an error</s></p><span class="pick">✓ Scripted reader, then a person</span><div class="st to"><b>Trade-off</b><p>The fallback reads 82 of 95, not all.</p></div><div class="st roi"><b>Pay-off</b><p>The store never stops. All 13 misses reach a person.</p></div></div>
-    <div class="dc"><p class="n">#5</p><h3>What does the owner see?</h3><p class="opt"><s>Staff rankings</s></p><span class="pick">✓ Counts only</span><div class="st to"><b>Trade-off</b><p>The owner loses per-person scores.</p></div><div class="st roi"><b>Pay-off</b><p>Staff trust it, so they actually use it.</p></div></div>
-    <div class="dc"><p class="n">#6</p><h3>Which languages?</h3><p class="opt"><s>English only</s></p><span class="pick">✓ English, Hindi, Kannada, Malayalam</span><div class="st to"><b>Trade-off</b><p>Four times the test messages.</p></div><div class="st roi"><b>Pay-off</b><p>The whole floor can use it, not just managers.</p></div></div>
+    <div class="dc"><p class="n">#1</p><h3>Where do staff work?</h3><p class="opt"><span class="xo">Build a staff app<i class="strike" data-fx-layer="wb0s1" data-anim="wipe" data-seq="0.0"></i></span></p><span class="pick">✓ Their own WhatsApp<i class="ring" data-fx-layer="wb0r" data-anim="ink" data-seq="0.2"></i></span><div class="st to" data-fx-layer="wb0t" data-anim="drop" data-seq="0.3"><b>Trade-off</b><p>Less control of the screen; Meta’s 24-hour and template rules.</p></div><div class="st roi" data-fx-layer="wb0p" data-anim="drop" data-seq="0.4"><b>Pay-off</b><p>Zero installs. All thirty staff reachable on day one.</p></div></div>
+    <div class="dc"><p class="n">#2</p><h3>How much does the AI decide?</h3><p class="opt"><span class="xo">Everything<i class="strike" data-fx-layer="wb1s1" data-anim="wipe" data-seq="1.0"></i></span></p><p class="opt"><span class="xo">Nothing, ask every time<i class="strike" data-fx-layer="wb1s2" data-anim="wipe" data-seq="1.1"></i></span></p><span class="pick">✓ A setting per rule<i class="ring" data-fx-layer="wb1r" data-anim="ink" data-seq="1.2"></i></span><div class="st to" data-fx-layer="wb1t" data-anim="drop" data-seq="1.3"><b>Trade-off</b><p>The manager sets nine rules once.</p></div><div class="st roi" data-fx-layer="wb1p" data-anim="drop" data-seq="1.4"><b>Pay-off</b><p>Target: 40% fewer calls reach her. Money and people stay hers.</p></div></div>
+    <div class="dc"><p class="n">#3</p><h3>Who changes the data?</h3><p class="opt"><span class="xo">The model, directly<i class="strike" data-fx-layer="wb2s1" data-anim="wipe" data-seq="2.0"></i></span></p><span class="pick">✓ Model reads, code decides<i class="ring" data-fx-layer="wb2r" data-anim="ink" data-seq="2.2"></i></span><div class="st to" data-fx-layer="wb2t" data-anim="drop" data-seq="2.3"><b>Trade-off</b><p>More code to write and test.</p></div><div class="st roi" data-fx-layer="wb2p" data-anim="drop" data-seq="2.4"><b>Pay-off</b><p>Provable: 0 of 8,019 runs past her setting.</p></div></div>
+    <div class="dc"><p class="n">#4</p><h3>What if the AI fails?</h3><p class="opt"><span class="xo">Show an error<i class="strike" data-fx-layer="wb3s1" data-anim="wipe" data-seq="3.0"></i></span></p><span class="pick">✓ Scripted reader, then a person<i class="ring" data-fx-layer="wb3r" data-anim="ink" data-seq="3.2"></i></span><div class="st to" data-fx-layer="wb3t" data-anim="drop" data-seq="3.3"><b>Trade-off</b><p>The fallback reads 82 of 95, not all.</p></div><div class="st roi" data-fx-layer="wb3p" data-anim="drop" data-seq="3.4"><b>Pay-off</b><p>The store never stops. All 13 misses reach a person.</p></div></div>
+    <div class="dc"><p class="n">#5</p><h3>What does the owner see?</h3><p class="opt"><span class="xo">Staff rankings<i class="strike" data-fx-layer="wb4s1" data-anim="wipe" data-seq="4.0"></i></span></p><span class="pick">✓ Counts only<i class="ring" data-fx-layer="wb4r" data-anim="ink" data-seq="4.2"></i></span><div class="st to" data-fx-layer="wb4t" data-anim="drop" data-seq="4.3"><b>Trade-off</b><p>The owner loses per-person scores.</p></div><div class="st roi" data-fx-layer="wb4p" data-anim="drop" data-seq="4.4"><b>Pay-off</b><p>Staff trust it, so they actually use it.</p></div></div>
+    <div class="dc"><p class="n">#6</p><h3>Which languages?</h3><p class="opt"><span class="xo">English only<i class="strike" data-fx-layer="wb5s1" data-anim="wipe" data-seq="5.0"></i></span></p><span class="pick">✓ English, Hindi, Kannada, Malayalam<i class="ring" data-fx-layer="wb5r" data-anim="ink" data-seq="5.2"></i></span><div class="st to" data-fx-layer="wb5t" data-anim="drop" data-seq="5.3"><b>Trade-off</b><p>Four times the test messages.</p></div><div class="st roi" data-fx-layer="wb5p" data-anim="drop" data-seq="5.4"><b>Pay-off</b><p>The whole floor can use it, not just managers.</p></div></div>
   </div>
   <p class="cap" style="margin-top:24px">“Target” means not measured yet; the store pilot will tell.</p>
 </section>
@@ -529,13 +531,13 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 <!-- 14 routing decision -->
 <section>
   <h2>How one staff message is routed to the right person.</h2>
-  <div data-fx-video="routing" style="margin-top:64px; display:grid; grid-template-columns:260px 40px 260px 40px 1fr; align-items:center">
-    <div class="box b-pp ra r1"><b>A staff message</b>“Customer wants 15% off the navy rain jacket, the zip is stiff.”</div>
+  <div data-travel="routing" style="margin-top:64px; display:grid; grid-template-columns:260px 40px 260px 40px 1fr; align-items:center">
+    <div class="box b-pp ra r1" data-fx-stop="0"><b>A staff message</b>“Customer wants 15% off the navy rain jacket, the zip is stiff.”</div>
     <div class="arr a1">→</div>
-    <div class="box b-pp ra r2"><b>Read</b>AI or scripted rules name the intent: <i>price_override</i></div>
+    <div class="box b-pp ra r2" data-fx-stop="1"><b>Read</b>AI or scripted rules name the intent: <i>price_override</i></div>
     <div class="arr a2">→</div>
     <div style="display:grid; gap:14px">
-      <div class="box b-wh ro r3" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Yours only</b><span>The manager acts. The card says which rule sent it.</span></div>
+      <div class="box b-wh ro r3" data-fx-stop="2" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Yours only</b><span>The manager acts. The card says which rule sent it.</span></div>
       <div class="box b-lm ro r4" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Asks you</b><span>The agent drafts the action and waits for a tap.</span></div>
       <div class="box b-bl ro r5" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Handles it</b><span>Acts, unless a check fails: then it becomes Asks you.</span></div>
     </div>

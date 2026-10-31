@@ -196,6 +196,56 @@ void main(){
     o.observe(box); cleanups.push(() => { o.disconnect(); clearTimeout(timer); });
   });
 
+  // v211 travel: a chat bubble follows your scroll from stop to stop (staff message -> Read -> the rule), each stop lighting up as
+  // it arrives. opts.travel = { i, stops: [[x, y, w, h], ...], text }. Scroll back and it goes back. Skipped under reduced motion.
+  if (opts.travel && secs[opts.travel.i] && !reduce) {
+    const { i, stops, text } = opts.travel, sec = secs[i];
+    const hl = stops.map(([x, y, w, h]) => { const d = document.createElement("i"); d.className = "cfx-stop"; return place(i, d, x, y, w, h); });
+    const bub = document.createElement("div"); bub.className = "cfx-bubble"; bub.textContent = text; bub.setAttribute("aria-hidden", "true"); sec.appendChild(bub);
+    const pt = stops.map(([x, y, w, h], k) => [(k === stops.length - 1 ? x + 70 : x + w / 2), y + h / 2]);
+    const mid = (stops[0][1] + stops[0][3] / 2);
+    const ease = (t) => (t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    const KEYS = [[0, .18, 0, 0], [.18, .42, 0, 1], [.42, .58, 1, 1], [.58, .82, 1, 2], [.82, 1.01, 2, 2]];   // [from, to, stop a, stop b]
+    let raf = 0;
+    const draw = () => {
+      raf = 0; const r = sec.getBoundingClientRect(), k = r.width / W, c = r.top + mid * k;
+      const pr = Math.min(1, Math.max(0, (innerHeight * .8 - c) / (innerHeight * .5)));
+      const [f, t, a, b] = KEYS.find(([f, t]) => pr >= f && pr < t) || KEYS[4];
+      const u = ease(Math.min(1, (pr - f) / (t - f))), x = pt[a][0] + (pt[b][0] - pt[a][0]) * u, y = pt[a][1] + (pt[b][1] - pt[a][1]) * u;
+      bub.style.left = x / W * 100 + "%"; bub.style.top = y / H(i) * 100 + "%"; bub.style.fontSize = 15 * k + "px";
+      bub.classList.toggle("on", pr > .02);
+      hl.forEach((d, n) => d.classList.toggle("on", pr > .02 && a === b && a === n || (n === 2 && pr >= .82)));
+    };
+    let sc = caseEl.parentElement; while (sc && !(sc.scrollHeight > sc.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
+    const on = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    (sc || window).addEventListener("scroll", on, { passive: true }); addEventListener("resize", on); draw();
+    cleanups.push(() => { (sc || window).removeEventListener("scroll", on); removeEventListener("resize", on); cancelAnimationFrame(raf); });
+  }
+
+  // v211 layers: parts of a still that draw themselves in when the section is seen (whiteboard strikes, rings, stickies).
+  // opts.layers = [[section, x, y, w, h, file, anim, seq]]; the section swaps to its "-base" still only when it can animate,
+  // so without this script (or under reduced motion) the complete still shows.
+  if (opts.layers && !reduce) {
+    const by = {};
+    opts.layers.forEach((l) => { if (secs[l[0]]) (by[l[0]] ||= []).push(l); });
+    Object.entries(by).forEach(([i, ls]) => {
+      i = +i; const im = secs[i].querySelector(":scope > img"), f = sections[i][0].replace(".webp", "-base.webp");
+      if (im) { im.srcset = `${base}work/${slug}/${f}?v=${v} 1440w, ${base}work/${slug}/${f.replace(".webp", "@2x.webp")}?v=${v} 2880w`; im.src = `${base}work/${slug}/${f}?v=${v}`; }
+      const els = ls.map(([, x, y, w, h, file, anim, seq]) => {
+        const [c, st] = String(seq).split(".").map(Number), e = document.createElement("img");
+        e.className = "cfx-layer a-" + anim; e.alt = ""; e.setAttribute("aria-hidden", "true"); e.decoding = "async";
+        e.src = asset(file); e.srcset = `${asset(file)} 1x, ${asset(file.replace(/\.(\w+)$/, "@2x.$1"))} 2x`;
+        e.style.setProperty("--d", (c * .12 + st * .16).toFixed(2) + "s"); return place(i, e, x, y, w, h);
+      });
+      const go = () => { els.forEach((e) => e.classList.add("on")); o.disconnect(); clearInterval(t); };
+      // start when the first card's top is a quarter of the way up the screen, so the whole sequence plays in view
+      const first = els.reduce((m, e) => (parseFloat(e.style.top) < parseFloat(m.style.top) ? e : m), els[0]);
+      const o = new IntersectionObserver((es) => { if (es[0].isIntersecting) go(); }, { rootMargin: "0px 0px -25% 0px" }); o.observe(first);
+      const t = setInterval(() => { const r = first.getBoundingClientRect(); if (r.height && r.top < innerHeight * .75 && r.bottom > 0) go(); }, 700);
+      cleanups.push(() => { o.disconnect(); clearInterval(t); });
+    });
+  }
+
   // v210 jump links: [[section, x, y, w, h, targetSection, label]], real links laid over the still that scroll to a section
   if (opts.links) opts.links.forEach(([i, x, y, w, h, to, label]) => {
     if (!secs[i] || !secs[to]) return;
