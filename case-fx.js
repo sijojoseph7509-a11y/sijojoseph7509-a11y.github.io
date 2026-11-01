@@ -18,6 +18,7 @@ export default function caseFx(caseEl, { slug, v, sections, opts = {}, base = ""
   caseEl.classList.add("fx-wait"); { const done = () => caseEl.classList.remove("fx-wait"); if (css.sheet) done(); else { css.addEventListener("load", done, { once: true }); css.addEventListener("error", done, { once: true }); } }
   caseEl.classList.add("cfx", "cfx-" + (opts.reveal || "rise"));
   if (opts.accent) caseEl.style.setProperty("--cfx-accent", opts.accent);
+  caseEl.style.setProperty("--cfx-link", opts.link || opts.accent || "#2F3BEA");   // v220: the colour of link text on hover (underline + arrow)
   const cleanups = [];
 
   const secs = [...caseEl.querySelectorAll(":scope > img")].map((im, i) => {
@@ -247,10 +248,19 @@ void main(){
   }
 
   // v210 jump links: [[section, x, y, w, h, targetSection, label]], real links laid over the still that scroll to a section
-  if (opts.links) opts.links.forEach(([i, x, y, w, h, to, label]) => {
+  // v220: an optional 8th field [x, y, w, h] is the link's own words ("Read this part"); on hover they get an underline and an arrow
+  if (opts.links) opts.links.forEach(([i, x, y, w, h, to, label, cta]) => {
     if (!secs[i] || !secs[to]) return;
     const a = document.createElement("a"); a.className = "cfx-link"; a.href = "#"; a.setAttribute("aria-label", "Jump to: " + label);
     a.addEventListener("click", (e) => { e.preventDefault(); secs[to].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); });
+    if (cta) {
+      const [cx, cy, cw, ch] = cta, pc = (v, of) => v / of * 100 + "%";
+      w = Math.max(w, cx + cw + ch * 1.45 - x);   // room for the arrow inside the link, so nothing hangs outside it
+      const u = document.createElement("i"); u.className = "cfx-u"; Object.assign(u.style, { left: pc(cx - x, w), top: pc(cy + ch + 1 - y, h), width: pc(cw, w) });
+      const ar = document.createElement("i"); ar.className = "cfx-arr"; Object.assign(ar.style, { left: pc(cx + cw + ch * .3 - x, w), top: pc(cy - y, h), width: pc(ch, w), height: pc(ch, h) });
+      ar.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4"/></svg>';
+      a.append(u, ar);
+    }
     place(i, a, x, y, w, h);
   });
 

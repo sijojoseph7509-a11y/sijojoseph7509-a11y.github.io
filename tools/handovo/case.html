@@ -243,6 +243,19 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
 .dix { margin-top: 36px; border-top: 1px solid var(--line); }
 .dix a { display: grid; grid-template-columns: 170px 1fr 140px; gap: 24px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
 .dix .k { margin: 0; } .dix p { font: 600 21px/1.4 Mona; letter-spacing: -.01em; margin: 0; } .dix i { font-style: normal; color: var(--blue); font-weight: 700; text-align: right; }
+
+/* v220 chapters: the case is told in seven chapters; each opens with a divider that names its question and shows all seven */
+.chap { background: var(--blue); color: #fff; min-height: 660px; padding: 150px 120px 230px; }
+.chap .eye { color: var(--lime); }
+.chap h2 { color: #fff; font-size: 88px; }
+.chap .cq { margin-top: 26px; max-width: 860px; font: 500 28px/1.4 Mona; letter-spacing: -.01em; color: #E3E5FF; }
+.chap .rail { position: absolute; left: 120px; right: 120px; bottom: 72px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; }
+.chap .rail div { border-top: 3px solid rgba(255, 255, 255, .28); padding-top: 14px; }
+.chap .rail span { font: 500 12px/1 GSCode, monospace; color: rgba(255, 255, 255, .55); } .chap .rail p { margin-top: 8px; font: 600 16px/1.3 Mona; color: rgba(255, 255, 255, .55); }
+.chap .rail .done { border-color: var(--lime); } .chap .rail .done span, .chap .rail .done p { color: #E3E5FF; }
+.chap .rail .now { border-color: #fff; } .chap .rail .now span { color: var(--lime); } .chap .rail .now p { color: #fff; }
+.toc a { grid-template-columns: 90px 1fr 170px; } .toc .k { font: 500 14px/1 GSCode, monospace; }
+.toc p b { display: block; font: 700 26px/1.2 Mona; letter-spacing: -.02em; margin-bottom: 6px; } .toc p span { font: 500 19px/1.45 Mona; color: #3A3A45; }
 </style></head>
 <body>
 
@@ -262,7 +275,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <img class="shot" src="shots/screen03.webp" alt="" style="margin-top:88px; border-radius:22px 22px 0 0; box-shadow:0 -20px 80px rgba(0,0,40,.35)">
 </section>
 
-<!-- 02 the 90-second version (v181, v184 layout: headline + film, four short proof cards, stack) -->
 <section data-new="summary" class="qs" style="padding:96px 120px 100px; background:var(--paper)">
   <div class="grid2" style="gap:64px; align-items:center; grid-template-columns:1fr 640px">
     <div>
@@ -279,34 +291,20 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <div class="stack" style="margin-top:32px"><span class="me">Designed and built by me</span><span>Figma</span><span>Next.js</span><span>Postgres (Supabase)</span><span>Claude API, structured output</span><span>Vercel</span><span>4 languages</span></div>
 </section>
 
-<!-- v210 the 60-second path -->
-<section style="background:var(--paper); padding-top:56px; padding-bottom:72px">
-  <h2 style="font-size:44px">Short on time? Four stops.</h2>
-  <div class="jump">
-    <a data-fx-link="problem" href="#"><p class="k">The problem</p><b>Why stores lose the plan</b><span>What I saw on the floor.</span><i>Read this part</i></a>
-    <a data-fx-link="decisions" href="#"><p class="k">My thinking</p><b>Six calls and their cost</b><span>Options, trade-offs, pay-offs.</span><i>Read this part</i></a>
-    <a data-fx-link="aiux" href="#"><p class="k">AI UX</p><b>How the agent behaves</b><span>Five real screens.</span><i>Read this part</i></a>
-    <a data-fx-link="testing" href="#"><p class="k">Proof</p><b>8,019 ways to break it</b><span>What the tests found.</span><i>Read this part</i></a>
+<section data-anchor="story" style="background:var(--paper); padding-top:88px; padding-bottom:96px">
+  <p class="eye">The story</p>
+  <h2 style="font-size:52px">Seven chapters, from a lost plan to a pilot.</h2>
+  <div class="dix toc">
+    <a data-fx-link="ch1" href="#"><p class="k">01</p><p><b>The problem</b><span>Why does a store’s plan never reach the people on the floor?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch2" href="#"><p class="k">02</p><p><b>Listening</b><span>What really happens between the manager and the floor?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch3" href="#"><p class="k">03</p><p><b>The root cause</b><span>Why does the day leak at every hand-off?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch4" href="#"><p class="k">04</p><p><b>Choices</b><span>What may an AI teammate do on its own, and what may it not?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch5" href="#"><p class="k">05</p><p><b>The system</b><span>How does one goal become the right task on the right phone?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch6" href="#"><p class="k">06</p><p><b>The design</b><span>What do the manager and the staff see, and why can they trust it?</span></p><i>Read chapter</i></a>
+    <a data-fx-link="ch7" href="#"><p class="k">07</p><p><b>Proof</b><span>Does it hold up in a real store, and what comes next?</span></p><i>Read chapter</i></a>
   </div>
 </section>
 
-<!-- v217 decisions index -->
-<section style="padding-top:88px; padding-bottom:96px">
-  <h2 style="font-size:44px">Six decisions, one line each.</h2>
-  <div class="dix">
-    <a data-fx-link="heard" href="#"><p class="k">Channel</p><p>I chose WhatsApp over a new staff app, because staff told me they won’t install another app.</p><i>See the evidence</i></a>
-    <a data-fx-link="decisions" href="#"><p class="k">Who acts</p><p>I chose to let the model read and code decide, because only code can be tested 8,019 times.</p><i>See the evidence</i></a>
-    <a data-fx-link="aiux" href="#"><p class="k">When unsure</p><p>I chose to hand unclear messages to the shift lead over letting the AI guess, because a late message costs minutes and a wrong one costs trust.</p><i>See the evidence</i></a>
-    <a data-fx-link="rules" href="#"><p class="k">Control</p><p>I chose a setting per rule over one on/off switch, because a manager trusts reminders long before she trusts discounts.</p><i>See the evidence</i></a>
-    <a data-fx-link="trust" href="#"><p class="k">Privacy</p><p>I chose counts over staff rankings, because staff who feel watched stop replying.</p><i>See the evidence</i></a>
-    <a data-fx-link="changed" href="#"><p class="k">From the tests</p><p>I chose “run out” over “done” when a message could mean both, because a wrong flag costs one tap and a hidden empty shelf costs sales.</p><i>See the evidence</i></a>
-  </div>
-</section>
-
-
-
-
-<!-- 03 at a glance: shipped, tested, decided -->
 <section style="background:var(--paper)">
   <h2>Handovo at a glance.</h2>
   <div class="grid3" style="margin-top:64px; gap:28px">
@@ -317,14 +315,19 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:36px">These are engine tests. Field results come from a four-week store pilot.</p>
 </section>
 
-<!-- 03 play the day -->
+<section class="chap" data-anchor="ch1">
+  <p class="eye">Chapter 01 of 07</p>
+  <h2>The problem</h2>
+  <p class="cq">Why does a store’s plan never reach the people on the floor?</p>
+  <div class="rail"><div class="now"><span>01</span><p>The problem</p></div><div class=""><span>02</span><p>Listening</p></div><div class=""><span>03</span><p>The root cause</p></div><div class=""><span>04</span><p>Choices</p></div><div class=""><span>05</span><p>The system</p></div><div class=""><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section style="padding-bottom:100px">
   <h2>Two minutes in a 30-person clothing store in Koramangala.</h2>
   <p class="lead">One scripted Thursday you can play: control room on the left, a staff phone on the right.</p>
   <img class="shot" data-fx-video="tour" src="shots/tour01.webp" alt="" style="margin-top:72px">
 </section>
 
-<!-- v200 where I found the problem -->
 <section>
   <div class="ovl" style="--pos:50% 50%"><img src="ill/p5-vm.webp" alt="A visual merchandiser kneels to dress a mannequin in the entrance display before the store opens."><div class="txt"><h2>I saw it every day as a visual merchandiser.</h2><p>At Marks &amp; Spencer and Vero Moda I turned head-office plans into what customers see, and watched how the day really ran.</p></div></div>
   <div class="grid4" style="margin-top:64px">
@@ -336,7 +339,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:36px">Then I checked it wasn’t just me: store managers and floor staff told me the same four stories.</p>
 </section>
 
-<!-- 04 problem -->
 <section data-anchor="problem" style="background:var(--paper)">
   <div class="ovl" style="--pos:50% 40%"><img src="ill/p1-floor.webp" alt="A busy fashion store floor: staff fold, carry boxes and serve customers, each glancing at a phone."><div class="txt"><h2>A store’s day lives in the manager’s head and a noisy WhatsApp group.</h2></div></div>
   <div class="pb">
@@ -347,7 +349,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <div class="hmw"><p class="k">The question I designed for</p><p class="q">How might a manager say what today is about once, and trust an agent to run the rest, inside rules they control?</p></div>
 </section>
 
-<!-- 05 context by numbers -->
 <section class="blue">
   <h2>Retail employs millions in India, and its messages rarely reach the floor.</h2>
   <div class="grid3" style="margin-top:80px; gap:56px">
@@ -361,7 +362,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- v200 evidence across retail -->
 <section>
   <div class="ovl" style="--pos:50% 40%"><img src="ill/p12-break.webp" alt="Store workers on their break, each scrolling a phone."><div class="txt"><h2>Every country that measures it finds the same gap.</h2></div></div>
   <div class="grid4" style="margin-top:64px">
@@ -373,7 +373,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p style="margin-top:56px; font:700 28px/1.3 Mona; letter-spacing:-.01em; max-width:1000px">In India it is worse: every kind of message lands in one WhatsApp group.</p>
 </section>
 
-<!-- 06 a day in the store, morning -->
 <section>
   <h2>One goal, said once, reaches everyone.</h2>
   <div class="grid2" style="margin-top:64px; gap:40px">
@@ -384,7 +383,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 07 a day in the store, afternoon -->
 <section style="padding-top:40px">
   <h2>The afternoon, as Handovo handles it.</h2>
   <div class="grid2" style="margin-top:64px; gap:40px">
@@ -395,7 +393,13 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 08 research plan -->
+<section class="chap" data-anchor="ch2">
+  <p class="eye">Chapter 02 of 07</p>
+  <h2>Listening</h2>
+  <p class="cq">What really happens between the manager and the floor?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="now"><span>02</span><p>Listening</p></div><div class=""><span>03</span><p>The root cause</p></div><div class=""><span>04</span><p>Choices</p></div><div class=""><span>05</span><p>The system</p></div><div class=""><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section style="background:var(--paper)">
   <h2>Five methods, five questions.</h2>
   <div class="mt">
@@ -408,7 +412,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:32px">No research numbers here are invented. Where I haven’t measured yet, I say so.</p>
 </section>
 
-<!-- 09 competitive landscape -->
 <section>
   <h2>Stores already have tools. None of them runs the day.</h2>
   <table class="mx" style="margin-top:64px">
@@ -422,7 +425,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:28px">Categories, not named products: a reading of the kinds of tool a store like this uses today.</p>
 </section>
 
-<!-- v200 is it worth solving -->
 <section>
   <div class="ovl" style="--pos:50% 45%"><img src="ill/p11-street.webp" alt="A busy high street at dusk lined with mid-size clothing stores."><div class="txt"><h2>Chains already pay for tools like this.</h2><p>Mid-size stores like these run on a WhatsApp group instead.</p></div></div>
   <div class="bn">
@@ -437,7 +439,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 10 personas (v200: detailed, from my conversations and my VM years) -->
 <section style="background:var(--paper)">
   <div class="grid2" style="align-items:end">
     <div><h2>Four people, one store, very different days.</h2></div>
@@ -463,7 +464,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 11 journey map -->
 <section>
   <h2>The day leaks at every hand-off.</h2>
   <div style="margin-top:56px; position:relative">
@@ -480,7 +480,13 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- v200 whiteboard: from symptoms to root cause to the idea -->
+<section class="chap" data-anchor="ch3">
+  <p class="eye">Chapter 03 of 07</p>
+  <h2>The root cause</h2>
+  <p class="cq">Why does the day leak at every hand-off?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="done"><span>02</span><p>Listening</p></div><div class="now"><span>03</span><p>The root cause</p></div><div class=""><span>04</span><p>Choices</p></div><div class=""><span>05</span><p>The system</p></div><div class=""><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section style="padding-bottom:110px">
   <div class="grid2" style="align-items:end">
     <div><h2>How I got from symptoms to the root cause.</h2></div>
@@ -489,7 +495,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <!--board--><div style="margin-top:56px"><div style="position:relative; width:1200px; height:940px; border-radius:16px; background:#F4F4F4; background-image:radial-gradient(circle, #D2D2D2 1.1px, transparent 1.3px); background-size:24px 24px; box-shadow:inset 0 0 0 1px #E2E2E2; overflow:hidden"><svg width="1200" height="940" viewBox="0 0 1200 940" style="position:absolute; left:0; top:0; overflow:visible" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M412 420 C 440 420, 450 140, 488 140" stroke="#757575" stroke-width="2.2"/><path d="M488 140 l-12 -7 M488 140 l-12 7" stroke="#757575" stroke-width="2.2"/><path d="M635 180 L635 214" stroke="#757575" stroke-width="2.2"/><path d="M635 214 l-7 -12 M635 214 l7 -12" stroke="#757575" stroke-width="2.2"/><path d="M635 292 L635 326" stroke="#757575" stroke-width="2.2"/><path d="M635 326 l-7 -12 M635 326 l7 -12" stroke="#757575" stroke-width="2.2"/><path d="M635 404 L635 438" stroke="#757575" stroke-width="2.2"/><path d="M635 438 l-7 -12 M635 438 l7 -12" stroke="#757575" stroke-width="2.2"/><path d="M635 516 L635 550" stroke="#757575" stroke-width="2.2"/><path d="M635 550 l-7 -12 M635 550 l7 -12" stroke="#757575" stroke-width="2.2"/><path d="M635 628 L635 684" stroke="#757575" stroke-width="2.2"/><path d="M635 684 l-7 -12 M635 684 l7 -12" stroke="#757575" stroke-width="2.2"/><path d="M772 760 C 820 760, 820 196, 858 196" stroke="#757575" stroke-width="2.2"/><path d="M858 196 l-12 -7 M858 196 l-12 7" stroke="#757575" stroke-width="2.2"/><path d="M488 712 C 470 640, 640 650, 760 672 C 820 690, 800 850, 690 856 C 560 864, 470 820, 492 726" stroke="#F24822" stroke-width="4.5" opacity=".9"/></svg><div style="position:absolute; left:28px; top:70px; width:400px; height:700px; border-radius:14px; background:rgba(255,224,122,.16); border:1px solid rgba(0,0,0,.06)"></div><div style="position:absolute; left:28px; top:40px; font:600 13px/1 Mona; color:#333; padding:6px 10px; border-radius:6px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.12)">From the floor: my VM years and conversations</div><div style="position:absolute; left:470px; top:70px; width:330px; height:840px; border-radius:14px; background:rgba(151,71,255,.07); border:1px solid rgba(0,0,0,.06)"></div><div style="position:absolute; left:470px; top:40px; font:600 13px/1 Mona; color:#333; padding:6px 10px; border-radius:6px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.12)">5 whys</div><div style="position:absolute; left:842px; top:70px; width:330px; height:840px; border-radius:14px; background:rgba(13,153,255,.07); border:1px solid rgba(0,0,0,.06)"></div><div style="position:absolute; left:842px; top:40px; font:600 13px/1 Mona; color:#333; padding:6px 10px; border-radius:6px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.12)">How might we…</div><div style="position:absolute; left:48px; top:96px; width:172px; height:168px; padding:14px 14px; background:#FFE07A; transform:rotate(-1.5deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.1; font-weight:600; color:#1E1E1E">Huddle plan never reached the 2 pm shift</p><p style="position:absolute; left:14px; bottom:10px; font:500 10px/1 Mona; color:rgba(0,0,0,.42)">Sijo Joseph</p></div><div style="position:absolute; left:238px; top:104px; width:172px; height:168px; padding:14px 14px; background:#FFB8A8; transform:rotate(1.2deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.1; font-weight:600; color:#1E1E1E">Task buried in a 200-message WhatsApp group</p><p style="position:absolute; left:14px; bottom:10px; font:500 10px/1 Mona; color:rgba(0,0,0,.42)">Sijo Joseph</p></div><div style="position:absolute; left:52px; top:300px; width:172px; height:168px; padding:14px 14px; background:#A8D8FF; transform:rotate(1deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.1; font-weight:600; color:#1E1E1E">Manager walks the floor asking “who did this?”</p><p style="position:absolute; left:14px; bottom:10px; font:500 10px/1 Mona; color:rgba(0,0,0,.42)">Sijo Joseph</p></div><div style="position:absolute; left:242px; top:296px; width:172px; height:168px; padding:14px 14px; background:#9FE3B4; transform:rotate(-1.8deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.1; font-weight:600; color:#1E1E1E">Head-office brief done late, or differently</p><p style="position:absolute; left:14px; bottom:10px; font:500 10px/1 Mona; color:rgba(0,0,0,.42)">Sijo Joseph</p></div><div style="position:absolute; left:140px; top:500px; width:172px; height:168px; padding:14px 14px; background:#D9C2FF; transform:rotate(0.8deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.1; font-weight:600; color:#1E1E1E">“I never saw that message”</p><p style="position:absolute; left:14px; bottom:10px; font:500 10px/1 Mona; color:rgba(0,0,0,.42)">Sijo Joseph</p></div><div style="position:absolute; left:60px; top:700px; width:330px; font-family:Mona,sans-serif; font-size:16px; line-height:1.12; font-weight:600; color:#7A6A2B; transform:rotate(-1deg); ">same 4 stories in every store I asked →</div><div style="position:absolute; left:492px; top:104px; width:286px; height:76px; border-radius:12px; background:#fff; border:2px solid #9747FF; padding:9px 14px"><p style="font:600 11px/1 Mona; color:#9747FF; letter-spacing:.04em">WHY 1</p><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.08; font-weight:600; color:#1E1E1E; margin-top:4px">Tasks don’t get done on time</p></div><div style="position:absolute; left:492px; top:216px; width:286px; height:76px; border-radius:12px; background:#fff; border:2px solid #9747FF; padding:9px 14px"><p style="font:600 11px/1 Mona; color:#9747FF; letter-spacing:.04em">WHY 2</p><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.08; font-weight:600; color:#1E1E1E; margin-top:4px">People didn’t know it was theirs</p></div><div style="position:absolute; left:492px; top:328px; width:286px; height:76px; border-radius:12px; background:#fff; border:2px solid #9747FF; padding:9px 14px"><p style="font:600 11px/1 Mona; color:#9747FF; letter-spacing:.04em">WHY 3</p><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.08; font-weight:600; color:#1E1E1E; margin-top:4px">It was said once, at the huddle or in the group</p></div><div style="position:absolute; left:492px; top:440px; width:286px; height:76px; border-radius:12px; background:#fff; border:2px solid #9747FF; padding:9px 14px"><p style="font:600 11px/1 Mona; color:#9747FF; letter-spacing:.04em">WHY 4</p><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.08; font-weight:600; color:#1E1E1E; margin-top:4px">No one owns each task or follows it up</p></div><div style="position:absolute; left:492px; top:552px; width:286px; height:76px; border-radius:12px; background:#fff; border:2px solid #9747FF; padding:9px 14px"><p style="font:600 11px/1 Mona; color:#9747FF; letter-spacing:.04em">WHY 5</p><p style="font-family:Mona,sans-serif; font-size:17px; line-height:1.08; font-weight:600; color:#1E1E1E; margin-top:4px">Only the manager can</p></div><div style="position:absolute; left:500px; top:690px; width:270px; height:150px; padding:16px; background:#FF8577; transform:rotate(-2deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 10px 18px -8px rgba(0,0,0,.2)"><p style="font-family:Mona,sans-serif; font-size:19px; line-height:1.08; font-weight:700; color:#1E1E1E">The manager is the only router of every task and every decision</p></div><div style="position:absolute; left:560px; top:852px; width:240px; font-family:Mona,sans-serif; font-size:22px; line-height:1.12; font-weight:700; color:#F24822; transform:rotate(-3deg); ">← the root cause</div><div style="position:absolute; left:862px; top:100px; width:290px; height:190px; padding:16px; background:#A8D8FF; transform:rotate(1deg); box-shadow:0 2px 3px rgba(0,0,0,.12), 0 8px 16px -8px rgba(0,0,0,.18)"><p style="font-family:Mona,sans-serif; font-size:18px; line-height:1.1; font-weight:600; color:#1E1E1E">HMW let the manager say it once, and have it reach the right person, followed up, without losing control?</p></div><div style="position:absolute; left:862px; top:330px; width:138px; height:134px; padding:12px; background:#9FE3B4; transform:rotate(1.2deg); box-shadow:0 2px 3px rgba(0,0,0,.12)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.08; font-weight:600; color:#1E1E1E">One goal in, tasks out with an owner + reason</p><p style="position:absolute; left:12px; bottom:10px"><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i></p></div><div style="position:absolute; left:1012px; top:330px; width:138px; height:134px; padding:12px; background:#9FE3B4; transform:rotate(-1.2deg); box-shadow:0 2px 3px rgba(0,0,0,.12)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.08; font-weight:600; color:#1E1E1E">Staff stay in WhatsApp</p><p style="position:absolute; left:12px; bottom:10px"><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i></p></div><div style="position:absolute; left:862px; top:480px; width:138px; height:134px; padding:12px; background:#9FE3B4; transform:rotate(1.2deg); box-shadow:0 2px 3px rgba(0,0,0,.12)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.08; font-weight:600; color:#1E1E1E">The agent follows up, not the manager</p><p style="position:absolute; left:12px; bottom:10px"><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i></p></div><div style="position:absolute; left:1012px; top:480px; width:138px; height:134px; padding:12px; background:#9FE3B4; transform:rotate(-1.2deg); box-shadow:0 2px 3px rgba(0,0,0,.12)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.08; font-weight:600; color:#1E1E1E">Manager sets what it may do alone</p><p style="position:absolute; left:12px; bottom:10px"><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i><i style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#9747FF; margin-right:4px"></i></p></div><div style="position:absolute; left:866px; top:640px; width:280px; font-family:Mona,sans-serif; font-size:19px; line-height:1.12; font-weight:700; color:#F24822; transform:rotate(-2deg); ">nope:</div><div style="position:absolute; left:862px; top:680px; width:290px; height:62px; padding:8px 12px; background:#E6E6E6; transform:rotate(0.8deg)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.05; font-weight:600; color:#555"><s style="text-decoration-color:#F24822; text-decoration-thickness:3px; color:#1E1E1E">New app for staff</s><br>they won’t install it</p></div><div style="position:absolute; left:862px; top:754px; width:290px; height:62px; padding:8px 12px; background:#E6E6E6; transform:rotate(-0.8deg)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.05; font-weight:600; color:#555"><s style="text-decoration-color:#F24822; text-decoration-thickness:3px; color:#1E1E1E">Fully automatic AI</s><br>managers won’t trust it</p></div><div style="position:absolute; left:862px; top:828px; width:290px; height:62px; padding:8px 12px; background:#E6E6E6; transform:rotate(0.8deg)"><p style="font-family:Mona,sans-serif; font-size:15px; line-height:1.05; font-weight:600; color:#555"><s style="text-decoration-color:#F24822; text-decoration-thickness:3px; color:#1E1E1E">Stricter group rules</s><br>doesn’t scale</p></div><div style="position:absolute; left:770px; top:820px"><svg width="22" height="26" viewBox="0 0 22 26"><path d="M2 2 L2 21 L7 16 L11 24 L14 22.5 L10 15 L17 15 Z" fill="#0D99FF" stroke="#fff" stroke-width="1.5"/></svg><span style="position:absolute; left:16px; top:20px; font:600 12px/1 Mona; color:#fff; background:#0D99FF; padding:4px 7px; border-radius:4px 10px 10px 10px">Sijo</span></div></div></div><!--/board-->
 </section>
 
-<!-- v200 research to decisions -->
 <section data-anchor="heard" style="background:var(--paper)">
   <h2>Every decision traces back to something real.</h2>
   <div class="dcall"><span class="dbadge">Decision</span><p>I chose WhatsApp over a new staff app, because staff told me they won’t install another app.</p></div>
@@ -503,7 +508,13 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- v206 decision whiteboard -->
+<section class="chap" data-anchor="ch4">
+  <p class="eye">Chapter 04 of 07</p>
+  <h2>Choices</h2>
+  <p class="cq">What may an AI teammate do on its own, and what may it not?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="done"><span>02</span><p>Listening</p></div><div class="done"><span>03</span><p>The root cause</p></div><div class="now"><span>04</span><p>Choices</p></div><div class=""><span>05</span><p>The system</p></div><div class=""><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section data-anchor="decisions" data-new="decisions">
   <div class="grid2" style="align-items:end">
     <div><h2>Six calls I had to make, and what each one cost.</h2></div>
@@ -521,7 +532,26 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:24px">“Target” means not measured yet; the store pilot will tell.</p>
 </section>
 
-<!-- 12 the idea -->
+<section data-anchor="verdict" style="padding-top:88px; padding-bottom:96px">
+  <p class="eye">The verdict</p>
+  <h2 style="font-size:44px">Six decisions, one line each.</h2>
+  <div class="dix">
+    <a data-fx-link="heard" href="#"><p class="k">Channel</p><p>I chose WhatsApp over a new staff app, because staff told me they won’t install another app.</p><i>See the evidence</i></a>
+    <a data-fx-link="decisions" href="#"><p class="k">Who acts</p><p>I chose to let the model read and code decide, because only code can be tested 8,019 times.</p><i>See the evidence</i></a>
+    <a data-fx-link="aiux" href="#"><p class="k">When unsure</p><p>I chose to hand unclear messages to the shift lead over letting the AI guess, because a late message costs minutes and a wrong one costs trust.</p><i>See the evidence</i></a>
+    <a data-fx-link="rules" href="#"><p class="k">Control</p><p>I chose a setting per rule over one on/off switch, because a manager trusts reminders long before she trusts discounts.</p><i>See the evidence</i></a>
+    <a data-fx-link="trust" href="#"><p class="k">Privacy</p><p>I chose counts over staff rankings, because staff who feel watched stop replying.</p><i>See the evidence</i></a>
+    <a data-fx-link="changed" href="#"><p class="k">From the tests</p><p>I chose “run out” over “done” when a message could mean both, because a wrong flag costs one tap and a hidden empty shelf costs sales.</p><i>See the evidence</i></a>
+  </div>
+</section>
+
+<section class="chap" data-anchor="ch5">
+  <p class="eye">Chapter 05 of 07</p>
+  <h2>The system</h2>
+  <p class="cq">How does one goal become the right task on the right phone?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="done"><span>02</span><p>Listening</p></div><div class="done"><span>03</span><p>The root cause</p></div><div class="done"><span>04</span><p>Choices</p></div><div class="now"><span>05</span><p>The system</p></div><div class=""><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section class="dark">
   <div class="ovl" style="--pos:50% 55%"><img src="ill/p10-huddle.webp" alt="A store manager types the day’s goal at the morning huddle while staff see it arrive on their phones."><div class="txt"><h2>One goal in. Tasks out to every phone. The manager decides what the agent may do alone.</h2></div></div>
   <div class="grid3" style="margin-top:80px">
@@ -532,7 +562,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p style="margin-top:72px; font-size:22px; max-width:900px">The model only suggests. Code checks it and applies the manager’s setting.</p>
 </section>
 
-<!-- 13 system architecture -->
 <section style="padding-top:40px">
   <h2>How a message travels from a staff phone to a decision.</h2>
   <div style="margin-top:64px; display:grid; grid-template-columns:240px 40px 1fr 40px 260px; gap:0; align-items:stretch">
@@ -562,7 +591,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:48px">Staff messages are data, never instructions to the AI.</p>
 </section>
 
-<!-- 13b service blueprint (v181) -->
 <section data-new="blueprint">
   <h2>What each person and the agent do across one Thursday.</h2>
   
@@ -575,7 +603,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 14 routing decision -->
 <section>
   <h2>How one staff message is routed to the right person.</h2>
   <div data-travel="routing" style="margin-top:64px; display:grid; grid-template-columns:260px 40px 260px 40px 1fr; align-items:center">
@@ -596,7 +623,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 14b how the AI behaves (v181) -->
 <section data-new="ai" class="blue">
   <h2>Four rules for an agent on a shop floor.</h2>
   <div class="grid4" style="margin-top:56px; gap:24px">
@@ -608,7 +634,13 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:28px">Every rule is attacked 8,019 ways before a store sees it.</p>
 </section>
 
-<!-- v210 AI UX patterns: real screens from the pilot build -->
+<section class="chap" data-anchor="ch6">
+  <p class="eye">Chapter 06 of 07</p>
+  <h2>The design</h2>
+  <p class="cq">What do the manager and the staff see, and why can they trust it?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="done"><span>02</span><p>Listening</p></div><div class="done"><span>03</span><p>The root cause</p></div><div class="done"><span>04</span><p>Choices</p></div><div class="done"><span>05</span><p>The system</p></div><div class="now"><span>06</span><p>The design</p></div><div class=""><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section data-anchor="aiux">
   <div class="grid2" style="align-items:end">
     <div><h2>How the agent behaves on screen.</h2></div>
@@ -624,7 +656,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 15 the rules -->
 <section data-anchor="rules" style="background:var(--paper)">
   <div class="split"><img src="ill/p2-decide.webp" alt="The store manager decides a request on her phone while a staff member waits at the door."><div><h2>The nine rules, and the setting each one starts with.</h2><p class="lead">She decides what matters. The agent gets everything else ready.</p></div></div>
   <div class="dcall"><span class="dbadge">Decision</span><p>I chose a setting per rule over one on/off switch, because a manager trusts reminders long before she trusts discounts.</p></div>
@@ -642,7 +673,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:24px">Defaults from the pilot build. The manager can change the first seven at any time on the Rules screen.</p>
 </section>
 
-<!-- 16 goal -->
 <section style="padding-bottom:60px">
   <div class="step" style="margin-top:40px">
     <div><p class="k">01 The goal</p><h3>The manager writes one goal</h3><p>In plain words, no forms: “Rain all week: push rain jackets, count the linen shirts, tidy the fitting rooms.”</p></div>
@@ -650,7 +680,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 17 plan -->
 <section style="padding-top:60px">
   <div class="step">
     <div><p class="k">02 The plan</p><h3>The agent drafts the tasks</h3><p>Eight tasks, each with an owner and a reason. The plan waits for the manager.</p></div>
@@ -658,7 +687,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 18 staff -->
 <section class="dark">
   <div class="grid2" style="align-items:center">
     <div><p class="k">03 The floor</p><h3 style="font-size:40px; line-height:1.08">Everyone gets only their own tasks</h3><p>Meera gets her task and what to reply, in her language.</p></div>
@@ -666,7 +694,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 19 tasks -->
 <section>
   <div class="step">
     <div><p class="k">04 The day’s work</p><h3>Every task has an owner, a time and a history</h3><p>To do, Waiting for photo, Blocked, Done. Proof keeps a task open.</p></div>
@@ -674,7 +701,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 20 discount -->
 <section style="background:var(--paper)">
   <div class="step">
     <div><p class="k">05 A decision</p><h3>A discount is the manager’s call</h3><p>Kavya asks for 15% off. Discounts are <b>Yours only</b>, so the agent holds the reply and shows why.</p></div>
@@ -682,7 +708,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 21 count -->
 <section>
   <div class="step">
     <div><p class="k">06 A mismatch</p><h3>A count that doesn’t add up</h3><p>Meera counts 8; the system says 12. A gap over 2 turns <b>Handles&nbsp;it</b> into <b>Asks&nbsp;you</b>: 4 pieces, ₹7,596.</p></div>
@@ -690,7 +715,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 22 sold out + urgent -->
 <section style="background:var(--paper)">
   <div class="grid2">
     <div><p class="k">07 Handled</p><h3 style="font-size:36px">Sold out, handled without asking</h3><p>A rain jacket size hits zero. Restock is <b>Handles it</b>, so Manoj gets the task at once.</p><img class="shot" data-fx-video="soldout" src="shots/screen08.webp" alt="" style="margin-top:40px"></div>
@@ -698,7 +722,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 23 blocked -->
 <section>
   <div class="step">
     <div><p class="k">09 A blocker</p><h3>When something is in the way</h3><p>The new arrivals rail has fallen. Blocked tasks always reach the manager, with three choices.</p></div>
@@ -706,7 +729,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 24 rules screen -->
 <section>
   <div class="step" style="grid-template-columns:420px 1fr">
     <div><p class="k">10 The limits</p><h3>The manager sets the limits</h3><p>Three settings per rule, enforced in code. Each card says which rule sent it.</p></div>
@@ -714,7 +736,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 25 handover + digest -->
 <section>
   <div class="grid2">
     <div><p class="k">11 Handover</p><h3 style="font-size:36px">End of shift</h3><p>Open work moves to the next shift with a suggested owner and a note.</p><img class="shot" data-fx-video="handover" src="shots/screen11.webp" alt="" style="margin-top:40px"></div>
@@ -722,7 +743,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 26 time-driven flows -->
 <section style="background:var(--paper)">
   <h2>The agent keeps time so the manager doesn’t have to.</h2>
   <div style="margin-top:64px; display:grid; gap:48px">
@@ -747,7 +767,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 27 edge cases -->
 <section style="background:var(--paper)">
   <div class="split"><img src="ill/p6-stock.webp" alt="A stock worker by a near-empty shelf types a message on his phone."><div><h2>What happens when the day doesn’t follow the script.</h2><p class="lead">Stock runs out, people send odd messages, the AI fails. Each case has a plan.</p></div></div>
   <div class="grid4" style="margin-top:64px; column-gap:20px; row-gap:20px">
@@ -762,7 +781,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- v200 designing for the highs and lows -->
 <section>
   <div class="ovl" style="--pos:50% 45%"><img src="ill/p3-sale.webp" alt="A crowded festive sale day: a queue at billing while the shift lead points a colleague to a rail."><div class="txt"><h2>The busiest day and the worst day decide if it’s trusted.</h2><p>Extremes decide whether a manager keeps using it.</p></div></div>
   <div class="grid3" style="margin-top:56px; gap:24px">
@@ -775,7 +793,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 28 language -->
 <section class="dark" data-new="language">
   <div class="ovl" style="--pos:50% 40%"><img src="ill/p7-lang.webp" alt="A staff member replies to a work message on her phone between customers."><div class="txt"><h2>Every person, in their own language.</h2><p>Staff write in English, Hindi, Kannada or Malayalam, and the reply comes back the same way.</p></div></div>
   <div class="grid2" style="align-items:center; grid-template-columns:440px 1fr">
@@ -788,7 +805,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- staff app (v198; moved after Language and access in v199) -->
 <section data-new="staff">
   <div class="grid2" style="align-items:end">
     <div><h2>An app for everyone on the floor.</h2></div>
@@ -803,8 +819,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-
-<!-- 29 trust and privacy -->
 <section data-anchor="trust">
   <div class="split rev"><img src="ill/p8-trust.webp" alt="Two store staff laugh together while folding sweaters, their phones face-down on the table."><div><h2>What Handovo stores about staff, and what it never collects.</h2><p class="lead">Counts only. Staff should feel helped by it.</p></div></div>
   <div class="dcall"><span class="dbadge">Decision</span><p>I chose counts over staff rankings, because staff who feel watched stop replying.</p></div>
@@ -819,7 +833,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 30 principles -->
 <section style="background:var(--lime)">
   <h2>Built so a manager can trust it on day one.</h2>
   <div class="grid2" style="margin-top:72px; row-gap:48px">
@@ -830,7 +843,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 30b design system (v181) -->
 <section data-new="system">
   <h2>Small, strict, shared by every screen.</h2>
   <div class="grid3" style="margin-top:56px; gap:28px; align-items:start">
@@ -846,7 +858,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 30c scale (v181) -->
 <section data-new="scale" style="background:var(--paper)">
   <h2>From one store to fifty.</h2>
   <div class="grid4" style="margin-top:56px; gap:24px">
@@ -858,7 +869,13 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:28px">How I’d scale it; the pilot covers one store.</p>
 </section>
 
-<!-- 31 build -->
+<section class="chap" data-anchor="ch7">
+  <p class="eye">Chapter 07 of 07</p>
+  <h2>Proof</h2>
+  <p class="cq">Does it hold up in a real store, and what comes next?</p>
+  <div class="rail"><div class="done"><span>01</span><p>The problem</p></div><div class="done"><span>02</span><p>Listening</p></div><div class="done"><span>03</span><p>The root cause</p></div><div class="done"><span>04</span><p>Choices</p></div><div class="done"><span>05</span><p>The system</p></div><div class="done"><span>06</span><p>The design</p></div><div class="now"><span>07</span><p>Proof</p></div></div>
+</section>
+
 <section>
   <h2>A working build for one real store.</h2>
   <table class="tbl" style="margin-top:64px">
@@ -875,7 +892,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p style="margin-top:48px; font-size:17px; color:var(--mute)">Next.js, Postgres (Supabase), Claude with structured output, Vercel. The test phone lets anyone rehearse a day before WhatsApp is connected.</p>
 </section>
 
-<!-- testing the agent -->
 <section data-anchor="testing">
   <h2>I tried to make it break its own rules.</h2>
   <p class="lead">Before a store trusts it, it has to keep to the manager’s limits every time.</p>
@@ -904,7 +920,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:56px">Labels fixed before the first run. I broke a rule on purpose to check the test caught it (243 failures). Live AI not measured yet.</p>
 </section>
 
-<!-- what the test changed -->
 <section data-anchor="changed" style="background:var(--paper)">
   <h2>One bug fixed, two decisions made.</h2>
   <div class="dcall"><span class="dbadge">Decision</span><p>I chose “run out” over “done” when a message could mean both, because a wrong flag costs one tap and a hidden empty shelf costs sales.</p></div>
@@ -915,7 +930,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- v203 engineering -->
 <section>
   <div class="grid2" style="align-items:end">
     <div><h2>Every AI answer is checked in code before anything changes.</h2></div>
@@ -932,7 +946,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:36px">Next.js, Postgres on Supabase, Claude API, GitHub Actions. Next: measure Live AI on the same messages.</p>
 </section>
 
-<!-- 32 measurement (v181: north stars + guardrails; v213: clear hierarchy) -->
 <section data-new="measure">
   <div class="split rev"><img src="ill/p4-digest.webp" alt="The store owner reads the day’s short digest on his phone at home with a cup of chai."><div><h2>How I’ll know the pilot worked.</h2><p class="lead">Three numbers the owner can read in one minute at the end of the day.</p></div></div>
   <div class="ns">
@@ -944,12 +957,10 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   <p class="cap" style="margin-top:24px">Targets for the four-week pilot, measured against week one.</p>
 </section>
 
-<!-- 33 next -->
 <section style="background:var(--paper); padding-bottom:0">
   <div class="ovl" style="--pos:50% 50%; margin-bottom:0"><img src="ill/p13-open.webp" alt="A store opening for the day, sunlight across the floor."><div class="txt"><h2>Prove it on the floor.</h2><p>Next: a four-week pilot in one real store.</p></div></div>
 </section>
 
-<!-- v200 how I made it -->
 <section>
   <div class="grid2" style="align-items:end">
     <div><h2>How I made Handovo, and where AI helped.</h2></div>
@@ -963,7 +974,6 @@ section:not([style*="paper"]) .dcall { background: var(--paper); }
   </div>
 </section>
 
-<!-- 34 reflection -->
 <section class="dark">
   <div class="ovl" style="--pos:50% 60%"><img src="ill/p9-close.webp" alt="The store at closing time: lights dimmed, the manager walking out with her bag."><div class="txt"><h2>Most of my time went into deciding what the AI may not do.</h2></div></div>
   <div class="grid2" style="margin-top:64px">

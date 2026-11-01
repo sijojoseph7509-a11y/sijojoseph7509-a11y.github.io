@@ -149,3 +149,70 @@ def syntra(d):
         y = 910 + k * 38
         o.append(t(744, y, 430, f'<s style="text-decoration-color:{amber}; text-decoration-thickness:4px; color:{pen}">{E(a)}</s> <span style="color:#8A6A4A">{E(why)}</span>', 23, pen, (-1) ** k * .6, 600))
     return f'<div style="position:relative; width:{W}px; height:{H}px; border-radius:4px; {paper} box-shadow:0 30px 60px -36px rgba(90,50,10,.45), 0 0 0 1px rgba(150,100,50,.12); overflow:hidden">{"".join(o)}</div>'
+
+# ------------------------------------------------------------------ v220 Syntra: three more sketchbook pages, same paper and pen
+def _sy_page(W, H, body):
+    paper = ("background:#F8EEDF; background-image:radial-gradient(rgba(140,90,40,.07) 1px, transparent 1.4px), radial-gradient(rgba(140,90,40,.05) 1px, transparent 1.4px);"
+             " background-size:7px 7px, 11px 11px; background-position:0 0, 3px 5px;")
+    tape = lambda x, r: f'<i style="position:absolute; left:{x}px; top:-8px; width:120px; height:34px; background:rgba(255,255,255,.55); transform:rotate({r}deg); box-shadow:0 1px 2px rgba(0,0,0,.08)"></i>'
+    return (f'<div class="board" style="position:relative; width:{W}px; height:{H}px; border-radius:4px; {paper} box-shadow:0 30px 60px -36px rgba(90,50,10,.45), 0 0 0 1px rgba(150,100,50,.12); overflow:hidden">'
+            + tape(70, -3) + tape(W - 190, 4) + ''.join(body) + '</div>')
+
+def _sticky(x, y, w, text, bg, r):
+    return (f'<div style="position:absolute; left:{x}px; top:{y}px; width:{w}px; padding:16px 16px 18px; background:{bg}; transform:rotate({r}deg); box-shadow:0 10px 16px -10px rgba(90,50,10,.45)">'
+            f'<p style="{FONT} font-size:27px; line-height:1.12; font-weight:600; color:#3E2B18">{E(text)}</p></div>')
+
+def syntra_affinity(d):
+    """Sticky notes from the store visits, grouped into four themes, each ending in what it asks of the design."""
+    W, H, pen, amber = 1200, 700, "#5B4128", "#DD8020"
+    o = [t(60, 40, 900, "What we heard in stores, grouped", 38, pen, -1, 700), t(62, 92, 900, "from our store visits, grouped into four themes", 22, "#8A6A4A", 0, 600)]
+    cols = ["#FFE7A6", "#FFD3B0", "#F7E2C2", "#FFEBC8"]
+    for k, (head, notes, so) in enumerate(d):
+        x = 50 + k * 285
+        o.append(t(x, 160, 260, f'<u style="text-decoration-color:{amber}; text-decoration-thickness:3px; text-underline-offset:5px">{E(head)}</u>', 28, amber, 0, 700))
+        for n, note in enumerate(notes):
+            o.append(_sticky(x + (n % 2) * 10, 214 + n * 158, 250, note, cols[(k + n) % 4], (-1) ** (k + n) * 1.6))
+        o.append(t(x, 556, 250, f'<span style="color:{amber}">so →</span> {E(so)}', 24, pen, 0, 700))
+    o.append(svg(W, H, ''.join(f'<path d="M{50 + k * 285} 542 C {120 + k * 285} 536, {200 + k * 285} 538, {290 + k * 285 - 40} 542" stroke="{amber}" stroke-width="2.5"/>' for k in range(4))))
+    o.append(t(60, 636, 1000, "the shelf speaks in notes and names; people speak in feelings and places", 27, pen, -1, 700, "background:linear-gradient(100deg, rgba(249,156,54,0) 0%, rgba(249,156,54,.36) 3%, rgba(249,156,54,.3) 97%, rgba(249,156,54,0) 100%); padding:0 6px; width:auto"))
+    return _sy_page(W, H, o)
+
+def syntra_match(d):
+    """The match worked out on paper: the controls, the count, and the fairness trade-off."""
+    W, H, pen, amber, brown = 1200, 760, "#5B4128", "#DD8020", "#975C1C"
+    o = [t(60, 40, 900, "How should a feeling pick a bottle?", 38, pen, -1, 700)]
+    # the controls, sketched
+    ctl = (f'<circle cx="170" cy="250" r="78" stroke="{pen}" stroke-width="3"/><path d="M170 250 L170 186" stroke="{amber}" stroke-width="5"/>'
+           + ''.join(f'<path d="M{300 + k * 80} 176 L{300 + k * 80} 324" stroke="{pen}" stroke-width="3"/><rect x="{288 + k * 80}" y="{200 + k * 40}" width="24" height="16" rx="4" stroke="{amber}" stroke-width="3"/>' for k in range(3)))
+    o.append(svg(W, H, ctl))
+    o.append(t(110, 344, 140, "mood", 24, pen, 0, 700, "text-align:center"))
+    for k, lab in enumerate(d["sliders"]):
+        o.append(t(262 + k * 80, 344, 80, lab, 20, pen, 0, 700, "text-align:center"))
+    o.append(t(60, 410, 560, d["count"], 30, pen, 0, 700))
+    o.append(t(60, 456, 560, d["bottles"], 26, "#8A6A4A", 0, 600))
+    # two ways to pick
+    o.append(t(640, 150, 500, "way 1: best scent for every setting", 26, pen, 0, 700))
+    o.append(t(640, 192, 500, f'<s style="text-decoration-color:{amber}; text-decoration-thickness:4px">{E(d["greedy"])}</s>', 24, pen, 0, 600))
+    o.append(t(640, 290, 500, "way 2: one-to-one, every bottle gets its turn", 26, pen, 0, 700))
+    o.append(t(640, 332, 500, E(d["fair"]), 24, pen, 0, 600))
+    o.append(svg(W, H, f'<path d="M630 282 C 700 272, 1100 270, 1160 284 C 1168 330, 1166 372, 1156 392 C 1050 400, 700 402, 636 392 C 626 360, 624 310, 630 282 Z" stroke="{amber}" stroke-width="3.5"/>'))
+    o.append(t(640, 470, 520, "what fairness costs", 28, brown, -1, 700))
+    for k, line in enumerate(d["cost"]):
+        o.append(t(640, 520 + k * 44, 520, f'<span style="color:{amber}">→</span> {E(line)}', 24, pen, 0, 600))
+    o.append(t(60, 560, 520, "next", 28, brown, -1, 700))
+    o.append(t(60, 606, 520, E(d["next"]), 24, pen, 0, 600))
+    o.append(t(60, 690, 1080, d["verdict"], 28, pen, -1, 700, "background:linear-gradient(100deg, rgba(249,156,54,0) 0%, rgba(249,156,54,.36) 3%, rgba(249,156,54,.3) 97%, rgba(249,156,54,0) 100%); padding:0 6px"))
+    return _sy_page(W, H, o)
+
+def syntra_retro(d):
+    """After the exhibit: what to keep, what we changed on the day, and what to measure next time."""
+    W, H, pen, amber = 1200, 700, "#5B4128", "#DD8020"
+    o = [t(60, 40, 900, "After the exhibit: keep, change, measure", 38, pen, -1, 700), t(62, 92, 900, "from what we saw at the kiosk", 22, "#8A6A4A", 0, 600)]
+    cols = [("KEEP", "#E9F2D9"), ("CHANGED ON THE DAY", "#FFE7A6"), ("MEASURE NEXT TIME", "#FFD3B0")]
+    for k, (head, bg) in enumerate(cols):
+        x = 50 + k * 380
+        o.append(t(x, 160, 360, f'<u style="text-decoration-color:{amber}; text-decoration-thickness:3px; text-underline-offset:5px">{head}</u>', 26, amber, 0, 700))
+        for n, note in enumerate(d[k]):
+            o.append(_sticky(x + (n % 2) * 12, 214 + n * 152, 330, note, bg, (-1) ** (k + n) * 1.4))
+    o.append(svg(W, H, ''.join(f'<path d="M{410 + k * 380} 170 C {412 + k * 380} 360, {408 + k * 380} 520, {411 + k * 380} 660" stroke="#C9B08C" stroke-width="2" stroke-dasharray="6 8"/>' for k in range(2))))
+    return _sy_page(W, H, o)

@@ -181,6 +181,8 @@ def rtext(slug, S, v):
             w = b[1]; img = f'work/{slug}/kit/{S["id"]}-board.webp?v={v}'
             out.append(f'<figure class="rf"><img src="{img}" width="2400" height="1500" alt="Whiteboard: what I saw and heard, five whys to the root cause, how might we, ideas and crossed-out ideas" loading="lazy" decoding="async"></figure>')
             out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp("Root cause", 400, "f-mono up")}</p><h3 class="t x3" style="color:{fg}">{sp(E(w["root"]), 500)}</h3><p class="t l" style="color:{lb}">{sp("How might we", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(w["hmw"]))}</p></div>')
+        elif k == 'wbx':     # v220: a sketchbook page, as a picture with its alt text
+            out.append(f'<figure class="rf"><img src="work/{slug}/kit/{S["id"]}-board.webp?v={v}" width="2400" height="1800" alt="{E(b[3])}" loading="lazy" decoding="async"></figure>')
         elif k == 'photo':   # v215: the photo chapter, copied next to the other text-version pictures
             _, img, pos, side_l, h, sub = b
             import shutil; os.makedirs(os.path.join(ROOT, 'work', slug, 'kit'), exist_ok=True)

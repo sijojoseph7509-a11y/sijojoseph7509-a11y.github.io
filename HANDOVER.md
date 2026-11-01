@@ -1223,3 +1223,9 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Kit sections use the Figma system: light #ECF5F2 with white cards, mint #DDEBE7, ink #161513, body 16 px #4C5450, mono only for section labels and table heads; the Carekin notebook board is written in Google Sans Flex (boards.carekin wraps the old drawing).
 - Reel re-recorded with the D2 screens (reel.html taps and highlight boxes moved). Section 06 phones now have drawn bezels under the live loops.
 - case-fx: link hover is a soft white highlight (no ring, no lift). Handovo `reveal: "mask"` → "none"; no case uses a scroll reveal now.
+
+### v220: link hovers, Handovo chapters, Syntra sketchbook pages, Carekin hero
+- case-fx links take an 8th field: the box of the link's own words (`cta`, measured by casekit/handovo render.mjs). Hover draws an underline under them and an arrow after them in `--cfx-link` (fxOpts.link, else accent; Carekin #0F766E, Handovo #2F3BEA). No background, no ring.
+- Handovo is told in seven chapters like Carekin: "The story" contents (section 3), `.chap` dividers (blue, lime rail) before 5, 13, 19, 22, 25, 31, 53, and "The verdict" (Six decisions) closes Choices. 61 sections; videos, draw, travel, layers and links remapped (scratchpad ho_remap.py pattern: old index → new).
+- Syntra: three more sketchbook pages (boards.syntra_affinity / _match / _retro, block "wbx"): an affinity map of the store visits, the match worked out on paper (162 settings, 19 bottles, fair one-to-one), and an after-exhibit keep / changed / measure board. Only facts already in the case.
+- Carekin hero (02) redrawn on a clean background with bezels sized to the live screens.

@@ -266,6 +266,31 @@ SYNTRA = [
       ("AI", "Code and images", "AI helped me write the ESP32 and app code, and make images and the ticket drawings. The interaction and every choice are mine."),
       ("Design", "Figma", "The screens, the printed manual and this documentation.")]),
   ]),
+  # v220: three more sketchbook pages
+  dict(id="k-wb-affinity", after="k-business", bg="light", desc="Sketchbook page: sticky notes from our store visits grouped into four piles. The words: people ask for something fresh for evenings, never a note name, and know the mood, not the notes; so a mood knob. The nose: it gives up after three paper strips, and bottles are chosen by their label; so choose by feeling first and smell only the match. The staff: too busy, and too many choices with too few answers; so a self-serve kiosk with one match. The memory: the name is forgotten by the time people get home, and a scent is remembered as a place; so VR worlds and a ticket that comes alive in AR.", blocks=[
+    ("head", "Affinity map", "Before the whys: what we heard, in four piles.", "Everything we heard in stores, grouped into four themes. Each one ends in what it asks of the design."),
+    ("wbx", "affinity", [("THE WORDS", ["“Something fresh, for evenings”, never a note name", "People know the mood, not the notes"], "a mood knob, not a list of notes"),
+                          ("THE NOSE", ["Paper strips everywhere; the nose gives up after three", "Bottle chosen by its label, not its scent"], "choose by feeling, smell only the match"),
+                          ("THE STAFF", ["Staff busy, shoppers leave without buying", "Too many choices, too few answers"], "a self-serve kiosk with one match"),
+                          ("THE MEMORY", ["“I forgot the name by the time I got home”", "A scent is remembered as a place"], "VR worlds, and a ticket for home")],
+     "Sketchbook page: sticky notes from store visits in four piles, the words, the nose, the staff and the memory, each ending in what it asks of the design"),
+  ]),
+  dict(id="k-wb-match", after="k-match", bg="light", desc="Sketchbook page: how a feeling picks a bottle, worked out on paper. A knob for mood and three sliders for longevity, expression and occasion give 6 x 3 x 3 x 3 = 162 settings for 19 bottles. Way one, the best scent for every setting, leaves 2 bottles never shown and gives one bottle 15 settings, so it is crossed out. Way two, one-to-one, gives every bottle 8 or 9 settings. What fairness costs: still the best match in 119 of 162 settings, in the top three in 158, an average drop of 0.01 on a 0 to 1 score. Next: describe a mood in your own words and let an AI model set the controls, tested with 20 people.", blocks=[
+    ("head", "On paper", "How should a feeling pick a bottle?", "The controls, the counting and the fairness trade-off on one page. The fair way won, and the page shows what it cost."),
+    ("wbx", "match", {"sliders": ["longevity", "expression", "occasion"], "count": "6 moods × 3 × 3 × 3 = 162 settings", "bottles": "for 19 bottles on the shelf",
+                      "greedy": "2 bottles never shown, one bottle gets 15 settings", "fair": "every bottle gets 8 or 9 settings",
+                      "cost": ["still the best match in 119 of 162 settings", "in the top three in 158", "an average drop of 0.01 on a 0 to 1 score"],
+                      "next": "describe a mood in your own words and let an AI model set the controls, tested with 20 people",
+                      "verdict": "fair wins: every bottle gets its turn, for a 0.01 drop in match"},
+     "Sketchbook page: the knob and three sliders, 162 settings for 19 bottles, best-per-setting crossed out, one-to-one circled, and what fairness costs"),
+  ]),
+  dict(id="k-wb-retro", after="k-outcome", bg="light", desc="Sketchbook page after the exhibit. Keep: strangers reached for the knob without being asked; 66 tickets printed in one day, from the printer's own log. Changed on the day: people walked past the AR ticket, so a line beside the printer; long questions were slow in a dim room, so one-liners; the word note confused people, so plain families like woody and fresh. Measure next time: time from first turn to ticket; re-turns and a thumbs up or down on the match; AR opens at home.", blocks=[
+    ("head", "Retro", "After the exhibit: keep, change, measure.", "From what we saw at the kiosk. The last column is what the next build logs."),
+    ("wbx", "retro", [["Strangers reached for the knob without being asked", "66 tickets printed in one day, from the printer’s own log"],
+                      ["People walked past the AR ticket → a line beside the printer", "Long questions were slow in a dim room → one-liners", "“Note” confused people → plain families: woody, fresh"],
+                      ["Time from first turn to ticket", "Re-turns, and a thumbs up or down on the match", "AR opens at home"]],
+     "Sketchbook page: keep, changed on the day, and measure next time, on sticky notes"),
+  ]),
 ]
 
 # v219: the order the Carekin story is told in (03, the old walkthrough film, is left out: the reel at the top shows the app)

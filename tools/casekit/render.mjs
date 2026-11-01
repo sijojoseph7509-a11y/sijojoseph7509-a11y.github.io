@@ -20,11 +20,11 @@ for (const slug of slugs) {
       if (dpr === 1) heights[slug][id] = Math.round(await el.evaluate((e) => e.getBoundingClientRect().height));
       if (dpr === 1) {   // v215: jump-link cards, in the section's own 1440-px units, for case-fx (content.js fxOpts.links)
         const ls = await el.evaluate((e) => [...e.querySelectorAll("[data-fx-link]")].map((a) => { const r = a.getBoundingClientRect(), q = e.getBoundingClientRect();
-          return { x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height), to: a.dataset.fxLink, label: a.querySelector("h3")?.textContent || ("Decision: " + (a.querySelector(".t")?.textContent || "")) }; }));
+          return { x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height), to: a.dataset.fxLink, cta: (() => { const g = document.createRange(); g.selectNodeContents(a.querySelector("i")); const t = g.getBoundingClientRect(); return [t.left - q.left, t.top - q.top, t.width, t.height].map((v) => Math.round(v * 10) / 10); })(), label: a.querySelector("h3")?.textContent || ("Decision: " + (a.querySelector(".t")?.textContent || "")) }; }));
         if (ls.length) ((links[slug] ||= {})[id] = ls);
       }
       if (dpr === 2) {   // pictures for the text version: the whiteboard itself, or the hook's two tiles
-        const pic = await p.$(`#${id} .wb`) || (id === "k-hook" ? await p.$(`#${id} > div:nth-of-type(1)`) : null);
+        const pic = await p.$(`#${id} .wb`) || await p.$(`#${id} .board`) || (id === "k-hook" ? await p.$(`#${id} > div:nth-of-type(1)`) : null);
         if (pic) { await pic.screenshot({ path: `${tmp}/${id}-b.png` }); webp(`${tmp}/${id}-b.png`, `work/${slug}/kit/${id}-board.webp`, 86); }
       }
     }

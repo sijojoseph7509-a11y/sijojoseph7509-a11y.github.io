@@ -18,7 +18,7 @@ const fx = await p.evaluate(() => [...document.querySelectorAll("[data-fx-video]
   const kind = e.dataset.fxVideo ? "video" : e.dataset.fxPop ? "pop" : e.dataset.fxLink ? "link" : e.dataset.fxStop ? "stop" : e.dataset.fxLayer ? "layer" : "draw";
   const pad = kind === "layer" ? 18 : 0;   // v211: layers keep their shadow
   if (pad) return { kind, name: e.dataset.fxLayer, anim: e.dataset.anim, seq: e.dataset.seq, i, x: Math.round(r.left - q.left - pad), y: Math.round(r.top - q.top - pad), w: Math.round(r.width + pad * 2), h: Math.round(r.height + pad * 2) };
-  return { kind, name: e.dataset.fxVideo || e.dataset.fxPop || e.dataset.fxDraw || e.dataset.fxLink || e.dataset.fxStop, to, label: e.dataset.fxLink ? e.querySelector("b")?.textContent : undefined, i, x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height),
+  return { kind, name: e.dataset.fxVideo || e.dataset.fxPop || e.dataset.fxDraw || e.dataset.fxLink || e.dataset.fxStop, to, label: e.dataset.fxLink ? e.querySelector("b")?.textContent : undefined, cta: e.dataset.fxLink && e.querySelector("i") ? (() => { const g = document.createRange(); g.selectNodeContents(e.querySelector("i")); const t = g.getBoundingClientRect(); return [t.left - q.left, t.top - q.top, t.width, t.height].map((v) => Math.round(v * 10) / 10); })() : undefined, i, x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height),
     radius: parseFloat(getComputedStyle(e).borderTopLeftRadius) || 0, bg: getComputedStyle(sec).backgroundColor };
 }));
 fs.writeFileSync("tools/handovo/fx.json", JSON.stringify(fx, null, 1));

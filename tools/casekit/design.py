@@ -188,6 +188,7 @@ def sy_section(S, k):
             cells = ''.join(f'<div class="it xt rule"><p class="k {cls[lv]}">{E(tag)}</p><h3>{E(h)}</h3><p class="g">{E(p)}</p></div>' for lv, tag, h, p in b[1])
             out.append(f'<div class="cols" style="grid-template-columns:repeat(3,1fr)">{cells}</div>')
         elif t == 'wb': out.append('<div style="margin:72px -64px 0">' + boards.syntra(b[1]) + '</div>')
+        elif t == 'wbx': out.append('<div style="margin:72px -64px 0">' + getattr(boards, 'syntra_' + b[1])(b[2]) + '</div>')   # v220 more sketchbook pages
         elif t == 'hook': out.append(sy_hook())
     return f'<section id="{S["id"]}">' + ''.join(out) + '</section>'
 
