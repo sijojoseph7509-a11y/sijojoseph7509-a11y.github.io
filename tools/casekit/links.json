@@ -1,0 +1,38 @@
+{
+ "carekin": {
+  "k-jump": [
+   {
+    "x": 40,
+    "y": 275,
+    "w": 310,
+    "h": 165,
+    "to": "11.webp",
+    "label": "Care across three cities"
+   },
+   {
+    "x": 364,
+    "y": 275,
+    "w": 310,
+    "h": 165,
+    "to": "k-calls",
+    "label": "Six calls and their cost"
+   },
+   {
+    "x": 687,
+    "y": 275,
+    "w": 310,
+    "h": 165,
+    "to": "26.webp",
+    "label": "When a dose changes"
+   },
+   {
+    "x": 1011,
+    "y": 275,
+    "w": 310,
+    "h": 165,
+    "to": "42.webp",
+    "label": "How I’d test it"
+   }
+  ]
+ }
+}

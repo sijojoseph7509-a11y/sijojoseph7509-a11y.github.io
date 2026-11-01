@@ -1,3 +1,4 @@
+import os
 # v201: the added sections drawn in each case study's own design system, measured from the Figma pages
 # (tools/reader/src/<slug>.json): same fonts, weights, sizes, colours, margins and layout patterns as the sections around them.
 #   Syntra  · white page with soft amber "clouds"; centred 40 px heading, Lato Light + Lato Medium, #BD680F; 20 px Lato Light
@@ -69,6 +70,41 @@ h2 { font: 400 30px/1.25 GSFlex; max-width: 680px; }
 .tbl .row .tag { display: block; font: 400 12px/1.2 GSCode, monospace; text-transform: uppercase; margin-bottom: 6px; }
 .persona h3 { font: 400 30px/1.15 GSFlex; } .persona .meta { display: block; margin: 8px 0 18px; font: 400 13px/1.35 GSCode, monospace; text-transform: uppercase; color: #0F766E; }
 .persona .f { margin-top: 12px; } .persona .f p { font: 400 15px/1.5 GSFlex; } .persona .f b { font-weight: 500; }
+/* v215 photo chapter: full-bleed photo, the side label and headline set on it over a deep-teal fade */
+section.ph { padding: 0; height: 780px; background: #0F3B38; }
+section.ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+section.ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 38, 36, .92) 0%, rgba(10, 38, 36, .6) 34%, rgba(10, 38, 36, .1) 64%, rgba(10, 38, 36, 0) 80%); }
+section.ph .side { z-index: 1; top: auto; bottom: 98px; color: #B3E3D6; }
+section.ph .tx { position: absolute; z-index: 1; left: 480px; right: 120px; bottom: 90px; }
+section.ph h2 { color: #fff; font-size: 40px; max-width: 760px; } section.ph .sub { color: rgba(255, 255, 255, .9); font-size: 18px; max-width: 700px; }
+/* v215b Carekin persona rows: a tall portrait on the left, the name and the five answers in two columns beside it */
+.prow { display: grid; gap: 16px; margin: 48px 0 0 -440px; }
+.prow .persona.pp { display: grid; grid-template-columns: 380px 1fr; min-height: 440px; }
+.prow .persona .pph { height: auto; min-height: 440px; } .prow .persona .pph::after { background: linear-gradient(to top, rgba(10, 38, 36, .55) 0%, rgba(10, 38, 36, 0) 40%); }
+.prow .persona .body { padding: 34px 38px 32px; display: flex; flex-direction: column; }
+.prow .persona .who h3 { font: 400 30px/1.15 GSFlex; color: #0F2A28; } .prow .persona .who .meta { margin: 8px 0 22px; }
+.prow .persona .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+.prow .persona .fg .f { margin: 0; padding: 12px 0; border-top: 1px solid rgba(15, 59, 56, .12); }
+.prow .persona .fg .f .k { margin-bottom: 4px; color: #0F766E; } .prow .persona .fg .f p { font: 400 15px/1.5 GSFlex; color: #405652; }
+.prow .persona .fg .f.must { grid-column: 1 / -1; background: #0F3B38; border: 0; border-radius: 12px; padding: 14px 18px; margin-top: 10px; }
+.prow .persona .fg .f.must .k { color: #FF8A6B; } .prow .persona .fg .f.must p { color: #F4F8F6; font-weight: 500; }
+/* v215 persona portraits with the name on the photo */
+.persona.pp { padding: 0; overflow: hidden; } .persona.pp .body { padding: 22px 24px 24px; }
+.persona .pph { position: relative; height: 400px; } .persona .pph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; }
+.persona .pph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 38, 36, .9) 0%, rgba(10, 38, 36, .4) 36%, rgba(10, 38, 36, 0) 64%); }
+.persona .pph .nm { position: absolute; z-index: 1; left: 24px; right: 24px; bottom: 20px; }
+.persona .pph h3 { color: #fff; font-size: 28px; } .persona .pph .meta { color: #B3E3D6; margin: 6px 0 0; }
+/* v215 calls board: dropped option struck in coral, the choice in a teal pill, cost and gain below */
+.calls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
+.calls .pnl { display: flex; flex-direction: column; } .calls h3 { font: 500 21px/1.3 GSFlex; margin-bottom: 14px; }
+.calls .no { font: 400 16px/1.4 GSFlex; color: #6B7F7B; text-decoration: line-through; text-decoration-color: #FF8A6B; text-decoration-thickness: 2px; }
+.calls .yes { align-self: flex-start; margin: 10px 0 16px; padding: 7px 14px; border-radius: 999px; background: #0F3B38; color: #fff; font: 500 15px/1.3 GSFlex; }
+.calls .tp { display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(15, 59, 56, .12); }
+.calls .tp .k { margin: 2px 0 0; } .calls .tp p { font: 400 15px/1.5 GSFlex; color: #405652; }
+/* v215 jump links */
+.jump { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; margin-left: -440px; }
+.jump a { display: flex; flex-direction: column; gap: 6px; padding: 22px; border-radius: 16px; background: #fff; text-decoration: none; box-shadow: 0 0 0 1px rgba(15, 59, 56, .12); }
+.jump h3 { font: 500 19px/1.3 GSFlex; color: #0F2A28; } .jump p { font: 400 14px/1.5 GSFlex; color: #405652; } .jump i { font-style: normal; color: #0F766E; font-weight: 500; margin-top: auto; padding-top: 8px; }
 """,
 }
 
@@ -167,8 +203,18 @@ def ck_section(S):
             out.append(f'<div class="pnl" style="background:{pnl}; margin-top:16px; display:grid; grid-template-columns:240px 1fr; gap:24px"><span class="k" style="color:{acc}; margin:0">{E(b[1])}</span><p style="color:{tx}">{E(b[2])}</p></div>')
         elif t == 'verdict': out.append(f'<p class="verdict" style="color:{ink}">{E(b[1])}</p>')
         elif t == 'personas':
-            cells = ''.join(f'<div class="persona pnl" style="background:{pnl}"><h3 style="color:{ink}">{E(name)}</h3><span class="meta">{E(meta)}</span>' + ''.join(f'<div class="f"><p style="color:{tx}"><b style="color:{ink}">{E(a)}.</b> {E(c)}</p></div>' for a, c in fields) + '</div>' for ini, col, name, meta, fields in b[1])
-            out.append(f'<div class="cols" style="grid-template-columns:repeat(2,1fr)">{cells}</div>')
+            def pc(name, meta, fields):
+                img = 'img/ck-' + name.split(',')[0].strip().lower() + '.webp'
+                fs = ''.join(f'<div class="f"><p style="color:{tx}"><b style="color:{ink}">{E(a)}.</b> {E(c)}</p></div>' for a, c in fields)
+                if os.path.exists(os.path.join(os.path.dirname(__file__), img)):   # v215b: a row, portrait left, answers right
+                    fg = ''.join(f'<div class="f{" must" if a.endswith("must") else ""}"><span class="k">{E(a)}</span><p>{E(c)}</p></div>' for a, c in fields)
+                    return f'<div class="persona pnl pp" style="background:{pnl}"><div class="pph"><img src="{img}" alt=""></div><div class="body"><div class="who"><h3>{E(name)}</h3><span class="meta">{E(meta)}</span></div><div class="fg">{fg}</div></div></div>'
+                return f'<div class="persona pnl" style="background:{pnl}"><h3 style="color:{ink}">{E(name)}</h3><span class="meta">{E(meta)}</span>{fs}</div>'
+            cells = ''.join(pc(name, meta, fields) for ini, col, name, meta, fields in b[1])
+            if all(os.path.exists(os.path.join(os.path.dirname(__file__), 'img/ck-' + n.split(',')[0].strip().lower() + '.webp')) for _, _, n, _, _ in b[1]):
+                out.append(f'<div class="prow">{cells}</div>')
+            else:
+                out.append(f'<div class="cols" style="grid-template-columns:repeat(2,1fr)">{cells}</div>')
         elif t == 'map':
             rows = ''.join(f'<div class="row"><p style="color:{ink}">{E(h)}</p><p style="color:{tx}">{E(d)}</p></div>' for a, h, d in b[1])
             out.append(f'<div class="tbl"><div class="hd"><span class="k" style="color:{side}">What I heard</span><span class="k" style="color:{side}">So I designed</span></div>{rows}</div>')
@@ -177,6 +223,15 @@ def ck_section(S):
             rows = ''.join(f'<div class="row"><p style="color:{ink}"><span class="tag" style="color:{tc[lv]}">{E(tag)}</span>{E(h)}</p><p style="color:{tx}">{E(p)}</p></div>' for lv, tag, h, p in b[1])
             out.append(f'<div class="tbl"><div class="hd"><span class="k" style="color:{side}">Situation</span><span class="k" style="color:{side}">What Carekin does</span></div>{rows}</div>')
         elif t == 'wb': out.append('<div style="margin:56px 0 0 -440px">' + boards.carekin(b[1]) + '</div>')
+        elif t == 'photo':   # v215: ('photo', img, object-position, side label, headline, sub)
+            _, img, pos, side_l, h, sub = b
+            out.append(f'<img src="img/{img}.webp" alt="" style="object-position:{pos}"><p class="side">{E(side_l)}</p><div class="tx"><h2>{E(h)}</h2>' + (f'<p class="sub">{E(sub)}</p>' if sub else '') + '</div>')
+            return f'<section id="{S["id"]}" class="ph">' + ''.join(out) + '</section>'
+        elif t == 'calls':   # v215: [(question, dropped, chosen, trade-off, pay-off)]
+            cells = ''.join(f'<div class="pnl" style="background:{pnl}"><span class="k" style="color:{acc}">Call {k + 1:02d}</span><h3 style="color:{ink}">{E(q)}</h3><p class="no">{E(no)}</p><span class="yes">✓ {E(yes)}</span><div class="tp"><span class="k" style="color:{acc}">Trade-off</span><p>{E(to)}</p></div><div class="tp"><span class="k" style="color:{acc}">Pay-off</span><p>{E(po)}</p></div></div>' for k, (q, no, yes, to, po) in enumerate(b[1]))
+            out.append(f'<div class="calls">{cells}</div>')
+        elif t == 'jump':    # v215: [(target, label, title, line)] — positions go to links.json via render.mjs
+            out.append('<div class="jump">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="k" style="color:{acc}">{E(lab)}</span><h3>{E(h)}</h3><p>{E(l)}</p><i>Jump →</i></a>' for tg, lab, h, l in b[1]) + '</div>')
     return f'<section id="{S["id"]}" style="background:{bg}">' + ''.join(out) + '</section>'
 
 def page(slug, secs):

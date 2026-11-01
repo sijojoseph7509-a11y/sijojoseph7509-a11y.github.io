@@ -181,6 +181,19 @@ def rtext(slug, S, v):
             w = b[1]; img = f'work/{slug}/kit/{S["id"]}-board.webp?v={v}'
             out.append(f'<figure class="rf"><img src="{img}" width="2400" height="1500" alt="Whiteboard: what I saw and heard, five whys to the root cause, how might we, ideas and crossed-out ideas" loading="lazy" decoding="async"></figure>')
             out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp("Root cause", 400, "f-mono up")}</p><h3 class="t x3" style="color:{fg}">{sp(E(w["root"]), 500)}</h3><p class="t l" style="color:{lb}">{sp("How might we", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(w["hmw"]))}</p></div>')
+        elif k == 'photo':   # v215: the photo chapter, copied next to the other text-version pictures
+            _, img, pos, side_l, h, sub = b
+            import shutil; os.makedirs(os.path.join(ROOT, 'work', slug, 'kit'), exist_ok=True)
+            shutil.copyfile(os.path.join(ROOT, 'tools', 'casekit', 'img', img + '.webp'), os.path.join(ROOT, 'work', slug, 'kit', img + '.webp'))
+            out.append(f'<figure class="rf"><img src="work/{slug}/kit/{img}.webp?v={v}" width="1536" height="1024" alt="" loading="lazy" decoding="async"></figure>')
+            out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp(E(side_l), 400, "f-mono up")}</p><h2 class="t x4" style="color:{fg}">{sp(E(h), 500)}</h2>' + (f'<p class="t b" style="color:{tx}">{sp(E(sub))}</p>' if sub else '') + '</div>')
+        elif k == 'calls':   # v215
+            for n, (q, no, yes, to, po) in enumerate(b[1]):
+                out.append(f'<div class="rpnl" style="background:{panel}"><div class="rk"><p class="t l" style="color:{lb}">{sp("Call %02d" % (n + 1), 400, "f-mono up")}</p><h3 class="t x3" style="color:{fg}">{sp(E(q), 500)}</h3>'
+                           f'<p class="t p" style="color:{tx}">{sp("Dropped: " + E(no))}</p><p class="t p" style="color:{fg}">{sp("Chose: " + E(yes), 500)}</p>'
+                           f'<p class="t l" style="color:{lb}">{sp("Trade-off", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(to))}</p><p class="t l" style="color:{lb}">{sp("Pay-off", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(po))}</p></div></div>')
+        elif k == 'jump':    # the text version has its own contents list
+            pass
         elif k == 'hook':
             out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp("Syntra in one look", 400, "f-mono up")}</p><h2 class="t x4" style="color:{fg}">{sp("Find a perfume by feeling. Then step inside it, and take it home.", 400)}</h2><p class="t b" style="color:{tx}">{sp("Turn a knob and three sliders to describe a feeling. Syntra names the perfume, lets you step inside it in VR on a Meta Quest 3, and prints a ticket that comes alive in AR. 66 tickets were printed at our exhibit in one day.")}</p></div>')
             out.append(f'<figure class="rf"><img src="work/syntra/kit/k-hook-board.webp?v={v}" width="2400" height="1200" alt="A 360-degree VR world and two printed Syntra tickets" loading="lazy" decoding="async"></figure>')
@@ -203,7 +216,12 @@ def site(v):
         for S in SECS:
             line = pad + json.dumps([S['id'] + '.webp', heights[slug][S['id']], S['desc']], ensure_ascii=False) + ','
             if S.get('replaces'):
-                pos = [name(l) for l in order].index(S['replaces']); order[pos] = line
+                names_ = [name(l) for l in order]
+                if S['replaces'] in names_: order[names_.index(S['replaces'])] = line
+                else:   # v215: already replaced on an earlier run; it goes where the replaced file stood
+                    prev = '%02d.webp' % (int(S['replaces'][:2]) - 1); pos = names_.index(prev) + 1
+                    while pos < len(names_) and names_[pos].startswith('k-'): pos += 1   # after kit sections already in that slot
+                    order.insert(pos, line)
             else:
                 pos = [name(l) for l in order].index(S['after'] if S['after'].endswith('.webp') else S['after'] + '.webp'); order.insert(pos + 1, line)
         order = [l if l.rstrip().endswith(',') else l + ',' for l in order]; order[-1] = order[-1].rstrip(',')

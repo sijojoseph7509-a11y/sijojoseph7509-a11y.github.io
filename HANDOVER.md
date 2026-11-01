@@ -1190,3 +1190,12 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   sample removed from the design-system Type card.
 - Carekin Work-card result: "Figma prototype and test plan".
 - The 30 px "notch strip" above a full-screen case was removed (it read as a stray black bar); the case bar now sits at the top.
+
+### v215: Carekin process, thinking and photos
+- New kit sections (tools/casekit/content.py, CAREKIN): k-jump (four jump links; render.mjs now writes tools/casekit/links.json,
+  which feeds content.js fxOpts.links), photo chapters k-ph-priya / k-ph-arun / k-ph-pillbox / k-ph-dose (`photo` block:
+  full-bleed photo, side label + headline on a deep-teal fade), and k-calls (six real decisions: dropped, chosen, trade-off,
+  pay-off). Personas get portraits (tools/casekit/img/ck-*.webp) in a row layout: portrait left, answers in two columns,
+  "Carekin must" as a dark band.
+- build.py: `ONLY=<slug>` limits the site step; a "replaces" entry that was already replaced now goes where it stood (after any
+  kit sections there). The text version renders photo and calls blocks; photos are copied to work/carekin/kit/.

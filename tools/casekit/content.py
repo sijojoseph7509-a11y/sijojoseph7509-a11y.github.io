@@ -99,6 +99,31 @@ CAREKIN = [
       ("Design", "Figma, by me", "Every screen, the design system, the prototype and the walkthrough are my own work."),
       ("Visuals", "AI, in my style", "The scenario illustrations are AI-generated in my style. The phone screens are the real prototype.")]),
   ]),
+  dict(id="k-jump", after="02.webp", bg="mint", desc="Short on time? Four stops, each a link: the problem (care runs across three cities and one phone), my thinking (six calls and what each cost), the key flow (when a doctor changes a dose) and the test plan (how I would test it with families).", blocks=[
+    ("head", "Short on time", "Four stops, if you only have a minute.", "Each card jumps to its part of the story."),
+    ("jump", [("11.webp", "The problem", "Care across three cities", "One parent, four carers, one phone."),
+              ("k-calls", "My thinking", "Six calls and their cost", "What I dropped, chose and paid."),
+              ("26.webp", "Key flow", "When a dose changes", "Everyone finds out, and confirms."),
+              ("42.webp", "Proof", "How I’d test it", "Five families, two weeks.")]),
+  ]),
+  dict(id="k-ph-priya", after="20.webp", bg="dark", desc="Photo: Priya steps out of a meeting in her Bengaluru office to read a message about her mother's medicine. Overlay: the organiser hears about a changed dose last, if at all.", blocks=[
+    ("photo", "ck-office", "50% 35%", "Insights", "Priya hears about a changed dose last, if at all.", "The organiser in Bengaluru plans everything, but the change happens in Thrissur.")]),
+  dict(id="k-ph-arun", after="k-map", bg="dark", desc="Photo: Arun in his Dubai apartment at night, reading the family chat on his phone. Overlay: one family, three cities, one WhatsApp group.", blocks=[
+    ("photo", "ck-dubai", "50% 45%", "The ecosystem", "One family, three cities, one WhatsApp group.", "So Carekin works where they already talk, and the app is only for the person who plans.")]),
+  dict(id="k-ph-pillbox", after="23.webp", bg="dark", desc="Photo: a weekly pillbox beside a folded handwritten prescription, a strip of tablets and reading glasses. Overlay: it starts with a pillbox and a slip of paper.", blocks=[
+    ("photo", "ck-pillbox", "50% 50%", "From paper", "It starts with a pillbox and a slip of paper.", "Carekin records exactly what the doctor wrote. It never suggests or reads a dose for you.")]),
+  dict(id="k-calls", after="30.webp", bg="light", desc="Six calls I had to make, each with the option I dropped, the one I chose, the trade-off and the pay-off: Home mode instead of making the helper install the app; record only what the doctor wrote instead of an AI suggesting doses; history instead of last-write-wins when two people log offline; one gentle nudge after 24 hours instead of alarms for everyone; a refused dose recorded calmly with one summary instead of a red missed mark; and software on the phone they already have instead of a smart pillbox.", blocks=[
+    ("head", "My thinking", "Six calls I had to make, and what each one cost.", "Struck through: what I dropped. In the pill: what I chose."),
+    ("calls", [
+      ("Where does the helper log a dose?", "Make Lakshmi install the full app", "One-button Home mode", "She sees one dose at a time, nothing more.", "The person giving pills never has to learn an app."),
+      ("Who reads the prescription?", "An AI that reads the slip and suggests the dose", "Record only what the doctor wrote", "More typing for Priya when a slip reads badly.", "Carekin never interprets a medicine."),
+      ("Two people log offline at once?", "Last write wins", "History, never overwrite", "More entries for Priya to look at.", "A dose is never silently lost."),
+      ("Someone hasn’t confirmed a change?", "Alarms for the whole family", "One gentle nudge after 24 hours", "A slow confirmation can take a day.", "Nobody is woken at 3 am; the old dose stays visible meanwhile."),
+      ("Amma refuses a tablet?", "Mark it red as “missed”", "Recorded calmly, one summary", "Priya hears later in the day.", "Lakshmi isn’t blamed, and “ran out” becomes a refill reminder."),
+      ("Hardware or software?", "A smart pillbox", "The phone they already have", "No sensor to prove a tablet was taken.", "Costs nothing, and knows when the doctor changed a dose.")]),
+  ]),
+  dict(id="k-ph-dose", after="35.webp", bg="dark", desc="Photo: at home in Thrissur, the helper hands Amma her evening tablets and a glass of water, the pillbox and phone on the side table. Overlay: two carers, one dose, and it must never be given twice.", blocks=[
+    ("photo", "ck-dose", "50% 40%", "Safety", "Two carers, one dose. It must never be given twice.", "If a dose is already logged, Home mode blocks a second one.")]),
 ]
 
 SYNTRA = [
