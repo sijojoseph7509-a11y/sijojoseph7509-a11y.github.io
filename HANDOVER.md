@@ -1183,3 +1183,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   guardrails row of chips, then the footnote. Line-art 10-decide.webp redone with a natural phone grip (kept, unused).
 - Also in v213: `.cfx .cfx-sec { isolation: isolate }` so animated layers can't float over the case bar; the problem section
   (07) is labelled problem cards + the HMW question as a blue band; the routing notes (23) use the same card hierarchy.
+
+### v214: more Handovo photos, persona portraits, Carekin result, no black strip
+- Handovo: persona portraits (ill/pp-*.webp) with name and role on the photo (`.persona .pph`, 470 px, anchored to the top so
+  heads never crop); full-bleed photos with headlines for evidence (9), business (14), the idea (20) and next (51); the Caveat
+  sample removed from the design-system Type card.
+- Carekin Work-card result: "Figma prototype and test plan".
+- The 30 px "notch strip" above a full-screen case was removed (it read as a stray black bar); the case bar now sits at the top.

@@ -302,7 +302,7 @@ button.card { width: 100%; padding: 0; border: 0; text-align: left; font: inheri
 .os.case-fs { padding: 0; background: #000; }
 .os.case-fs .os-screen { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; box-shadow: none; background: #121214; }
 @media (min-width: 761px) {
-  .os.case-fs .os-screen.case-fs .win { top: 30px !important; }   /* the strip beside the notch, as on a MacBook in full screen */
+  /* v214: the 30 px notch strip read as a stray black bar, so the full-screen case now fills to the top */
   .os-screen.case-fs .fs-bar { padding-top: 10px; }
 }
 /* move the mouse to the bottom edge to reveal the dock (macOS full-screen behaviour) */
