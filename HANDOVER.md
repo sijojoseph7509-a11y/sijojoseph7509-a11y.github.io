@@ -1199,3 +1199,6 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   "Carekin must" as a dark band.
 - build.py: `ONLY=<slug>` limits the site step; a "replaces" entry that was already replaced now goes where it stood (after any
   kit sections there). The text version renders photo and calls blocks; photos are copied to work/carekin/kit/.
+
+### v216: Handovo "Prove it on the floor" ends on the photo
+- The four next-step lines under the closing photo (section 51) were removed at Sijo's request; the section is the photo alone.
