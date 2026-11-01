@@ -1216,3 +1216,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Every phone on all six pages now holds a D2 clone (names "D2 · …"; Final page hero and six feature images replaced by editable "UI hero" / "UI feature …" frames). The v1 "before" phone stays.
 - Site: fx/live-*.webp re-exported from the Live frames; content.js seqs taps moved to the new buttons; sections 31, 34, 36 re-exported; 06 caption no longer says "dark"; reader crops (m/02-1, 06-1…6, 31, 34, 36) rebuilt; guard time 8:02.
 - Still old UI: walkthrough.mp4 / reel.mp4 recordings and the illustrated scenario frames.
+
+### v219: Carekin told in seven chapters; one design system; new reel; motion off
+- Carekin story order is now content.py `CAREKIN_ORDER` (build.py applies it to content.js and the text version): intro (01, 02, 09, 04, contents) then seven chapters, each opened by a `k-chN` divider (block "chapter": the chapter, its question, a rail of all seven): The problem, Listening, The root cause, Choices, The system, The design, Proof. "The verdict" (k-decisions) closes Choices. 03 (old walkthrough film) and the "At a glance" strip are out; `videos` removed from fxOpts.
+- k-jump is now the chapter contents (block "toc", seven links). Links recomputed from links.json.
+- Kit sections use the Figma system: light #ECF5F2 with white cards, mint #DDEBE7, ink #161513, body 16 px #4C5450, mono only for section labels and table heads; the Carekin notebook board is written in Google Sans Flex (boards.carekin wraps the old drawing).
+- Reel re-recorded with the D2 screens (reel.html taps and highlight boxes moved). Section 06 phones now have drawn bezels under the live loops.
+- case-fx: link hover is a soft white highlight (no ring, no lift). Handovo `reveal: "mask"` → "none"; no case uses a scroll reveal now.

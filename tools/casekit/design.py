@@ -111,6 +111,26 @@ section.ph h2 { color: #fff; font-size: 40px; max-width: 760px; } section.ph .su
 .jump { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; margin-left: -440px; }
 .jump a { display: flex; flex-direction: column; gap: 6px; padding: 22px; border-radius: 16px; background: #fff; text-decoration: none; box-shadow: 0 0 0 1px rgba(15, 59, 56, .12); }
 .jump h3 { font: 500 19px/1.3 GSFlex; color: #0F2A28; } .jump p { font: 400 14px/1.5 GSFlex; color: #405652; } .jump i { font-style: normal; color: #0F766E; font-weight: 500; margin-top: auto; padding-top: 8px; }
+/* v219 one system with the Figma sections: body 16 px in #4C5450, white cards on #ECF5F2, mono only for section labels and table heads */
+.pnl p, .tbl .row p, .calls .tp p, .prow .persona .fg .f p, .persona .f p { font-size: 16px; line-height: 1.55; color: #4C5450; }
+.pnl .k, .calls .tp .k, .tbl .row .tag, .prow .persona .fg .f .k, .jump .k { font: 500 14px/1.3 GSFlex; text-transform: none; letter-spacing: 0; }
+.pnl h3 { font-size: 20px; } .calls h3 { font-size: 21px; } .calls .no { color: #6B7570; }
+.dcall { border-left: 0; border-radius: 14px; background: #FFFFFF; box-shadow: 0 0 0 1px #D5E5E1; }
+.jump a { box-shadow: 0 0 0 1px #D5E5E1; }
+.prow .persona .fg .f.must p { color: #F4F8F6; }
+.dix .t { font: 400 13px/1.3 GSCode, monospace; }
+.toc a { grid-template-columns: 60px 1fr 140px; padding: 20px 0; }
+.toc p b { display: block; font: 500 21px/1.3 GSFlex; color: #161513; margin-bottom: 4px; } .toc p { font: 400 16px/1.5 GSFlex; color: #4C5450; }
+/* v219 chapter dividers: the chapter, the question it answers, and where it sits among all seven */
+section.ch { min-height: 640px; padding: 154px 120px 220px 480px; }
+section.ch .side { color: #FF8A6B; }
+section.ch h2 { font: 400 64px/1.05 GSFlex; color: #FFFFFF; letter-spacing: -.02em; max-width: 840px; }
+section.ch .q { margin-top: 24px; max-width: 760px; font: 400 24px/1.45 GSFlex; color: #B3CCC6; }
+section.ch .rail { position: absolute; left: 40px; right: 40px; bottom: 64px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; }
+.rail div { border-top: 2px solid rgba(179, 204, 198, .22); padding-top: 14px; }
+.rail .n { font: 400 12px/1 GSCode, monospace; color: rgba(179, 204, 198, .55); } .rail p { margin-top: 8px; font: 500 15px/1.3 GSFlex; color: rgba(179, 204, 198, .55); }
+.rail .done { border-color: #5EEAD4; } .rail .done .n, .rail .done p { color: #9CCFC4; }
+.rail .now { border-color: #FF8A6B; } .rail .now .n { color: #FF8A6B; } .rail .now p { color: #FFFFFF; }
 """,
 }
 
@@ -189,8 +209,9 @@ def sy_hook():
 <div class="cols" style="grid-template-columns:repeat(3,1fr); margin-top:90px">{stats}</div>'''
 
 # ---------------- Carekin ----------------
-CK = {'light': ('#FFFFFF', '#EEF5F2', '#0F2A28', '#405652', '#0F766E', '#3B504C'),
-      'mint': ('#EEF5F2', '#DDEBE6', '#0F2A28', '#405652', '#0F766E', '#3B504C'),
+CK = {'light': ('#ECF5F2', '#FFFFFF', '#161513', '#4C5450', '#0F766E', '#515A56'),   # v219: the Figma sections' own light, ink and body grey
+      'mint': ('#DDEBE7', '#F6FAF8', '#161513', '#4C5450', '#0F766E', '#515A56'),
+      'chapter': ('#0F3B38', '#164A46', '#FFFFFF', '#B3CCC6', '#FF8A6B', '#B3CCC6'),
       'dark': ('#0F3B38', '#164A46', '#F4F8F6', '#B3CCC6', '#FF8A6B', '#B3CCC6')}
 def ck_section(S):
     bg, pnl, ink, tx, acc, side = CK[S['bg']]
@@ -240,6 +261,13 @@ def ck_section(S):
             out.append(f'<div class="dcall"><span class="db">Decision</span><p>{E(b[1])}</p></div>')
         elif t == 'dix':     # v217: [(target, topic, sentence)], each row a jump link
             out.append('<div class="dix">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="t">{E(tp)}</span><p>{E(se)}</p><i>See the evidence</i></a>' for tg, tp, se in b[1]) + '</div>')
+        elif t == 'chapter':   # v219: ('chapter', n, name, question) with a rail of all seven chapters
+            from content import CHAPTERS
+            n, name, q = b[1], b[2], b[3]
+            rail = ''.join(f'<div class="{"done" if k < n else "now" if k == n else ""}"><span class="n">{k + 1:02d}</span><p>{E(nm)}</p></div>' for k, (_, nm, _) in enumerate(CHAPTERS))
+            return f'<section id="{S["id"]}" class="ch" style="background:{bg}"><p class="side">Chapter {n + 1:02d} of 07</p><h2>{E(name)}</h2><p class="q">{E(q)}</p><div class="rail">{rail}</div></section>'
+        elif t == 'toc':      # v219: the seven chapters as rows, each a jump link
+            out.append('<div class="dix toc">' + ''.join(f'<a data-fx-link="{E(cid)}" href="#"><span class="t">{k + 1:02d}</span><p><b>{E(nm)}</b>{E(q)}</p><i>Read chapter</i></a>' for k, (cid, nm, q) in enumerate(b[1])) + '</div>')
         elif t == 'jump':    # v215: [(target, label, title, line)] — positions go to links.json via render.mjs
             out.append('<div class="jump">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="k" style="color:{acc}">{E(lab)}</span><h3>{E(h)}</h3><p>{E(l)}</p><i>Read this part</i></a>' for tg, lab, h, l in b[1]) + '</div>')
     return f'<section id="{S["id"]}" style="background:{bg}">' + ''.join(out) + '</section>'

@@ -1,3 +1,4 @@
+import re
 # v202: three whiteboards, one per project, each drawn the way I'd really work, all in the same handwriting (Caveat):
 #   Handovo  · a FigJam board: sections, square stickies with my name, connectors, a 5-whys chain, voting dots, my cursor
 #   Carekin  · a ruled notebook page in ink: a fishbone of causes, the root cause highlighted, a ticked idea list
@@ -63,7 +64,7 @@ def handovo(d=HO):
     return f'<div style="position:relative; width:{W}px; height:{H}px; border-radius:16px; {grid} box-shadow:inset 0 0 0 1px #E2E2E2; overflow:hidden">{svg(W, H, body)}{"".join(o)}{cursor}</div>'
 
 # ------------------------------------------------------------------ Carekin · notebook fishbone
-def carekin(d):
+def _carekin_board(d):
     W, H, ink, pen, coral = 1280, 1010, "#22324A", "#5E6B7A", "#D9573A"
     paper = ("background:#FDFCF6; background-image:linear-gradient(90deg, transparent 98px, #F2B8B5 98px, #F2B8B5 100px, transparent 100px),"
              " repeating-linear-gradient(180deg, transparent 0 33px, #D9E5F0 33px 34px);")
@@ -98,6 +99,16 @@ def carekin(d):
     for k, (a, why) in enumerate(d["dead"]):
         o.append(f'<div style="position:absolute; left:800px; top:{890 + k * 38}px; width:440px; {FONT} font-size:22px; font-weight:600; color:{pen}"><s style="text-decoration-color:{coral}; text-decoration-thickness:3px; color:{ink}">{E(a)}</s>, {E(why)}</div>')
     return f'<div style="position:relative; width:{W}px; height:{H}px; border-radius:6px; {paper} box-shadow:0 1px 0 #E5E1D6, 0 24px 50px -30px rgba(0,0,0,.35); overflow:hidden">{"".join(o)}</div>'
+
+def carekin(d):
+    """v219: the same notebook, written in the case's own Google Sans Flex instead of handwriting (sizes x0.74, no tilt)."""
+    global FONT
+    old, FONT = FONT, "font-family:GSFlex,sans-serif;"
+    try: h = _carekin_board(d)
+    finally: FONT = old
+    h = re.sub(r'font-size:(\d+)px', lambda m: 'font-size:%dpx' % round(int(m.group(1)) * .74), h)
+    h = re.sub(r'font-weight:\s*[67]00', 'font-weight:500', h)
+    return re.sub(r'rotate\((-?\d+)deg\)', 'rotate(0deg)', h)
 
 # ------------------------------------------------------------------ Syntra · sketchbook mind map
 def syntra(d):

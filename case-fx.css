@@ -59,9 +59,10 @@
 .cfx .cfx-onbands > :not(canvas):not(img) { z-index: 2; }
 
 /* v210 jump links over a still: invisible until hovered or focused, then a soft lift and ring */
-.cfx-link { position: absolute; z-index: 4; border-radius: 18px; transition: box-shadow .3s ease, transform .3s ease, background .3s ease; }
-.cfx-link:hover, .cfx-link:focus-visible { background: rgba(47, 59, 234, .04); box-shadow: 0 0 0 2px var(--cfx-accent, #2F3BEA), 0 14px 30px rgba(47, 59, 234, .14); transform: translateY(-2px); outline: none; }
-@media (prefers-reduced-motion: reduce) { .cfx-link { transition: none; } .cfx-link:hover, .cfx-link:focus-visible { transform: none; } }
+.cfx-link { position: absolute; z-index: 4; border-radius: 10px; transition: background .25s ease; }
+.cfx-link:hover { background: rgba(255, 255, 255, .62); box-shadow: 0 1px 2px rgba(15, 30, 28, .06); }
+.cfx-link:focus-visible { outline: 2px solid var(--cfx-accent, #2F3BEA); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .cfx-link { transition: none; } }
 
 /* v211 travel: the routing message bubble and the stop it is at */
 .cfx-bubble { position: absolute; z-index: 5; transform: translate(-50%, -50%) scale(.9); opacity: 0; pointer-events: none; white-space: nowrap;

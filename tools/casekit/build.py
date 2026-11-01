@@ -7,14 +7,14 @@
 #   python3 tools/casekit/build.py site <build>    after render.mjs: update content.js and the text versions
 import html, json, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from content import CAREKIN, SYNTRA
+from content import CAREKIN, SYNTRA, CAREKIN_ORDER, CHAPTERS
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 E = lambda s: html.escape(s, quote=False)
 DATA = {'carekin': CAREKIN, 'syntra': SYNTRA}
 
 THEME = {
   'carekin': dict(font='GSFlex', fontfile='gsflex-400-700.woff2', mono='GSCode', hw=500, ink='#0F3B38', text='#2F4A46', lab='#0F766E', acc='#FF8A6B', wb='#0F766E',
-    bg={'light': ('#FFFFFF', '#EEF5F2'), 'mint': ('#EEF5F2', '#FFFFFF'), 'dark': ('#0F2A28', '#183F3B')}, darkink='#FFFFFF', darktext='#B3CCC6', darklab='#FF8A6B',
+    bg={'light': ('#ECF5F2', '#FFFFFF'), 'mint': ('#DDEBE7', '#FFFFFF'), 'dark': ('#0F2A28', '#183F3B'), 'chapter': ('#0F3B38', '#164A46')}, darkink='#FFFFFF', darktext='#B3CCC6', darklab='#FF8A6B',
     lvl={'high': ('#0F3B38', '#FFFFFF', '#E3F1EC'), 'low': ('#7EE0C6', '#0F3B38', '#EFFAF6'), 'worst': ('#FF8A6B', '#3B1A10', '#FFF1EC')}),
   'syntra': dict(font='Lato', fontfile=None, mono='Lato', hw=300, ink='#7A4D1C', text='#5A3A1A', lab='#BD680F', acc='#DD8020', wb='#BD680F',
     bg={'light': ('#FBF6EF', '#FFFFFF'), 'cream': ('#F4E6D3', '#FFFDF9'), 'dark': ('#24170C', '#3A2615')}, darkink='#FBEBD7', darktext='#D7BFA2', darklab='#F99C36',
@@ -147,7 +147,7 @@ def page(slug):
 # ---- text version (reader) ----
 def rtext(slug, S, v):
     t = THEME[slug]; bg = S['bg']
-    dark = bg in ('dark', 'hook'); col = '#1C120A' if bg == 'hook' else t['bg'][bg][0]; panel = t['bg']['dark' if dark else bg][1]
+    dark = bg in ('dark', 'hook', 'chapter'); col = '#1C120A' if bg == 'hook' else t['bg'][bg][0]; panel = t['bg']['dark' if dark else bg][1]
     fg = t['darkink'] if dark else t['ink']; tx = t['darktext'] if dark else t['text']; lb = t['darklab'] if dark else t['lab']
     sp = lambda s, w=400, cls='f-sans': f'<span class="{cls}" style="font-weight:{w}">{s}</span>'
     out = []
@@ -194,6 +194,14 @@ def rtext(slug, S, v):
                            f'<p class="t l" style="color:{lb}">{sp("Trade-off", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(to))}</p><p class="t l" style="color:{lb}">{sp("Pay-off", 400, "f-mono up")}</p><p class="t p" style="color:{tx}">{sp(E(po))}</p></div></div>')
         elif k == 'jump':    # the text version has its own contents list
             pass
+        elif k == 'chapter':   # v219
+            out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp("Chapter %02d of 07" % (b[1] + 1), 400, "f-mono up")}</p><h2 class="t x4" style="color:{fg}">{sp(E(b[2]), 500)}</h2><p class="t b" style="color:{tx}">{sp(E(b[3]))}</p></div>')
+        elif k == 'toc':       # v219: the chapters as a plain list
+            out.append('<div class="rk">' + ''.join(f'<p class="t p" style="color:{tx}">{sp("%02d " % (n + 1))}{sp(E(nm), 500)}: {sp(E(q))}</p>' for n, (_, nm, q) in enumerate(b[1])) + '</div>')
+        elif k == 'dcall':
+            out.append(f'<div class="rk"><p class="t p" style="color:{fg}">{sp("Decision: " + E(b[1]), 500)}</p></div>')
+        elif k == 'dix':
+            out.append('<div class="rk">' + ''.join(f'<p class="t p" style="color:{tx}">{sp(E(tp) + ": ", 500)}{sp(E(se))}</p>' for _, tp, se in b[1]) + '</div>')
         elif k == 'hook':
             out.append(f'<div class="rk"><p class="t l" style="color:{lb}">{sp("Syntra in one look", 400, "f-mono up")}</p><h2 class="t x4" style="color:{fg}">{sp("Find a perfume by feeling. Then step inside it, and take it home.", 400)}</h2><p class="t b" style="color:{tx}">{sp("Turn a knob and three sliders to describe a feeling. Syntra names the perfume, lets you step inside it in VR on a Meta Quest 3, and prints a ticket that comes alive in AR. 66 tickets were printed at our exhibit in one day.")}</p></div>')
             out.append(f'<figure class="rf"><img src="work/syntra/kit/k-hook-board.webp?v={v}" width="2400" height="1200" alt="A 360-degree VR world and two printed Syntra tickets" loading="lazy" decoding="async"></figure>')
@@ -224,6 +232,9 @@ def site(v):
                     order.insert(pos, line)
             else:
                 pos = [name(l) for l in order].index(S['after'] if S['after'].endswith('.webp') else S['after'] + '.webp'); order.insert(pos + 1, line)
+        if slug == 'carekin':   # v219: tell it in the chapter order; files not in the order are left out
+            byname = {name(l): l for l in order}
+            order = [byname[f + '.webp'] for f in CAREKIN_ORDER]
         order = [l if l.rstrip().endswith(',') else l + ',' for l in order]; order[-1] = order[-1].rstrip(',')
         new_names = [name(l) for l in order]
         first = idx[0]
@@ -262,6 +273,12 @@ def site(v):
                 a = S['after']; sid = 's' + a[:2] if a.endswith('.webp') else a
                 main, n = re.subn(rf'(<section class="rs" id="{sid}"[^>]*>.*?</section>)', lambda m: m.group(1) + sec, main, count=1, flags=re.S)
                 assert n, (slug, sid)
+        if slug == 'carekin':   # v219: the text version follows the same chapter order
+            parts = re.findall(r'<section class="rs" id="([\w-]+)".*?</section>', main, flags=re.S)
+            blocks = {m.group(1): m.group(0) for m in re.finditer(r'<section class="rs" id="([\w-]+)".*?</section>', main, flags=re.S)}
+            first = main.index('<section class="rs"'); last = main.rindex('</section>') + len('</section>')
+            ids = [('s' + f) if f[0].isdigit() else f for f in CAREKIN_ORDER]
+            main = main[:first] + ''.join(blocks[x] for x in ids if x in blocks) + main[last:]
         open(rp, 'w').write(main + '\n')
         sys.path.insert(0, os.path.join(ROOT, 'tools', 'reader'))
         from page import write_page

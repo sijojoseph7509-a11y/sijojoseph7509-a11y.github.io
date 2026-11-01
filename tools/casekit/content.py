@@ -4,6 +4,18 @@
 # Each section: id (file name), after (existing file it follows), bg, blocks. build.py renders both the designed image and the
 # text version from this. Every number has its source in the section. No invented quotes or research.
 
+
+# v219: Carekin is told in seven chapters; each opens with a divider (bg "chapter") that names the question it answers.
+CHAPTERS = [
+  ("k-ch1", "The problem", "Who finds out when Amma’s dose changes, and who doesn’t?"),
+  ("k-ch2", "Listening", "What do families actually do today, and where does it break?"),
+  ("k-ch3", "The root cause", "Why does a changed dose get lost between people who all care?"),
+  ("k-ch4", "Choices", "What did I try, drop and decide, and what did each choice cost?"),
+  ("k-ch5", "The system", "How does one schedule reach three people who never open the same app?"),
+  ("k-ch6", "The design", "What does each person see, and how does it stay safe?"),
+  ("k-ch7", "Proof", "How would I know it works, and what would I do next?"),
+]
+
 CAREKIN = [
   dict(id="k-origin", after="04.webp", bg="light", desc="How I found the problem: I talked with family carers and asked them to walk me through the last time a dose changed. Four stories came back: the prescription photo nobody confirms, the helper who finds out last, calls from children far away, and the same dose given twice.", blocks=[
     ("head", "How I found the problem", "It started with families, not with an app idea.",
@@ -100,15 +112,12 @@ CAREKIN = [
       ("Design", "Figma, by me", "Every screen, the design system, the prototype and the walkthrough are my own work."),
       ("Visuals", "AI, in my style", "The scenario illustrations are AI-generated in my style. The phone screens are the real prototype.")]),
   ]),
-  dict(id="k-jump", after="02.webp", bg="mint", desc="Short on time? Four stops, each a link: the problem (care runs across three cities and one phone), my thinking (six calls and what each cost), the key flow (when a doctor changes a dose) and the test plan (how I would test it with families).", blocks=[
-    ("head", "Short on time", "Four stops, if you only have a minute.", "Each card jumps to its part of the story."),
-    ("jump", [("11.webp", "The problem", "Care across three cities", "One parent, four carers, one phone."),
-              ("k-calls", "My thinking", "Six calls and their cost", "What I dropped, chose and paid."),
-              ("26.webp", "Key flow", "When a dose changes", "Everyone finds out, and confirms."),
-              ("42.webp", "Proof", "How I’d test it", "Five families, two weeks.")]),
+  dict(id="k-jump", after="02.webp", bg="mint", desc="The story in seven chapters, each answering one question and each a link: the problem, listening, the root cause, choices, the system, the design and proof.", blocks=[
+    ("head", "The story", "Seven chapters, from a missed dose to the design.", "Each chapter answers one question. Start at the top, or jump to the one you care about."),
+    ("toc", CHAPTERS),
   ]),
   dict(id="k-decisions", after="k-jump", bg="light", desc="Six decisions, one line each, each linking to its evidence: one-button Home mode over the full app for the helper; recording only what the doctor wrote over AI dose suggestions; keeping every entry over letting the last edit win; one gentle nudge after 24 hours over alarms; blocking a second dose over trusting memory; and the phone they already have over a smart pillbox.", blocks=[
-    ("head", "Decisions", "Six decisions, one line each.", "Each one links to the part of the case that shows why."),
+    ("head", "The verdict", "Six decisions, one line each.", "Where chapters one to four led. Each one links to the evidence behind it."),
     ("dix", [("k-map", "The helper", "I chose a one-button Home mode over the full app, because the person giving the tablets never downloads it."),
              ("24.webp", "Prescriptions", "I chose to record only what the doctor wrote over AI dose suggestions, because a wrong guess about medicine can hurt someone."),
              ("28.webp", "Offline", "I chose to keep every entry over letting the last edit win, because a dose logged offline has to survive a later change."),
@@ -135,6 +144,13 @@ CAREKIN = [
   ]),
   dict(id="k-ph-dose", after="35.webp", bg="dark", desc="Photo: at home in Thrissur, the helper hands Amma her evening tablets and a glass of water, the pillbox and phone on the side table. Overlay: two carers, one dose, and it must never be given twice.", blocks=[
     ("photo", "ck-dose", "50% 40%", "Safety", "Two carers, one dose. It must never be given twice.", "If a dose is already logged, Home mode blocks a second one.")]),
+  dict(id="k-ch1", after="02.webp", bg="chapter", desc="Chapter 1 of 7, The problem: Who finds out when Amma’s dose changes, and who doesn’t?", blocks=[("chapter", 0, "The problem", "Who finds out when Amma’s dose changes, and who doesn’t?")]),
+  dict(id="k-ch2", after="02.webp", bg="chapter", desc="Chapter 2 of 7, Listening: What do families actually do today, and where does it break?", blocks=[("chapter", 1, "Listening", "What do families actually do today, and where does it break?")]),
+  dict(id="k-ch3", after="02.webp", bg="chapter", desc="Chapter 3 of 7, The root cause: Why does a changed dose get lost between people who all care?", blocks=[("chapter", 2, "The root cause", "Why does a changed dose get lost between people who all care?")]),
+  dict(id="k-ch4", after="02.webp", bg="chapter", desc="Chapter 4 of 7, Choices: What did I try, drop and decide, and what did each choice cost?", blocks=[("chapter", 3, "Choices", "What did I try, drop and decide, and what did each choice cost?")]),
+  dict(id="k-ch5", after="02.webp", bg="chapter", desc="Chapter 5 of 7, The system: How does one schedule reach three people who never open the same app?", blocks=[("chapter", 4, "The system", "How does one schedule reach three people who never open the same app?")]),
+  dict(id="k-ch6", after="02.webp", bg="chapter", desc="Chapter 6 of 7, The design: What does each person see, and how does it stay safe?", blocks=[("chapter", 5, "The design", "What does each person see, and how does it stay safe?")]),
+  dict(id="k-ch7", after="02.webp", bg="chapter", desc="Chapter 7 of 7, Proof: How would I know it works, and what would I do next?", blocks=[("chapter", 6, "Proof", "How would I know it works, and what would I do next?")]),
 ]
 
 SYNTRA = [
@@ -251,3 +267,13 @@ SYNTRA = [
       ("Design", "Figma", "The screens, the printed manual and this documentation.")]),
   ]),
 ]
+
+# v219: the order the Carekin story is told in (03, the old walkthrough film, is left out: the reel at the top shows the app)
+CAREKIN_ORDER = """01 02 09 04 k-jump
+k-ch1 10 11 12 13 14 05
+k-ch2 k-origin 16 15 k-persona 19 20 k-ph-priya 21 22 17 k-business
+k-ch3 k-whiteboard k-map k-ph-arun
+k-ch4 30 29 k-calls 31 k-decisions
+k-ch5 23 k-ph-pillbox 24 25 26 27 28
+k-ch6 06 07 32 33 34 35 36 k-ph-dose 37 38 39 40 k-extremes
+k-ch7 41 42 43 44 k-tools 08""".split()
