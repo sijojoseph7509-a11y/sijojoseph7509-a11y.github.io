@@ -1210,3 +1210,9 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - AI tells: Caveat removed from the Handovo whiteboards (now Mona); every "·" separator, ✓ tick and "Jump →" removed from Handovo
   and the kit sections; a few "X, not Y" lines rewritten. Still to do with a Carekin UI redesign: the 116 Google Sans Code
   uppercase labels inside Carekin's Figma frames.
+
+### v218: Carekin app UI redesigned (D2, brand colours)
+- New Figma page "Carekin UI · D2" (s6WXmDrd36Frlkg1kVsvUg): local variable collection "Carekin D2" (brand tide #0F3B38, teal #0F766E, mint #5EEAD4 for Given, coral #FF8A6B only for changes), 8 editable screens (Today with sky timeline, Give medication, Progress, What changed, Guard, Check the prescription, WhatsApp, Home 200%) and 11 "Live ·" prototype states at 412 × 917.
+- Every phone on all six pages now holds a D2 clone (names "D2 · …"; Final page hero and six feature images replaced by editable "UI hero" / "UI feature …" frames). The v1 "before" phone stays.
+- Site: fx/live-*.webp re-exported from the Live frames; content.js seqs taps moved to the new buttons; sections 31, 34, 36 re-exported; 06 caption no longer says "dark"; reader crops (m/02-1, 06-1…6, 31, 34, 36) rebuilt; guard time 8:02.
+- Still old UI: walkthrough.mp4 / reel.mp4 recordings and the illustrated scenario frames.
