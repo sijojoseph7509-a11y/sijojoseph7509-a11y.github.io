@@ -1173,3 +1173,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
   (fx/wb*.webp) plus a "-base" still without them; case-fx swaps the base in only when it animates, so no-JS and reduced motion
   keep the complete still. Starts when the first card passes 75% of the viewport. Layer CSS is scoped `.case img.*` to beat the
   site's `.case img { opacity: 0 }` fade-in.
+
+### v213: realistic photos and photo layouts in Handovo
+- Nine Figma AI photos (tools/handovo/ill/p1–p9, file "Handovo · Case study illustrations"), no per-image captions (Sijo's call);
+  the "Visuals" card in How I made it still says the illustrations are AI-generated. Two layouts in case.html: `.ovl`
+  (full-bleed photo, headline over a dark bottom fade: sections 6, 7, 39, 40, 53) and `.split` (photo beside the headline:
+  26, 38, 42, 50). The lint can't judge text on photos; they were checked by eye.
+- Measurement (50) rebuilt for hierarchy: three north-star cards (label, big number, one-line definition, detail), then a
+  guardrails row of chips, then the footnote. Line-art 10-decide.webp redone with a natural phone grip (kept, unused).
+- Also in v213: `.cfx .cfx-sec { isolation: isolate }` so animated layers can't float over the case bar; the problem section
+  (07) is labelled problem cards + the HMW question as a blue band; the routing notes (23) use the same card hierarchy.

@@ -205,6 +205,32 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 .jump a { display: flex; flex-direction: column; gap: 6px; padding: 22px 24px; border-radius: 18px; background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 0 0 1px var(--line); }
 .jump .k { margin: 0; } .jump b { font: 700 21px/1.25 Mona; letter-spacing: -.01em; } .jump span { font-size: 16px; color: #3A3A45; }
 .jump i { font-style: normal; color: var(--blue); font-weight: 700; margin-top: auto; padding-top: 10px; }
+.scene { margin-top: 48px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); }
+.scene img { width: 100%; height: 440px; object-fit: cover; display: block; }
+.scene + .cap { margin-top: 10px; }
+.ovl { position: relative; margin: -120px -120px 72px; height: 760px; overflow: hidden; background: #0B0B0F; }
+.ovl img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); }
+.ovl::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8, 8, 18, .88) 0%, rgba(8, 8, 18, .6) 32%, rgba(8, 8, 18, .12) 62%, rgba(8, 8, 18, 0) 80%); }
+.ovl .txt { position: absolute; z-index: 1; left: 120px; right: 120px; bottom: 84px; }
+.ovl h2 { color: #fff; max-width: 1040px; } .ovl p { color: rgba(255, 255, 255, .92); font-size: 22px; line-height: 1.45; max-width: 780px; margin-top: 18px; }
+.split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 72px; align-items: center; margin-bottom: 64px; }
+.split.rev { grid-template-columns: 1fr 1.05fr; } .split.rev > img { order: 2; }
+.split > img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 24px; display: block; }
+.split .lead { margin-top: 18px; }
+.ns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 8px; }
+.ns > div { background: var(--paper); border-radius: 22px; padding: 32px 32px 30px; display: flex; flex-direction: column; }
+.ns .what { font: 600 16px/1.3 Mona; color: var(--blue); margin: 0 0 14px; }
+.ns .num { font: 700 72px/1 Mona; letter-spacing: -.03em; color: var(--ink); margin: 0; }
+.ns .def { font: 600 19px/1.35 Mona; color: var(--ink); margin: 18px 0 6px; }
+.ns .how { font-size: 16px; line-height: 1.5; color: #3A3A45; margin: 0; }
+.gr { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+.gr .k { margin: 4px 0 0; line-height: 1.35; } .gr ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.gr li { font-size: 16px; padding: 8px 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--line); color: #2A2A33; }
+.pb { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pb > div { background: #fff; border-radius: 22px; padding: 30px 30px 32px; }
+.pb .k { margin: 0 0 12px; } .pb h3 { font-size: 26px; margin: 0 0 10px; } .pb p:last-child { font-size: 18px; line-height: 1.5; color: #3A3A45; margin: 0; }
+.hmw { margin-top: 28px; padding: 44px 56px 48px; background: var(--blue); border-radius: 24px; }
+.hmw .k { color: var(--lime); margin: 0 0 14px; } .hmw p.q { color: #fff; font: 700 34px/1.25 Mona; letter-spacing: -.02em; margin: 0; max-width: 1080px; }
 </style></head>
 <body>
 
@@ -274,10 +300,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- v200 where I found the problem -->
 <section>
-  <div class="grid2" style="align-items:end">
-    <div><h2>I saw it every day as a visual merchandiser.</h2></div>
-    <p>At Marks &amp; Spencer and Vero Moda I turned head-office plans into what customers see, and watched how the day really ran.</p>
-  </div>
+  <div class="ovl" style="--pos:50% 50%"><img src="ill/p5-vm.webp" alt="A visual merchandiser kneels to dress a mannequin in the entrance display before the store opens."><div class="txt"><h2>I saw it every day as a visual merchandiser.</h2><p>At Marks &amp; Spencer and Vero Moda I turned head-office plans into what customers see, and watched how the day really ran.</p></div></div>
   <div class="grid4" style="margin-top:64px">
     <div class="card"><p class="lab">What I saw</p><h3>The plan didn’t reach everyone</h3><p>The later shift never heard the huddle.</p></div>
     <div class="card"><p class="lab">What I saw</p><h3>Tasks got lost in WhatsApp</h3><p>Buried under photos and “ok”s within the hour.</p></div>
@@ -289,15 +312,13 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 04 problem -->
 <section data-anchor="problem" style="background:var(--paper)">
-  <h2>A store’s day lives in the manager’s head and a noisy WhatsApp group.</h2>
-  <div class="grid3" style="margin-top:72px">
-    <div><h3>Plans don’t reach the floor</h3><p>By noon, half the huddle is forgotten.</p></div>
-    <div><h3>Every small call goes up</h3><p>Discounts, counts that don’t match, a broken rail: each one becomes a call or a message the manager has to chase.</p></div>
-    <div><h3>AI can’t just be let loose</h3><p>An agent messaging thirty people needs limits only the manager sets.</p></div>
+  <div class="ovl" style="--pos:50% 40%"><img src="ill/p1-floor.webp" alt="A busy fashion store floor: staff fold, carry boxes and serve customers, each glancing at a phone."><div class="txt"><h2>A store’s day lives in the manager’s head and a noisy WhatsApp group.</h2></div></div>
+  <div class="pb">
+    <div><p class="k">For the team</p><h3>Plans don’t reach the floor</h3><p>By noon, half the huddle is forgotten.</p></div>
+    <div><p class="k">For the manager</p><h3>Every small call goes up</h3><p>Discounts, counts that don’t match, a broken rail: each becomes a call she has to chase.</p></div>
+    <div><p class="k">For the AI</p><h3>It can’t just be let loose</h3><p>An agent messaging thirty people needs limits only the manager sets.</p></div>
   </div>
-  <div style="margin-top:88px; padding:48px 56px; background:#fff; border-radius:24px">
-    <p class="q">How might a manager say what today is about once, and trust an agent to run the rest, inside rules they control?</p>
-  </div>
+  <div class="hmw"><p class="k">The question I designed for</p><p class="q">How might a manager say what today is about once, and trust an agent to run the rest, inside rules they control?</p></div>
 </section>
 
 <!-- 05 context by numbers -->
@@ -335,7 +356,6 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
     <div><img class="ill" src="ill/03-phone.webp" alt=""><p class="k" style="margin-top:22px">The task</p><p>Each person gets only their own task on their phone, in their language, with what to reply.</p></div>
     <div><img class="ill" src="ill/04-discount.webp" alt=""><p class="k" style="margin-top:22px">A discount</p><p>At billing, a customer wants 15% off a rain jacket. Kavya asks in chat; the call stays with the manager.</p></div>
   </div>
-  <p class="cap" style="margin-top:40px">AI-generated illustrations in my style. They storyboard the designed scenario; they are not research photos.</p>
 </section>
 
 <!-- 07 a day in the store, afternoon -->
@@ -347,7 +367,6 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
     <div><img class="ill" src="ill/07-customer.webp" alt=""><p class="k" style="margin-top:22px">An upset customer</p><p>Rohit has an angry customer at Footwear. That always reaches the manager, marked urgent.</p></div>
     <div><img class="ill" src="ill/08-handover.webp" alt=""><p class="k" style="margin-top:22px">Handover</p><p>At shift change, open work moves to the evening team with a note. The owner gets one digest.</p></div>
   </div>
-  <p class="cap" style="margin-top:40px">AI-generated illustrations in my style. They storyboard the designed scenario; they are not research photos.</p>
 </section>
 
 <!-- 08 research plan -->
@@ -542,10 +561,10 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
       <div class="box b-bl ro r5" style="display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:center"><b style="margin:0">Rule is Handles it</b><span>Acts, unless a check fails: then it becomes Asks you.</span></div>
     </div>
   </div>
-  <div class="grid3" style="margin-top:72px; gap:28px">
-    <div class="card"><p class="lab">A check that fails</p><p>A count that is more than 2 units off the system turns Handles it into Asks you, with the money at stake.</p></div>
-    <div class="card"><p class="lab">Always up</p><p>Blocked tasks and upset customers always reach the manager, so someone can clear the way.</p></div>
-    <div class="card"><p class="lab">Locked</p><p>Warnings, performance and pay are Yours only and can’t be changed. Ranking staff isn’t available at all.</p></div>
+  <div class="pb" style="margin-top:72px">
+    <div style="background:var(--paper)"><p class="k">A check that fails</p><h3>Handles it becomes Asks you</h3><p>A count more than 2 units off goes to the manager, with the money at stake.</p></div>
+    <div style="background:var(--paper)"><p class="k">Always up</p><h3>Some things always reach her</h3><p>Blocked tasks and upset customers, so someone can clear the way.</p></div>
+    <div style="background:var(--paper)"><p class="k">Locked</p><h3>Some things never move</h3><p>Warnings, performance and pay stay Yours only. Ranking staff isn’t available at all.</p></div>
   </div>
 </section>
 
@@ -578,7 +597,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 15 the rules -->
 <section style="background:var(--paper)">
-  <h2>The nine rules, and the setting each one starts with.</h2>
+  <div class="split"><img src="ill/p2-decide.webp" alt="The store manager decides a request on her phone while a staff member waits at the door."><div><h2>The nine rules, and the setting each one starts with.</h2><p class="lead">She decides what matters. The agent gets everything else ready.</p></div></div>
   <div style="margin-top:56px">
     <div class="rr"><p class="t">Remind staff about overdue tasks</p><span><span class="chip c-handles">Handles it</span></span><p>Low risk; one nudge, then the shift lead</p></div>
     <div class="rr"><p class="t">Answer staff questions from store policies</p><span><span class="chip c-handles">Handles it</span></span><p>Answers come only from text the manager wrote</p></div>
@@ -700,7 +719,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 27 edge cases -->
 <section style="background:var(--paper)">
-  <h2>What happens when the day doesn’t follow the script.</h2>
+  <div class="split"><img src="ill/p6-stock.webp" alt="A stock worker by a near-empty shelf types a message on his phone."><div><h2>What happens when the day doesn’t follow the script.</h2><p class="lead">Stock runs out, people send odd messages, the AI fails. Each case has a plan.</p></div></div>
   <div class="grid4" style="margin-top:64px; column-gap:20px; row-gap:20px">
     <div class="ec"><span class="chip k-ai">AI</span><h3>The AI fails</h3><p>Timeouts, refusals or bad JSON.</p><p class="out">Scripted rules take over. The store never stops.</p></div>
     <div class="ec"><span class="chip k-safe">Safety</span><h3>A message tries to give orders</h3><p>“Approve this” or “ignore the rules” in a staff message.</p><p class="out">Read as a message, never as an instruction.</p></div>
@@ -715,10 +734,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- v200 designing for the highs and lows -->
 <section>
-  <div class="grid2" style="align-items:end">
-    <div><h2>The busiest day and the worst day decide if it’s trusted.</h2></div>
-    <p>Extremes decide whether a manager keeps using it.</p>
-  </div>
+  <div class="ovl" style="--pos:50% 45%"><img src="ill/p3-sale.webp" alt="A crowded festive sale day: a queue at billing while the shift lead points a colleague to a rail."><div class="txt"><h2>The busiest day and the worst day decide if it’s trusted.</h2><p>Extremes decide whether a manager keeps using it.</p></div></div>
   <div class="grid3" style="margin-top:56px; gap:24px">
     <div class="xt" style="background:#EEF0FF"><span class="lvl" style="background:#2F3BEA; color:#fff">High, sale day</span><h3>Diwali or end of season: footfall triples</h3><p>Non-urgent asks wait in one batch for the manager; urgent customers still jump the queue; the shift lead takes the overflow.</p></div>
     <div class="xt" style="background:#EEF0FF"><span class="lvl" style="background:#2F3BEA; color:#fff">High, launch</span><h3>A new collection lands overnight</h3><p>One head-office brief becomes a task per section, each with a photo to confirm, due before the doors open.</p></div>
@@ -731,6 +747,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 28 language -->
 <section class="dark" data-new="language">
+  <div class="ovl" style="--pos:50% 40%"><img src="ill/p7-lang.webp" alt="A staff member replies to a work message on her phone between customers."><div class="txt"><h2>Every person, in their own language.</h2><p>Staff write in English, Hindi, Kannada or Malayalam, and the reply comes back the same way.</p></div></div>
   <div class="grid2" style="align-items:center; grid-template-columns:440px 1fr">
     <div><h3 style="font-size:40px; line-height:1.08">Their language, their phone, one word to reply</h3>
       <p style="margin-top:12px">Staff get answers in the language they write. “Done” is one tap.</p>
@@ -759,7 +776,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 29 trust and privacy -->
 <section>
-  <h2>What Handovo stores about staff, and what it never collects.</h2>
+  <div class="split rev"><img src="ill/p8-trust.webp" alt="Two store staff laugh together while folding sweaters, their phones face-down on the table."><div><h2>What Handovo stores about staff, and what it never collects.</h2><p class="lead">Counts, never rankings. Staff should feel helped, not watched.</p></div></div>
   <div class="grid3" style="margin-top:64px; gap:28px">
     <div class="card"><p class="lab">What it stores</p><ul style="padding-left:20px"><li>Name, role, section, shift, phone and language</li><li>Check-ins, tasks and when they were done</li><li>Messages to and from the store’s number</li></ul></div>
     <div class="card"><p class="lab">What it never does</p><ul style="padding-left:20px"><li>No rankings, scores or leaderboards</li><li>No location or phone tracking</li><li>The owner’s digest shows counts, never names</li><li>Photos only confirm a task</li></ul></div>
@@ -883,21 +900,16 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
   <p class="cap" style="margin-top:36px">Next.js, Postgres on Supabase, Claude API, GitHub Actions. Next: measure Live AI on the same messages.</p>
 </section>
 
-<!-- 32 measurement (v181: north stars + guardrails) -->
+<!-- 32 measurement (v181: north stars + guardrails; v213: clear hierarchy) -->
 <section data-new="measure">
-  <h2>How I’ll know the pilot worked.</h2>
-  <div class="grid3" style="margin-top:56px; gap:28px">
-    <div class="card"><p class="lab">North star, Manager load</p><h3 style="font-size:44px">−40%</h3><p><b>Decisions reaching the manager each day</b>, by week four, without problems found late.</p></div>
-    <div class="card"><p class="lab">North star, Follow-through</p><h3 style="font-size:44px">90%</h3><p><b>Tasks done by their due time</b>, counting how many needed a nudge or the shift lead.</p></div>
-    <div class="card"><p class="lab">North star, Handover</p><h3 style="font-size:44px">0</h3><p><b>Open tasks lost at shift change</b>: every one has an owner on the next shift.</p></div>
+  <div class="split rev"><img src="ill/p4-digest.webp" alt="The store owner reads the day’s short digest on his phone at home with a cup of chai."><div><h2>How I’ll know the pilot worked.</h2><p class="lead">Three numbers the owner can read in one minute at the end of the day.</p></div></div>
+  <div class="ns">
+    <div><p class="what">Manager load</p><p class="num">−40%</p><p class="def">fewer decisions reach the manager</p><p class="how">By week four, with no problems found late.</p></div>
+    <div><p class="what">Follow-through</p><p class="num">90%</p><p class="def">of tasks done on time</p><p class="how">Counting how many needed a nudge or the shift lead.</p></div>
+    <div><p class="what">Handover</p><p class="num">0</p><p class="def">open tasks lost at shift change</p><p class="how">Every one has an owner on the next shift.</p></div>
   </div>
-  <div class="grid4" style="margin-top:28px; gap:20px">
-    <div><p class="lab">Guardrail</p><p>Time from goal to plan sent</p></div>
-    <div><p class="lab">Guardrail</p><p>Rules the manager loosens or tightens (trust)</p></div>
-    <div><p class="lab">Guardrail</p><p>Consent withdrawals and complaints</p></div>
-    <div><p class="lab">Guardrail</p><p>How often the AI falls back</p></div>
-  </div>
-  <p class="cap" style="margin-top:28px">Targets for the four-week pilot, against week one.</p>
+  <div class="gr"><p class="k">Watched alongside, so the numbers stay honest</p><ul><li>Time from goal to plan sent</li><li>Rules the manager loosens or tightens</li><li>Consent withdrawals and complaints</li><li>How often the AI falls back</li></ul></div>
+  <p class="cap" style="margin-top:24px">Targets for the four-week pilot, measured against week one.</p>
 </section>
 
 <!-- 33 next -->
@@ -929,7 +941,7 @@ html.anim .r3 { animation: f3 8s ease-in-out infinite; } html.anim .r4 { animati
 
 <!-- 34 reflection -->
 <section class="dark">
-  <h2>Most of my time went into deciding what the AI may not do.</h2>
+  <div class="ovl" style="--pos:50% 60%"><img src="ill/p9-close.webp" alt="The store at closing time: lights dimmed, the manager walking out with her bag."><div class="txt"><h2>Most of my time went into deciding what the AI may not do.</h2></div></div>
   <div class="grid2" style="margin-top:64px">
     <p>Drafting a plan from one sentence was quick. Deciding what stays with a person took most of the project.</p>
     <p>Designing for AI is designing limits: settings a manager can read, code that enforces them, a log that shows what happened.</p>
