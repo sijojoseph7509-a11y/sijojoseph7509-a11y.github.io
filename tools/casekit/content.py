@@ -9,10 +9,10 @@ CAREKIN = [
     ("head", "How I found the problem", "It started with families, not with an app idea.",
      "I talked with family carers, people looking after a parent’s medicines from the same house or another city. I didn’t ask what app they wanted. I asked them to walk me through the last time a dose changed."),
     ("cards", 4, [
-      ("What I heard · 01", "The photo nobody confirms", "A new prescription arrived as a WhatsApp photo. Everyone assumed someone else had read it."),
-      ("What I heard · 02", "The helper finds out last", "The person who actually gives the tablets heard about a change days later, or not at all."),
-      ("What I heard · 03", "Calls from far away", "Children in other cities called home to ask if Amma had taken it, and felt guilty when no one knew."),
-      ("What I heard · 04", "The same dose, twice", "With two people helping, a dose was sometimes given twice, because nothing showed it was already given.")]),
+      ("What I heard, 01", "The photo nobody confirms", "A new prescription arrived as a WhatsApp photo. Everyone assumed someone else had read it."),
+      ("What I heard, 02", "The helper finds out last", "The person who actually gives the tablets heard about a change days later, or not at all."),
+      ("What I heard, 03", "Calls from far away", "Children in other cities called home to ask if Amma had taken it, and felt guilty when no one knew."),
+      ("What I heard, 04", "The same dose, twice", "With two people helping, a dose was sometimes given twice, because nothing showed it was already given.")]),
     ("band", "Then I checked it wasn’t just them", "Published research with family carers says the same, in numbers and in their own words. That is the next section."),
   ]),
   dict(id="k-business", after="17.webp", bg="mint", desc="Is it worth solving: the cost (57.8% of family carers made a medication error in the past year; only about half of Indians with chronic illness take medicines as prescribed, WHO SAGE wave 2), the market (India's home healthcare market from $12.0 billion in 2025 to $18.8 billion in 2030, MarketsandMarkets), who pays (free for families, paid by home-care agencies), how I will validate it and the risks.", blocks=[
@@ -32,25 +32,25 @@ CAREKIN = [
     ("head", "Personas", "Four people around one parent.",
      "Built from my conversations with family carers and from published research. Each is a composite; the names are fictional."),
     ("personas", [
-      ("P", "#0F3B38", "Priya, 38 · the organiser", "Bengaluru · IT manager · visits home every other month", [
+      ("P", "#0F3B38", "Priya, 38, the organiser", "Bengaluru, IT manager, visits home every other month", [
         ("A day", "Checks the family chat between meetings, orders refills, calls the doctor’s clinic."),
         ("Goals", "Certainty, in one glance, that today’s doses happened."),
         ("Frustrations", "Hearing about a mistake days later; being the only one who knows the plan."),
         ("Won’t accept", "Another app the rest of the family won’t open."),
         ("Carekin must", "Let her change a dose once and know every carer has seen it.")]),
-      ("L", "#FF8A6B", "Lakshmi, 52 · the helper", "Thrissur · lives in · reads Malayalam · shares a phone", [
+      ("L", "#FF8A6B", "Lakshmi, 52, the helper", "Thrissur, lives in, reads Malayalam, shares a phone", [
         ("A day", "Cooks, gives Amma her tablets at 8, 1 and 8, keeps a notebook."),
         ("Goals", "One clear thing to do, at the right time."),
         ("Frustrations", "Being blamed for a change nobody told her about."),
         ("Won’t accept", "English menus, small text, a new app on a shared phone."),
         ("Carekin must", "Send each dose on WhatsApp, in Malayalam, with a photo of the tablet and one button.")]),
-      ("A", "#5B8C7F", "Amma, 78 · the parent", "Thrissur · five tablets a day · proud of managing herself", [
+      ("A", "#5B8C7F", "Amma, 78, the parent", "Thrissur, five tablets a day, proud of managing herself", [
         ("A day", "Newspaper, temple, her serials; takes the tablets when Lakshmi brings them."),
         ("Goals", "Stay independent, not be treated like a patient."),
         ("Frustrations", "Three children asking her the same question."),
         ("Won’t accept", "Alarms, and being watched."),
         ("Carekin must", "Work around her, without her ever touching the app.")]),
-      ("A", "#7EB8A9", "Arun, 41 · the son abroad", "Dubai · long hours · calls home twice a week", [
+      ("A", "#7EB8A9", "Arun, 41, the son abroad", "Dubai, long hours, calls home twice a week", [
         ("A day", "Reads the family chat at night, Indian time."),
         ("Goals", "Know Amma is fine without calling to check."),
         ("Frustrations", "Guilt, and different answers from different people."),
@@ -71,6 +71,7 @@ CAREKIN = [
   dict(id="k-map", after="k-whiteboard", bg="light", desc="From what I heard to what I designed: families won't leave WhatsApp, so the helper gets doses there; the helper never downloads the app, so Home mode has one button; mistakes cluster after a dose change, so a change stays open until every carer confirms; children far away feel guilt, so Today leads with one calm sentence; the helper reads Malayalam on a shared phone, so Malayalam and 200% text; two people gave the same dose, so an Already given warning.", blocks=[
     ("head", "From what I heard to what I designed", "Every decision traces back to a family.",
      "Nothing in Carekin is there because it looked good. Each choice answers something a family told me."),
+    ("dcall", "I chose a one-button Home mode over the full app, because the person giving the tablets never downloads it."),
     ("map", [
       ("I heard", "Families coordinate in WhatsApp and won’t leave it.", "The helper gets every dose on WhatsApp; only Priya uses the app."),
       ("I heard", "The person giving pills never downloads an app.", "Home mode: one dose, one big button, on a shared phone."),
@@ -83,12 +84,12 @@ CAREKIN = [
     ("head", "Designing for the highs and lows", "The hardest days decide if a family trusts it.",
      "A normal Tuesday is easy. I designed for the busiest and the worst days too, because that is when a family decides whether to keep using it."),
     ("xt", [
-      ("high", "High · discharge day", "Home from hospital with eight new medicines", "Priya scans the discharge sheet once. Each change stays open until Lakshmi and Arun confirm; Lakshmi gets doses one at a time, not a list."),
-      ("high", "High · festival travel", "Amma spends Onam in Bengaluru", "The plan moves with Amma: Priya gives the doses for those days and Lakshmi’s prompts pause."),
-      ("low", "Low · nothing changes", "Months of the same routine", "Carekin goes quiet: one calm weekly note, no daily noise."),
-      ("low", "Low · a refusal", "Amma won’t take the evening tablet", "Logged as “Not given · Amma refused”, with one calm summary to Priya, not an alarm."),
-      ("worst", "Worst · no signal", "Lakshmi’s phone is offline", "She logs the dose anyway; it syncs later, and a clash with a new dose is shown, never guessed."),
-      ("worst", "Worst · two givers", "Two people reach for the same dose", "“Already given at 8:04, by Lakshmi” stops the second one.")]),
+      ("high", "High, discharge day", "Home from hospital with eight new medicines", "Priya scans the discharge sheet once. Each change stays open until Lakshmi and Arun confirm; Lakshmi gets doses one at a time, not a list."),
+      ("high", "High, festival travel", "Amma spends Onam in Bengaluru", "The plan moves with Amma: Priya gives the doses for those days and Lakshmi’s prompts pause."),
+      ("low", "Low, nothing changes", "Months of the same routine", "Carekin goes quiet: one calm weekly note, no daily noise."),
+      ("low", "Low, a refusal", "Amma won’t take the evening tablet", "Logged as “Not given, Amma refused”, with one calm summary to Priya, not an alarm."),
+      ("worst", "Worst, no signal", "Lakshmi’s phone is offline", "She logs the dose anyway; it syncs later, and a clash with a new dose is shown, never guessed."),
+      ("worst", "Worst, two givers", "Two people reach for the same dose", "“Already given at 8:04, by Lakshmi” stops the second one.")]),
   ]),
   dict(id="k-tools", after="43.webp", bg="dark", desc="How I made it: conversations with family carers, published research and a FigJam board; AI to sort my notes into themes and check copy, checked against what families said; every screen, the design system, the prototype and the walkthrough made by me in Figma; scenario illustrations AI-generated in my style.", blocks=[
     ("head", "How I made it", "Where I used AI, and where I didn’t.",
@@ -106,6 +107,15 @@ CAREKIN = [
               ("26.webp", "Key flow", "When a dose changes", "Everyone finds out, and confirms."),
               ("42.webp", "Proof", "How I’d test it", "Five families, two weeks.")]),
   ]),
+  dict(id="k-decisions", after="k-jump", bg="light", desc="Six decisions, one line each, each linking to its evidence: one-button Home mode over the full app for the helper; recording only what the doctor wrote over AI dose suggestions; keeping every entry over letting the last edit win; one gentle nudge after 24 hours over alarms; blocking a second dose over trusting memory; and the phone they already have over a smart pillbox.", blocks=[
+    ("head", "Decisions", "Six decisions, one line each.", "Each one links to the part of the case that shows why."),
+    ("dix", [("k-map", "The helper", "I chose a one-button Home mode over the full app, because the person giving the tablets never downloads it."),
+             ("24.webp", "Prescriptions", "I chose to record only what the doctor wrote over AI dose suggestions, because a wrong guess about medicine can hurt someone."),
+             ("28.webp", "Offline", "I chose to keep every entry over letting the last edit win, because a dose logged offline has to survive a later change."),
+             ("26.webp", "Reminders", "I chose one gentle nudge after 24 hours over alarms, because alarms at night get muted, and then nothing gets through."),
+             ("36.webp", "Safety", "I chose to block a second dose and show the first, because the worst mistake is the same tablet given twice."),
+             ("k-calls", "Hardware", "I chose the phone they already have over a smart pillbox, because a pillbox can’t tell anyone the doctor changed a dose.")]),
+  ]),
   dict(id="k-ph-priya", after="20.webp", bg="dark", desc="Photo: Priya steps out of a meeting in her Bengaluru office to read a message about her mother's medicine. Overlay: the organiser hears about a changed dose last, if at all.", blocks=[
     ("photo", "ck-office", "50% 35%", "Insights", "Priya hears about a changed dose last, if at all.", "The organiser in Bengaluru plans everything, but the change happens in Thrissur.")]),
   dict(id="k-ph-arun", after="k-map", bg="dark", desc="Photo: Arun in his Dubai apartment at night, reading the family chat on his phone. Overlay: one family, three cities, one WhatsApp group.", blocks=[
@@ -114,6 +124,7 @@ CAREKIN = [
     ("photo", "ck-pillbox", "50% 50%", "From paper", "It starts with a pillbox and a slip of paper.", "Carekin records exactly what the doctor wrote. It never suggests or reads a dose for you.")]),
   dict(id="k-calls", after="30.webp", bg="light", desc="Six calls I had to make, each with the option I dropped, the one I chose, the trade-off and the pay-off: Home mode instead of making the helper install the app; record only what the doctor wrote instead of an AI suggesting doses; history instead of last-write-wins when two people log offline; one gentle nudge after 24 hours instead of alarms for everyone; a refused dose recorded calmly with one summary instead of a red missed mark; and software on the phone they already have instead of a smart pillbox.", blocks=[
     ("head", "My thinking", "Six calls I had to make, and what each one cost.", "Struck through: what I dropped. In the pill: what I chose."),
+    ("dcall", "I chose the phone they already have over a smart pillbox, because a pillbox can’t tell anyone the doctor changed a dose."),
     ("calls", [
       ("Where does the helper log a dose?", "Make Lakshmi install the full app", "One-button Home mode", "She sees one dose at a time, nothing more.", "The person giving pills never has to learn an app."),
       ("Who reads the prescription?", "An AI that reads the slip and suggests the dose", "Record only what the doctor wrote", "More typing for Priya when a slip reads badly.", "Carekin never interprets a medicine."),
@@ -133,17 +144,17 @@ SYNTRA = [
     ("head", "Personas", "Three shoppers, one wall of bottles.",
      "Built from our store visits and my conversations with people choosing perfume. Each is a composite; the names are fictional."),
     ("personas", [
-      ("A", "#DD8020", "Ananya, 22 · her first perfume", "Design student · shops with friends · knows moods, not notes", [
+      ("A", "#DD8020", "Ananya, 22, buying her first perfume", "Design student who shops with friends and knows moods better than notes", [
         ("Goals", "A scent that feels like her, at a price she can afford."),
         ("Frustrations", "After three paper strips everything smells the same."),
         ("Won’t accept", "Being pushed towards the most expensive bottle."),
         ("Syntra must", "Let her describe a mood and trust the match.")]),
-      ("R", "#9C5410", "Rahul, 31 · buying a gift", "Works long hours · ten minutes in the store", [
+      ("R", "#9C5410", "Rahul, 31, buying a gift", "Works long hours and has ten minutes in the store", [
         ("Goals", "A safe gift that doesn’t feel generic."),
         ("Frustrations", "No idea where to start, and staff are busy."),
         ("Won’t accept", "A long quiz or a sales pitch."),
         ("Syntra must", "Get him to one confident answer, fast.")]),
-      ("F", "#C9A27A", "Farah, 44 · wants a change", "Loyal to one scent for years", [
+      ("F", "#C9A27A", "Farah, 44, wants a change", "Loyal to one scent for years", [
         ("Goals", "Something new for evenings that still feels like her."),
         ("Frustrations", "Can’t explain what she likes beyond “not too sweet”."),
         ("Won’t accept", "Being rushed."),
@@ -214,12 +225,12 @@ SYNTRA = [
     ("head", "Designing for the highs and lows", "A rush, an empty floor and a broken printer.",
      "A kiosk is judged on its busiest and worst moments. Some of these I built for the exhibit; the rest are how I’d handle them in a store."),
     ("xt", [
-      ("high", "High · a queue", "A crowd at the exhibit", "One turn of the knob and the sliders gives a match straight away; VR stays optional, so the line keeps moving."),
-      ("high", "High · friends together", "Three people at one kiosk", "Every turn shows on screen at once, so friends compare, and each prints their own ticket."),
-      ("low", "Low · no staff", "One shy visitor, nobody around", "The idle screen invites a turn; nothing needs explaining."),
-      ("low", "Low · not quite right", "The match doesn’t feel like them", "A small turn gives the next closest scent, without starting again."),
-      ("worst", "Worst · no paper", "The ticket can’t print", "The screen shows a code to save the result to a phone instead."),
-      ("worst", "Worst · no headset", "VR isn’t available", "VR is skipped; the match and the ticket still work.")]),
+      ("high", "High: a queue", "A crowd at the exhibit", "One turn of the knob and the sliders gives a match straight away; VR stays optional, so the line keeps moving."),
+      ("high", "High: friends together", "Three people at one kiosk", "Every turn shows on screen at once, so friends compare, and each prints their own ticket."),
+      ("low", "Low: no staff", "One shy visitor, nobody around", "The idle screen invites a turn; nothing needs explaining."),
+      ("low", "Low: not quite right", "The match doesn’t feel like them", "A small turn gives the next closest scent, without starting again."),
+      ("worst", "Worst: no paper", "The ticket can’t print", "The screen shows a code to save the result to a phone instead."),
+      ("worst", "Worst: no headset", "VR isn’t available", "VR is skipped; the match and the ticket still work.")]),
   ]),
   dict(id="k-store", after="k-extremes", bg="light", desc="Would it survive a real store: one headset shared by many faces (a washable face cover and a wipe between visitors, and VR stays optional); stock (connect to live store stock so a sold-out bottle is never the answer); staff (the kiosk starts the conversation and staff hand over the bottle and a tester); and upkeep (an ESP32, five controls, a TV, a Meta Quest 3 and a 58 mm thermal printer, each able to fail without stopping the match on screen). How I would handle them; not tested in a store.", blocks=[
     ("head", "In a real store", "Would it survive a store floor every day?",

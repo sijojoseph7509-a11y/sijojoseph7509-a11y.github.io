@@ -20,7 +20,7 @@ for (const slug of slugs) {
       if (dpr === 1) heights[slug][id] = Math.round(await el.evaluate((e) => e.getBoundingClientRect().height));
       if (dpr === 1) {   // v215: jump-link cards, in the section's own 1440-px units, for case-fx (content.js fxOpts.links)
         const ls = await el.evaluate((e) => [...e.querySelectorAll("[data-fx-link]")].map((a) => { const r = a.getBoundingClientRect(), q = e.getBoundingClientRect();
-          return { x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height), to: a.dataset.fxLink, label: a.querySelector("h3")?.textContent || "" }; }));
+          return { x: Math.round(r.left - q.left), y: Math.round(r.top - q.top), w: Math.round(r.width), h: Math.round(r.height), to: a.dataset.fxLink, label: a.querySelector("h3")?.textContent || ("Decision: " + (a.querySelector(".t")?.textContent || "")) }; }));
         if (ls.length) ((links[slug] ||= {})[id] = ls);
       }
       if (dpr === 2) {   // pictures for the text version: the whiteboard itself, or the hook's two tiles

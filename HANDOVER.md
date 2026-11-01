@@ -1202,3 +1202,11 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 
 ### v216: Handovo "Prove it on the floor" ends on the photo
 - The four next-step lines under the closing photo (section 51) were removed at Sijo's request; the section is the photo alone.
+
+### v217: decisions made visible; AI tells removed; Carekin reveal off
+- Handovo: "Six decisions, one line each" index (section 4, ten fx links in total) and a "Decision" callout (`.dcall`) with an
+  "I chose X over Y because Z" line on six decision sections (anchors heard, decisions, aiux, rules, trust, changed).
+- Carekin: k-decisions index (`dix` block) and `dcall` lines on k-map and k-calls; reveal "none" (Sijo found the mask odd).
+- AI tells: Caveat removed from the Handovo whiteboards (now Mona); every "·" separator, ✓ tick and "Jump →" removed from Handovo
+  and the kit sections; a few "X, not Y" lines rewritten. Still to do with a Carekin UI redesign: the 116 Google Sans Code
+  uppercase labels inside Carekin's Figma frames.

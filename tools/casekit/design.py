@@ -77,6 +77,12 @@ section.ph::after { content: ""; position: absolute; inset: 0; background: linea
 section.ph .side { z-index: 1; top: auto; bottom: 98px; color: #B3E3D6; }
 section.ph .tx { position: absolute; z-index: 1; left: 480px; right: 120px; bottom: 90px; }
 section.ph h2 { color: #fff; font-size: 40px; max-width: 760px; } section.ph .sub { color: rgba(255, 255, 255, .9); font-size: 18px; max-width: 700px; }
+/* v217 decisions: one marker everywhere, and an index of one-line decisions */
+.dcall { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; margin-top: 32px; padding: 18px 22px; border-left: 4px solid #FF8A6B; background: #F4F8F6; border-radius: 0 14px 14px 0; }
+.dcall .db { font: 500 13px/1 GSFlex; color: #fff; background: #0F3B38; padding: 7px 11px; border-radius: 7px; } .dcall p { font: 500 18px/1.45 GSFlex; color: #0F2A28; }
+.dix { margin-top: 36px; border-top: 1px solid rgba(15, 59, 56, .14); }
+.dix a { display: grid; grid-template-columns: 150px 1fr 120px; gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(15, 59, 56, .14); text-decoration: none; }
+.dix .t { font: 500 14px/1.3 GSFlex; color: #0F766E; } .dix p { font: 500 18px/1.45 GSFlex; color: #0F2A28; } .dix i { font-style: normal; font: 500 14px/1.3 GSFlex; color: #0F766E; text-align: right; }
 /* v215b Carekin persona rows: a tall portrait on the left, the name and the five answers in two columns beside it */
 .prow { display: grid; gap: 16px; margin: 48px 0 0 -440px; }
 .prow .persona.pp { display: grid; grid-template-columns: 380px 1fr; min-height: 440px; }
@@ -228,10 +234,14 @@ def ck_section(S):
             out.append(f'<img src="img/{img}.webp" alt="" style="object-position:{pos}"><p class="side">{E(side_l)}</p><div class="tx"><h2>{E(h)}</h2>' + (f'<p class="sub">{E(sub)}</p>' if sub else '') + '</div>')
             return f'<section id="{S["id"]}" class="ph">' + ''.join(out) + '</section>'
         elif t == 'calls':   # v215: [(question, dropped, chosen, trade-off, pay-off)]
-            cells = ''.join(f'<div class="pnl" style="background:{pnl}"><span class="k" style="color:{acc}">Call {k + 1:02d}</span><h3 style="color:{ink}">{E(q)}</h3><p class="no">{E(no)}</p><span class="yes">✓ {E(yes)}</span><div class="tp"><span class="k" style="color:{acc}">Trade-off</span><p>{E(to)}</p></div><div class="tp"><span class="k" style="color:{acc}">Pay-off</span><p>{E(po)}</p></div></div>' for k, (q, no, yes, to, po) in enumerate(b[1]))
+            cells = ''.join(f'<div class="pnl" style="background:{pnl}"><span class="k" style="color:{acc}">Call {k + 1:02d}</span><h3 style="color:{ink}">{E(q)}</h3><p class="no">{E(no)}</p><span class="yes">{E(yes)}</span><div class="tp"><span class="k" style="color:{acc}">Trade-off</span><p>{E(to)}</p></div><div class="tp"><span class="k" style="color:{acc}">Pay-off</span><p>{E(po)}</p></div></div>' for k, (q, no, yes, to, po) in enumerate(b[1]))
             out.append(f'<div class="calls">{cells}</div>')
+        elif t == 'dcall':   # v217: ('dcall', 'I chose X over Y because Z')
+            out.append(f'<div class="dcall"><span class="db">Decision</span><p>{E(b[1])}</p></div>')
+        elif t == 'dix':     # v217: [(target, topic, sentence)], each row a jump link
+            out.append('<div class="dix">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="t">{E(tp)}</span><p>{E(se)}</p><i>See the evidence</i></a>' for tg, tp, se in b[1]) + '</div>')
         elif t == 'jump':    # v215: [(target, label, title, line)] — positions go to links.json via render.mjs
-            out.append('<div class="jump">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="k" style="color:{acc}">{E(lab)}</span><h3>{E(h)}</h3><p>{E(l)}</p><i>Jump →</i></a>' for tg, lab, h, l in b[1]) + '</div>')
+            out.append('<div class="jump">' + ''.join(f'<a data-fx-link="{E(tg)}" href="#"><span class="k" style="color:{acc}">{E(lab)}</span><h3>{E(h)}</h3><p>{E(l)}</p><i>Read this part</i></a>' for tg, lab, h, l in b[1]) + '</div>')
     return f'<section id="{S["id"]}" style="background:{bg}">' + ''.join(out) + '</section>'
 
 def page(slug, secs):
