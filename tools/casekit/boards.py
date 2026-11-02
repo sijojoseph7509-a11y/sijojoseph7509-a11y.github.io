@@ -100,7 +100,7 @@ def _carekin_board(d):
         o.append(f'<div style="position:absolute; left:800px; top:{890 + k * 38}px; width:440px; {FONT} font-size:22px; font-weight:600; color:{pen}"><s style="text-decoration-color:{coral}; text-decoration-thickness:3px; color:{ink}">{E(a)}</s>, {E(why)}</div>')
     return f'<div style="position:relative; width:{W}px; height:{H}px; border-radius:6px; {paper} box-shadow:0 1px 0 #E5E1D6, 0 24px 50px -30px rgba(0,0,0,.35); overflow:hidden">{"".join(o)}</div>'
 
-def carekin(d):
+def _carekin_v219(d):
     """v219: the same notebook, written in the case's own Google Sans Flex instead of handwriting (sizes x0.74, no tilt)."""
     global FONT
     old, FONT = FONT, "font-family:GSFlex,sans-serif;"
@@ -216,3 +216,154 @@ def syntra_retro(d):
             o.append(_sticky(x + (n % 2) * 12, 214 + n * 152, 330, note, bg, (-1) ** (k + n) * 1.4))
     o.append(svg(W, H, ''.join(f'<path d="M{410 + k * 380} 170 C {412 + k * 380} 360, {408 + k * 380} 520, {411 + k * 380} 660" stroke="#C9B08C" stroke-width="2" stroke-dasharray="6 8"/>' for k in range(2))))
     return _sy_page(W, H, o)
+
+# ------------------------------------------------------------------ v221 blue-pen design-process board (Sijo's reference: a thesis process sheet)
+INK = "#2430C9"
+PEN = "font-family:Caveat,cursive; color:" + INK + ";"
+def _box(x, y, w, h, head, body="", r="28px 22px 32px 24px / 24px 30px 22px 28px", extra=""):
+    return (f'<div style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; box-sizing:border-box; border:3px solid {INK}; border-radius:{r}; padding:14px 22px; {extra}">'
+            f'<p style="{PEN} font-size:40px; line-height:1; font-weight:700; letter-spacing:.04em">{head}</p>' + (f'<p style="{PEN} font-size:27px; line-height:1.12; font-weight:600; margin-top:8px">{body}</p>' if body else '') + '</div>')
+def _arrow(x1, y1, x2, y2, bend=0):
+    mx, my = (x1 + x2) / 2 + bend, (y1 + y2) / 2
+    import math; a = math.atan2(y2 - my, x2 - mx); h = 16
+    p1 = (x2 - h * math.cos(a - .45), y2 - h * math.sin(a - .45)); p2 = (x2 - h * math.cos(a + .45), y2 - h * math.sin(a + .45))
+    return f'<path d="M{x1} {y1} Q {mx} {my} {x2} {y2} M{p1[0]:.0f} {p1[1]:.0f} L{x2} {y2} L{p2[0]:.0f} {p2[1]:.0f}" stroke="{INK}" stroke-width="3"/>'
+def _bracket(x, y1, y2, label):
+    return (svg(1200, 1560, f'<path d="M{x + 30} {y1} L{x} {y1} L{x} {y2} L{x + 30} {y2}" stroke="{INK}" stroke-width="3"/>')
+            + f'<div style="position:absolute; left:{x - 26}px; top:{(y1 + y2) // 2}px; transform:translate(-50%,-50%) rotate(-90deg); white-space:nowrap; {PEN} font-size:30px; font-weight:700; letter-spacing:.08em">{label}</div>')
+
+def pen_flow(d, project, concept, design):
+    W, H = 1200, 1600
+    s = lambda a: E(a)
+    o = [f'<div style="position:absolute; left:0; right:0; top:34px; text-align:center; {PEN} font-size:76px; font-weight:700; letter-spacing:.08em">DESIGN PROCESS</div>',
+         f'<div style="position:absolute; left:0; right:0; top:120px; text-align:center; {PEN} font-size:50px; font-weight:700; letter-spacing:.06em">FOR {s(project.upper())}</div>',
+         svg(W, H, f'<path d="M300 186 C 520 182, 760 190, 930 184" stroke="{INK}" stroke-width="3"/>')]
+    cx, cw = 330, 520
+    o.append(_box(cx, 230, cw, 170, "QUESTION", "(" + s(d["hmw"].lstrip("…").replace("HMW ", "how might we ")) + ")"))
+    o.append(_box(cx, 450, cw, 230, "WHAT I SAW", "<br>".join("· " + s(x) for x in d["saw"][:3])))
+    o.append(_box(cx, 730, cw, 230, "WHY? WHY? WHY?", "<br>".join("→ " + s(x) for x in d["whys"][:4])))
+    o.append(_box(cx, 1010, cw, 150, "ROOT CAUSE", s(d["root"]), extra=f"box-shadow:0 0 0 6px #fff, 0 0 0 9px {INK}"))
+    o.append(_box(cx, 1210, cw, 160, "CONCEPT", s(concept)))
+    o.append(_box(cx + 20, 1416, cw - 40, 140, "THE DESIGN", s(design), r="40px 34px 44px 30px / 34px 42px 30px 40px"))
+    # ideas, and what got crossed out
+    o.append(_box(880, 820, 230, 70, "IDEAS", r="40px"))
+    o.append(f'<div style="position:absolute; left:892px; top:905px; width:205px; {PEN} font-size:23px; line-height:1.12; font-weight:600">' + "<br>".join("+ " + s(x) for x in d["ideas"][:4]) + '</div>')
+    o.append(_box(104, 1180, 210, 70, "NOT THIS", r="40px", extra="padding:14px 18px; white-space:nowrap"))
+    o.append(f'<div style="position:absolute; left:110px; top:1268px; width:210px; {PEN} font-size:23px; line-height:1.1; font-weight:600">' + "<br>".join(f'<s style="text-decoration-thickness:3px">{s(a)}</s>' for a, _ in d["dead"][:3]) + '</div>')
+    # the loop: the design is the answered question
+    o.append(f'<div style="position:absolute; left:1110px; top:520px; width:64px; height:760px; box-sizing:border-box; border:3px solid {INK}; border-radius:34px"></div>')
+    o.append(f'<div style="position:absolute; left:1142px; top:900px; transform:translate(-50%,-50%) rotate(-90deg); white-space:nowrap; {PEN} font-size:27px; font-weight:400; letter-spacing:.06em">THE DESIGN IS THE ANSWERED QUESTION</div>')
+    o.append(svg(W, H, _arrow(590, 400, 590, 446) + _arrow(590, 680, 590, 726) + _arrow(590, 960, 590, 1006) + _arrow(590, 1160, 590, 1206) + _arrow(590, 1370, 590, 1416)
+                 + _arrow(995, 820, 852, 760, -20) + _arrow(882, 870, 854, 1250, -70) + _arrow(314, 1215, 328, 1250, -10)
+                 + f'<path d="M810 1480 C 1000 1490, 1140 1440, 1142 1282" stroke="{INK}" stroke-width="3"/>' + _arrow(1142, 518, 852, 300, -60)))
+    o += [_bracket(64, 230, 680, "LISTENING"), _bracket(64, 730, 1160, "DEFINING"), _bracket(64, 1210, 1556, "DECIDING")]
+    return f'<div class="board" style="position:relative; width:{W}px; height:{H}px; background:#FDFDFB; border-radius:4px; box-shadow:0 30px 60px -40px rgba(20,30,90,.35), 0 0 0 1px rgba(36,48,201,.08); overflow:hidden">{"".join(o)}</div>'
+
+def pen_skin(h):
+    """v221: the Syntra sketchbook pages in the same blue pen on white."""
+    for c in ("#5B4128", "#DD8020", "#975C1C", "#8A6A4A", "#3E2B18", "#C9B08C", "#5B4128"):
+        h = h.replace(c, INK)
+    h = re.sub(r'background:#F8EEDF;[^"]*?background-position:0 0, 3px 5px;', 'background:#FDFDFB;', h)
+    h = re.sub(r'background:(#E9F2D9|#FFE7A6|#FFD3B0|#F7E2C2|#FFEBC8); transform', f'background:transparent; border:3px solid {INK}; border-radius:26px 20px 30px 22px / 22px 28px 20px 26px; transform', h)
+    h = h.replace('box-shadow:0 10px 16px -10px rgba(90,50,10,.45)', 'box-shadow:none').replace('rgba(249,156,54,', 'rgba(36,48,201,')
+    return h
+
+CONCEPT = {"carekin": ("One plan, seen three ways: the app for Priya, WhatsApp for Lakshmi, one button at home", "Carekin: an Android app + WhatsApp"),
+           "syntra": ("Find it by feeling, step inside it in VR, take it home in AR", "Syntra: a knob, three sliders, nine VR worlds, an AR ticket"),
+           "handovo": ("One goal in; the agent turns it into tasks in each person’s WhatsApp, within the manager’s limits", "Handovo: a control room + WhatsApp")}
+def carekin(d): return pen_flow(d, "Carekin", *CONCEPT["carekin"])
+_syntra_v202 = syntra
+def syntra(d): return pen_flow(d, "Syntra", *CONCEPT["syntra"])
+def handovo_pen(): return pen_flow(HO, "Handovo", *CONCEPT["handovo"])
+for _n in ("syntra_affinity", "syntra_match", "syntra_retro"):
+    globals()["_" + _n] = globals()[_n]
+    globals()[_n] = (lambda f: (lambda d: pen_skin(f(d))))(globals()["_" + _n])
+
+# ------------------------------------------------------------------ v221b: drawn by hand. Every line wobbles, overshoots a little and some get a second pass.
+import random as _rnd
+_R = _rnd.Random(7)
+_INKF = ('<defs><filter id="ink" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/>'
+         '<feDisplacementMap in="SourceGraphic" scale="1.6"/></filter></defs>')
+def _j(v, a=2.2): return v + _R.uniform(-a, a)
+def _hline(pts, w=3.0, passes=1):
+    """A hand line through points: jittered, smooth (Catmull-Rom), drawn once or twice."""
+    out = []
+    for k in range(passes):
+        P = [(_j(x), _j(y)) for x, y in pts]
+        d = f'M{P[0][0]:.1f} {P[0][1]:.1f}'
+        for i in range(len(P) - 1):
+            p0 = P[i - 1] if i else P[i]; p1, p2 = P[i], P[i + 1]; p3 = P[i + 2] if i + 2 < len(P) else p2
+            c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6); c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+            d += f' C{c1[0]:.1f} {c1[1]:.1f} {c2[0]:.1f} {c2[1]:.1f} {p2[0]:.1f} {p2[1]:.1f}'
+        out.append(f'<path d="{d}" stroke="{INK}" stroke-width="{w * _R.uniform(.85, 1.15):.2f}" opacity="{.92 if k == 0 else .55}"/>')
+    return ''.join(out)
+def _seg(x1, y1, x2, y2, n=4):
+    return [(x1 + (x2 - x1) * t / n + _R.uniform(-1.5, 1.5), y1 + (y2 - y1) * t / n + _R.uniform(-1.5, 1.5)) for t in range(n + 1)]
+def _hbox(x, y, w, h, r=26, passes=1):
+    """A rounded box drawn in one go, starting top-left, ending with a small overshoot past where it began."""
+    pts = [(x + r, y)] + _seg(x + r, y, x + w - r, y)[1:] + [(x + w - r * .3, y + r * .3), (x + w, y + r)] + _seg(x + w, y + r, x + w, y + h - r)[1:] \
+        + [(x + w - r * .3, y + h - r * .3), (x + w - r, y + h)] + _seg(x + w - r, y + h, x + r, y + h)[1:] + [(x + r * .3, y + h - r * .3), (x, y + h - r)] \
+        + _seg(x, y + h - r, x, y + r)[1:] + [(x + r * .3, y + r * .3), (x + r + 14, y - 2)]
+    return _hline(pts, 3.1, passes)
+def _harrow(x1, y1, x2, y2, bend=0):
+    import math
+    mx, my = (x1 + x2) / 2 + bend, (y1 + y2) / 2
+    a = math.atan2(y2 - my, x2 - mx); h = _R.uniform(14, 18)
+    return (_hline([(x1, y1), (mx * .5 + (x1 + x2) / 4, my * .5 + (y1 + y2) / 4), (x2, y2)], 2.8)
+            + _hline([(x2 - h * math.cos(a - .5), y2 - h * math.sin(a - .5)), (x2, y2), (x2 - h * math.cos(a + .5), y2 - h * math.sin(a + .5))], 2.8))
+
+def _ptext(x, y, w, html, size, weight=600, extra=""):
+    return f'<div style="position:absolute; left:{x}px; top:{y}px; width:{w}px; {PEN} font-size:{size}px; line-height:1.12; font-weight:{weight}; transform:rotate({_R.uniform(-1.1, 1.1):.2f}deg); {extra}">{html}</div>'
+
+def pen_flow(d, project, concept, design):
+    _R.seed(len(project) * 31)
+    W, H = 1200, 1600; s = E; st = []; o = []
+    o.append(_ptext(0, 30, W, "DESIGN PROCESS", 78, 700, "text-align:center; letter-spacing:.08em"))
+    o.append(_ptext(0, 118, W, "FOR " + s(project.upper()), 52, 700, "text-align:center; letter-spacing:.06em"))
+    st.append(_hline(_seg(300, 188, 930, 182, 6), 3.2, 2))
+    cx, cw = 330, 520
+    def box(x, y, w, h, head, body="", r=26, passes=1, hs=40):
+        st.append(_hbox(x, y, w, h, r, passes))
+        o.append(_ptext(x + 22, y + 14, w - 40, head, hs, 700, "letter-spacing:.04em"))
+        if body: o.append(_ptext(x + 22, y + 14 + hs + 6, w - 40, body, 27))
+    box(cx, 230, cw, 170, "QUESTION", "(" + s(d["hmw"].lstrip("…").replace("HMW ", "how might we ")) + ")")
+    box(cx, 450, cw, 230, "WHAT I SAW", "<br>".join("· " + s(x) for x in d["saw"][:3]))
+    box(cx, 730, cw, 230, "WHY? WHY? WHY?", "<br>".join("→ " + s(x) for x in d["whys"][:4]))
+    box(cx, 1010, cw, 150, "ROOT CAUSE", s(d["root"]), passes=2); st.append(_hbox(cx - 8, 1002, cw + 16, 166, 30))
+    box(cx, 1210, cw, 160, "CONCEPT", s(concept))
+    box(cx + 20, 1416, cw - 40, 140, "THE DESIGN", s(design), r=40, passes=2)
+    box(880, 820, 230, 70, "IDEAS", r=34)
+    o.append(_ptext(892, 905, 205, "<br>".join("+ " + s(x) for x in d["ideas"][:4]), 23))
+    box(104, 1180, 210, 70, "NOT THIS", r=34)
+    o.append(_ptext(110, 1268, 210, "<br>".join(f'<s style="text-decoration-thickness:3px">{s(a)}</s>' for a, _ in d["dead"][:3]), 23))
+    st.append(_hbox(1110, 520, 64, 760, 32))
+    o.append(f'<div style="position:absolute; left:1142px; top:900px; transform:translate(-50%,-50%) rotate(-90.6deg); white-space:nowrap; {PEN} font-size:27px; font-weight:400; letter-spacing:.06em">THE DESIGN IS THE ANSWERED QUESTION</div>')
+    for a in [(590, 400, 590, 446), (590, 680, 590, 726), (590, 960, 590, 1000), (590, 1170, 590, 1206), (590, 1370, 590, 1412), (995, 820, 852, 760, -20), (882, 870, 854, 1250, -70), (314, 1215, 328, 1250, -10), (1142, 518, 852, 300, -60)]:
+        st.append(_harrow(*a))
+    st.append(_hline([(810, 1480), (960, 1488), (1100, 1440), (1142, 1360), (1142, 1284)], 3))
+    for x, y1, y2, label in [(64, 230, 680, "LISTENING"), (64, 730, 1160, "DEFINING"), (64, 1210, 1556, "DECIDING")]:
+        st.append(_hline([(x + 30, y1 + _R.uniform(-3, 3)), (x, y1), (x + _R.uniform(-2, 2), (y1 + y2) / 2), (x, y2), (x + 32, y2 + _R.uniform(-3, 3))], 3))
+        o.append(f'<div style="position:absolute; left:{x - 26}px; top:{(y1 + y2) // 2}px; transform:translate(-50%,-50%) rotate({-90 + _R.uniform(-1, 1):.2f}deg); white-space:nowrap; {PEN} font-size:25px; font-weight:400; letter-spacing:.08em">{label}</div>')
+    ink = f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" style="position:absolute; left:0; top:0; overflow:visible" fill="none" stroke-linecap="round" stroke-linejoin="round">{_INKF}<g filter="url(#ink)">{"".join(st)}</g></svg>'
+    return f'<div class="board" style="position:relative; width:{W}px; height:{H}px; background:#FDFDFB; border-radius:4px; box-shadow:0 30px 60px -40px rgba(20,30,90,.35), 0 0 0 1px rgba(36,48,201,.08); overflow:hidden">{ink}{"".join(o)}</div>'
+
+def pen_skin(h):
+    """v221b: the Syntra sketchbook pages in blue pen on white, borders roughened like a ballpoint."""
+    for c in ("#5B4128", "#DD8020", "#975C1C", "#8A6A4A", "#3E2B18", "#C9B08C"):
+        h = h.replace(c, INK)
+    h = re.sub(r'background:#F8EEDF;[^"]*?background-position:0 0, 3px 5px;', 'background:#FDFDFB;', h)
+    h = re.sub(r'background:(#E9F2D9|#FFE7A6|#FFD3B0|#F7E2C2|#FFEBC8); transform', f'background:transparent; border:2.6px solid {INK}; border-radius:26px 18px 30px 20px / 20px 28px 18px 26px; filter:url(#inkb); transform', h)
+    h = h.replace('box-shadow:0 10px 16px -10px rgba(90,50,10,.45)', 'box-shadow:none').replace('rgba(249,156,54,', 'rgba(36,48,201,')
+    defs = ('<svg width="0" height="0" style="position:absolute"><filter id="inkb" x="-4%" y="-6%" width="108%" height="112%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="5" result="n"/>'
+            '<feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter></svg>')
+    return h.replace('class="board" style="', 'class="board" style="', 1).replace('>', '>' + defs, 1)
+
+# v221c: Sijo's reference lettering: Architects Daughter (OFL), regular weight only, sizes scaled for its wider letters
+PEN = "font-family:ArchDaughter,cursive; color:" + INK + ";"
+def _ptext(x, y, w, html, size, weight=400, extra=""):
+    return f'<div style="position:absolute; left:{x}px; top:{y}px; width:{w}px; {PEN} font-size:{round(size * .8)}px; line-height:1.18; font-weight:400; transform:rotate({_R.uniform(-1.1, 1.1):.2f}deg); {extra}">{html}</div>'
+_pen_skin_v221b = pen_skin
+def pen_skin(h):
+    h = _pen_skin_v221b(h).replace("font-family:Caveat,cursive;", "font-family:ArchDaughter,cursive;")
+    h = re.sub(r'font-size:(\d+)px', lambda m: 'font-size:%dpx' % round(int(m.group(1)) * .8), h)
+    return re.sub(r'font-weight:\s*[5-7]00', 'font-weight:400', h)

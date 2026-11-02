@@ -1,3 +1,4 @@
+@font-face { font-family: ArchDaughter; src: url(../../fonts/architectsdaughter-400.ttf) format("truetype"); font-weight: 400; }
 /* Whiteboard: a hand-drawn board that shows how a problem was taken apart (v200). Used by tools/handovo/case.html and
    tools/casekit/<slug>.html. Brand colours come from the page: --wb-ink (marker), --wb-accent (circles, arrows). */
 @font-face { font-family: Caveat; src: url(../../fonts/caveat-latin.woff2) format("woff2"); font-weight: 400 700; }

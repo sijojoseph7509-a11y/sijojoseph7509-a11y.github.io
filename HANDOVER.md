@@ -1229,3 +1229,8 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Handovo is told in seven chapters like Carekin: "The story" contents (section 3), `.chap` dividers (blue, lime rail) before 5, 13, 19, 22, 25, 31, 53, and "The verdict" (Six decisions) closes Choices. 61 sections; videos, draw, travel, layers and links remapped (scratchpad ho_remap.py pattern: old index → new).
 - Syntra: three more sketchbook pages (boards.syntra_affinity / _match / _retro, block "wbx"): an affinity map of the store visits, the match worked out on paper (162 settings, 19 bottles, fair one-to-one), and an after-exhibit keep / changed / measure board. Only facts already in the case.
 - Carekin hero (02) redrawn on a clean background with bezels sized to the live screens.
+
+### v221: whiteboards redrawn by hand, in blue pen
+- Carekin, Syntra and Handovo whiteboards follow Sijo's reference (a hand-drawn design-process sheet): boards.pen_flow draws QUESTION → WHAT I SAW → WHY? → ROOT CAUSE → CONCEPT → THE DESIGN, with IDEAS and NOT THIS beside, LISTENING / DEFINING / DECIDING brackets, and a loop "the design is the answered question". Caveat in blue ink #2430C9 on white; every line is a jittered hand stroke (seeded random, Catmull-Rom, overshoot, some double passes, an ink displacement filter). Handovo's board is pasted from boards.handovo_pen() between <!--board--> markers (Caveat @font-face back in case.html).
+- Syntra's three sketchbook pages use the same pen (boards.pen_skin). Ekmaati unchanged.
+- Lettering: Architects Daughter (OFL, fonts/architectsdaughter-400.ttf, licence fonts/OFL-ArchitectsDaughter.txt), downloaded with Sijo's OK; @font-face ArchDaughter in whiteboard.css and Handovo case.html.
