@@ -381,6 +381,7 @@
         <i class="fs-progress" aria-hidden="true"></i>
       </header>
       <div class="case"></div>
+      <nav class="case-dock" aria-label="Case study shortcuts"><button class="dock-btn" data-exit-case aria-label="Back to all work">‹ All work</button><button class="dock-btn" data-case-top aria-label="Back to the top of this case study">↑ Top</button></nav>
       <div class="case-end"><span>Next case study</span><button class="case-next" data-case="${esc(next.case.slug)}">${esc(next.title)} ›</button>
         <button class="btn alt" data-exit-case>All work</button></div>`;
     body.scrollTop = 0;
@@ -388,6 +389,7 @@
     const prog = body.querySelector(".fs-progress");
     if (body._prog) body.removeEventListener("scroll", body._prog);
     body._prog = () => { if (!prog.isConnected) return; const max = body.scrollHeight - body.clientHeight; const f = max > 0 ? Math.min(1, body.scrollTop / max) : 0; prog.style.transform = `scaleX(${f})`;
+      body.querySelector(".case-dock")?.classList.toggle("on", body.scrollTop > body.clientHeight * 0.9);
       if (window.SJT && caseSlug) { if (f > 0.5) SJT.once(`case-${caseSlug}-half`); if (f > 0.95) SJT.once(`case-${caseSlug}-end`); } };
     body.addEventListener("scroll", body._prog, { passive: true });
     fillCase(p, slug, caseView());
@@ -607,6 +609,7 @@
 
   os.addEventListener("click", (e) => {
     if (e.target.closest("[data-exit-case]")) { e.preventDefault(); show("work"); sound(); return; }
+    if (e.target.closest("[data-case-top]")) { body.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }); body.querySelector(".fs-btn[data-exit-case]")?.focus({ preventScroll: true }); return; }
     if (e.target.closest("[data-share]")) { copyLink(); return; }
     if (e.target.closest("[data-copy-email]")) { copyEmail(); sound(); return; }
     const wf = e.target.closest("[data-work-filter]");

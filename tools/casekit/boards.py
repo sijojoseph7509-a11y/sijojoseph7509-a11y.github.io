@@ -15,7 +15,7 @@ def svg(w, h, body):
 
 # ------------------------------------------------------------------ Handovo · FigJam
 HO = dict(
-  saw=["Huddle plan never reached the 2 pm shift", "Task buried in a 200-message WhatsApp group", "Manager walks the floor asking “who did this?”", "Head-office brief done late, or differently", "“I never saw that message”"],
+  saw=["Huddle plan didn’t reach the 2 pm shift", "Task buried in a 200-message WhatsApp group", "Manager walks the floor asking “who did this?”", "Head-office brief done late, or differently", "“I never saw that message”"],
   whys=["Tasks don’t get done on time", "People didn’t know it was theirs", "It was said once, at the huddle or in the group", "No one owns each task or follows it up", "Only the manager can"],
   root="The manager is the only router of every task and every decision",
   hmw="HMW let the manager say it once, and have it reach the right person, followed up, without losing control?",

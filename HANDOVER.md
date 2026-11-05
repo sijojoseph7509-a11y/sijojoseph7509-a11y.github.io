@@ -1234,3 +1234,13 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 - Carekin, Syntra and Handovo whiteboards follow Sijo's reference (a hand-drawn design-process sheet): boards.pen_flow draws QUESTION → WHAT I SAW → WHY? → ROOT CAUSE → CONCEPT → THE DESIGN, with IDEAS and NOT THIS beside, LISTENING / DEFINING / DECIDING brackets, and a loop "the design is the answered question". Caveat in blue ink #2430C9 on white; every line is a jittered hand stroke (seeded random, Catmull-Rom, overshoot, some double passes, an ink displacement filter). Handovo's board is pasted from boards.handovo_pen() between <!--board--> markers (Caveat @font-face back in case.html).
 - Syntra's three sketchbook pages use the same pen (boards.pen_skin). Ekmaati unchanged.
 - Lettering: Architects Daughter (OFL, fonts/architectsdaughter-400.ttf, licence fonts/OFL-ArchitectsDaughter.txt), downloaded with Sijo's OK; @font-face ArchDaughter in whiteboard.css and Handovo case.html.
+
+### v222: AI and research shown up front; "never reach" softened
+- Handovo "at a glance" (04): new "Where AI helps / Where a person decides" row, each line taken from the case; the four languages are named.
+- Handovo chapter 1 question is now "Why doesn't a store's plan reach everyone on the floor?" (03, 05, alt text, reader). Whiteboard note (20) and boards.py: "Huddle plan didn't reach the 2 pm shift". Sijo: some messages do reach the floor, so don't say "never".
+- Carekin k-jump intro: "Built on 7 interviews, 2 home visits, a 7-day diary study and a card sort with 8 people." (from the methods table). links.json shifted +26px.
+- Draft for a new content-AI case (tool comparison, outline, journey map) lives in references/content-ai/ (git-ignored), waiting on Sijo's interviews.
+
+### v223: floating "All work / Top" pill in case studies
+- os.js adds `.case-dock` after `.case`: "‹ All work" (data-exit-case) and "↑ Top" (data-case-top, smooth scroll, instant under reduced motion; focus returns to the bar's All work button).
+- It shows once scrolled past ~0.9 of a screen (toggled in body._prog); sticky at the bottom right, glass like the bar. Styles at the end of styles.css.

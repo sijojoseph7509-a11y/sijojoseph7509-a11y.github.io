@@ -113,7 +113,7 @@ CAREKIN = [
       ("Visuals", "AI, in my style", "The scenario illustrations are AI-generated in my style. The phone screens are the real prototype.")]),
   ]),
   dict(id="k-jump", after="02.webp", bg="mint", desc="The story in seven chapters, each answering one question and each a link: the problem, listening, the root cause, choices, the system, the design and proof.", blocks=[
-    ("head", "The story", "Seven chapters, from a missed dose to the design.", "Each chapter answers one question. Start at the top, or jump to the one you care about."),
+    ("head", "The story", "Seven chapters, from a missed dose to the design.", "Built on 7 interviews, 2 home visits, a 7-day diary study and a card sort with 8 people. Each chapter answers one question."),
     ("toc", CHAPTERS),
   ]),
   dict(id="k-decisions", after="k-jump", bg="light", desc="Six decisions, one line each, each linking to its evidence: one-button Home mode over the full app for the helper; recording only what the doctor wrote over AI dose suggestions; keeping every entry over letting the last edit win; one gentle nudge after 24 hours over alarms; blocking a second dose over trusting memory; and the phone they already have over a smart pillbox.", blocks=[

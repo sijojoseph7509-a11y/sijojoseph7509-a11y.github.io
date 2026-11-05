@@ -1223,3 +1223,16 @@ button.card .cover::before, button.card .cover::after { display: none; }   /* re
 .lab-tabs.stuck::before { opacity: 1; }
 @media (max-width: 760px) { .lab-tabs { top: 0; } .lab-tabs::before { top: -10px; } }
 .lab-tabs { z-index: 1; }   /* under the title bar (z 2), so the band never dims the title or toolbar */
+
+/* v223: floating shortcuts in a case study, back to all work and back to the top; shown once past the cover */
+.case-dock { position: sticky; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 3; width: fit-content; margin: -50px 20px 0 auto; display: flex; gap: 4px; padding: 4px;
+  border-radius: 999px; background: var(--g-win); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: 0 0 0 .5px var(--sep), 0 8px 24px rgba(0,0,0,.14); opacity: 0; transform: translateY(10px); pointer-events: none; visibility: hidden;
+  transition: opacity .3s var(--smooth), transform .3s var(--smooth), visibility 0s .3s; }
+.case-dock.on { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition: opacity .3s var(--smooth), transform .3s var(--smooth); }
+.dock-btn { height: 36px; padding: 0 16px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 600; color: var(--t1); background: transparent; cursor: pointer; transition: background .15s; }
+.dock-btn:hover { background: var(--g-fill-2); }
+.dock-btn + .dock-btn { color: #fff; background: var(--accent); }
+.dock-btn + .dock-btn:hover { background: var(--accent); filter: brightness(1.1); }
+.dock-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .case-dock, .case-dock.on { transition: none; transform: none; } }
