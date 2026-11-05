@@ -174,6 +174,25 @@ reference, with release notes up to v221. Read this first, then dip into HANDOVE
 - **Syntra's three sketchbook pages** (affinity, match, retro) use `boards.pen_skin`.
 - **Ekmaati** is not touched, as Sijo asked.
 
+## Next idea: scroll sliders (not built yet)
+
+- Sijo wants a scroll slider on all four cases. Options given:
+  - **A. One glass rail:** a frosted capsule on the right edge, chapter ticks, a glass label on hover, fades
+    out when idle.
+  - **B. A slider per case:**
+    - Carekin: the sky timeline, with dose dots for chapters.
+    - Handovo: a blue rail with a lime marker and task chips.
+    - Syntra: a rotating amber knob.
+    - Ekmaati: a sindoor thread with clay beads.
+  - **C. Recommended:** the glass rail with per-case colour tokens and marker shapes.
+- Reference images: `references/sliders/glass-rail.png` and `per-case-sliders.png` (git-ignored; made with
+  Figma AI in file `kVyQAfgi8UmGSHiuDAJwLa`).
+- Rules for any of them:
+  - Desktop only. No scroll hijacking.
+  - Respect reduced motion, and make it keyboard reachable.
+  - Chapter positions come from the `k-chN` or `.chap` sections.
+- Waiting on Sijo to choose A, B or C.
+
 ## Still open
 
 - Carekin's 49-second walkthrough film and the illustrated "Tuesday in three cities" frames still show the old
