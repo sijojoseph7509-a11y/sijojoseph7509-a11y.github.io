@@ -1244,3 +1244,7 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 ### v223: floating "All work / Top" pill in case studies
 - os.js adds `.case-dock` after `.case`: "‹ All work" (data-exit-case) and "↑ Top" (data-case-top, smooth scroll, instant under reduced motion; focus returns to the bar's All work button).
 - It shows once scrolled past ~0.9 of a screen (toggled in body._prog); sticky at the bottom right, glass like the bar. Styles at the end of styles.css.
+
+### v224: smaller case-study pill
+- `.case-dock` shrunk so it doesn't get in the way: buttons 26px high, 11.5px text, 14px from the corner, lighter shadow (Sijo: "should not hinder the experience").
+- sweep-shots/ are left out of commits to keep pushes small (152 MB of PNGs caused HTTP 408s).
