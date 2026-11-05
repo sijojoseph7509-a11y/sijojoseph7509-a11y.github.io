@@ -191,7 +191,9 @@ reference, with release notes up to v221. Read this first, then dip into HANDOVE
   - Desktop only. No scroll hijacking.
   - Respect reduced motion, and make it keyboard reachable.
   - Chapter positions come from the `k-chN` or `.chap` sections.
-- Waiting on Sijo to choose A, B or C.
+- Sijo chose C. It was built (a hairline glass rail, chapter ticks, a drag-to-scrub marker), but on 5 Nov he
+  asked to stop and drop it. Every rail change was reverted, nothing was published, and the site stays at v221.
+  Don't rebuild it unless he asks again.
 
 ## Still open
 
