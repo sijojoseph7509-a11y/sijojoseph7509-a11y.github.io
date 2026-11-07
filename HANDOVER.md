@@ -1248,3 +1248,10 @@ New sections in tools/handovo/case.html (all `data-new="…"`, 38 → 43 section
 ### v224: smaller case-study pill
 - `.case-dock` shrunk so it doesn't get in the way: buttons 26px high, 11.5px text, 14px from the corner, lighter shadow (Sijo: "should not hinder the experience").
 - sweep-shots/ are left out of commits to keep pushes small (152 MB of PNGs caused HTTP 408s).
+
+### v225: Carekin brand fixes ("Call Priya", spacing, coral only for change)
+- WhatsApp's third reply button is "Call Priya" (matches the screens), in Figma section 121:294, 23.webp, the text version and carekin.json.
+- 23 (system architecture) respaced in Figma: diagram moved up under the headline, people cards aligned with the Schedule / Event log / Message router rows, WhatsApp platform aligned with the event log, constraints row moved up.
+- Brand: mint is the helper, coral only marks change. Lakshmi's cards (19, 23), the WhatsApp route and the "Platform constraints" label are mint; 13 (Context by numbers) is light mint #DDEBE6; 33 (Home mode) is mint #5EEAD4.
+- 19.webp was recoloured from the live image with Pillow, because Figma 121:227 still has older wording ("The 3-user mental model", "Executor", "Design rule that follows") than the site. Figma's Lakshmi node is mint too. Sync that text in Figma before the next export of 19.
+- Coral is still used for small labels and stat numbers on dark sections across Carekin (a wider pattern, not changed).
